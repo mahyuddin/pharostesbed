@@ -291,6 +291,7 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 			return;
 		}
 		b_opaque_interface = true;
+		printf("proteus_driver: opaque interface enabled.\n");
 	}
 	
 	/* 
@@ -478,10 +479,12 @@ void Proteus::updateOpaque() {
 	char message[50];
 	if (sprintf(message, "Hello World!") > 0) {
 		opaqueData.data_count = strlen(message);
-		opaqueData.data = message;
+		opaqueData.data = (uint8_t*)message;
+		printf("proteus_driver: updateOpaque: count=%i\n", opaqueData.data_count);
 		this->Publish(this->opaque_addr,
-	         PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
-	         (void*)&opaqueData);
+			PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
+			(void*)&opaqueData,
+			opaqueData.data_count);
 	}
 	//memset(&cpdata,0,sizeof(cpdata));
 	//cpdata.data = new uint8_t [cpdata.data_count];
