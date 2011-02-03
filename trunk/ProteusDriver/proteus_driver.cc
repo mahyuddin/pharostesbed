@@ -146,6 +146,7 @@ class Proteus : public Driver {
 		void updateCompass();
 		//void updateIR();
 		//void updateSonar();
+		void updateOpaque();
 		
 		// The serial port where the micro-controller is attached
 		const char* serial_port;
@@ -158,11 +159,16 @@ class Proteus : public Driver {
 		
 		//bool ir_as_sonar; //ir data to sonar interface
 		
+		/**
+		 * This is the address to each device provided by the Proteus robot.
+		 *
+		 * See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__devaddr.html
+		 */
 		player_devaddr_t position_addr;
 		// player_devaddr_t power_addr;
 		//player_devaddr_t ir_addr;
 		//player_devaddr_t sonar_addr;
-		//player_devaddr_t opaque_addr;
+		player_devaddr_t opaque_addr;
 		player_devaddr_t compass_addr;
 		
 		
@@ -179,8 +185,8 @@ class Proteus : public Driver {
 		player_opaque_data_t opaque_data;
 		
 		// Whether the interface is being used
-		bool b_position2d_interface, b_compass_interface;
-		// bool b_ir_interface, b_sonar_interface, b_opaque_interface;
+		bool b_position2d_interface, b_compass_interface, b_opaque_interface;
+		// bool b_ir_interface, b_sonar_interface;
 		int packet_type;
 		
 		timeval _currTime;
@@ -211,18 +217,19 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 	gettimeofday(&_currTime, NULL);
 	printf("%ld.%.6ld proteus_driver: constructor called\n", _currTime.tv_sec, _currTime.tv_usec);
 	
+	// Clear the device addresses...
 	memset(&this->position_addr,0,sizeof(player_devaddr_t));
 	//memset(&this->power_addr,0,sizeof(player_devaddr_t));
 	//memset(&this->ir_addr,0,sizeof(player_devaddr_t));
 	//memset(&this->sonar_addr,0,sizeof(player_devaddr_t));
-	//memset(&this->opaque_addr,0,sizeof(player_devaddr_t));
+	memset(&this->opaque_addr,0,sizeof(player_devaddr_t));
 	memset(&this->compass_addr, 0, sizeof(player_devaddr_t));
 	
 	
 	b_position2d_interface = false;
 	//b_ir_interface = false;
 	//b_sonar_interface = false;
-	//b_opaque_interface = false;
+	b_opaque_interface = false;
 	b_compass_interface = false;
 	
 	/*
@@ -278,12 +285,13 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 	}*/
 	
 	// Do we create a Opaque interface?
-	/*if(cf->ReadDeviceAddr(&(this->opaque_addr), section, "provides", PLAYER_OPAQUE_CODE, -1, NULL) == 0) {
+	if(cf->ReadDeviceAddr(&(this->opaque_addr), section, "provides", PLAYER_OPAQUE_CODE, -1, NULL) == 0) {
 		if(this->AddInterface(this->opaque_addr) != 0) {
 			this->SetError(-1);
 			return;
 		}
-	}*/
+		b_opaque_interface = true;
+	}
 	
 	/* 
 	 * For documentation, see: 
@@ -462,23 +470,24 @@ void Proteus::updateCompass() {
 	delete [] sonardata.ranges;
 }*/
 
-/*void Proteus::updateOpaque() {
-
-	     ////////////////////////////
-	     // Update Opaque data
-	     player_opaque_data_t cpdata;
-	     memset(&cpdata,0,sizeof(cpdata));
-
-	     cpdata.data_count=1;
-	     //cpdata.data = new uint8_t [cpdata.data_count];
-
-	     cpdata.data[0]=this->proteus_dev->line_detect;
-
-	     this->Publish(this->opaque_addr,
+/**
+ * Takes a message from the MCU and publishes it inside an opaque message.
+ */
+void Proteus::updateOpaque() {
+	player_opaque_data_t opaqueData; // See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__opaque__data.html
+	char message[50];
+	if (sprintf(message, "Hello World!") > 0) {
+		opaqueData.data_count = strlen(message);
+		opaqueData.data = message;
+		this->Publish(this->opaque_addr,
 	         PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
-	         (void*)&cpdata);
-	     //delete [] cpdata.data;
-}*/
+	         (void*)&opaqueData);
+	}
+	//memset(&cpdata,0,sizeof(cpdata));
+	//cpdata.data = new uint8_t [cpdata.data_count];
+	//cpdata.data[0]=this->proteus_dev->line_detect;
+	//delete [] cpdata.data;
+}
 
 /**
  * The main thread of the proteus driver.
@@ -546,7 +555,7 @@ void Proteus::Main() {
 		}
 		//this->updateIR();
 		//this->updateSonar();
-		//this->updateOpaque();
+		this->updateOpaque();
 		
 		if (commOK != SUCCESS) {
 			gettimeofday(&_currTime, NULL);
@@ -748,30 +757,20 @@ int Proteus::ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void
 		
 		this->Publish(this->sonar_addr, PLAYER_MSGTYPE_RESP_ACK, PLAYER_SONAR_REQ_GET_GEOM, (void*)&sonar_array);
 	}*/
-  /*
-  else if(Message::MatchMessage(hdr,PLAYER_MSGTYPE_REQ,
-                                    PLAYER_OPAQUE_REQ,
-                                    this->opaque_addr))
-  {
-    if (!data)
-    {
-      PLAYER_ERROR("NULL opaque data");
-      return -1;
-    }
-    memcpy(&opaque_data, data, sizeof opaque_data);
-
-    // Play Command
-    if (opaque_data.data[0] == 0 )
-    {
-      uint8_t song_index;
-
-      song_index = opaque_data.data[1];
-
-      roomba_play_song(this->roomba_dev, song_index);
-    }
-    return 0;
-  }
-  */
+	else if(Message::MatchMessage(hdr,PLAYER_MSGTYPE_REQ, PLAYER_OPAQUE_REQ, this->opaque_addr)) {
+		if (!data) {
+			PLAYER_ERROR("NULL opaque data");
+			return -1;
+		}
+		memcpy(&opaque_data, data, sizeof opaque_data);
+		// Play Command
+		//if (opaque_data.data[0] == 0 ) {
+		//	uint8_t song_index;
+		//	song_index = opaque_data.data[1];
+		//	roomba_play_song(this->roomba_dev, song_index);
+		//}
+		return 0;
+	}
 	else {
 		gettimeofday(&_currTime, NULL);
 		printf("%ld.%.6ld proteus_driver.cc: ProcessMessage: Unkown message! type=%i, subtype=%i\n",
