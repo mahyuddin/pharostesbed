@@ -10,6 +10,7 @@ import pharoslabut.io.*;
 
 import playerclient.*;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.opaque.PlayerOpaqueData;
 
 /**
  * The PharosServer operates on each robot.  It acts as an adapter that sits between the PlayerServer and PharosClient.
@@ -19,7 +20,7 @@ import playerclient.structures.PlayerConstants;
  * 
  * @author Chien-Liang Fok
  */
-public class PharosServer implements MessageReceiver, BeaconListener {
+public class PharosServer implements MessageReceiver, BeaconListener, OpaqueListener {
 	
 	private String playerServerIP;
 	private int playerServerPort;
@@ -49,6 +50,8 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 	private GPSMotionScript gpsMotionScript;
 	private RelativeMotionScript relMotionScript;
 	
+	private FileLogger flogger = null;
+	
 //	private String expName;
 	
 	/**
@@ -73,17 +76,17 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		this.beaconMax = beaconMax;
 		
 		if (!createPlayerClient()) {
-			log("Failed to connect to player server!");
+			log("ERROR: Failed to connect to player server!");
 			System.exit(1); // fatal error
 		}
 		
 		if (!initServer()) {
-			log("Failed to initialize the server!");
+			log("ERROR: Failed to initialize the server!");
 			System.exit(1);
 		}
 		
 		if (!initBeacons()) {
-			log("Failed to initialize the beacons!");
+			log("ERROR: Failed to initialize the beacons!");
 			System.exit(1);
 		}
 	}
@@ -92,7 +95,7 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		try {
 			client = new PlayerClient(playerServerIP, playerServerPort);
 		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
+			log("ERROR: Unable to connecting to Player: ");
 			log("    [ " + e.toString() + " ]");
 			return false;
 		}
@@ -100,25 +103,32 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
+		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
 		if (motors == null) {
-			log("motors is null");
+			log("ERROR: motors is null");
 			return false;
 		}
 		
 		if (compass == null) {
-			log("compass is null");
+			log("ERROR: compass is null");
 			return false;
 		}
 		
 		if (gps == null) {
-			log("gps is null");
+			log("ERROR: gps is null");
+			return false;
+		}
+		
+		if (oi == null) {
+			log("ERROR: opaque interface is null");
 			return false;
 		}
 		
 		compassDataBuffer = new CompassDataBuffer(compass);
 		gpsDataBuffer = new GPSDataBuffer(gps);
 		motionArbiter = new MotionArbiter(motors);
+		oi.addOpaqueListener(this);
 		return true;
 	}
 	
@@ -201,7 +211,7 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		beaconBroadcaster.start();
 		
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
-		FileLogger flogger = new FileLogger(fileName);
+		flogger = new FileLogger(fileName);
 		
 		motionArbiter.setFileLogger(flogger);
 		beaconBroadcaster.setFileLogger(flogger);
@@ -239,9 +249,18 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 	}
 	
 	private void stopExp() {
+		flogger = null;
 		motionArbiter.setFileLogger(null);
 		beaconBroadcaster.setFileLogger(null);
 		beaconReceiver.setFileLogger(null);
+	}
+	
+	@Override
+	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+		if (opaqueData.getDataCount() > 0) {
+			String s = new String(opaqueData.getData());
+			log("Proteus Message: " + s);
+		}
 	}
 	
 	@Override
@@ -252,6 +271,8 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println("PharosServer: " + msg);
+		if (flogger != null)
+			flogger.log("PharosServer: " + msg);
 	}
 	
 	private static void print(String msg) {
