@@ -188,6 +188,12 @@ typedef struct {
 	unsigned char line_detect;    //if line detecting, 1 for line, 0 for no line (not supported on most robots)
 	
 	
+	uint8_t newStatusData;
+	int16_t statusTachSpeed;
+	int16_t statusTargetSpeed;
+	int16_t statusMotorPower;
+	int16_t statusSteeringAngle;
+	
 	/**
 	 * The following variables are used to buffer incoming serial data.
 	 * The buffer is empty when _rxBuffStartIndx = _rxBuffEndIndx.
