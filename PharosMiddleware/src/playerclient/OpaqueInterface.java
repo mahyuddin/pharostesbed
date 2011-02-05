@@ -22,7 +22,7 @@ public class OpaqueInterface extends PlayerDevice {
 	}
 	
 	public synchronized void readData (PlayerMsgHdr header) { 
-		System.out.println("OpaqueInterface: readData called, header:\n" + header.toString());
+		//System.out.println("OpaqueInterface: readData called, header:\n" + header.toString());
 		
 		if (header.getSubtype() == PLAYER_OPAQUE_DATA_STATE) {
 			int dataCount = 0;
