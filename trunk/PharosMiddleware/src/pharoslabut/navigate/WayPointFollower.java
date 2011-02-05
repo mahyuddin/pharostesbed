@@ -13,6 +13,7 @@ public class WayPointFollower implements Runnable {
 	private GPSMotionScript script;
 	private boolean running = false;
 	private FileLogger flogger;
+	private WayPointFollowerDoneListener doneListener;
 	
 	public WayPointFollower(NavigateCompassGPS navigator, GPSMotionScript script, FileLogger flogger) {
 		this.navigator = navigator;
@@ -20,11 +21,22 @@ public class WayPointFollower implements Runnable {
 		this.flogger = flogger;
 	}
 	
-	public void start() {
+	/**
+	 * Starts the robot following the waypoints specified in the motion script.
+	 * This method should only be called when the WayPointFoller is stopped.  If it
+	 * is called when the WayPointFollower is running, a false value will be returned.
+	 * 
+	 * @param doneListener The listener that should be notified when the WayPointFoller is done.
+	 * @return true if the call was successful, false otherwise.
+	 */
+	public boolean start(WayPointFollowerDoneListener doneListener) {
 		if (!running) {
 			running = true;
+			this.doneListener = doneListener;
 			new Thread(this).start();
-		}
+			return true;
+		} else
+			return false;
 	}
 	
 	public boolean isRunning() {
@@ -33,6 +45,7 @@ public class WayPointFollower implements Runnable {
 	
 	public void stop() {
 		running = false;
+		doneListener = null;
 	}
 	
 	public void run() {
@@ -70,6 +83,11 @@ public class WayPointFollower implements Runnable {
 			log("Motion Script Completed!");
 		else 
 			log("Terminated prematurely.");
+		
+		if (doneListener != null)
+			doneListener.wayPointFollowerDone(wayPointIndx == script.numWayPoints(), wayPointIndx);
+		
+		stop();
 	}
 	
 	private void log(String msg) {
