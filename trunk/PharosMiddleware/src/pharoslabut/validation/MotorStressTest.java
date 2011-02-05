@@ -19,7 +19,7 @@ public class MotorStressTest {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	
-	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean showGUI) {
+	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
@@ -34,7 +34,12 @@ public class MotorStressTest {
 			System.exit(1);
 		}
 		
-		MotionArbiter motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_BALL_LIKE, motors);
+		MotionArbiter motionArbiter = null;
+		
+		if (useCarLike)
+			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motors);
+		else
+			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 		
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
@@ -93,14 +98,14 @@ public class MotorStressTest {
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
-		System.err.println("\t-gui: display GUI (default not shown)");
+		System.err.println("\t-car: issue car like commands (default non-car-like)");
 	}
 	
 	public static void main(String[] args) {
 		String fileName = "log.txt";
 		String serverIP = "localhost";
 		int serverPort = 6665;
-		boolean showGUI = false;
+		boolean useCarLike = false;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -113,8 +118,8 @@ public class MotorStressTest {
 				else if (args[i].equals("-file")) {
 					fileName = args[++i];
 				}
-				else if (args[i].equals("-gui")) {
-					showGUI = true;
+				else if (args[i].equals("-car")) {
+					useCarLike = true;
 				}
 				else {
 					usage();
@@ -130,8 +135,8 @@ public class MotorStressTest {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
-		System.out.println("ShowGUI: " + showGUI);
+		System.out.println("Use Car Commands: " + useCarLike);
 		
-		new MotorStressTest(serverIP, serverPort, fileName, showGUI);
+		new MotorStressTest(serverIP, serverPort, fileName, useCarLike);
 	}
 }
