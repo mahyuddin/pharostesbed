@@ -24,7 +24,7 @@ public class PlayerOpaqueData {
 	}
 	
 	public String toString() {
-		String result = "dataCount = " + dataCount + "\n";
+		String result = "dataCount = " + dataCount + ", ";
 		if (data != null) {
 			result += "data = [" + data[0];
 			for (int i=1; i < data.length; i++) {
