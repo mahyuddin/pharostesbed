@@ -142,11 +142,13 @@ class Proteus : public Driver {
 		// Fetch the latest data from the micro-controller
 		//int getNewData();
 		
+		void publishOpaqueMsg(uint8_t* msgBuffer);
+		
 		void updatePos2D();
 		void updateCompass();
 		//void updateIR();
 		//void updateSonar();
-		void updateOpaque();
+		//void updateOpaque();
 		
 		// The serial port where the micro-controller is attached
 		const char* serial_port;
@@ -471,11 +473,24 @@ void Proteus::updateCompass() {
 	delete [] sonardata.ranges;
 }*/
 
+void Proteus::publishOpaqueMsg(uint8_t* msgBuffer) {
+	// See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__opaque__data.html
+	player_opaque_data_t opaqueData;
+	opaqueData.data_count = strlen((char*)msgBuffer);
+	opaqueData.data = msgBuffer;
+	this->Publish(this->opaque_addr,
+		PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
+		(void*)&opaqueData,
+		opaqueData.data_count);
+}
+
 /**
  * Takes a message from the MCU and publishes it inside an opaque message.
  */
-void Proteus::updateOpaque() {
-	player_opaque_data_t opaqueData; // See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__opaque__data.html
+//void Proteus::updateOpaque() {
+	//this->publishOpaqueMsg(this->proteus_dev->messageBuffer);
+	
+	/*player_opaque_data_t opaqueData; // See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__opaque__data.html
 	
 	opaqueData.data_count = strlen((char*)this->proteus_dev->messageBuffer);
 	opaqueData.data = this->proteus_dev->messageBuffer;
@@ -483,7 +498,7 @@ void Proteus::updateOpaque() {
 	this->Publish(this->opaque_addr,
 		PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
 		(void*)&opaqueData,
-		opaqueData.data_count);
+		opaqueData.data_count);*/
 	/*char message[150];
 	if (sprintf(message, "Hello World This is a wonderful world.  Nice weather today too!") > 0) {
 		opaqueData.data_count = strlen(message);
@@ -494,7 +509,7 @@ void Proteus::updateOpaque() {
 			(void*)&opaqueData,
 			opaqueData.data_count);
 	}*/
-}
+//}
 
 /**
  * The main thread of the proteus driver.
@@ -547,28 +562,40 @@ void Proteus::Main() {
 		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
 		
 		//printf("proteus_driver: main: processing serial data...\n");
-		if (commOK == SUCCESS) { proteusProcessRxData(this->proteus_dev); }
-		
-		//printf("proteus_driver: main: checking for new data to publish...\n");
-		if (this->proteus_dev->newOdometryData) {
-			//printf("proteus_driver: main: Publishing new odometry data!\n");
-			this->updatePos2D();
-			this->proteus_dev->newOdometryData = false;
-		}
-		
-		if (this->proteus_dev->newCompassData) {
-			this->updateCompass();
-			this->proteus_dev->newCompassData = false;
-		}
-		//this->updateIR();
-		//this->updateSonar();
-		
-		if (this->proteus_dev->newMessage) {
-			this->updateOpaque();
-			this->proteus_dev->newMessage = false;
-		}
-		
-		if (commOK != SUCCESS) {
+		if (commOK == SUCCESS) { 
+			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
+				//printf("proteus_driver: main: checking for new data to publish...\n");
+				
+				if (this->proteus_dev->newOdometryData) {
+					//printf("proteus_driver: main: Publishing new odometry data!\n");
+					this->updatePos2D();
+					this->proteus_dev->newOdometryData = false;
+				} 
+				
+				if (this->proteus_dev->newCompassData) {
+					this->updateCompass();
+					this->proteus_dev->newCompassData = false;
+				}
+				
+				if (proteus_dev->newStatusData) {
+					uint8_t textMessage[500];
+					sprintf((char*)textMessage, "MCU_STATUS: tach speed = %i, target speed = %i, motor power = %i, steering angle = %f", 
+						proteus_dev->statusTachSpeed, proteus_dev->statusTargetSpeed, proteus_dev->statusMotorPower, 
+						proteus_dev->statusSteeringAngle/1000.0);
+					publishOpaqueMsg(textMessage);
+					proteus_dev->newStatusData = false;
+				}
+				
+				//this->updateIR();
+				//this->updateSonar();
+				
+				if (proteus_dev->newMessage) {
+					publishOpaqueMsg(proteus_dev->messageBuffer);
+					//this->updateOpaque();
+					proteus_dev->newMessage = false;
+				}
+			}
+		} else {
 			gettimeofday(&_currTime, NULL);
 			printf("%ld.%.6ld proteus_driver: main: COMM FAILURE: closing and then re-opening the serial link\n", _currTime.tv_sec, _currTime.tv_usec);
 			proteus_close(this->proteus_dev);
