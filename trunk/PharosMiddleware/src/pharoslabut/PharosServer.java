@@ -20,7 +20,7 @@ import playerclient.structures.opaque.PlayerOpaqueData;
  * 
  * @author Chien-Liang Fok
  */
-public class PharosServer implements MessageReceiver, BeaconListener, OpaqueListener {
+public class PharosServer implements MessageReceiver, BeaconListener, OpaqueListener, WayPointFollowerDoneListener {
 	
 	private String playerServerIP;
 	private int playerServerPort;
@@ -173,6 +173,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		return false;
 	}
 	
+	@Override
 	public void newMessage(Message msg) {
 		log("Received message: " + msg);
 		switch(msg.getType()) {
@@ -206,6 +207,13 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		// TODO
 	}
 	
+	/**
+	 * Starts an experiment.
+	 * 
+	 * @param expName The experiment name.
+	 * @param robotName The robot's name.
+	 * @param expType The type of experimet.
+	 */
 	private void startExp(String expName, String robotName, ExpType expType) {
 		// start the beacons
 		beaconBroadcaster.start();
@@ -237,7 +245,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
 				WayPointFollower wpFollower = new WayPointFollower(navigatorGPS, gpsMotionScript, flogger);
-				wpFollower.start();
+				wpFollower.start(this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
 				log("Following a relative motion script...");
@@ -248,11 +256,21 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		
 	}
 	
+	@Override
+	public void wayPointFollowerDone(boolean success, int finalWayPoint) {
+		// For now, assume that once the robot is done following a motion script,
+		// the experiment is over.
+		stopExp();
+		
+	}
+	
 	private void stopExp() {
 		flogger = null;
 		motionArbiter.setFileLogger(null);
 		beaconBroadcaster.setFileLogger(null);
 		beaconReceiver.setFileLogger(null);
+		gpsDataBuffer.setFileLogger(null);
+		compassDataBuffer.setFileLogger(null);
 	}
 	
 	@Override
