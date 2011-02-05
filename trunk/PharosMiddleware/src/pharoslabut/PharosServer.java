@@ -277,7 +277,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	public void newOpaqueData(PlayerOpaqueData opaqueData) {
 		if (opaqueData.getDataCount() > 0) {
 			String s = new String(opaqueData.getData());
-			log("Proteus Message: " + s);
+			log("MCU Message: " + s);
 		}
 	}
 	
