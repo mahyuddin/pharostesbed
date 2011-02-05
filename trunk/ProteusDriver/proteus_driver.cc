@@ -476,8 +476,16 @@ void Proteus::updateCompass() {
  */
 void Proteus::updateOpaque() {
 	player_opaque_data_t opaqueData; // See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/structplayer__opaque__data.html
-	char message[50];
-	if (sprintf(message, "Hello World!") > 0) {
+	
+	opaqueData.data_count = strlen((char*)this->proteus_dev->messageBuffer);
+	opaqueData.data = this->proteus_dev->messageBuffer;
+	printf("proteus_driver: updateOpaque: count=%i\n", opaqueData.data_count);
+	this->Publish(this->opaque_addr,
+		PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
+		(void*)&opaqueData,
+		opaqueData.data_count);
+	/*char message[150];
+	if (sprintf(message, "Hello World This is a wonderful world.  Nice weather today too!") > 0) {
 		opaqueData.data_count = strlen(message);
 		opaqueData.data = (uint8_t*)message;
 		printf("proteus_driver: updateOpaque: count=%i\n", opaqueData.data_count);
@@ -485,11 +493,7 @@ void Proteus::updateOpaque() {
 			PLAYER_MSGTYPE_DATA,PLAYER_OPAQUE_DATA_STATE,
 			(void*)&opaqueData,
 			opaqueData.data_count);
-	}
-	//memset(&cpdata,0,sizeof(cpdata));
-	//cpdata.data = new uint8_t [cpdata.data_count];
-	//cpdata.data[0]=this->proteus_dev->line_detect;
-	//delete [] cpdata.data;
+	}*/
 }
 
 /**
@@ -558,7 +562,11 @@ void Proteus::Main() {
 		}
 		//this->updateIR();
 		//this->updateSonar();
-		this->updateOpaque();
+		
+		if (this->proteus_dev->newMessage) {
+			this->updateOpaque();
+			this->proteus_dev->newMessage = false;
+		}
 		
 		if (commOK != SUCCESS) {
 			gettimeofday(&_currTime, NULL);

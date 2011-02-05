@@ -167,6 +167,9 @@ typedef struct {
 	float compass_heading;
 	//float compass;
 	
+	uint8_t newMessage;
+	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
+	
 	uint8_t newOdometryData;
 	unsigned char motor_stall;
 	float distance;
