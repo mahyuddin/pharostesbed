@@ -647,7 +647,10 @@ result_t processStatusPacket(proteus_comm_t* r) {
 	}
 }
 
-
+/**
+ * This is called whenever the MCU's motor controller reports a safety event.
+ * See the MCU's code, file Command.c, method Command_sendMotorSafetyMsg.
+ */
 result_t processMotorSafetyPacket(proteus_comm_t* r) {
 	if (rxSerialBufferSize(r) >= PROTEUS_MOTOR_SAFETY_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
 		int16_t previousMotorPower;
@@ -682,6 +685,9 @@ result_t processMotorSafetyPacket(proteus_comm_t* r) {
 	}
 }
 
+/**
+ * This is sent from the MCU for debugging purposes.
+ */
 result_t processTextMessagePacket(proteus_comm_t* r) {
 	uint8_t strSize;
 	getRxSerialBuff(r, 2, &strSize); // two byte after the begin message
@@ -706,6 +712,10 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 		textMessage[strlen(textMessage)] = '\0';
 		
 		printf("proteus_comms: processTextMessagePacket: StrSize: %i, Message: \"%s\"\n", strSize, textMessage);
+		
+		strcpy((char*)r->messageBuffer, textMessage);
+		r->newMessage = 1; // indicate that a new message was received
+		
 		return SUCCESS;
 	} else {
 		//printf("proteus_comms: processTextMessagePacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(),
