@@ -12,7 +12,10 @@ import playerclient.structures.PlayerConstants;
 
 /**
  * Periodically accesses the compass sensor and logs the heading data to a file.
+ * Note that this is an inefficient way of accessing the compass.  See CompassLoggerEvent for 
+ * a better way of accessing the compass.
  * 
+ * @see CompassLoggerEvent
  * @author Chien-Liang Fok
  */
 public class CompassLogger implements DeviceLogger, Runnable {
