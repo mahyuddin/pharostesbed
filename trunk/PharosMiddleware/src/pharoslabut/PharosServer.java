@@ -47,6 +47,8 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	private BeaconBroadcaster beaconBroadcaster;
 	private BeaconReceiver beaconReceiver;
 	
+	private pharoslabut.radioMeter.cc2420.RadioSignalMeter rsm;
+	
 	private GPSMotionScript gpsMotionScript;
 	private RelativeMotionScript relMotionScript;
 	
@@ -85,9 +87,13 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 			System.exit(1);
 		}
 		
-		if (!initBeacons()) {
-			log("ERROR: Failed to initialize the beacons!");
+		if (!initWiFiBeacons()) {
+			log("ERROR: Failed to initialize the beaconer!");
 			System.exit(1);
+		}
+		
+		if (!initTelosBeacons()) {
+			log("ERROR: Failed to initialize Telos beaconer!");
 		}
 	}
 	
@@ -138,7 +144,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		return true;
 	}
 	
-	private boolean initBeacons() {
+	private boolean initWiFiBeacons() {
     	// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
 		try {
@@ -173,6 +179,16 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		return false;
 	}
 	
+	private boolean initTelosBeacons() {
+		try {
+			rsm = new pharoslabut.radioMeter.cc2420.RadioSignalMeter();
+		} catch (RadioSignalMeterException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
 	@Override
 	public void newMessage(Message msg) {
 		log("Received message: " + msg);
@@ -193,7 +209,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		case STARTEXP:
 			log("Starting experiment...");
 			StartExpMsg sem = (StartExpMsg)msg;
-			startExp(sem.getExpName(), sem.getRobotName(), sem.getExpType());
+			startExp(sem.getExpName(), sem.getRobotName(), sem.getExpType(), sem.getDelay());
 			break;
 		case STOPEXP:
 			stopExp();
@@ -212,35 +228,45 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	 * 
 	 * @param expName The experiment name.
 	 * @param robotName The robot's name.
-	 * @param expType The type of experimet.
+	 * @param expType The type of experiment.
+	 * @param delay The number of milliseconds before starting to follow the motion script.
 	 */
-	private void startExp(String expName, String robotName, ExpType expType) {
-		// start the beacons
-		beaconBroadcaster.start();
+	private void startExp(String expName, String robotName, ExpType expType, int delay) {
 		
+		// Start the file logger
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		flogger = new FileLogger(fileName);
-		
 		motionArbiter.setFileLogger(flogger);
 		beaconBroadcaster.setFileLogger(flogger);
 		beaconReceiver.setFileLogger(flogger);
 		gpsDataBuffer.setFileLogger(flogger);
 		compassDataBuffer.setFileLogger(flogger);
+		rsm.setFileLogger(flogger);
 		
 		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
+
+		// Start the beacons
+		flogger.log("PharosServer: Starting the WiFi beacon broadcaster.");
+		beaconBroadcaster.start();
 		
+		// Start the TelosB cc2420 radio signal meter
+		flogger.log("PharosServer: Starting the TelosB beacon broadcaster.");
+		rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
+
+		flogger.log("PharosServer: Pausing " + delay + "ms before starting motion script.");
+		if (delay > 0) {
+			synchronized(this) {
+				try {
+					wait(delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		flogger.log("PharosServer: Starting motion script.");
 		switch(expType) {
 			case FOLLOW_GPS_MOTION_SCRIPT:
-				
-				// start the TelosB cc2420 radio signal meter
-				pharoslabut.radioMeter.cc2420.RadioSignalMeter rsm;
-				try {
-					rsm = new pharoslabut.radioMeter.cc2420.RadioSignalMeter(flogger);
-					rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
-				} catch (RadioSignalMeterException e) {
-					log("Failed to start CC2420 radio signal meter.");
-				}
-				
 				log("Following GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
@@ -265,12 +291,21 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	}
 	
 	private void stopExp() {
-		flogger = null;
+		flogger.log("PharosServer: Stopping the file logger.");
 		motionArbiter.setFileLogger(null);
 		beaconBroadcaster.setFileLogger(null);
 		beaconReceiver.setFileLogger(null);
 		gpsDataBuffer.setFileLogger(null);
 		compassDataBuffer.setFileLogger(null);
+		rsm.setFileLogger(null);
+		
+		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+		beaconBroadcaster.stop();
+		
+		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
+		rsm.stopBroadcast();
+		
+		flogger = null;
 	}
 	
 	@Override
