@@ -11,7 +11,8 @@ public class RadioSignalMeterTester {
 		
 		RadioSignalMeter rsm;
 		try {
-			rsm = new RadioSignalMeter(flogger);
+			rsm = new RadioSignalMeter();
+			rsm.setFileLogger(flogger);
 			rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
 		} catch (RadioSignalMeterException e) {
 			String msg = "Failed to start CC2420 radio signal meter.";
