@@ -12,7 +12,7 @@ public class RobotExpSettings {
 	public RobotExpSettings() {
 	}
 	
-	public void setRobotName(String robotName) {
+	public void setName(String robotName) {
 		this.robotName = robotName;
 	}
 	
@@ -28,7 +28,7 @@ public class RobotExpSettings {
 		this.scriptFileName = fileName;
 	}
 	
-	public String getRobotName() {
+	public String getName() {
 		return robotName;
 	}
 	

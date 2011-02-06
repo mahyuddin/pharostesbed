@@ -53,7 +53,7 @@ public class ExpConfigReader {
 							//							for (int i=0; i < elem.length; i++) {
 							//								System.out.println(i + ": " + elem[i]);
 							//							}
-							rs.setRobotName(elem[0]);
+							rs.setName(elem[0]);
 							rs.setIPAddress(elem[1]);
 							rs.setPort(Integer.valueOf(elem[3]));
 							rs.setMotionScript(elem[4]);
