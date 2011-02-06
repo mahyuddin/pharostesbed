@@ -74,8 +74,6 @@ public class RobotPingTest {
 		print("Usage: pharoslabut.experiment.RobotPingTest <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
-		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
-		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
 		print("\t-debug: enable debug mode");
 	}
 	
