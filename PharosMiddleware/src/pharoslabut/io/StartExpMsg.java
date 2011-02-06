@@ -15,6 +15,10 @@ public class StartExpMsg implements Message {
 	 */
 	private int delay;
 	
+	public StartExpMsg(String expName, String robotName, ExpType expType) {
+		this(expName, robotName, expType, 0);
+	}
+	
 	public StartExpMsg(String expName, String robotName, ExpType expType, int delay) {
 		this.expName = expName;
 		this.robotName = robotName;
