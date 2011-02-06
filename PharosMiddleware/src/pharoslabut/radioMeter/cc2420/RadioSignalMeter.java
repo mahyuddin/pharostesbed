@@ -138,15 +138,22 @@ public class RadioSignalMeter implements MessageListener {
 	 * @param numBcasts The number of broadcasts to emit.
 	 */
 	public void startBroadcast(long period, int numBcasts) {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
+		stopBroadcast();
 		this.numBcasts = numBcasts;
 		
 		if (numBcasts > 0) {
 			Timer timer = new Timer();
 			timer.scheduleAtFixedRate(new SendBeaconTimerTask(), 0 /* delay */, period);
+		}
+	}
+	
+	/**
+	 * Stops the broadcasting of beacons.
+	 */
+	public void stopBroadcast() {
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
 		}
 	}
 	
