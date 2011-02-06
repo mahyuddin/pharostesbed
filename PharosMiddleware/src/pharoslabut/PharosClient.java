@@ -168,7 +168,7 @@ public class PharosClient implements BeaconListener {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.PharosServer <options>\n");
+		print("Usage: pharoslabut.PharosClient <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
