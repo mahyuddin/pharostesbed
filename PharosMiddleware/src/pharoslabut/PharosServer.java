@@ -10,6 +10,7 @@ import pharoslabut.io.*;
 
 import playerclient.*;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.opaque.PlayerOpaqueData;
 
 /**
  * The PharosServer operates on each robot.  It acts as an adapter that sits between the PlayerServer and PharosClient.
@@ -19,7 +20,7 @@ import playerclient.structures.PlayerConstants;
  * 
  * @author Chien-Liang Fok
  */
-public class PharosServer implements MessageReceiver, BeaconListener {
+public class PharosServer implements MessageReceiver, BeaconListener, OpaqueListener, WayPointFollowerDoneListener {
 	
 	private String playerServerIP;
 	private int playerServerPort;
@@ -46,8 +47,12 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 	private BeaconBroadcaster beaconBroadcaster;
 	private BeaconReceiver beaconReceiver;
 	
+	private pharoslabut.radioMeter.cc2420.RadioSignalMeter rsm;
+	
 	private GPSMotionScript gpsMotionScript;
 	private RelativeMotionScript relMotionScript;
+	
+	private FileLogger flogger = null;
 	
 //	private String expName;
 	
@@ -73,18 +78,22 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		this.beaconMax = beaconMax;
 		
 		if (!createPlayerClient()) {
-			log("Failed to connect to player server!");
+			log("ERROR: Failed to connect to player server!");
 			System.exit(1); // fatal error
 		}
 		
 		if (!initServer()) {
-			log("Failed to initialize the server!");
+			log("ERROR: Failed to initialize the server!");
 			System.exit(1);
 		}
 		
-		if (!initBeacons()) {
-			log("Failed to initialize the beacons!");
+		if (!initWiFiBeacons()) {
+			log("ERROR: Failed to initialize the beaconer!");
 			System.exit(1);
+		}
+		
+		if (!initTelosBeacons()) {
+			log("ERROR: Failed to initialize Telos beaconer!");
 		}
 	}
 	
@@ -92,7 +101,7 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		try {
 			client = new PlayerClient(playerServerIP, playerServerPort);
 		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
+			log("ERROR: Unable to connecting to Player: ");
 			log("    [ " + e.toString() + " ]");
 			return false;
 		}
@@ -100,25 +109,32 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
+		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
 		if (motors == null) {
-			log("motors is null");
+			log("ERROR: motors is null");
 			return false;
 		}
 		
 		if (compass == null) {
-			log("compass is null");
+			log("ERROR: compass is null");
 			return false;
 		}
 		
 		if (gps == null) {
-			log("gps is null");
+			log("ERROR: gps is null");
+			return false;
+		}
+		
+		if (oi == null) {
+			log("ERROR: opaque interface is null");
 			return false;
 		}
 		
 		compassDataBuffer = new CompassDataBuffer(compass);
 		gpsDataBuffer = new GPSDataBuffer(gps);
 		motionArbiter = new MotionArbiter(motors);
+		oi.addOpaqueListener(this);
 		return true;
 	}
 	
@@ -128,7 +144,7 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		return true;
 	}
 	
-	private boolean initBeacons() {
+	private boolean initWiFiBeacons() {
     	// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
 		try {
@@ -163,6 +179,17 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		return false;
 	}
 	
+	private boolean initTelosBeacons() {
+		try {
+			rsm = new pharoslabut.radioMeter.cc2420.RadioSignalMeter();
+		} catch (RadioSignalMeterException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+	
+	@Override
 	public void newMessage(Message msg) {
 		log("Received message: " + msg);
 		switch(msg.getType()) {
@@ -182,7 +209,7 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		case STARTEXP:
 			log("Starting experiment...");
 			StartExpMsg sem = (StartExpMsg)msg;
-			startExp(sem.getExpName(), sem.getRobotName(), sem.getExpType());
+			startExp(sem.getExpName(), sem.getRobotName(), sem.getExpType(), sem.getDelay());
 			break;
 		case STOPEXP:
 			stopExp();
@@ -196,38 +223,55 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		// TODO
 	}
 	
-	private void startExp(String expName, String robotName, ExpType expType) {
-		// start the beacons
-		beaconBroadcaster.start();
+	/**
+	 * Starts an experiment.
+	 * 
+	 * @param expName The experiment name.
+	 * @param robotName The robot's name.
+	 * @param expType The type of experiment.
+	 * @param delay The number of milliseconds before starting to follow the motion script.
+	 */
+	private void startExp(String expName, String robotName, ExpType expType, int delay) {
 		
+		// Start the file logger
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
-		FileLogger flogger = new FileLogger(fileName);
-		
+		flogger = new FileLogger(fileName);
 		motionArbiter.setFileLogger(flogger);
 		beaconBroadcaster.setFileLogger(flogger);
 		beaconReceiver.setFileLogger(flogger);
 		gpsDataBuffer.setFileLogger(flogger);
 		compassDataBuffer.setFileLogger(flogger);
+		rsm.setFileLogger(flogger);
 		
 		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
+
+		// Start the beacons
+		flogger.log("PharosServer: Starting the WiFi beacon broadcaster.");
+		beaconBroadcaster.start();
 		
+		// Start the TelosB cc2420 radio signal meter
+		flogger.log("PharosServer: Starting the TelosB beacon broadcaster.");
+		rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
+
+		flogger.log("PharosServer: Pausing " + delay + "ms before starting motion script.");
+		if (delay > 0) {
+			synchronized(this) {
+				try {
+					wait(delay);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		flogger.log("PharosServer: Starting motion script.");
 		switch(expType) {
 			case FOLLOW_GPS_MOTION_SCRIPT:
-				
-				// start the TelosB cc2420 radio signal meter
-				pharoslabut.radioMeter.cc2420.RadioSignalMeter rsm;
-				try {
-					rsm = new pharoslabut.radioMeter.cc2420.RadioSignalMeter(flogger);
-					rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
-				} catch (RadioSignalMeterException e) {
-					log("Failed to start CC2420 radio signal meter.");
-				}
-				
 				log("Following GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
 				WayPointFollower wpFollower = new WayPointFollower(navigatorGPS, gpsMotionScript, flogger);
-				wpFollower.start();
+				wpFollower.start(this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
 				log("Following a relative motion script...");
@@ -238,10 +282,38 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 		
 	}
 	
+	@Override
+	public void wayPointFollowerDone(boolean success, int finalWayPoint) {
+		// For now, assume that once the robot is done following a motion script,
+		// the experiment is over.
+		stopExp();
+		
+	}
+	
 	private void stopExp() {
+		flogger.log("PharosServer: Stopping the file logger.");
 		motionArbiter.setFileLogger(null);
 		beaconBroadcaster.setFileLogger(null);
 		beaconReceiver.setFileLogger(null);
+		gpsDataBuffer.setFileLogger(null);
+		compassDataBuffer.setFileLogger(null);
+		rsm.setFileLogger(null);
+		
+		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+		beaconBroadcaster.stop();
+		
+		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
+		rsm.stopBroadcast();
+		
+		flogger = null;
+	}
+	
+	@Override
+	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+		if (opaqueData.getDataCount() > 0) {
+			String s = new String(opaqueData.getData());
+			log("MCU Message: " + s);
+		}
 	}
 	
 	@Override
@@ -252,6 +324,8 @@ public class PharosServer implements MessageReceiver, BeaconListener {
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println("PharosServer: " + msg);
+		if (flogger != null)
+			flogger.log("PharosServer: " + msg);
 	}
 	
 	private static void print(String msg) {

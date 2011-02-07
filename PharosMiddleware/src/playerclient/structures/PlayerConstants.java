@@ -377,6 +377,8 @@ public interface PlayerConstants {
 	public final int			PLAYER_MCOM_CLEAR						= 3;
 	public final int			PLAYER_MCOM_SET_CAPACITY				= 4;
 
+	public final int			PLAYER_OPAQUE_DATA_STATE				= 1;
+	
 	public final int			PLAYER_PLANNER_MAX_WAYPOINTS			= 128;
 	public final int			PLAYER_PLANNER_DATA_STATE				= 1;
 	public final int			PLAYER_PLANNER_CMD_GOAL					= 1;

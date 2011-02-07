@@ -1,4 +1,4 @@
-package pharoslabut.validation;
+package pharoslabut;
 
 import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.Priority;
@@ -9,17 +9,12 @@ import playerclient.PlayerException;
 import playerclient.Position2DInterface;
 import playerclient.structures.PlayerConstants;
 
-/**
- * Stresses out the motor of the Proteus robot by sending it a velocity step function.
- * 
- * @author Chien-Liang Fok
- */
-public class MotorStressTest {
+public class RobotMover {
 	//public static final int COMPASS_LOG_PERIOD = 100; // in milliseconds
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	
-	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike) {
+	public RobotMover(String serverIP, int serverPort,	String fileName, boolean showGUI) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
@@ -34,12 +29,7 @@ public class MotorStressTest {
 			System.exit(1);
 		}
 		
-		MotionArbiter motionArbiter = null;
-		
-		if (useCarLike)
-			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motors);
-		else
-			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
+		MotionArbiter motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 		
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
@@ -47,28 +37,16 @@ public class MotorStressTest {
 		}
 		
 		MotionTask currTask;
-		double speedStep = 2;
+		double speed = 0.5;
 		
-		pause(2000);
-		currTask = new MotionTask(Priority.SECOND, speedStep, 0);
+		currTask = new MotionTask(Priority.SECOND, speed, 0);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
-		pause(3000);
+		pause(1000);
 		
 		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
-		pause(5000);
-		
-		/*currTask = new MotionTask(Priority.SECOND, -speedStep, 0);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		pause(3000);
-		
-		// Stop the robot
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);*/
 		
 		log("Test complete!");
 		System.exit(0);
@@ -93,19 +71,19 @@ public class MotorStressTest {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.validation.MotorStressTest <options>\n");
+		System.err.println("Usage: pharoslabut.RobotMover <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
-		System.err.println("\t-car: issue car like commands (default non-car-like)");
+		System.err.println("\t-gui: display GUI (default not shown)");
 	}
 	
 	public static void main(String[] args) {
 		String fileName = "log.txt";
 		String serverIP = "localhost";
 		int serverPort = 6665;
-		boolean useCarLike = false;
+		boolean showGUI = false;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -118,8 +96,8 @@ public class MotorStressTest {
 				else if (args[i].equals("-file")) {
 					fileName = args[++i];
 				}
-				else if (args[i].equals("-car")) {
-					useCarLike = true;
+				else if (args[i].equals("-gui")) {
+					showGUI = true;
 				}
 				else {
 					usage();
@@ -135,8 +113,8 @@ public class MotorStressTest {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
-		System.out.println("Use Car Commands: " + useCarLike);
+		System.out.println("ShowGUI: " + showGUI);
 		
-		new MotorStressTest(serverIP, serverPort, fileName, useCarLike);
+		new RobotMover(serverIP, serverPort, fileName, showGUI);
 	}
 }

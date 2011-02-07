@@ -1,11 +1,11 @@
 package pharoslabut;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.*;
+//import java.net.InetAddress;
+//import java.net.UnknownHostException;
+//import java.util.*;
 
 import pharoslabut.io.*;
-//import pharoslabut.tasks.*;
+import pharoslabut.experiment.*;
 import pharoslabut.beacon.*;
 import pharoslabut.navigate.*;
 //import pharoslabut.tasks.Priority;
@@ -39,7 +39,7 @@ public class PharosClient implements BeaconListener {
      * @param mCastAddress
      * @param mCastPort
      */
-	public PharosClient(String mCastAddress, int mCastPort) {
+	public PharosClient(String expConfigFileName, String mCastAddress, int mCastPort) {
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
@@ -50,71 +50,93 @@ public class PharosClient implements BeaconListener {
 //			System.exit(1);
 //		}
 		
-		doM12Exp();
+		doExp(expConfigFileName);
 	}
 	
-	private void doM12Exp() {
-		Vector<RobotSetting> robots = new Vector<RobotSetting>();
+	private void doExp(String expConfigFileName) {
+		ExpConfig expConfig = ExpConfigReader.readExpConfig(expConfigFileName);
 		try {
-			String expName = "M12-Exp14";
-			int startInterval = 30000; // in milliseconds
-			robots.add(new RobotSetting("Shiner", "10.11.12.17", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("LiveOak", "10.11.12.26", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("Manny", "10.11.12.13", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("Czechvar", "10.11.12.14", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("Guiness", "10.11.12.20", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("Wynkoop", "10.11.12.25", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			//robots.add(new RobotSetting("Mardesous", "10.11.12.24", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
-			
-			doGPSWaypointExp(expName, robots, startInterval);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	class RobotSetting {
-		String robotName;
-		String scriptFileName;
-		InetAddress ipAddr;
-		int port;
-		
-		public RobotSetting(String robotName, String ipAddr, int port, String scriptFileName) throws UnknownHostException {
-			this.robotName = robotName;
-			this.scriptFileName = scriptFileName;
-			this.ipAddr = InetAddress.getByName(ipAddr);
-			this.port = port;
-		}
-		
-	}
-	
-	private void doGPSWaypointExp(String expName, Vector<RobotSetting> robots, int startInterval) {
-		try {
-			for (int i=0; i < robots.size(); i++) {
-				RobotSetting currRobot = robots.get(i);
-				log("Sending Motion script to robot " + currRobot.robotName);
+			// Send each of the robots their motion script.
+			for (int i=0; i < expConfig.numRobots(); i++) {
+				RobotExpSettings currRobot = expConfig.getRobot(i);
+				log("Sending Motion script to robot " + currRobot.getName());
 				
-				GPSMotionScript script = GPSTraceReader.readTraceFile(currRobot.scriptFileName);
+				GPSMotionScript script = GPSTraceReader.readTraceFile(currRobot.getMotionScript());
 				GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
-				sender.sendMessage(currRobot.ipAddr, currRobot.port, gpsMsg);
+				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), gpsMsg);
 			}
 			
+			// Pause two seconds to ensure each robot receives their motion script.
+			// This is to prevent out-of-order messages...
 			synchronized(this) {
-				wait(2000); // to prevent out-of-order messages...
+				wait(2000);
 			}
 			
-			for (int i=0; i < robots.size(); i++) {
-				RobotSetting currRobot = robots.get(i);
-				log("Sending start exp message to robot " + currRobot.robotName + "...");
-				sender.sendMessage(currRobot.ipAddr, currRobot.port, new StartExpMsg(expName, currRobot.robotName, ExpType.FOLLOW_GPS_MOTION_SCRIPT));
+			int delay = 0;
+			// Send each robot the start experiment command.
+			for (int i=0; i < expConfig.numRobots(); i++) {
+				RobotExpSettings currRobot = expConfig.getRobot(i);
 				
-				synchronized(this) {
-					wait(startInterval); // to prevent out-of-order messages...
-				}
+				StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), currRobot.getName(), 
+						ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
+				
+				log("Sending start exp message to robot " + currRobot.getName() + "...");
+				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), sem);
+				
+				// Update the delay between each robot.
+				delay += expConfig.getStartInterval();
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+//		
+//		Vector<RobotSetting> robots = new Vector<RobotSetting>();
+//		try {
+//			String expName = "MM10-Exp7";
+//			int startInterval = 1000; // in milliseconds
+//			robots.add(new RobotSetting("Guiness", "10.11.12.20", 7776, "MM10/MotionScript2.txt"));
+//			robots.add(new RobotSetting("Porterhouse", "10.11.12.19", 7776, "MM10/MotionScript2.txt"));
+//			//robots.add(new RobotSetting("LiveOak", "10.11.12.26", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			//robots.add(new RobotSetting("Manny", "10.11.12.13", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			//robots.add(new RobotSetting("Czechvar", "10.11.12.14", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			//robots.add(new RobotSetting("Guiness", "10.11.12.20", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			//robots.add(new RobotSetting("Wynkoop", "10.11.12.25", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			//robots.add(new RobotSetting("Mardesous", "10.11.12.24", 7776, "M12/MotionScripts/m12-gps-lollipop-1.5-4spause.txt"));
+//			
+//			doGPSWaypointExp(expName, robots, startInterval);
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//		}
 	}
+	
+//	private void doGPSWaypointExp(String expName, Vector<RobotSetting> robots, int startInterval) {
+//		try {
+//			for (int i=0; i < robots.size(); i++) {
+//				RobotSetting currRobot = robots.get(i);
+//				log("Sending Motion script to robot " + currRobot.robotName);
+//				
+//				GPSMotionScript script = GPSTraceReader.readTraceFile(currRobot.scriptFileName);
+//				GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
+//				sender.sendMessage(currRobot.ipAddr, currRobot.port, gpsMsg);
+//			}
+//			
+//			synchronized(this) {
+//				wait(2000); // to prevent out-of-order messages...
+//			}
+//			
+//			for (int i=0; i < robots.size(); i++) {
+//				RobotSetting currRobot = robots.get(i);
+//				log("Sending start exp message to robot " + currRobot.robotName + "...");
+//				sender.sendMessage(currRobot.ipAddr, currRobot.port, new StartExpMsg(expName, currRobot.robotName, ExpType.FOLLOW_GPS_MOTION_SCRIPT));
+//				
+//				synchronized(this) {
+//					wait(startInterval); // to prevent out-of-order messages...
+//				}
+//			}
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 	private boolean initBeaconRcvr() {
 		String pharosNI = BeaconReceiver.getPharosNetworkInterface();
@@ -146,21 +168,25 @@ public class PharosClient implements BeaconListener {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.PharosServer <options>\n");
+		print("Usage: pharoslabut.PharosClient <options>\n");
 		print("Where <options> include:");
+		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
 		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
+		String expConfigFileName = null;
 		String mCastAddress = "230.1.2.3";
 		int mCastPort = 6000;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
 		
-				if (args[i].equals("-mCastAddress")) {
+				if (args[i].equals("-file")) {
+					expConfigFileName = args[++i];
+				} else if (args[i].equals("-mCastAddress")) {
 					mCastAddress = args[++i];
 				}
 				else if (args[i].equals("-mCastPort")) {
@@ -180,10 +206,16 @@ public class PharosClient implements BeaconListener {
 			System.exit(1);
 		}
 		
+		if (expConfigFileName == null) {
+			usage();
+			System.exit(1);
+		}
+		
+		print("Exp Config: " + expConfigFileName);
 		print("Multicast Address: " + mCastAddress);
 		print("Multicast Port: " + mCastPort);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new PharosClient(mCastAddress, mCastPort);
+		new PharosClient(expConfigFileName, mCastAddress, mCastPort);
 	}
 }

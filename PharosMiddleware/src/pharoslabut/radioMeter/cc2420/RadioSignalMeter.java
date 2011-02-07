@@ -12,7 +12,7 @@ import pharoslabut.logger.*;
 public class RadioSignalMeter implements MessageListener {
 //	private String outputFile;
 	private MoteIF moteIF;
-	private FileLogger flogger;
+	private FileLogger flogger = null;
 	private int seqno = 0;
 	private int moteID;
 	
@@ -21,9 +21,7 @@ public class RadioSignalMeter implements MessageListener {
 	
 	private String motePort;
 	
-	public RadioSignalMeter(FileLogger flogger) throws RadioSignalMeterException {
-		this.flogger = flogger;
-		
+	public RadioSignalMeter() throws RadioSignalMeterException {
 		try {
 			// Get the local node ID
 			moteID = getMoteID();
@@ -33,21 +31,30 @@ public class RadioSignalMeter implements MessageListener {
 			moteID = 0;
 		}
 		
-		// Get the serial port on which the TelosB is connected.
-		motePort = getMotePort();
-		
-		PhoenixSource phoenixLocal = null;
-		
-		
-		
-		if (motePort == null) {
-			phoenixLocal = BuildSource.makePhoenix(PrintStreamMessenger.err);
-		} else {
-			phoenixLocal = BuildSource.makePhoenix(motePort, PrintStreamMessenger.err);
+		try {
+			// Get the serial port on which the TelosB is connected.
+			motePort = getMotePort();
+
+			PhoenixSource phoenixLocal = null;
+
+
+
+			if (motePort == null) {
+				phoenixLocal = BuildSource.makePhoenix(PrintStreamMessenger.err);
+			} else {
+				phoenixLocal = BuildSource.makePhoenix(motePort, PrintStreamMessenger.err);
+			}
+
+			moteIF = new MoteIF(phoenixLocal);
+			moteIF.registerListener(new RadioSignalResultsMsg(), this);
+		} catch(Exception e) {
+			e.printStackTrace();
+			throw new RadioSignalMeterException("Unable to connect to TelosB Mote!");
 		}
-		
-		moteIF = new MoteIF(phoenixLocal);
-		moteIF.registerListener(new RadioSignalResultsMsg(), this);
+	}
+	
+	public void setFileLogger(FileLogger flogger) {
+		this.flogger = flogger;
 	}
 	
 	/**
@@ -138,15 +145,22 @@ public class RadioSignalMeter implements MessageListener {
 	 * @param numBcasts The number of broadcasts to emit.
 	 */
 	public void startBroadcast(long period, int numBcasts) {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
+		stopBroadcast();
 		this.numBcasts = numBcasts;
 		
 		if (numBcasts > 0) {
 			Timer timer = new Timer();
 			timer.scheduleAtFixedRate(new SendBeaconTimerTask(), 0 /* delay */, period);
+		}
+	}
+	
+	/**
+	 * Stops the broadcasting of beacons.
+	 */
+	public void stopBroadcast() {
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
 		}
 	}
 	
