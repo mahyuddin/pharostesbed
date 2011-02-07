@@ -1308,6 +1308,7 @@ public class PlayerClient extends Thread implements PlayerConstants {
 			break;
 		}
 		case PLAYER_OPAQUE_CODE: {              // plugin interface
+			newpd = new OpaqueInterface(this);
 			break;
 		}
 		case PLAYER_POSITION1D_CODE: {          // 1-D position
@@ -1520,6 +1521,21 @@ public class PlayerClient extends Thread implements PlayerConstants {
 
 		if (isReadyRequestDevice ())
 			return (Position2DInterface)newpd;
+		else
+			return null;
+	}
+	
+	/**
+	 * Request an Opaque device. 
+	 * @param index the device index
+	 * @param access access mode
+	 * @return an Opaque device if successful, null otherwise
+	 */
+	public OpaqueInterface requestInterfaceOpaque(int index, int access) {
+		requestDeviceAccess(PLAYER_OPAQUE_CODE, index, access);
+		
+		if (isReadyRequestDevice())
+			return (OpaqueInterface)newpd;
 		else
 			return null;
 	}
@@ -1901,22 +1917,7 @@ public class PlayerClient extends Thread implements PlayerConstants {
 		else
 			return null;
 	}
-
-
-	/**
-	 * Request an Opaque device. 
-	 * @param index the device index
-	 * @param access access mode
-	 * @return an Opaque device if successful, null otherwise
-	 */
-	/*    public OpaqueInterface requestInterfaceOpaque (int index, int access) {
-    	requestDeviceAccess (PLAYER_OPAQUE_CODE, index, access);
-    	if (isReadyRequestDevice ())
-    		return (OpaqueInterface)newpd;
-    	else
-    		return null;
-    }*/
-
+	
 	/**
 	 * Request a Position1D device. 
 	 * @param index the device index

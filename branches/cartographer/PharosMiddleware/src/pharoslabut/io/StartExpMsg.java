@@ -10,10 +10,20 @@ public class StartExpMsg implements Message {
 	private String robotName;
 	private ExpType expType;
 	
+	/**
+	 * The pause time in milliseconds before the robot starts to follow the motion script.
+	 */
+	private int delay;
+	
 	public StartExpMsg(String expName, String robotName, ExpType expType) {
+		this(expName, robotName, expType, 0);
+	}
+	
+	public StartExpMsg(String expName, String robotName, ExpType expType, int delay) {
 		this.expName = expName;
 		this.robotName = robotName;
 		this.expType = expType;
+		this.delay = delay;
 	}
 	
 	public String getRobotName() {
@@ -26,6 +36,10 @@ public class StartExpMsg implements Message {
 	
 	public ExpType getExpType() {
 		return expType;
+	}
+	
+	public int getDelay() {
+		return delay;
 	}
 	
 	@Override

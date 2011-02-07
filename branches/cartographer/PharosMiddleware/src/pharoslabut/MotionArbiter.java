@@ -20,7 +20,7 @@ import playerclient.Position2DInterface;
  * @author Chien-Liang Fok
  */
 public class MotionArbiter implements Runnable {
-	public static enum MotionType {MOTION_CAR_LIKE, MOTION_BALL_LIKE};
+	public static enum MotionType {MOTION_CAR_LIKE, MOTION_IROBOT_CREATE, MOTION_SEGWAY_RMP50};
 	
 	/**
 	 * The cycle time in milliseconds, which controls the frequency at which

@@ -1,23 +1,22 @@
 package pharoslabut.logger;
 
-import java.net.*;
+//import java.net.*;
 import org.jfree.ui.RefineryUtilities;
 
 import pharoslabut.CompassLoggerGUI;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.Position2DListener;
+import playerclient.*;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.opaque.PlayerOpaqueData;
 import playerclient.structures.position2d.PlayerPosition2dData;
 
 
 /**
  * Subscribes to the compass sensor and logs the heading data to a file.
+ * It uses an event-based model to efficiently gather compass data.
  * 
  * @author Chien-Liang Fok
  */
-public class CompassLoggerEvent implements DeviceLogger, Position2DListener {
+public class CompassLoggerEvent implements DeviceLogger, Position2DListener, OpaqueListener {
 	
 	private String serverIP = null;
 	private Position2DInterface compass = null;
@@ -67,6 +66,14 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener {
 			} catch(PlayerException pe) {
 				System.err.println("Error: " + pe.getMessage());
 			}
+		}
+		
+		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (oi != null) {
+			log("Subscribed to opaque interface.  Will log MCU messages.");
+			oi.addOpaqueListener(this);
+		} else {
+			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
 		}
 		
 		if (showGUI)
@@ -144,6 +151,14 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener {
 			gui.addData(deltaTimeS, heading);
 	}
 	
+	@Override
+	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+		if (opaqueData.getDataCount() > 0) {
+			String s = new String(opaqueData.getData());
+			log("MCU Message: " + s);
+		}
+	}
+	
 	private void log(String msg) {
 		String result = "CompassLogger: " + msg;
 		System.out.println(result);
@@ -160,6 +175,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener {
 		System.err.println("\t-file <file name>: The name of the file into which the compass data is logged (default log.txt)");
 		System.err.println("\t-period <period>: The period of sampling in milliseconds (default 100)");
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
+		System.err.println("\t-gui: Display the GUI");
 		System.err.println("\t-d: enable debug output");
 	}
 	
