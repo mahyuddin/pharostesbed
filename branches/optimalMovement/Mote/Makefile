@@ -1,0 +1,10 @@
+COMPONENT=RadioSignalMeterAppC
+
+PFLAGS += -I .
+PFLAGS += -I ledsBlinker
+
+CFLAGS += -DCC2420_DEF_CHANNEL=15
+CFLAGS += -DCC2420_DEF_RFPOWER=31
+
+include $(MAKERULES)
+
