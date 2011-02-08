@@ -46,7 +46,7 @@ public class WorldView {
 	}
 	
 	
-	public synchronized void writeConfidence(int x, int y, double c) {
+	public static synchronized void writeConfidence(int x, int y, double c) {
 	synchronized (world) {
 		// set (x,y)'s confidence = c
 		world.get(x).get(y).setConfidence(c);
@@ -54,7 +54,7 @@ public class WorldView {
 	}
 	
 	
-	public synchronized double readConfidence(int x, int y) {
+	public static synchronized double readConfidence(int x, int y) {
 	synchronized (world) {
 		// return confidence at (x,y);
 		return world.get(x).get(y).getConfidence();
