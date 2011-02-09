@@ -68,9 +68,19 @@ public class PharosClient implements BeaconListener {
 			
 			// Pause two seconds to ensure each robot receives their motion script.
 			// This is to prevent out-of-order messages...
+			log("Starting experiment in 5...");
 			synchronized(this) {
-				wait(2000);
+				wait(1000);
 			}
+			
+			log("4...");
+			synchronized(this) { wait(1000); }
+			log("3...");
+			synchronized(this) { wait(1000); }
+			log("2...");
+			synchronized(this) { wait(1000); }
+			log("1...");
+			synchronized(this) { wait(1000); }
 			
 			int delay = 0;
 			// Send each robot the start experiment command.
