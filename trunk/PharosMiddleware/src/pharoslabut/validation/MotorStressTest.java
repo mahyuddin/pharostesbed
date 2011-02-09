@@ -19,7 +19,7 @@ public class MotorStressTest {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	
-	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike, double speed, int duration) {
+	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike, double speed, int duration, double heading) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
@@ -61,7 +61,7 @@ public class MotorStressTest {
 		
 		MotionTask currTask;
 		
-		currTask = new MotionTask(Priority.SECOND, speed, 0);
+		currTask = new MotionTask(Priority.SECOND, speed, heading);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(duration);
@@ -73,7 +73,7 @@ public class MotorStressTest {
 		log("Pausing 5s before moving in reverse...");
 		pause(5000);
 		
-		currTask = new MotionTask(Priority.SECOND, -1 * speed, 0);
+		currTask = new MotionTask(Priority.SECOND, -1 * speed, heading);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
@@ -124,6 +124,7 @@ public class MotorStressTest {
 		System.err.println("\t-car: issue car like commands (default non-car-like)");
 		System.err.println("\t-speed: the speed at which to move the robot in m/s (default 2)");
 		System.err.println("\t-duration: how long to move the robot in milliseconds (default 2000)");
+		System.err.println("\t-heading: the heading in which to turn (default 0)");
 	}
 	
 	public static void main(String[] args) {
@@ -133,6 +134,7 @@ public class MotorStressTest {
 		boolean useCarLike = false;
 		double speed = 2;
 		int duration = 2000;
+		double heading = 0;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -154,6 +156,9 @@ public class MotorStressTest {
 				else if (args[i].equals("-duration")) {
 					duration = Integer.valueOf(args[++i]);
 				}
+				else if (args[i].equals("-heading")) {
+					heading = Double.valueOf(args[++i]);
+				}
 				else {
 					usage();
 					System.exit(1);
@@ -171,7 +176,8 @@ public class MotorStressTest {
 		System.out.println("Use Car Commands: " + useCarLike);
 		System.out.println("Speed: " + speed);
 		System.out.println("Duration: " + duration);
+		System.out.println("Heading: " + heading);
 		
-		new MotorStressTest(serverIP, serverPort, fileName, useCarLike, speed, duration);
+		new MotorStressTest(serverIP, serverPort, fileName, useCarLike, speed, duration, heading);
 	}
 }
