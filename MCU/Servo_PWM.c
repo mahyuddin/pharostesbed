@@ -8,6 +8,10 @@
  *  - Removed dependence on Scheduler
  *  - Added Enhanced Capture Timer, Channel 2, to generate 20Hz interrupts 
  *    for setting _setMotor to be TRUE.
+ * Modified by Chien-Liang Fok <liangfok@mail.utexas.edu> on 02/09/2011.
+ *  - Added method Servo_calcNewSetPoint that simplifies the code within
+ *    Servo_updatePosition.
+ *  - 
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -29,7 +33,7 @@ bool Servo1Enabled, Servo2Enabled, Servo3Enabled, Servo4Enabled;
  * Concatenates 2/3, 4/5, 6/7
  */
 void Servo_init() {
-	DDRT |= 0x04;     //set directional bit PT2--output
+	DDRT |= 0x04;     // set directional bit PT2--output
 	PWME = 0x00;      // disable channels 0-7
 	PWMPOL |= 0xFF;   // PP0-7 high then low
 	PWMCLK |= 0xFC;   // use clock SA,SB on channels 7-2
@@ -64,33 +68,36 @@ void Servo_init() {
 }
 
 /**
+ * Compares the actual set point to the target set point, and adjusts the
+ * actual set point closer to the target set point.  The maximum amount
+ * of change is specified by MaxChangePerPeriod.
+ *
+ * @param actualSP The actual set point.
+ * @param targetSP The target set point.
+ * @return The new value of the actual set point.
+ */
+uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
+	if(actualSP - MaxChangePerPeriod > targetSP) 
+		// Target is lower than actual minus the max change per period
+		return actualSP - MaxChangePerPeriod;
+	else if(actualSP + MaxChangePerPeriod < targetSP) 
+		// Target is higher than actual plus the max change per period
+		return actualSP + MaxChangePerPeriod;
+	else
+		// The change is smaller than the max change per period.  Just jump to the target value.
+		return TargetSetpoint2;
+}
+
+/**
  * Each time an interrupt occurs, update the servo positions.
  * This should be executed at 50Hz.
  */
 void Servo_updatePosition(void) {
-	short as2, ts2, as3, ts3, as4, ts4, mcpp;
-	
 	LED_BLUE1 ^= 1;
 	
-	as2 = (short) ActualSetpoint2;
-	ts2 = (short) TargetSetpoint2;
-	as3 = (short) ActualSetpoint3;
-	ts3 = (short) TargetSetpoint3;
-	as4 = (short) ActualSetpoint4;
-	ts4 = (short) TargetSetpoint4;
-	mcpp = (short) MaxChangePerPeriod;
-	
-	if(as2 - mcpp > ts2) ActualSetpoint2 = ActualSetpoint2 - MaxChangePerPeriod;
-	else if(as2 + mcpp < ts2) ActualSetpoint2 = ActualSetpoint2 + MaxChangePerPeriod;
-	else ActualSetpoint2 = TargetSetpoint2;
-	
-	if(as3 - mcpp > ts3) ActualSetpoint3 = ActualSetpoint3 - MaxChangePerPeriod;
-	else if(as3 + mcpp < ts3) ActualSetpoint3 = ActualSetpoint3 + MaxChangePerPeriod;
-	else ActualSetpoint3 = TargetSetpoint3;
-	
-	if(as4 - mcpp > ts4) ActualSetpoint4 = ActualSetpoint4 - MaxChangePerPeriod;
-	else if(as4 + mcpp < ts4) ActualSetpoint4 = ActualSetpoint4 + MaxChangePerPeriod;
-	else ActualSetpoint4 = TargetSetpoint4;
+	ActualSetpoint2 = Servo_calcNewSetPoint(ActualSetpoint2, TargetSetpoint2);
+	ActualSetpoint3 = Servo_calcNewSetPoint(ActualSetpoint3, TargetSetpoint3);
+	ActualSetpoint4 = Servo_calcNewSetPoint(ActualSetpoint4, TargetSetpoint4);
 	
 	_Servo2_set(ActualSetpoint2);   //128 straight
 	_Servo3_set(ActualSetpoint3);
