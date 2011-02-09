@@ -4,17 +4,16 @@ import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.Priority;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.logger.*;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
+import playerclient.*;
+import playerclient.structures.*;
+import playerclient.structures.position2d.PlayerPosition2dData;
 
 /**
  * Stresses out the motor of the Proteus robot by sending it a velocity step function.
  * 
  * @author Chien-Liang Fok
  */
-public class MotorStressTest {
+public class MotorStressTest implements Position2DListener {
 	//public static final int COMPASS_LOG_PERIOD = 100; // in milliseconds
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
@@ -32,7 +31,8 @@ public class MotorStressTest {
 		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
-		}
+		} else
+			motors.addPos2DListener(this);
 		
 		MotionArbiter motionArbiter = null;
 		
@@ -95,6 +95,12 @@ public class MotorStressTest {
 		
 		log("Test complete!");
 		System.exit(0);
+	}
+	
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		PlayerPose pp = data.getPos();
+		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
 	}
 	
 	private void pause(int duration) {
