@@ -11,6 +11,11 @@ public class LocationTracker {
 		// robot begins in upper-left corner facing down (south)
 		currentX = 0; currentY = 0; bearing = Math.PI; 
 		
+		// To reset the robot's odometry to (x, y, yaw) = (0,0,0), send
+		// a PLAYER_POSITION2D_REQ_RESET_ODOM request.  Null response.
+		// note: the PlayerClient pkgs refer to the turn angle as "yaw"
+				
+		
 		
 	}
 	
