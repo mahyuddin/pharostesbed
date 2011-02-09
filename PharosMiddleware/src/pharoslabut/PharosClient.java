@@ -36,8 +36,11 @@ public class PharosClient implements BeaconListener {
     /**
      * The constructor.
      * 
-     * @param mCastAddress
-     * @param mCastPort
+     * @param expConfigFileName The name of the file containing the experiment configuration.
+     * @param mCastAddress The multicast address over which to broadcast 802.11 beacons
+     * @param mCastPort The multicast port on which to broadcast 802.11 beacons
+     * @see pharoslabut.experiment.ExpConfig
+     * @see pharoslabut.navigate.GPSTraceReader
      */
 	public PharosClient(String expConfigFileName, String mCastAddress, int mCastPort) {
 		this.mCastAddress = mCastAddress;
@@ -68,19 +71,18 @@ public class PharosClient implements BeaconListener {
 			
 			// Pause two seconds to ensure each robot receives their motion script.
 			// This is to prevent out-of-order messages...
-			log("Starting experiment in 5...");
-			synchronized(this) {
-				wait(1000);
+			int startTime = 5;
+			log("Starting experiment in " + startTime + "...");
+			while (startTime-- > 0) {
+				synchronized(this) { 
+					try {
+						wait(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				if (startTime > 0) log(startTime + "...");
 			}
-			
-			log("4...");
-			synchronized(this) { wait(1000); }
-			log("3...");
-			synchronized(this) { wait(1000); }
-			log("2...");
-			synchronized(this) { wait(1000); }
-			log("1...");
-			synchronized(this) { wait(1000); }
 			
 			int delay = 0;
 			// Send each robot the start experiment command.
