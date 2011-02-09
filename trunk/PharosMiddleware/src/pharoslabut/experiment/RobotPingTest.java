@@ -31,11 +31,12 @@ public class RobotPingTest {
 			            String line=null;
 			            boolean done = false;
 			            
+			            int lineno = 0;
 			            int numTimeouts = 0;
 			            while((line=input.readLine()) != null && !done) {
 			                if (line.contains("timeout"))
 			                	numTimeouts++;
-			                else {
+			                else if (line.contains("64 bytes from")){
 			                	log(currRobot.getName() + " OK");
 			                	done = true;
 			                }
