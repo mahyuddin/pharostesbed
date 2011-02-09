@@ -29,7 +29,7 @@
 
 $numArgs = $#ARGV + 1;
 if ($numArgs != 1) {
-	print "Usage: perl parseLogFile.pl [log file name]\n";
+	print "Usage: perl parseLogLocateTarget.pl [log file name]\n";
 	exit 0;
 }
 
