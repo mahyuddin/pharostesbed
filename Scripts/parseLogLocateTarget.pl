@@ -37,7 +37,7 @@ $LOGFILE = $ARGV[0];
 open(LOGFILE) or die("Could not open log file.");
 
 # Print the table header...
-print "Time Stamp (ms)\tDelta Time (ms)\tCurrent Latitude\tCurrent Longitude\tTarget Latitude\t";
+print "Time Stamp (ms)\tDelta Time (ms)\tDelta Time (s)\tCurrent Latitude\tCurrent Longitude\tTarget Latitude\t";
 print "Target Longitude\tDistance to Target (m)\tAngle To Target (radians)\tCurrent Heading (radians)\t";
 print "Heading Error (radians)\tTurn Direction\n";
 
@@ -63,6 +63,7 @@ while (my $line  = <LOGFILE>) {
 		@array = split(/(\s+|:)/, $line);
 		$timeStamp = $array[18];
 		$deltaTime = $timeStamp - $startTime;
+		$deltaTimeS = $deltaTime / 1000;
 		
 		# Extract the current location...
 		@array = split(/(\x28|,\s+|\x29)/,$line2);
@@ -107,7 +108,7 @@ while (my $line  = <LOGFILE>) {
 #		print "Heading Error: $headingError\n";
 #		print "Turn Direction: $turnDirection\n";
 		
-		print "$timeStamp\t$deltaTime\t$currLatitude\t$currLongitude\t$destLatitude\t$destLongitude\t";
+		print "$timeStamp\t$deltaTime\t$deltaTimeS\t$currLatitude\t$currLongitude\t$destLatitude\t$destLongitude\t";
 		print "$distance\t$angleToTarget\t$currentHeading\t$headingError\t$turnDirection\n";
     } 
 }
