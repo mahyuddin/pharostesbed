@@ -59,7 +59,7 @@ public class MotionArbiter implements Runnable {
 	
 	/**
 	 * Whether the most recent command sent to the robot was to stop.  
-	 * If so, this component need to continue to periodically send the current
+	 * If so, this component needs to continue to periodically send the current
 	 * motion task to the robot.
 	 */
 	private boolean isStopped = false;
@@ -85,12 +85,13 @@ public class MotionArbiter implements Runnable {
 		new Thread(this).start();
 	}
 	
+	/**
+	 * Sets the file logger.  This can be null to stop this component from logging data.
+	 * 
+	 * @param flogger The file logger to use.
+	 */
 	public void setFileLogger(FileLogger flogger) {
 		this.flogger = flogger;
-	}
-	
-	public void unsetFileLogger() {
-		this.flogger = null;
 	}
 	
 	/**
@@ -156,11 +157,14 @@ public class MotionArbiter implements Runnable {
 	
 	private void sendMotionCmd(double velocity, double heading) {
 		log("Sending the following motion command: velocity=" + velocity + ", heading=" + heading);
+		
 		if (motionType == MotionType.MOTION_CAR_LIKE) {
 			motors.setCarCMD(velocity, heading);
 		} else {
 			motors.setSpeed(velocity, heading);
 		}
+		
+		isStopped = (velocity == MotionTask.STOP_VELOCITY);
 	}
 	
 	private void log(String msg) {
@@ -185,26 +189,24 @@ public class MotionArbiter implements Runnable {
 				if (motionTask != null) {
 					
 					// get the current speed to send it to the robot
-					double currSpeed = motionTask.getVelocity();   
+					//double currSpeed = motionTask.getVelocity();   
 					
 					// This was removed because the MCU firmware now controls the acceleration
 					// double currSpeed = accelControl.getDampenedSpeed(motionTask.getVelocity());
 					
-					sendMotionCmd(currSpeed, motionTask.getHeading());
+					sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
 					
 					// no point in periodically sending a stop motion command...
-					if (currSpeed == 0 && motionTask.isStop()) {
-						log("Current speed is zero and motionTask is stop, resorting to initial state");
-						isStopped = true;
+					if (motionTask.isStop()) {
+						log("MotionTask is stop, resorting to initial state");
 						currTask = null;
 					}
 				} else {
+					// There is no motion task to execute...
+					
 					if (!isStopped) {
-						// There is no motion task to execute, stop the robot
+						// The robot is not stopped...stop the robot.
 						sendMotionCmd(MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-						
-						// Prevent the robot from continuously sending the stop command.
-						isStopped = true;
 					}
 					
 					// Task queue is empty and there is no task to run, wait for a motion task to 
