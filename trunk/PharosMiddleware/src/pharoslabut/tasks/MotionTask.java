@@ -5,7 +5,7 @@ package pharoslabut.tasks;
  * the motion.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.tasks.MotionTask
+ * @see pharoslabut.MotionArbiter
  */
 public class MotionTask extends Task {
 	private static final long serialVersionUID = -1005883794694320611L;
