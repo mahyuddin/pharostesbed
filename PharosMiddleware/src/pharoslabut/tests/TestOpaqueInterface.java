@@ -28,8 +28,9 @@ public class TestOpaqueInterface implements OpaqueListener {
 	
 	@Override
 	public void newOpaqueData(PlayerOpaqueData opaqueData) {
-		System.out.println("Opaque data: " + opaqueData);
+		//System.out.println("Opaque data: " + opaqueData);
 		String s = new String(opaqueData.getData());
+		log(s);
 	}
 	
 	private static void log(String msg) {
