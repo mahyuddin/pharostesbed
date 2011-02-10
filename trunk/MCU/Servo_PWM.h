@@ -111,7 +111,7 @@ int16_t Servo_getSteeringAngle(void);
 // Input:  Steering angle (.0001 radians)
 // Output: none
 //         +: left, -: right
-void Servo_setSteeringAngle(short angle);
+void Servo_setSteeringAngle(int16_t angle);
 
 
 #endif /* _Servo_PWM_H */
