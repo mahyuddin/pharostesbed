@@ -542,7 +542,7 @@ result_t processCompassPacket(proteus_comm_t* r) {
 		// clip rotation to +/-PI
 		if (headingRadians > 2*PI) {
 			// bad data, notify the x86 so it can be recorded
-			sprintf((char*)r->messageBuffer, "ERROR: Invalid heading: %f", headingRadians);
+			sprintf((char*)r->messageBuffer, "ERROR: Invalid heading: %f radians (%i 1/10 degrees)", headingRadians, heading);
 			r->newMessage = 1;
 		} else if (headingRadians > PI) { 
 			r->compass_heading = headingRadians - 2*PI;
