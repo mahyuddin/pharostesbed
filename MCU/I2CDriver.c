@@ -18,6 +18,8 @@ uint8_t _I2C_driver_state = I2C_STATE_IDLE;
 
 uint16_t _i2cBusyCount;
 
+//uint8_t _i2cSendInfoCount; // for testing purposes
+
 /**
  * Initializes the I2C bus.  Enables the bus, sets the correct clock frequency,
  * and clears the interrupt.
@@ -25,6 +27,7 @@ uint16_t _i2cBusyCount;
 void I2CDriver_init(void) {
 	
 	_i2cBusyCount = 0;
+	//_i2cSendInfoCount = 0; // for testing purposes
 	
 	/*
 	 * The IBCR (I2C Bus Control Register) configures the I2C bus.
@@ -142,6 +145,13 @@ void I2CDriver_init(void) {
  */
 bool I2CDriver_readCompass() {
 	if  (_I2C_driver_state == I2C_STATE_IDLE) {
+	
+	  // This tests the ability for the MCU to send messages to the x86.
+	  //if (++_i2cSendInfoCount == 10) {
+	  //  _i2cSendInfoCount = 0;
+	  //  Command_sendMessagePacket("INFO: I2CDriver: init compass read");
+	  //}
+	  
 		LED_BLUE2 ^= 1; // to indicate compass read activity
 		_i2cBusyCount = 0;
 		
