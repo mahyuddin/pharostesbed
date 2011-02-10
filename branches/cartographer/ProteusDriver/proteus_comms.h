@@ -167,6 +167,9 @@ typedef struct {
 	float compass_heading;
 	//float compass;
 	
+	uint8_t newMessage;
+	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
+	
 	uint8_t newOdometryData;
 	unsigned char motor_stall;
 	float distance;
@@ -184,6 +187,12 @@ typedef struct {
 	*/
 	unsigned char line_detect;    //if line detecting, 1 for line, 0 for no line (not supported on most robots)
 	
+	
+	uint8_t newStatusData;
+	int16_t statusTachSpeed;
+	int16_t statusTargetSpeed;
+	int16_t statusMotorPower;
+	int16_t statusSteeringAngle;
 	
 	/**
 	 * The following variables are used to buffer incoming serial data.
