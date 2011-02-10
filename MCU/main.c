@@ -26,13 +26,13 @@ void main(void) {
 	Timer_Init(); // TCNT @ 333.3ns, TOF @ 21.84ms
 	LED_Init();
 	
-	MotorControl_init();
 	TaskHandler_init();
-	Servo_init();
-	Tach_init();
-	Compass_init();
+	// Servo_init();
+	// Tach_init();
+	// Compass_init();
 	SerialDriver_init(57600);
 	Command_init();
+    INS_Init(); // in INS.h
 	
 	asm cli  // Enable interrupts
 	

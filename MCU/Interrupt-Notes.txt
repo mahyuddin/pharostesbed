@@ -10,12 +10,12 @@ Interrupts Used in the Proteus Micro-Controller:
 
 Channel		TFLG1 Bit	Interrupt	TC Register
 0			0x01		8			TC0 // Tach.c, encoder
-1			0x02		9			TC1
+1			0x02		9			TC1 
 2			0x04		10			TC2 // Servo_PWM.c, Servo_updatePosition
 3			0x08		11			TC3 // Compass.c, input of PWM signal
 4			0x10		12			TC4 // Tach.c, Tach_doSpeedCalc
-5			0x20		13			TC5 // MotorControl.c, MotorControl_doSafetyCheck
-6			0x40		14			TC6 // MotorControl.c, MotorControl_updateSpeed
+5			0x20		13			TC5 
+6			0x40		14			TC6 
 7			0x80		15			TC7 // Compass.c, Compass_Timer
 
 
