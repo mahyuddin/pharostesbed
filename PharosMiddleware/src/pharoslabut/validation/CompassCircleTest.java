@@ -16,15 +16,13 @@ import playerclient.structures.PlayerConstants;
  * @author Chien-Liang Fok
  */
 public class CompassCircleTest {
-	public static final double ROBOT_CIRCLE_VELOCITY = 0.6;
-	public static final double ROBOT_CIRCLE_ANGLE = -20;
 	public static final int ROBOT_REFRESH_PERIOD = 500; // interval of sending commands to robot in ms
 	public static final int COMPASS_LOG_PERIOD = 100; // in milliseconds
 	
 	private PlayerClient client = null;
 	
 	public CompassCircleTest(String serverIP, int serverPort, int time, 
-			String fileName, boolean showGUI) {
+			String fileName, boolean showGUI, double speed, double turnAngle) {
 		
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -50,7 +48,7 @@ public class CompassCircleTest {
 		MotionArbiter motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motorInterface);
 		
 		// First start the robot moving in circles
-		MotionTask circleTask = new MotionTask(Priority.SECOND, ROBOT_CIRCLE_VELOCITY, Math.toRadians(ROBOT_CIRCLE_ANGLE));
+		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
 		motionArbiter.submitTask(circleTask);
 		
 		//CompassLogger compassLogger = new CompassLogger(compass, showGUI);
@@ -84,6 +82,8 @@ public class CompassCircleTest {
 		System.err.println("\t-time <period in s>: duration of test (default infinity)");
 		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
 		System.err.println("\t-gui: display GUI (default not shown)");
+		System.err.println("\t-speed <speed in m/s>: the speed at which the robot should move (default 0.6)");
+		System.err.println("\t-turnAngle <angle in degrees>: The angle in which to turn, negative means right (default -20)");
 	}
 	
 	public static void main(String[] args) {
@@ -91,6 +91,8 @@ public class CompassCircleTest {
 		String fileName = "log.txt";
 		String serverIP = "localhost";
 		int serverPort = 6665;
+		double speed = 0.6;
+		double turnAngle = -20;
 		boolean showGUI = false;
 
 		try {
@@ -110,6 +112,12 @@ public class CompassCircleTest {
 				else if (args[i].equals("-gui")) {
 					showGUI = true;
 				}
+				else if (args[i].equals("-speed")) {
+					speed = Double.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-turnAngle")) {
+					turnAngle = Double.valueOf(args[++i]);
+				}
 				else {
 					usage();
 					System.exit(1);
@@ -126,7 +134,9 @@ public class CompassCircleTest {
 		log("Time: " + time + "s");
 		log("File: " + fileName);
 		log("ShowGUI: " + showGUI);
+		log("Speed: " + speed);
+		log("Turn Angle: " + turnAngle);
 		
-		new CompassCircleTest(serverIP, serverPort, time, fileName, showGUI);
+		new CompassCircleTest(serverIP, serverPort, time, fileName, showGUI, speed, turnAngle);
 	}
 }
