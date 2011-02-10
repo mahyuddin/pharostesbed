@@ -152,6 +152,28 @@ void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
 }
+/**
+ * Sends an accelerometer packet to the x86 computer.
+ * This is called by Compass.c after it gets the compass reading.
+ */
+void Command_sendAccelerometerPacket(uint8_t tickNumber, uint16_t acceleration) {
+	uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+	uint16_t i;
+	
+	outToSerial[indx++] = PROTEUS_BEGIN;
+	outToSerial[indx++] = PROTEUS_ACCELEROMETER_PACKET;
+	outToSerial[indx++] = tickNumber;
+	
+	indx = saveTwoBytes(outToSerial, indx, acceleration);
+	
+	outToSerial[indx++] = PROTEUS_END;
+	
+	for(i = 0; i < indx; i++){
+		SerialDriver_sendByte(outToSerial[i]);  
+	}
+}
+
 
 /**
  * Sends a text message to the x86 computer.
