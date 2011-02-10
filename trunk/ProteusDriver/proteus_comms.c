@@ -778,33 +778,39 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		switch(msgType) {
 			case PROTEUS_ODOMETRY_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
-				if (processOdometryPacket(r) == FAIL) return FAIL;
+				return processOdometryPacket(r);
+				//if (processOdometryPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_COMPASS_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
-				if (processCompassPacket(r) == FAIL) return FAIL;
+				return processCompassPacket(r);
+				//if (processCompassPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_TACHOMETER_PACKET:
-				if (processTachPacket(r) == FAIL) return FAIL;
+				return processTachPacket(r);
+				//if (processTachPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_STATUS_PACKET:
-				if (processStatusPacket(r) == FAIL) return FAIL;
+				return processStatusPacket(r);
+				//if (processStatusPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_MOTOR_SAFETY_PACKET:
-				if (processMotorSafetyPacket(r) == FAIL) return FAIL;
+				return processMotorSafetyPacket(r);
+				//if (processMotorSafetyPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_TEXT_MESSAGE_PACKET:
-				if (processTextMessagePacket(r) == FAIL) return FAIL;
+				return processTextMessagePacket(r);
+				//if (processTextMessagePacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
