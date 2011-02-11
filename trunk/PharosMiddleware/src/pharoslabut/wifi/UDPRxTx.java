@@ -144,4 +144,80 @@ public class UDPRxTx implements Runnable {
 			}
 		}
 	}
+	
+	private class AODVDRunner implements Runnable {
+		
+		String expName, robotName;
+
+		Process pr;
+		
+		public AODVDRunner(String expName, String robotName) {
+			this.expName = expName;
+			this.robotName = robotName;
+			new Thread(this).start();
+		}
+		
+		public void kill() {
+			pr.destroy();
+			int exitVal;
+			try {
+				exitVal = pr.waitFor();
+				System.out.println("Exited AODV with error code " + exitVal);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void run() {
+			 try {
+		            Runtime rt = Runtime.getRuntime();
+		            String cmd = "sudo ~/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -p " + expName + "-" + robotName + "-AODV.log";
+		            log("Command: " + cmd);
+		            
+		            pr = rt.exec(cmd);
+		        } catch(Exception e) {
+		        	String eMsg = "Unable to run aodvd: " + e.toString();
+		            System.err.println(eMsg);
+		            System.exit(1);
+		        }
+		}
+	}
+	
+	private class ClickRunner implements Runnable {
+		
+		String expName, robotName;
+
+		Process pr;
+		
+		public ClickRunner(String expName, String robotName) {
+			this.expName = expName;
+			this.robotName = robotName;
+			new Thread(this).start();
+		}
+		
+		public void kill() {
+			pr.destroy();
+			int exitVal;
+			try {
+				exitVal = pr.waitFor();
+				System.out.println("Exited Click with error code " + exitVal);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public void run() {
+			 try {
+		            Runtime rt = Runtime.getRuntime();
+		            String cmd = "sudo ~/pcs_experiment/click pcs.click &> " + expName + "-" + robotName + "-click.log";
+		            log("Command: " + cmd);
+		            
+		            pr = rt.exec(cmd);
+		        } catch(Exception e) {
+		        	String eMsg = "Unable to run click: " + e.toString();
+		            System.err.println(eMsg);
+		            System.exit(1);
+		        }
+		}
+	}
 }
