@@ -22,7 +22,7 @@ public class CompassCircleTest {
 	private PlayerClient client = null;
 	
 	public CompassCircleTest(String serverIP, int serverPort, int time, 
-			String fileName, boolean showGUI, double speed, double turnAngle) {
+			String fileName, boolean showGUI, double speed, double turnAngle, boolean getStatusMsgs) {
 		
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -52,7 +52,7 @@ public class CompassCircleTest {
 		motionArbiter.submitTask(circleTask);
 		
 		//CompassLogger compassLogger = new CompassLogger(compass, showGUI);
-		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, serverPort, 1 /* device index */, showGUI);
+		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, serverPort, 1 /* device index */, showGUI, getStatusMsgs);
 		if (compassLogger.start(COMPASS_LOG_PERIOD, fileName)) {
 			synchronized(this) {
 				try {
@@ -84,6 +84,7 @@ public class CompassCircleTest {
 		System.err.println("\t-gui: display GUI (default not shown)");
 		System.err.println("\t-speed <speed in m/s>: the speed at which the robot should move (default 0.6)");
 		System.err.println("\t-turnAngle <angle in degrees>: The angle in which to turn, negative means right (default -20)");
+		System.err.println("\t-getStatusMsgs: whether to subscribe to the interface that provides MCU status messages (default false)");
 	}
 	
 	public static void main(String[] args) {
@@ -94,6 +95,7 @@ public class CompassCircleTest {
 		double speed = 0.6;
 		double turnAngle = -20;
 		boolean showGUI = false;
+		boolean getStatusMsgs = false;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -118,6 +120,9 @@ public class CompassCircleTest {
 				else if (args[i].equals("-turnAngle")) {
 					turnAngle = Double.valueOf(args[++i]);
 				}
+				else if (args[i].equals("-getStatusMsgs")) {
+					getStatusMsgs = true;
+				}
 				else {
 					usage();
 					System.exit(1);
@@ -137,6 +142,7 @@ public class CompassCircleTest {
 		log("Speed: " + speed);
 		log("Turn Angle: " + turnAngle);
 		
-		new CompassCircleTest(serverIP, serverPort, time, fileName, showGUI, speed, turnAngle);
+		new CompassCircleTest(serverIP, serverPort, time, fileName, showGUI, 
+				speed, turnAngle, getStatusMsgs);
 	}
 }
