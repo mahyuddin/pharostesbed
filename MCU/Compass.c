@@ -11,6 +11,7 @@
 #include "I2CDriver.h"
 #include "Command.h"
 #include "TaskHandler.h"
+#include <stdio.h>
 
 //bool _pwmEnabled = FALSE;
 
@@ -154,6 +155,13 @@ void Compass_headingReady(uint16_t heading) {
 		// The I2C actually worked, disable PWM computation
 	//	Compass_disablePWM();
 	//}
+	
+	/*{ // for debugging
+		char message[100];
+		if (sprintf(message, "Compass_headingReady: heading = %i", heading) > 0)
+			Command_sendMessagePacket(message);
+	}*/
+	
 	Command_sendCompassPacket(I2C_DATA, heading);
 }
 
