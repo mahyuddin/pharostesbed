@@ -54,6 +54,8 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	
 	private FileLogger flogger = null;
 	
+	private pharoslabut.wifi.UDPRxTx udpTest;
+	
 //	private String expName;
 	
 	/**
@@ -245,6 +247,10 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		
 		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
 
+		// This is temporary code for mission 14...
+		flogger.log("PharosServer: Starting UDPRxTx:");
+		udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
+		
 		// Start the beacons
 		flogger.log("PharosServer: Starting the WiFi beacon broadcaster.");
 		beaconBroadcaster.start();
@@ -304,6 +310,9 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		
 		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
 		rsm.stopBroadcast();
+		
+		flogger.log("PharosServer: Stopping the UDP tester.");
+		udpTest.stop();
 		
 		flogger = null;
 	}
