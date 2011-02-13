@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.nio.ByteBuffer;
 import pharoslabut.logger.*;
+import pharoslabut.radioMeter.cc2420.RadioSignalMeterException;
 
 /**
  * This class listens for and transmits UDP datagram packets.
@@ -19,6 +20,10 @@ public class UDPRxTx implements Runnable {
 	private FileLogger flogger = null;
 	private Hashtable<String, Integer> serialnoTable = new Hashtable<String, Integer>();
 	
+	private AODVDRunner aodvr;
+	//private ClickRunner clickr;
+	private M14Process m14p;
+	
 	/**
 	 * Whether this object's thread should remain running.
 	 */
@@ -29,17 +34,24 @@ public class UDPRxTx implements Runnable {
 	 * 
 	 * @param port The port on which to listen for and transmit UDP datagram packets.
 	 */
-	public UDPRxTx(int port) {
+	public UDPRxTx(String expName, String robotName, int port, FileLogger flogger) {
 		this.port = port;
+		this.flogger = flogger;
+		
 		try {
 			socket = new DatagramSocket(port);
+			
+			aodvr = new AODVDRunner(expName, robotName);
+			//clickr = new ClickRunner(expName, robotName);
+			m14p = new M14Process();
+			
+			// Create a thread for receiving datagram packets.
+			new Thread(this).start();
+			
 		} catch (SocketException e) {
 			e.printStackTrace();
 			log("ERROR: Unable to create datagram socket, message: " + e.getMessage());
 		}
-		
-		// Create a thread for receiving datagram packets.
-		new Thread(this).start();
 	}
 	
 	/**
@@ -81,6 +93,9 @@ public class UDPRxTx implements Runnable {
 	
 	public void stop() {
 		running = false;
+		aodvr.stop();
+		//clickr.stop();
+		m14p.stop();
 	}
 	
 	/**
@@ -128,9 +143,10 @@ public class UDPRxTx implements Runnable {
 	
 	public static void main(String[] args) {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		UDPRxTx udp = new UDPRxTx(5000);
+		FileLogger flogger = new FileLogger("TestExp.log");
+		UDPRxTx udp = new UDPRxTx("TestExp", "TestRobot", 55555, flogger);
 		
-		String ipAddr = "10.11.12." + args[0];
+		/*String ipAddr = "10.11.12." + args[0];
 		
 		while (true) {
 			System.out.println("Sending to " + ipAddr);
@@ -140,6 +156,45 @@ public class UDPRxTx implements Runnable {
 					udp.wait(1000);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
+				}
+			}
+		}*/
+	}
+	
+	private class M14Process implements Runnable {
+		boolean running = true;
+		int myID;
+		int[] destAddrs = {19, 20, 25, 14, 36, 17, 35, 24};
+		
+		public M14Process() {
+			try {
+				myID = pharoslabut.radioMeter.cc2420.RadioSignalMeter.getMoteID();
+			} catch (RadioSignalMeterException e) {
+				e.printStackTrace();
+			}
+			new Thread(this).start();
+		}
+		
+		public void stop() {
+			running = false;
+		}
+		
+		public void run() {
+			while(running) {
+				
+				// send to everybody except myself.
+				for (int i = 0; i < destAddrs.length; i++) {
+					if (destAddrs[i] != myID) {
+						send("10.11.12." + destAddrs[i]);
+					}
+				}
+			
+				synchronized(this) {
+					try {
+						wait(10000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
@@ -157,13 +212,24 @@ public class UDPRxTx implements Runnable {
 			new Thread(this).start();
 		}
 		
-		public void kill() {
+		public void stop() {
+			log("stopping AODV process.");
 			pr.destroy();
 			int exitVal;
 			try {
 				exitVal = pr.waitFor();
-				System.out.println("Exited AODV with error code " + exitVal);
+				System.out.println("Exited AODV with code " + exitVal);
+				log("AODV exited with code " + exitVal);
 			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			
+			// remove the modprobe kernel module
+			String cmd = "sudo modprobe -r kaodv";
+			Runtime rt = Runtime.getRuntime();
+			try {
+				pr = rt.exec(cmd);
+			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
@@ -171,13 +237,26 @@ public class UDPRxTx implements Runnable {
 		public void run() {
 			 try {
 		            Runtime rt = Runtime.getRuntime();
-		            String cmd = "sudo ~/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -p " + expName + "-" + robotName + "-AODV.log";
-		            log("Command: " + cmd);
+		            //String cmd = "sudo /home/ut/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -p " + expName + "-" + robotName;
+		            String cmd = "sudo /home/ut/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -d";
+		            log("AODV command: " + cmd);
 		            
 		            pr = rt.exec(cmd);
+		            
+		            BufferedReader input = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+
+		            String line=null;
+
+		            while((line=input.readLine()) != null) {
+		               log(line);
+		            }
+		            
+		            int exitVal = pr.waitFor();
+		            log("AODV exited with code " + exitVal);
 		        } catch(Exception e) {
 		        	String eMsg = "Unable to run aodvd: " + e.toString();
 		            System.err.println(eMsg);
+		            log(eMsg);
 		            System.exit(1);
 		        }
 		}
@@ -195,12 +274,12 @@ public class UDPRxTx implements Runnable {
 			new Thread(this).start();
 		}
 		
-		public void kill() {
+		public void stop() {
 			pr.destroy();
 			int exitVal;
 			try {
 				exitVal = pr.waitFor();
-				System.out.println("Exited Click with error code " + exitVal);
+				System.out.println("Exited Click with code " + exitVal);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -209,13 +288,25 @@ public class UDPRxTx implements Runnable {
 		public void run() {
 			 try {
 		            Runtime rt = Runtime.getRuntime();
-		            String cmd = "sudo ~/pcs_experiment/click pcs.click &> " + expName + "-" + robotName + "-click.log";
+		            String cmd = "sudo /home/ut/pcs_experiment/click /home/ut/pcs_experiment/pcs.click";
 		            log("Command: " + cmd);
 		            
 		            pr = rt.exec(cmd);
+		            
+		            
+		            FileLogger flogger1 = new FileLogger(expName + "-" + robotName + "-click.log");
+		            BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+
+		            String line=null;
+
+		            while((line=input.readLine()) != null) {
+		               flogger1.log(line);
+		            }
+		            
 		        } catch(Exception e) {
 		        	String eMsg = "Unable to run click: " + e.toString();
 		            System.err.println(eMsg);
+		            log(eMsg);
 		            System.exit(1);
 		        }
 		}
