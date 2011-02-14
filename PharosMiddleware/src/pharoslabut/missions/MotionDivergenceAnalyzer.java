@@ -127,10 +127,10 @@ public class MotionDivergenceAnalyzer {
 		/*
 		 * Read in all of the log files and analyze them.
 		 */
-		Vector<ExpData> expData = new Vector<ExpData>();
+		Vector<RobotExpData> expData = new Vector<RobotExpData>();
 		Vector<AnalysisResults> resultsData = new Vector<AnalysisResults>();
 		for (int i = 0; i < logFileNames.size(); i++) {
-			ExpData ed = LogFileReader.readLogFile(logFileNames.get(i));
+			RobotExpData ed = new RobotExpData(logFileNames.get(i));
 			expData.add(ed);
 			resultsData.add(analyzeFile(ed, filePrefixes.get(i)));
 		}
@@ -213,11 +213,11 @@ public class MotionDivergenceAnalyzer {
 	 * @param prefix The prefix to be added to the beginning of the file names that contain
 	 * the final results.
 	 */
-	private AnalysisResults analyzeFile(ExpData expData, String prefix) {
+	private AnalysisResults analyzeFile(RobotExpData expData, String prefix) {
 		System.out.println("Analyzing file: " + expData.getFileName());
 		
 		FileLogger flogger = new FileLogger(prefix + "-MotionDivergenceAbsolute.txt", false /* print time stamp */);
-		Vector<PathEdge> pathHistory = expData.getPathHistory();
+		Vector<PathEdge> pathHistory = expData.getpathEdges();
 		AnalysisResults results = new AnalysisResults();
 		
 		for (int i=0; i < pathHistory.size(); i++) {
