@@ -1,6 +1,8 @@
 package pharoslabut.logger.analyzer;
 
+import java.io.*;
 import java.util.Vector;
+
 import pharoslabut.logger.*;
 import pharoslabut.navigate.Location;
 
@@ -12,194 +14,60 @@ import pharoslabut.navigate.Location;
  */
 public class GPSVisualizerScriptGenerator {
 
-	public GPSVisualizerScriptGenerator() throws Exception {
-		Vector<String> logFileNames = new Vector<String>();
-		Vector<String> captionName = new Vector<String>();
-		Vector<String> traceColor = new Vector<String>();
+	private String outputFileName = null;
+	private Vector<String> logFileNames = new Vector<String>();
+	private Vector<String> captionNames = new Vector<String>();
+	private Vector<String> traceColors = new Vector<String>();
+	private Vector<WayPoint> waypoints = new Vector<WayPoint>();
+	
+	public GPSVisualizerScriptGenerator(String fileName) throws Exception {
+
+		BufferedReader input = null;
+		try {
+			input =  new BufferedReader(new FileReader(fileName));
+		} catch (IOException ex){
+			ex.printStackTrace();
+			System.err.println("Unable to open " + fileName);
+			System.exit(1);
+		}
 		
-		/*
-		 * Analyze the log files of robot Lonestar
-		 */
-//		String robotName = "Lonestar";
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Lonestar_20101203100206.log");
-//		captionName.add("Run 1");
-//		traceColor.add("red");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp10/M9-Exp10-Lonestar_20101203102922.log");
-//		captionName.add("Run 2");
-//		traceColor.add("blue");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp11/M9-Exp11-Lonestar_20101203111154.log");
-//		captionName.add("Run 3");
-//		traceColor.add("purple");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp12/M9-Exp12-Lonestar_20101203114724.log");
-//		captionName.add("Run 4");
-//		traceColor.add("orange");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp1/M11-Exp1-Lonestar_20101206054444.log");
-//		captionName.add("Run 5");
-//		traceColor.add("maroon");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp3/M11-Exp3-Lonestar_20101206064809.log");		
-//		captionName.add("Run 6");
-//		traceColor.add("turqoise");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp4/M11-Exp4-Lonestar_20101206071859.log");
-//		captionName.add("Run 7");
-//		traceColor.add("green");
+		try {
+			String line = null;
+			int lineno = 1;
+			while (( line = input.readLine()) != null) {
+				if (!line.equals("")) {
+					if (line.contains("OUTPUT_FILE")) {
+						String[] elem = line.split("[\\s]+");
+						try {
+							outputFileName = elem[1];
+						} catch(Exception e) {
+							e.printStackTrace();
+							System.err.println("Warning: Syntax error on line " + lineno + " of config file " + fileName + ":\n" + line);
+							System.exit(1);
+						}
+					}
+					else if (line.contains("LOG_FILE")) {
+						String[] elem = line.split("[\\s]+");
+					
+						logFileNames.add(elem[1]);
+						captionNames.add(elem[2]);
+						traceColors.add(elem[3]);
+				
+					}
+					else if (line.contains("WAYPOINT")) {
+						String[] elem = line.split("[\\s]+");
+						String name = line.substring(line.indexOf(elem[3]));
+						waypoints.add(new WayPoint(Double.valueOf(elem[1]), Double.valueOf(elem[2]), name));
+					}
+				}
+				lineno++;
+			}
+			input.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
-		
-//		This generates a file containing *all* runs of *all three* robots.
-//		
-//		String robotName = "Lonestar-Shiner-Wynkoop";
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Lonestar_20101203100206.log");
-//		captionName.add("Lonestar-1");
-//		traceColor.add("red");
-//		logFileNames.add("M9/M9-Results/M9-Exp10/M9-Exp10-Lonestar_20101203102922.log");
-//		captionName.add("Lonestar-2");
-//		traceColor.add("red");
-//		logFileNames.add("M9/M9-Results/M9-Exp11/M9-Exp11-Lonestar_20101203111154.log");
-//		captionName.add("Lonestar-3");
-//		traceColor.add("red");
-//		logFileNames.add("M9/M9-Results/M9-Exp12/M9-Exp12-Lonestar_20101203114724.log");
-//		captionName.add("Lonestar-4");
-//		traceColor.add("red");
-//		logFileNames.add("M11/M11-Results/M11-Exp1/M11-Exp1-Lonestar_20101206054444.log");
-//		captionName.add("Lonestar-5");
-//		traceColor.add("red");
-//		logFileNames.add("M11/M11-Results/M11-Exp3/M11-Exp3-Lonestar_20101206064809.log");		
-//		captionName.add("Lonestar-6");
-//		traceColor.add("red");
-//		logFileNames.add("M11/M11-Results/M11-Exp4/M11-Exp4-Lonestar_20101206071859.log");
-//		captionName.add("Lonestar-7");
-//		traceColor.add("red");
-//
-//		logFileNames.add("M9/M9-Results/M9-Exp1/M9-Exp1-Shiner_20101203123303.log");
-//		captionName.add("Shiner-1");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp2/M9-Exp2-Shiner_20101203130807.log");
-//		captionName.add("Shiner-2");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp3/M9-Exp3-Shiner_20101203132921.log");
-//		captionName.add("Shiner-3");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp5/M9-Exp5-Shiner_20101203135855.log");
-//		captionName.add("Shiner-4");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp6/M9-Exp6-Shiner_20101203142245.log");
-//		captionName.add("Shiner-5");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp7/M9-Exp7-Shiner_20101203143934.log");
-//		captionName.add("Shiner-6");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Shiner_20101203160528.log");
-//		captionName.add("Shiner-7");
-//		traceColor.add("orange");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Wynkoop_20101203100336.log");
-//		captionName.add("Wynkoop-1");
-//		traceColor.add("blue");
-//		logFileNames.add("M9/M9-Results/M9-Exp10/M9-Exp10-Wynkoop_20101203103051.log");
-//		captionName.add("Wynkoop-2");
-//		traceColor.add("blue");
-//		logFileNames.add("M9/M9-Results/M9-Exp11/M9-Exp11-Wynkoop_20101203111323.log");
-//		captionName.add("Wynkoop-3");
-//		traceColor.add("blue");
-//		logFileNames.add("M9/M9-Results/M9-Exp12/M9-Exp12-Wynkoop_20101203114853.log");
-//		captionName.add("Wynkoop-4");
-//		traceColor.add("blue");
-//		logFileNames.add("M11/M11-Results/M11-Exp3/M11-Exp3-Wynkoop_20101206064822.log");
-//		captionName.add("Wynkoop-5");
-//		traceColor.add("blue");
-//		logFileNames.add("M11/M11-Results/M11-Exp4/M11-Exp4-Wynkoop_20101206071912.log");
-//		captionName.add("Wynkoop-6");
-//		traceColor.add("blue");
-//		logFileNames.add("M11/M11-Results/M11-Exp5/M11-Exp5-Wynkoop_20101206075054.log");
-//		captionName.add("Wynkoop-7");
-//		traceColor.add("blue");
-		
-//		String robotName = "Lonestar-MD";
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Lonestar_20101203100206.log");
-//		captionName.add("Lonestar-1");
-//		traceColor.add("red");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp10/M9-Exp10-Lonestar_20101203102922.log");
-//		captionName.add("Lonestar-2");
-//		traceColor.add("blue");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp11/M9-Exp11-Lonestar_20101203111154.log");
-//		captionName.add("Lonestar-3");
-//		traceColor.add("purple");
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp12/M9-Exp12-Lonestar_20101203114724.log");
-//		captionName.add("Lonestar-4");
-//		traceColor.add("orange");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp1/M11-Exp1-Lonestar_20101206054444.log");
-//		captionName.add("Lonestar-5");
-//		traceColor.add("maroon");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp3/M11-Exp3-Lonestar_20101206064809.log");		
-//		captionName.add("Lonestar-6");
-//		traceColor.add("turquoise");
-//		
-//		logFileNames.add("M11/M11-Results/M11-Exp4/M11-Exp4-Lonestar_20101206071859.log");
-//		captionName.add("Lonestar-7");
-//		traceColor.add("green");
-		
-//		String robotName = "Shiner-MD";
-//		
-//		logFileNames.add("M9/M9-Results/M9-Exp1/M9-Exp1-Shiner_20101203123303.log");
-//		captionName.add("Shiner-1");
-//		traceColor.add("red");
-//		logFileNames.add("M9/M9-Results/M9-Exp2/M9-Exp2-Shiner_20101203130807.log");
-//		captionName.add("Shiner-2");
-//		traceColor.add("blue");
-//		logFileNames.add("M9/M9-Results/M9-Exp3/M9-Exp3-Shiner_20101203132921.log");
-//		captionName.add("Shiner-3");
-//		traceColor.add("purple");
-//		logFileNames.add("M9/M9-Results/M9-Exp5/M9-Exp5-Shiner_20101203135855.log");
-//		captionName.add("Shiner-4");
-//		traceColor.add("orange");
-//		logFileNames.add("M9/M9-Results/M9-Exp6/M9-Exp6-Shiner_20101203142245.log");
-//		captionName.add("Shiner-5");
-//		traceColor.add("maroon");
-//		logFileNames.add("M9/M9-Results/M9-Exp7/M9-Exp7-Shiner_20101203143934.log");
-//		captionName.add("Shiner-6");
-//		traceColor.add("turquoise");
-//		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Shiner_20101203160528.log");
-//		captionName.add("Shiner-7");
-//		traceColor.add("green");
-		
-		String robotName = "Wynkoop-MD";
-		
-		logFileNames.add("M9/M9-Results/M9-Exp9/M9-Exp9-Wynkoop_20101203100336.log");
-		captionName.add("Wynkoop-1");
-		traceColor.add("red");
-		logFileNames.add("M9/M9-Results/M9-Exp10/M9-Exp10-Wynkoop_20101203103051.log");
-		captionName.add("Wynkoop-2");
-		traceColor.add("blue");
-		logFileNames.add("M9/M9-Results/M9-Exp11/M9-Exp11-Wynkoop_20101203111323.log");
-		captionName.add("Wynkoop-3");
-		traceColor.add("purple");
-		logFileNames.add("M9/M9-Results/M9-Exp12/M9-Exp12-Wynkoop_20101203114853.log");
-		captionName.add("Wynkoop-4");
-		traceColor.add("orange");
-		logFileNames.add("M11/M11-Results/M11-Exp3/M11-Exp3-Wynkoop_20101206064822.log");
-		captionName.add("Wynkoop-5");
-		traceColor.add("maroon");
-		logFileNames.add("M11/M11-Results/M11-Exp4/M11-Exp4-Wynkoop_20101206071912.log");
-		captionName.add("Wynkoop-6");
-		traceColor.add("turquoise");
-		logFileNames.add("M11/M11-Results/M11-Exp5/M11-Exp5-Wynkoop_20101206075054.log");
-		captionName.add("Wynkoop-7");
-		traceColor.add("green");
-		
-		FileLogger flogger = new FileLogger("GPSRouteTrace-" + robotName + ".csv", false /* print time stamp */);
+		FileLogger flogger = new FileLogger(outputFileName + ".csv", false /* print time stamp */);
 		
 		for (int i=0; i < logFileNames.size(); i++) {
 			log("Processing " + logFileNames.get(i));
@@ -210,31 +78,80 @@ public class GPSVisualizerScriptGenerator {
 			for (int j=0; j < locations.size(); j++) {
 				Location currLoc = new Location(locations.get(j).getLoc());
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
-				if (j == 0) {
-					line += ", " + captionName.get(i) + ", " + traceColor.get(i);
-				}
+				if (j == 0)
+					line += ", " + captionNames.get(i) + ", " + traceColors.get(i);
 				flogger.log(line);
 			}
 		}
 		
 		
-		flogger.log("type,latitude,longitude,name,desc");
-		flogger.log("W,30.52626,-97.6324133,Waypoints 1 and 11,Waypoints 1 and 11");
-		flogger.log("W,30.5264833,-97.6325133,Waypoints 2 and 10,Waypoints 2 and 10");
-		flogger.log("W,30.5266383,-97.6321067,Waypoints 3 and 9,Waypoints 3 and 9");
-		flogger.log("W,30.52707,-97.6321167,Waypoints 4 and 8,Waypoints 4 and 8");
-		flogger.log("W,30.5270783,-97.6324933,Waypoint 5");
-		flogger.log("W,30.5274533,-97.632525,Waypoint 6");
-		flogger.log("W,30.5274983,-97.6321333,Waypoint 7");
+		if (waypoints.size() > 0) {
+			log("Adding waypoints...");
+			flogger.log("type,latitude,longitude,name");
+			for (int i=0; i < waypoints.size(); i++) {
+				WayPoint wp = waypoints.get(i);
+				flogger.log("W," + wp.getLat() + "," + wp.getLon() + "," + wp.getName());
+			}
+		}
+		log("done!");
 	}
 	
 	private void log(String msg) {
 		System.out.println(msg);
 	}
 	
+	private static void print(String msg) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(msg);
+	}
+	
+	private static void usage() {
+		print("Usage: pharoslabut.logger.analyzer.GPSVisualizerScriptGenerator <options>\n");
+		print("Where <options> include:");
+		print("\t-file <file name>: The specification file. (required)");
+		print("\t\tSyntax of specification file:");
+		print("\t\t\tOUTPUT_FILE <name of output file>");
+		print("\t\t\tLOG_FILE <name of log file> <caption> <color>");
+		print("\t\t\t...");
+		print("\t\tEach LOG_FILE listed in the specification file will have its own trace in the resulting GPSVisualizer script.");
+		print("\t-debug: enable debug mode");
+	}
+	
 	public static void main(String[] args) {
+		String fileName = null;
+		
 		try {
-			new GPSVisualizerScriptGenerator();
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-file")) {
+					fileName = args[++i];
+				} 
+				else if (args[i].equals("-debug") || args[i].equals("-d")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
+				}
+				else {
+					System.setProperty ("PharosMiddleware.debug", "true");
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.setProperty ("PharosMiddleware.debug", "true");
+			usage();
+			System.exit(1);
+		}
+		
+		if (fileName == null) {
+			System.setProperty ("PharosMiddleware.debug", "true");
+			usage();
+			System.exit(1);
+		}
+		
+		print("File: " + fileName);
+		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
+		
+		try {
+			new GPSVisualizerScriptGenerator(fileName);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
