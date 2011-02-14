@@ -7,7 +7,9 @@ import pharoslabut.logger.*;
 import pharoslabut.navigate.Location;
 
 /**
- * Reads the log file created by a robot as it traveled, and generates a GPS-based motion script based on this data.
+ * Reads log files created by robots as they follow a motion script, 
+ * and generates a CSV text file that can be used by GPSVisualizer to
+ * plot the traces on a map.  
  * 
  * @author Chien-Liang Fok
  *
@@ -20,6 +22,13 @@ public class GPSVisualizerScriptGenerator {
 	private Vector<String> traceColors = new Vector<String>();
 	private Vector<WayPoint> waypoints = new Vector<WayPoint>();
 	
+	/**
+	 * The constructor.
+	 * 
+	 * @param fileName The name of the file containing the specifications on
+	 * which log files to analyze.
+	 * @throws Exception If any error occurs.
+	 */
 	public GPSVisualizerScriptGenerator(String fileName) throws Exception {
 
 		BufferedReader input = null;
