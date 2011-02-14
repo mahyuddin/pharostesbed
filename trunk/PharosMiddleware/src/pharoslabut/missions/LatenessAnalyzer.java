@@ -3,8 +3,7 @@ package pharoslabut.missions;
 import java.util.Vector;
 
 import pharoslabut.logger.FileLogger;
-import pharoslabut.logger.analyzer.ExpData;
-import pharoslabut.logger.analyzer.LogFileReader;
+import pharoslabut.logger.analyzer.*;
 
 /**
  * Calculates the "lateness" of a robot reaching each waypoint.  The lateness is the difference in the 
@@ -100,9 +99,9 @@ public class LatenessAnalyzer {
 		/*
 		 * Read the log files, store the information contained within them in vector expData.
 		 */
-		Vector<ExpData> expData = new Vector<ExpData>();
+		Vector<RobotExpData> expData = new Vector<RobotExpData>();
 		for (int i = 0; i < logFileNames.size(); i++) {
-			ExpData ed = LogFileReader.readLogFile(logFileNames.get(i));
+			RobotExpData ed = new RobotExpData(logFileNames.get(i));
 			expData.add(ed);
 		}
 		
