@@ -205,7 +205,7 @@ public class GPSMotionScriptGenerator {
 			log("Processing " + logFileNames.get(i));
 			flogger.log("type,latitude,longitude,name,color"); 
 			
-			ExpData ed = LogFileReader.readLogFile(logFileNames.get(i));
+			RobotExpData ed = new RobotExpData(logFileNames.get(i));
 			Vector<GPSLocationState> locations = ed.getGPSHistory();
 			for (int j=0; j < locations.size(); j++) {
 				Location currLoc = new Location(locations.get(j).getLoc());
