@@ -35,7 +35,7 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
-//#include "Sharp_IR.h"
+#include "Sharp_IR.h"
 
 
 /**
@@ -171,13 +171,55 @@ void Command_sendMessagePacket(char* message) {
 }
 
 /**
- * This is called by interrupt 9 at 5Hz (200ms period).
+ * Function: Command_sendIRPacket()
+ * Inputs: None
+ * Outputs: None
+ * Desc: Sends an IR packet to the x86 computer.
+ * DATA PACKETS COME LIKE THIS:
+ * BEGIN Packet
+ * PROTEUS_IR_PACKET
+ * FL Data (2Bytes)
+ * FC Data (2Bytes)
+ * FR Data (2Bytes)
+ * RL Data (2Bytes)
+ * RC Data (2Bytes)
+ * RR Data (2Bytes)
+ * END Packet
  */
-void Command_sendData() {
+void Command_sendIRPacket(void) {
+  uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+  uint16_t i;
+  
+  outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
+	indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
+	indx = saveTwoBytes(outToSerial, indx, IR_getFC()); // Package Front Center data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getFR()); // Package Front Right data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRL()); // Package Rear Left data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRC()); // Package Rear Center data 
+	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data  		
+	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+
+	//i should equal PROTEUS_IR_PACKET_SIZE 
+  // Send all of the IR Data through the Serial Port
+	for(i=0; i<indx; i++){
+  	SerialDriver_sendByte(outToSerial[i]);
+	}
+}
+
+/**
+ * Function: Command_sendData(void)
+ * Inputs: None
+ * Outputs: None
+ * Desc: This is called by interrupt 9 at 5Hz (200ms period).
+ */
+void Command_sendData(void) {
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
-		Command_sendOdometryPacket();
-		Compass_getHeading();
+		//Command_sendOdometryPacket();
+		//Compass_getHeading();
+		Command_sendIRPacket();
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
@@ -228,7 +270,8 @@ void Command_stopSendingData() {
  * @param size The size of the command in number of bytes.
  */
 void Command_processCmd(uint8_t* cmd, uint16_t size) {
-	switch(cmd[0]) { // Look at opcode (loosely based on roomba command set)
+// Look at opcode (loosely based on roomba command set)
+	switch(cmd[0]) {
 		case PROTEUS_OPCODE_HEARTBEAT:
 			_heartbeatReceived = TRUE; // indicates that a heartbeat was received from the x86.
 			_heartBeatTimerArmed = FALSE; // disarm the heartbeat timer
@@ -262,9 +305,9 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			break;
 		case PROTEUS_OPCODE_SONAR_DE : //stop periodic sonar samples
 			processOpcodeSonarDe();
-			break;
-		case PROTEUS_OPCODE_SENSORS:
-			processOpcodeSensors();
+			break;*/
+		/*case PROTEUS_OPCODE_SENSORS:
+			//processOpcodeSensors();
 			break;*/
 		default: 
 			//LED_ORANGE2 ^= 1; // Command not recognized, toggle LED_RED3
