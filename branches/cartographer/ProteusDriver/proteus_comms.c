@@ -592,6 +592,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
 		if (r->newIRdata) {
+			// taking this out... because this massive printing lags the performance of the computer too much
 			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
 			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
 			printf("proteus_comms: processIRPacket: Front Right : %f mm\n", ((r->newIRdata)?(r->ir_fr):0));
