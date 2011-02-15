@@ -4,17 +4,20 @@ import pharoslabut.MotionArbiter;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
+import playerclient.IRInterface;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
 import playerclient.Position2DInterface;
 import playerclient.Position2DListener;
 import playerclient.structures.PlayerConstants;
 import playerclient.structures.PlayerPose;
+import playerclient.structures.ir.PlayerIrData;
 import playerclient.structures.position2d.PlayerPosition2dData;
 
 public class PathPlanner implements Position2DListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
+	
 	
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
 		try {
@@ -25,7 +28,33 @@ public class PathPlanner implements Position2DListener {
 			System.exit (1);
 		}
 		
-		//client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		
+		/////////// TRYING OUT STUFF FOR IR INTERFACE ////////////////////
+		System.out.print("Trying to Establish IR interface...");
+		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (ir == null) {
+			System.out.println("unable to connect to IR interface");
+			System.exit(1);
+		}
+		System.out.print("established\n");
+		
+		
+		//while (true) {
+			
+			if (ir.isDataReady()) {
+				PlayerIrData IRdata = ir.getData();
+				float [] IRranges = IRdata.getRanges();
+				//float [] IRvoltages = IRdata.getVoltages();
+				System.out.println("IR Ranges: " + IRranges[0] + ", " + IRranges[1] + ", " + IRranges[2] + ", " + IRranges[3] + ", " + IRranges[4] + ", " + IRranges[5]);
+				//System.out.println("IR Voltages: " + IRvoltages[0] + IRvoltages[1] + IRvoltages[2] + IRvoltages[3] + IRvoltages[4] + IRvoltages[5]);
+			}
+			System.out.println("IR not ready");
+		//}
+			
+		///////////// END OF IR INTERFACING ///////////////
+		
+		
+	
 		
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
