@@ -97,7 +97,8 @@ void Command_processCmd(uint8_t* cmd, uint16_t size);
  * Sends a compass packet to the x86.
  */
 void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading);
-
+void Command_sendOdometryPacket(void);
+void Command_sendIRPacket(void);
 void Command_startSendingData(void);
 void Command_stopSendingData(void);
 void Command_sendStatus(void);

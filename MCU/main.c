@@ -20,6 +20,7 @@
 #include "TaskHandler.h"
 #include "Tach.h"
 #include "Compass.h"
+#include "adc.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
@@ -32,6 +33,7 @@ void main(void) {
 	Tach_init();
 	Compass_init();
 	SerialDriver_init(57600);
+	ADC0_Init();
 	Command_init();
 	
 	asm cli  // Enable interrupts
