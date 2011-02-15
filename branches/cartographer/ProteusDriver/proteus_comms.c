@@ -505,7 +505,7 @@ result_t processOdometryPacket(proteus_comm_t* r) {
 		
 		r->newOdometryData = 1;
 		
-		printf("proteus_comms: OdometryPacket: distance = %f, steering angle = %f, motor limited = %i\n",
+		printf("proteus_comms: processOdometryPacket: distance = %f, steering angle = %f, motor limited = %i\n",
 			r->distance, r->steering_angle, r->motor_stall);
 		
 		return SUCCESS;
@@ -514,6 +514,96 @@ result_t processOdometryPacket(proteus_comm_t* r) {
 		//	PROTEUS_ODOMETRY_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD);
 		//printRxSerialBuff();
 		return FAIL;
+	}
+}
+
+result_t processIRPacket(proteus_comm_t* r) {
+	timeval _currTime;
+	if (rxSerialBufferSize(r) >= PROTEUS_IR_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
+		uint8_t data; // temporary variable for holding data from the serial Rx buffer.
+		uint16_t distance = 0;
+		
+		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
+		popRxSerialBuff(r, NULL); // pop PROTEUS IR PACKET
+		
+		// The next 12 bytes are the distance reading for 
+		// FL, FC, FR, RL, RC, RR, in that order
+		// The first two bytes are FL
+		
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fl = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are FC
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fc = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are FR
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fr = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RL
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rl = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RC
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rc = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RR
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rr = distance;
+			r->newIRdata = 1;
+		}
+		
+		popRxSerialBuff(r, NULL); // pop PROTEUS_END
+		
+		if (r->newIRdata) {
+			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
+			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
+			printf("proteus_comms: processIRPacket: Front Right : %f mm\n", ((r->newIRdata)?(r->ir_fr):0));
+			printf("proteus_comms: processIRPacket: Rear Left   : %f mm\n", ((r->newIRdata)?(r->ir_rl):0));
+			printf("proteus_comms: processIRPacket: Rear Center : %f mm\n", ((r->newIRdata)?(r->ir_rc):0));
+			printf("proteus_comms: processIRPacket: Rear Right  : %f mm\n\n", ((r->newIRdata)?(r->ir_rr):0));
+			*/
+		}
+		
+		return SUCCESS;
+	} else {
+		return FAIL;  // else not enough data has arrived yet, wait till next time
 	}
 }
 
@@ -541,9 +631,7 @@ result_t processCompassPacket(proteus_comm_t* r) {
 		
 		// clip rotation to +/-PI
 		if (headingRadians > 2*PI) {
-			// bad data, notify the x86 so it can be recorded
-			sprintf((char*)r->messageBuffer, "ERROR: Invalid heading: %f", headingRadians);
-			r->newMessage = 1;
+			// bad data, ignore
 		} else if (headingRadians > PI) { 
 			r->compass_heading = headingRadians - 2*PI;
 			r->newCompassData = 1;
@@ -554,10 +642,10 @@ result_t processCompassPacket(proteus_comm_t* r) {
 		
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
-		//if (r->newCompassData) {
-		//	printf("proteus_comms: CompassPacket: heading: %f radians, data type = %s\n",
-		//		r->compass_heading, (dataType == I2C_DATA ? "I2C" : "PWM"));
-		//}
+		if (r->newCompassData) {
+			printf("proteus_comms: processCompassPacket: heading: %f radians, data type = %s\n",
+				r->compass_heading, (dataType == I2C_DATA ? "I2C" : "PWM"));
+		}
 		
 		return SUCCESS;
 	} else {
@@ -565,9 +653,6 @@ result_t processCompassPacket(proteus_comm_t* r) {
 	}
 }
 
-/**
- * This is sent by the MCU for debugging the tachometer.  See the MCU code, Tach.c.
- */
 result_t processTachPacket(proteus_comm_t* r) {
 	timeval _currTime;
 	if (rxSerialBufferSize(r) >= PROTEUS_TACH_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
@@ -592,7 +677,7 @@ result_t processTachPacket(proteus_comm_t* r) {
 		
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
-		printf("proteus_comms: TachPacket: tach speed = %i cm/s, target speed = %i cm/s\n", 
+		printf("proteus_comms: processTachPacket: tach speed = %i cm/s, target speed = %i cm/s\n", 
 			tachSpeed, targetSpeed);
 		return SUCCESS;
 	} else {
@@ -603,12 +688,13 @@ result_t processTachPacket(proteus_comm_t* r) {
 	}
 }
 
-/**
- * This is sent periodically by the MCU to notify the x86 of its status.
- */
 result_t processStatusPacket(proteus_comm_t* r) {
 	timeval _currTime;
 	if (rxSerialBufferSize(r) >= PROTEUS_STATUS_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
+		int16_t tachSpeed = 0;
+		int16_t targetSpeed = 0;
+		int16_t motorPower = 0;
+		int16_t steeringAngle = 0;
 		uint8_t data; // temporary variable for holding data from the serial Rx buffer.
 		
 		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
@@ -616,34 +702,32 @@ result_t processStatusPacket(proteus_comm_t* r) {
 		
 		// The first two bytes are the tach speed in big endian format
 		popRxSerialBuff(r, &data);
-		r->statusTachSpeed = (data << 8);
+		tachSpeed = (data << 8);
 		popRxSerialBuff(r, &data);
-		r->statusTachSpeed += data;
+		tachSpeed += data;
 		
 		// The second two bytes are the target speed in big endian format
 		popRxSerialBuff(r, &data);
-		r->statusTargetSpeed = (data << 8);
+		targetSpeed = (data << 8);
 		popRxSerialBuff(r, &data);
-		r->statusTargetSpeed += data;
+		targetSpeed += data;
 		
 		// Bytes 5 and 6 are the motor power in big endian format
 		popRxSerialBuff(r, &data);
-		r->statusMotorPower = (data << 8);
+		motorPower = (data << 8);
 		popRxSerialBuff(r, &data);
-		r->statusMotorPower += data;
+		motorPower += data;
 		
 		// Bytes 7 and 8 are the steering angle in big endian format, in units of 0.0001 radians
 		popRxSerialBuff(r, &data);
-		r->statusSteeringAngle = (data << 8);
+		steeringAngle = (data << 8);
 		popRxSerialBuff(r, &data);
-		r->statusSteeringAngle += data;
+		steeringAngle += data;
 		
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
-		//sprintf(textMessage, "proteus_comms: StatusPacket: tach speed = %i cm/s, target speed = %i cm/s, motor power = %i, steering angle = %f\n", 
-		//	tachSpeed, targetSpeed, motorPower, steeringAngle/1000.0);
-		
-		r->newStatusData = 1; // tells the proteus_driver that there is new status data to publish
+		printf("proteus_comms: processStatusPacket: tach speed = %i cm/s, target speed = %i cm/s, motor power = %i, steering angle = %f\n", 
+			tachSpeed, targetSpeed, motorPower, steeringAngle/1000.0);
 		return SUCCESS;
 	} else {
 		//printf("proteus_comms: processStatusPacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(),
@@ -653,10 +737,7 @@ result_t processStatusPacket(proteus_comm_t* r) {
 	}
 }
 
-/**
- * This is called whenever the MCU's motor controller reports a safety event.
- * See the MCU's code, file Command.c, method Command_sendMotorSafetyMsg.
- */
+
 result_t processMotorSafetyPacket(proteus_comm_t* r) {
 	if (rxSerialBufferSize(r) >= PROTEUS_MOTOR_SAFETY_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
 		int16_t previousMotorPower;
@@ -691,9 +772,6 @@ result_t processMotorSafetyPacket(proteus_comm_t* r) {
 	}
 }
 
-/**
- * This is sent from the MCU for debugging purposes.
- */
 result_t processTextMessagePacket(proteus_comm_t* r) {
 	uint8_t strSize;
 	getRxSerialBuff(r, 2, &strSize); // two byte after the begin message
@@ -717,11 +795,7 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 		}
 		textMessage[strlen(textMessage)] = '\0';
 		
-		//printf("proteus_comms: MCU_MSG: StrSize: %i, Message: \"%s\"\n", strSize, textMessage);
-		
-		strcpy((char*)r->messageBuffer, textMessage);
-		r->newMessage = 1; // indicate that a new message was received
-		
+		printf("proteus_comms: processTextMessagePacket: StrSize: %i, Message: \"%s\"\n", strSize, textMessage);
 		return SUCCESS;
 	} else {
 		//printf("proteus_comms: processTextMessagePacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(),
@@ -734,101 +808,82 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 
 /**
  * Process the serial data was received from the MCU.
- * The data is stored in the serialRxBuffer.
- * Each call to this method processes one message.  If there is a possibility
- * that there are more messages in the buffer, SUCCESS is returned.
- * Otherwise, FAIL is returned.  Ideally, after reading data from the serial
- * port (by calling proteusReceiveSerialData), this method should be repeatedly
- * called until it returns FAIL.
+ * The data is stored in the _serialRxBuffer buffer.
  *
  * @param r The proteus_comm_t object containing a reference to the connection 
  * to the micro-controller.
- * @return SUCCESS if there may be more messages in the buffer, FAIL otherwise
+ * @return SUCCESS if successful, FAIL otherwise
  */
 result_t proteusProcessRxData(proteus_comm_t* r) {
-	//bool done = false;
-	//int numPktsProcessed = 0;
+	bool done = false;
+	int numPktsProcessed = 0;
 	
 	if (r == NULL) {
 		printf("proteus_comms: proteusProcessRxData: ERROR: r = NULL\n");
 		return FAIL;
 	}
 	
-	// Remove extraneous bytes from the front the rxSerialBuffer.
-	while (rxSerialBufferSize(r) > 0 && r->serialRxBuffer[r->rxBuffStartIndx] != PROTEUS_BEGIN) {
-		//uint8_t garbageData; // The front of the serial Rx buffer is not a message header,
-		popRxSerialBuff(r, NULL);// remove the extraneous byte
-	}
-	
-	if (rxSerialBufferSize(r) < 3) {
-		// Not enough space in rxSerialBuffer to hold a message.
-		return FAIL;
-	}
-	
 	//printf("proteus_comms: proteusProcessRxData: processing received bytes...\n");
 	//printRxSerialBuff();
 	
-	//while (!done &&  /* Make sure there is at least enough bytes for a command header*/ 
-	//	&& numPktsProcessed < 100 /* process up to 100 packets each time this method is invoked */) 
-	//{
-	
-	if (r->serialRxBuffer[r->rxBuffStartIndx] == PROTEUS_BEGIN) {
-		uint8_t msgType;
-		getRxSerialBuff(r, 1, &msgType); // the message type is the byte after the begin message
-		switch(msgType) {
-			case PROTEUS_ODOMETRY_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
-				if (processOdometryPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			case PROTEUS_COMPASS_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
-				if (processCompassPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			case PROTEUS_TACHOMETER_PACKET:
-				if (processTachPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			case PROTEUS_STATUS_PACKET:
-				if (processStatusPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			case PROTEUS_MOTOR_SAFETY_PACKET:
-				if (processMotorSafetyPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			case PROTEUS_TEXT_MESSAGE_PACKET:
-				if (processTextMessagePacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
-			default:
-				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
-				// The first byte does not constitute a valid message header.
-				// Continuously remove bytes until a PROTEUS_END is found or there is nothing
-				// left in the buffer.
-				while (rxSerialBufferSize(r) > 0 && r->serialRxBuffer[r->rxBuffStartIndx] != PROTEUS_END) {
+	while (!done && rxSerialBufferSize(r) > 2 /* Make sure there is at least enough bytes for a command header*/ 
+		&& numPktsProcessed < 100 /* process up to 100 packets each time this method is invoked */) 
+	{
+		if (r->serialRxBuffer[r->rxBuffStartIndx] == PROTEUS_BEGIN) {
+			uint8_t msgType;
+			getRxSerialBuff(r, 1, &msgType); // one byte after the begin message
+			switch(msgType) {
+				case PROTEUS_ODOMETRY_PACKET:
+					//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
+					if (processOdometryPacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_IR_PACKET:
+					//printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
+					if (processIRPacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_COMPASS_PACKET:
+					//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
+					if (processCompassPacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_TACHOMETER_PACKET:
+					if (processTachPacket(r) == FAIL) 
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_STATUS_PACKET:
+					if (processStatusPacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_MOTOR_SAFETY_PACKET:
+					if (processMotorSafetyPacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				case PROTEUS_TEXT_MESSAGE_PACKET:
+					if (processTextMessagePacket(r) == FAIL)
+						done = true; // no point in processing more packets from the MCU
+					numPktsProcessed++;
+					break;
+				default:
+					printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
+					// The first byte does not constitute a valid message header
+					// remove the extraneous byte
 					popRxSerialBuff(r, NULL);
-				}
-				if (rxSerialBufferSize(r) != 0) {
-					popRxSerialBuff(r, NULL); // remove final PROTEUS_END byte
-					return SUCCESS;
-				} else
-					return FAIL;
-		} // switch msg type
-	} 
-	// else {
-	//	uint8_t garbageData; // The front of the serial Rx buffer is not a message header,
-		
-	//	popRxSerialBuff(r, &garbageData);// remove the extraneous byte
-		//printf("proteus_comms: proteusProcessRxData: discarding junk byte 0x%.2x\n", garbageData);
-	//}
+			}
+		} else {
+			uint8_t garbageData; // The front of the serial Rx buffer is not a message header,
+			// remove the extraneous byte
+			popRxSerialBuff(r, &garbageData);
+			printf("proteus_comms: proteusProcessRxData: discarding junk byte 0x%.2x\n", garbageData);
+		}
+	}
 	return SUCCESS;
 }
 
