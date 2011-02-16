@@ -21,6 +21,7 @@ public interface RobotIPAssignments {
 	public static final int MARDESOUS = 24;
 	public static final int NEGRAMONDELO = 34;
 	public static final int NEWCASTLE = 29;
+	public static final int PORTERHOUSE = 19;
 	public static final int PYRAMID = 33;
 	public static final int SHINER = 17;
 	public static final int SPATEN = 35;
