@@ -121,7 +121,7 @@ public class Line {
 		 * have been if it had traveled the specified distance from
 		 * the startLoc to the destLoc.
 		 */
-		Location idealLoc = null;
+		//Location idealLoc = null;
 		
 		/*
 		 * Iteratively search for the location that is "distanceTraveled" away from
