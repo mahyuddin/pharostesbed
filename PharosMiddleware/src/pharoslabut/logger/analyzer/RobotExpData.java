@@ -81,9 +81,12 @@ public class RobotExpData {
 //				}
 				
 			}
-			else if (line.contains("GPSDataBuffer")) {
+			else if (line.contains("GPSDataBuffer: New GPS Data:")) {
 				
 				String[] tokens = line.split("[:=(), ]");
+//				for (int i=0; i < tokens.length; i++) {
+//					System.out.println(i + ": " + tokens[i]);
+//				}
 				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
 				currLoc = new PlayerGpsData();
 				currLoc.setAltitude(Integer.valueOf(tokens[18]));
@@ -105,9 +108,6 @@ public class RobotExpData {
 					if (!currEdge.hasStartLoc())
 						currEdge.setStartLoc(new Location(currLoc));
 				}
-//				for (int i=0; i < tokens.length; i++) {
-//					System.out.println(i + ": " + tokens[i]);
-//				}
 			}
 			else if (line.contains("Arrived at destination")) {
 				String[] tokens = line.split("[:= ]");
