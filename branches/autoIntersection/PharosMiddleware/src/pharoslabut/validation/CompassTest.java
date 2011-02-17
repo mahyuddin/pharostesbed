@@ -1,17 +1,20 @@
 package pharoslabut.validation;
 
 import pharoslabut.logger.CompassLogger;
+import playerclient.OpaqueInterface;
+import playerclient.OpaqueListener;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
 import playerclient.Position2DInterface;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.opaque.PlayerOpaqueData;
 
 /**
  * Logs the compass data.  Does not move the robot.
  * 
  * @author Chien-Liang Fok
  */
-public class CompassTest {
+public class CompassTest implements OpaqueListener {
 	public static final double ROBOT_CIRCLE_VELOCITY = 0.6;
 	public static final double ROBOT_CIRCLE_ANGLE = -20;
 	public static final int ROBOT_REFRESH_PERIOD = 500; // interval of sending commands to robot in ms
@@ -20,7 +23,7 @@ public class CompassTest {
 	private PlayerClient client = null;
 	
 	public CompassTest(String serverIP, int serverPort, int time, 
-			String fileName, boolean showGUI) {
+			String fileName, boolean showGUI, boolean getStatusMsgs) {
 		
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -35,6 +38,11 @@ public class CompassTest {
 		if (compass == null) {
 			log("compass is null");
 			System.exit(1);
+		}
+		
+		if (getStatusMsgs) {
+			OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+			oi.addOpaqueListener(this);
 		}
 		
 		CompassLogger compassLogger = new CompassLogger(compass, showGUI);
@@ -54,6 +62,13 @@ public class CompassTest {
 		}
 	}
 	
+	@Override
+	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+		//System.out.println("Opaque data: " + opaqueData);
+		String s = new String(opaqueData.getData());
+		log(s);
+	}
+	
 	private static void log(String msg) {
 		System.out.println("CompassTest: " + msg);
 	}
@@ -66,6 +81,7 @@ public class CompassTest {
 		System.err.println("\t-time <period in s>: duration of test (default infinity)");
 		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
 		System.err.println("\t-gui: display GUI (default not shown)");
+		System.err.println("\t-getStatusMsgs: whether to subscribe to the interface that provides MCU status messages (default false)");
 	}
 	
 	public static void main(String[] args) {
@@ -74,6 +90,7 @@ public class CompassTest {
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		boolean showGUI = false;
+		boolean getStatusMsgs = false;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -92,6 +109,9 @@ public class CompassTest {
 				else if (args[i].equals("-gui")) {
 					showGUI = true;
 				}
+				else if (args[i].equals("-getStatusMsgs")) {
+					getStatusMsgs = true;
+				}
 				else {
 					usage();
 					System.exit(1);
@@ -108,7 +128,8 @@ public class CompassTest {
 		log("Time: " + time + "s");
 		log("File: " + fileName);
 		log("ShowGUI: " + showGUI);
+		log("GetStatusMsgs: " + getStatusMsgs);
 		
-		new CompassTest(serverIP, serverPort, time, fileName, showGUI);
+		new CompassTest(serverIP, serverPort, time, fileName, showGUI, getStatusMsgs);
 	}
 }

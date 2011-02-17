@@ -4,22 +4,21 @@ import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.Priority;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.logger.*;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
+import playerclient.*;
+import playerclient.structures.*;
+import playerclient.structures.position2d.PlayerPosition2dData;
 
 /**
  * Stresses out the motor of the Proteus robot by sending it a velocity step function.
  * 
  * @author Chien-Liang Fok
  */
-public class MotorStressTest {
+public class MotorStressTest implements Position2DListener {
 	//public static final int COMPASS_LOG_PERIOD = 100; // in milliseconds
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	
-	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike) {
+	public MotorStressTest(String serverIP, int serverPort,	String fileName, boolean useCarLike, double speed, int duration, double heading) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
@@ -32,7 +31,8 @@ public class MotorStressTest {
 		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
-		}
+		} else
+			motors.addPos2DListener(this);
 		
 		MotionArbiter motionArbiter = null;
 		
@@ -46,19 +46,42 @@ public class MotorStressTest {
 			motionArbiter.setFileLogger(flogger);
 		}
 		
+		int startTime = 4;
+		log("Starting experiment in " + startTime + "...");
+		while (startTime-- > 0) {
+			synchronized(this) { 
+				try {
+					wait(1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			if (startTime > 0) log(startTime + "...");
+		}
+		
 		MotionTask currTask;
-		double speedStep = 2;
 		
-		pause(2000);
-		currTask = new MotionTask(Priority.SECOND, speedStep, 0);
+		currTask = new MotionTask(Priority.SECOND, speed, heading);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
-		pause(3000);
+		pause(duration);
 		
-		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
+		
+		log("Pausing 5s before moving in reverse...");
 		pause(5000);
+		
+		currTask = new MotionTask(Priority.SECOND, -1 * speed, heading);
+		log("Submitting: " + currTask);
+		motionArbiter.submitTask(currTask);
+		
+		pause(duration);
+		
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		log("Submitting: " + currTask);
+		motionArbiter.submitTask(currTask);
 		
 		/*currTask = new MotionTask(Priority.SECOND, -speedStep, 0);
 		log("Submitting: " + currTask);
@@ -72,6 +95,12 @@ public class MotorStressTest {
 		
 		log("Test complete!");
 		System.exit(0);
+	}
+	
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		PlayerPose pp = data.getPos();
+		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
 	}
 	
 	private void pause(int duration) {
@@ -99,6 +128,9 @@ public class MotorStressTest {
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
 		System.err.println("\t-car: issue car like commands (default non-car-like)");
+		System.err.println("\t-speed: the speed at which to move the robot in m/s (default 2)");
+		System.err.println("\t-duration: how long to move the robot in milliseconds (default 2000)");
+		System.err.println("\t-heading: the heading in which to turn (default 0)");
 	}
 	
 	public static void main(String[] args) {
@@ -106,6 +138,9 @@ public class MotorStressTest {
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		boolean useCarLike = false;
+		double speed = 2;
+		int duration = 2000;
+		double heading = 0;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -120,6 +155,15 @@ public class MotorStressTest {
 				}
 				else if (args[i].equals("-car")) {
 					useCarLike = true;
+				}
+				else if (args[i].equals("-speed")) {
+					speed = Double.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-duration")) {
+					duration = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-heading")) {
+					heading = Double.valueOf(args[++i]);
 				}
 				else {
 					usage();
@@ -136,7 +180,10 @@ public class MotorStressTest {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
 		System.out.println("Use Car Commands: " + useCarLike);
+		System.out.println("Speed: " + speed);
+		System.out.println("Duration: " + duration);
+		System.out.println("Heading: " + heading);
 		
-		new MotorStressTest(serverIP, serverPort, fileName, useCarLike);
+		new MotorStressTest(serverIP, serverPort, fileName, useCarLike, speed, duration, heading);
 	}
 }
