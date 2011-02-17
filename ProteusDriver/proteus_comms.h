@@ -69,6 +69,7 @@ enum{
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
 	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ACCELEROMETER_PACKET
 };
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE 5
@@ -193,6 +194,20 @@ typedef struct {
 	int16_t statusTargetSpeed;
 	int16_t statusMotorPower;
 	int16_t statusSteeringAngle;
+    
+    /* INS Status stuff go! */
+    double statusINSSpeedX;
+    float statusINSAccelerationX;
+    unsigned char statusINSTickX;
+    
+    double statusINSSpeedY;
+    float statusINSAccelerationY;
+    unsigned char statusINSTickY;
+    
+    float statusINSOrientation;
+    
+    float statusINSDisplaceX;
+    float statusINSDisplaceY;
 	
 	/**
 	 * The following variables are used to buffer incoming serial data.
@@ -201,6 +216,7 @@ typedef struct {
 	uint8_t serialRxBuffer[SERIAL_RX_BUFFER_SIZE];
 	uint16_t rxBuffStartIndx; // points to the next Rx byte to process
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
+    
 } proteus_comm_t;
 
 proteus_comm_t* proteus_create(const char* serial_port);
@@ -220,6 +236,8 @@ result_t proteus_set_speeds(proteus_comm_t* r, double velocity, double angle);
 result_t proteusProcessRxData(proteus_comm_t* r);
 
 result_t proteusReceiveSerialData(proteus_comm_t* r);
+
+result_t processTextMessagePacket(proteus_comm_t* r);
 
 //int proteus_parse_sensor_packet(proteus_comm_t* r, unsigned char* buf, size_t buflen, uint8_t packcet);
 //int proteus_get_sensors(proteus_comm_t* r, int timeout, uint8_t packet);

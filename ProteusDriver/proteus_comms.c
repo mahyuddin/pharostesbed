@@ -808,6 +808,9 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
+			case PROTEUS_ACCELEROMETER_PACKET:
+				if (processAccelerometer_Packet(r) == FAIL) return FAIL;
+				break;
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.
@@ -888,4 +891,78 @@ result_t proteusReceiveSerialData(proteus_comm_t* r) {
 		}
 	}
 	return SUCCESS;
+}
+
+#define DEG2RADIAN 3.14159265/180
+// Added by Francis Rei Lao Israel for processing accelerometer packets.
+result_t processAccelerometerPacket(proteus_comm_t* r) {
+	uint8_t tickNumberNew;
+	uint8_t data;
+    uint8_t axis;
+	int acceleration;
+    float INS_Acceleration_New;
+    float Acceleration_Old;
+    double INS_Speed_Old;
+    double INS_Speed_New;
+    float displacement;
+	// Pull information from packet
+	if (rxSerialBufferSize(r) >= PROTEUS_COMPASS_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
+		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
+		popRxSerialBuff(r, NULL); // pop message type
+		
+		// Figure out tick number (so we can figure out speed later)
+		popRxSerialBuff(r, &tickNumberNew);
+        
+        popRxSerialBuff(r, &axis);
+		
+		// Pop acceleration
+		popRxSerialBuff(r, &data);
+		acceleration = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		acceleration += (data & 0x00FF);
+        
+        popRxSerialBuff(r, NULL); // pop PROTEUS_END
+	} else return FAIL;
+    
+	// Update Running tally of acceleration
+        // Correcting because input is fixed point w/ resolution of .001 M/S^2
+	INS_Acceleration_New = ((float) acceleration)/ 1000;
+    
+    if (axis == 0) { // X axis;
+        Acceleration_Old = r->statusINSAccelerationX;
+        Speed_Old = r->statusINSSpeedX;
+        tickNumberOld = r->statusINSTickX;
+    }
+    else if (axis == 1) {// Y axis;
+        Acceleration_Old = r->statusINSAccelerationY;
+        Speed_Old = r->statisINSSpeedY;
+        tickNumberOld = r->statusINSTickY;
+    }
+    else return FAIL;
+    
+	// Update Running tally of speed
+        // Gonna be assuming straight line from last value to this one, instead of, say, a step value.
+    INS_Speed_New = INS_Speed_Old +
+                        (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
+                        ((INS_Acceleration_New + Acceleration_Old)  /  2 );
+                        
+    displacement = (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+                        ((INS_Speed_Old + INS_Speed_New) / 2 );
+    
+    // Update displacement, Acceleration, etc:
+    if (axis==0) {
+        r-> statusINSAccelerationX = INS_Acceleration_New;
+        r-> statusINSSpeedX = INS_Speed_New;
+        r-> statusINSTickX = tickNumberNew;
+        // Update displacements
+        r-> statusINSDiscplaceX += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDiscplaceY += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+    } else if (axis == 1) {
+        r-> statusINSAccelerationY = INS_Acceleration_New;
+        r-> statusINSSpeedY = INS_Speed_New;
+        r-> statusINSTickY = tickNumberNew;
+        // Update displacements
+        r-> statusINSDiscplaceX += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDiscplaceY += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+    }
 }
