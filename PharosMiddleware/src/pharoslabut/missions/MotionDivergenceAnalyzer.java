@@ -217,7 +217,7 @@ public class MotionDivergenceAnalyzer {
 		System.out.println("Analyzing file: " + expData.getFileName());
 		
 		FileLogger flogger = new FileLogger(prefix + "-MotionDivergenceAbsolute.txt", false /* print time stamp */);
-		Vector<PathEdge> pathHistory = expData.getpathEdges();
+		Vector<PathEdge> pathHistory = expData.getPathEdges();
 		AnalysisResults results = new AnalysisResults();
 		
 		for (int i=0; i < pathHistory.size(); i++) {
@@ -280,7 +280,7 @@ public class MotionDivergenceAnalyzer {
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Absolute)");
 	
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.numLocations(); i++) {
+		for (int i = 0; i < edge.getNumLocations(); i++) {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
@@ -315,7 +315,7 @@ public class MotionDivergenceAnalyzer {
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Relative)");
 		
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.numLocations(); i++) {
+		for (int i = 0; i < edge.getNumLocations(); i++) {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
 			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
@@ -369,7 +369,7 @@ public class MotionDivergenceAnalyzer {
 		
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Relative)");
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.numLocations(); i++) {
+		for (int i = 0; i < edge.getNumLocations(); i++) {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
 			
