@@ -36,7 +36,7 @@ public class PathEdge {
 	 * @return The distance in meters.
 	 */
 	public double finalDistFromDest() {
-		return getLocation(numLocations()-1).getLocation().distanceTo(dest);
+		return getLocation(getNumLocations()-1).getLocation().distanceTo(dest);
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class PathEdge {
 //		return dist / (deltaTime / 1000.0);
 		
 		double sum = 0; // the total distance traveled
-		for (int i = 1; i < numLocations(); i++) {
+		for (int i = 1; i < getNumLocations(); i++) {
 			GPSLocationState startLoc = getLocation(i-1);
 			GPSLocationState endLoc = getLocation(i);
 			sum += startLoc.getLocation().distanceTo(endLoc.getLocation());
@@ -220,10 +220,37 @@ public class PathEdge {
 		locations.add(ls);
 	}
 	
-	public int numLocations() {
+	/**
+	 * The GPS sensor reports location information approximately at 1Hz.
+	 * This method returns all of the GPS locations recorded while the robot
+	 * was traversing this edge.
+	 * 
+	 * @return the number of GPS locations recorded during this edge.
+	 */
+	public Vector<GPSLocationState> getLocations() {
+		return locations;
+	}
+	
+	/**
+	 * The GPS sensor reports location information approximately at 1Hz.
+	 * This method returns the number of GPS locations recorded while the robot
+	 * was traversing this edge.
+	 * 
+	 * @return the number of GPS locations recorded during this edge.
+	 */
+	public int getNumLocations() {
 		return locations.size();
 	}
 	
+	/**
+	 * The GPS sensor reports location information approximately at 1Hz.
+	 * This method returns a specific GPS location measurement that was recorded 
+	 * while the robot was traversing this edge.
+	 * 
+	 * @param indx The index of the GPS location measurement, between 0 and 
+	 * the value returned by getNumLocations.
+	 * @return the number of GPS locations recorded during this edge.
+	 */
 	public GPSLocationState getLocation(int indx) {
 		return locations.get(indx);
 	}
@@ -255,9 +282,9 @@ public class PathEdge {
 		sb.append("Absolute Start time: " + getAbsoluteStartTime() 
 				+ ", Absolute End Time: " + getAbsoluteEndTime() + "\n");
 		sb.append("Speed of travel: " + getSpeed() + "\n");
-		sb.append("Number of GPS records: " + numLocations()  + "\n");
+		sb.append("Number of GPS records: " + getNumLocations()  + "\n");
 		sb.append("GPS History: " + "\n");
-		for (int i = 0; i < numLocations(); i++) {
+		for (int i = 0; i < getNumLocations(); i++) {
 			GPSLocationState loc = getLocation(i);
 			sb.append("\t" + (i+1) + ":\n\t\tTime:" + (loc.getTimeStamp() - startTime + "\n") 
 					+ "\t\tLocation:" + loc.getLoc() + "\n");
