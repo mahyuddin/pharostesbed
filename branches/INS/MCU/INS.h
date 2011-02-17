@@ -1,5 +1,6 @@
-#include "Scheduler.h"
-#include "adc.c"
+#include "Command.h"
+#include "adc.h"
+#include <mc9s12dp512.h>
 
 
 #define INS_SAMPLE_FREQ 3000

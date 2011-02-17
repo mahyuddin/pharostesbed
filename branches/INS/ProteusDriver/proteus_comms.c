@@ -809,7 +809,7 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_ACCELEROMETER_PACKET:
-				if (processAccelerometer_Packet(r) == FAIL) return FAIL;
+				if (processAccelerometerPacket(r) == FAIL) return FAIL;
 				break;
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
@@ -897,6 +897,7 @@ result_t proteusReceiveSerialData(proteus_comm_t* r) {
 // Added by Francis Rei Lao Israel for processing accelerometer packets.
 result_t processAccelerometerPacket(proteus_comm_t* r) {
 	uint8_t tickNumberNew;
+    uint8_t tickNumberOld;
 	uint8_t data;
     uint8_t axis;
 	int acceleration;
@@ -930,12 +931,12 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
     
     if (axis == 0) { // X axis;
         Acceleration_Old = r->statusINSAccelerationX;
-        Speed_Old = r->statusINSSpeedX;
+        INS_Speed_Old = r->statusINSSpeedX;
         tickNumberOld = r->statusINSTickX;
     }
     else if (axis == 1) {// Y axis;
         Acceleration_Old = r->statusINSAccelerationY;
-        Speed_Old = r->statisINSSpeedY;
+        INS_Speed_Old = r->statusINSSpeedY;
         tickNumberOld = r->statusINSTickY;
     }
     else return FAIL;
@@ -943,10 +944,10 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 	// Update Running tally of speed
         // Gonna be assuming straight line from last value to this one, instead of, say, a step value.
     INS_Speed_New = INS_Speed_Old +
-                        (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
-                        ((INS_Acceleration_New + Acceleration_Old)  /  2 );
+                        ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
+                        ( (INS_Acceleration_New + Acceleration_Old)  /  2 );
                         
-    displacement = (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+    displacement = ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
                         ((INS_Speed_Old + INS_Speed_New) / 2 );
     
     // Update displacement, Acceleration, etc:
@@ -955,14 +956,14 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
         r-> statusINSSpeedX = INS_Speed_New;
         r-> statusINSTickX = tickNumberNew;
         // Update displacements
-        r-> statusINSDiscplaceX += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
-        r-> statusINSDiscplaceY += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDisplaceX += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDisplaceY += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
     } else if (axis == 1) {
         r-> statusINSAccelerationY = INS_Acceleration_New;
         r-> statusINSSpeedY = INS_Speed_New;
         r-> statusINSTickY = tickNumberNew;
         // Update displacements
-        r-> statusINSDiscplaceX += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
-        r-> statusINSDiscplaceY += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDisplaceX += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        r-> statusINSDisplaceY += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
     }
 }

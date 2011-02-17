@@ -58,9 +58,9 @@ uint16_t _int13Count = 0;
 void MotorControl_init(void) {
 	
 	// Configure the motor speed interupt (ECT Channel 3, interrupt 11)
-	TIOS |= TIOS_CH6_INT14_BIT;  // Set Enhanced Capture Timer Channel 3 to be output compare.  This is interrupt 11.
-	TIE |= TIE_CH6_INT14_BIT;   // Timer Interrupt Enable register, allow interrupt 11 to occur
-	TC6 = TCNT + 50; // first interrupt right away
+	// TIOS |= TIOS_CH6_INT14_BIT;  // Set Enhanced Capture Timer Channel 3 to be output compare.  This is interrupt 11.
+	// TIE |= TIE_CH6_INT14_BIT;   // Timer Interrupt Enable register, allow interrupt 11 to occur
+	// TC6 = TCNT + 50; // first interrupt right away
 	
 	// Configure the safe mode interupt (ECT Channel 5, interupt 13)
 	TIOS |= TIOS_CH5_INT13_BIT;  // Set Enhanced Capture Timer Channel 5 to be output compare.  This is interrupt 13.
@@ -222,7 +222,7 @@ void MotorControl_doSafetyCheck() {
  * It is called every 10ms. Since we want a 50ms period, we need to wait five
  * interrupts before posting the task.
  */
-interrupt 14 void motorSpeedInterrupt(void) {
+/*interrupt 14*/ void motorSpeedInterrupt(void) {
 	
 	// TFLG1 is the "Main Timer Interrupt Flag 1".  See the ECT Block Diagram Document.
 	TFLG1 = TFLG1_CH6_INT14_BIT; // Acknowledge ECT Channel 6 interrupt

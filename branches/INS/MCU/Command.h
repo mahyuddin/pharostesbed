@@ -15,6 +15,8 @@
 #ifndef _PROTEUS_COMMAND_H
 #define _PROTEUS_COMMAND_H 1
 
+#include "Types.h"
+
 #define PROTEUS_BEGIN 0x24 //'$' to start transmissions
 #define PROTEUS_END 0x0A //LF terminated transmissions
 #define PROTEUS_ESCAPE 0xFF // escape special characters

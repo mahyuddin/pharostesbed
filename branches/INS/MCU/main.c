@@ -15,7 +15,6 @@
 #include "LED.h"
 #include "Command.h"
 #include "SerialDriver.h"
-#include "MotorControl.h"
 #include "Servo_PWM.h"
 #include "TaskHandler.h"
 #include "Tach.h"
