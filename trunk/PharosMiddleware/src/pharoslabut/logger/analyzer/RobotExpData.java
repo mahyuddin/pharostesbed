@@ -29,6 +29,14 @@ public class RobotExpData {
 	private String fileName;
 	
 	/**
+	 * The offset in ms between the local timestamps and the GPS timestamps.
+	 * To calibrate a local time stamp:
+	 * 
+	 * True time = Local timestamp - calibratedTimeOffset.
+	 */
+	private double calibratedTimeOffset;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the experiment log file.
@@ -37,6 +45,7 @@ public class RobotExpData {
 		this.fileName = fileName;
 		try {
 			readFile();
+			calibrateTime();
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -44,6 +53,12 @@ public class RobotExpData {
 		}
 	}
 	
+	/**
+	 * Reads in and organizes the data in the log file.
+	 * 
+	 * @throws NumberFormatException
+	 * @throws IOException
+	 */
 	private void readFile() throws NumberFormatException, IOException {
 		File file = new File(fileName);
 		BufferedReader br = new BufferedReader(new FileReader(file));
@@ -110,6 +125,7 @@ public class RobotExpData {
 				}
 			}
 			else if (line.contains("Arrived at destination")) {
+				// Save the end time of the experiment
 				String[] tokens = line.split("[:= ]");
 				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
 				currEdge.setEndTime(timeStamp);
@@ -120,11 +136,66 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Compares the GPS timestamps with the local time stamps to determine the 
+	 * offset needed to calibrate the local time stamps.  This assumes that the 
+	 * GPS timestamps are accurate to within 1 second.
+	 */
+	private void calibrateTime() {
+		// First gather all of the location data...
+		Vector<GPSLocationState> locs = new Vector<GPSLocationState>();
+		for (int i=0; i < pathEdges.size(); i++) {
+			locs.addAll(pathEdges.get(i).getLocations());
+		}
+		
+//		pharoslabut.logger.FileLogger flogger = new pharoslabut.logger.FileLogger("CalibrateTime", false);
+		
+		double diffSum = 0; // the sum of all the diffs 
+		
+		// Calculate the difference between the local time stamp
+		// and the GPS time stamp
+		for (int i=0; i < locs.size(); i++) {
+			
+			// The following is the difference, measured in milliseconds, 
+			// between the current time and midnight, January 1, 1970 UTC.
+			long localTimestamp = locs.get(i).getTimeStamp();
+			
+			// This is the GPS Timestamp.  The code that generates it is available here:
+			// http://playerstage.svn.sourceforge.net/viewvc/playerstage/code/player/tags/release-2-1-3/server/drivers/gps/garminnmea.cc?revision=8139&view=markup
+			// Note that the microsecond field is always zero, meaning it only provides
+			// one second resolution.  The value is the number of seconds elapsed since 
+			// 00:00 hours, Jan 1, 1970 UTC.
+			int gpsSec = locs.get(i).getLoc().getTime_sec();
+//			int gpsUSec = locs.get(i).getLoc().getTime_usec();
+			
+			// Calculate the difference between the two time stamps
+			double diff = (localTimestamp / 1000.0) - gpsSec;
+			
+			diffSum += diff;
+			
+//			String str = localTimestamp + "\t" + gpsSec +"\t" + diff;
+//			System.out.println(str);
+//			flogger.log(str);
+		}
+		
+		// Calculate the average offset and use it to calibrate all of the local timestamps.
+		calibratedTimeOffset = diffSum / locs.size() * 1000;
+		
+//		String str = "CalibratedTimeOffset: " + calibratedTimeOffset;
+//		System.out.println(str);
+//		flogger.log(str);
+		
+	}
+	
+	public long getCalibratedTimeStamp(long timestamp) {
+		return Math.round(timestamp - calibratedTimeOffset);
+	}
+	
+	/**
 	 * Gets the path edge history.
 	 * 
 	 * @return the path edge history.
 	 */
-	public Vector<PathEdge> getpathEdges() {
+	public Vector<PathEdge> getPathEdges() {
 		return pathEdges;
 	}
 	
@@ -150,7 +221,7 @@ public class RobotExpData {
 	
 	/**
 	 * Goes through each of the path edges and gathers all of the GPS data
-	 * into a single vector.
+	 * into a single vector.  Returns this vector.
 	 * 
 	 * @return The vector containing the entire path history of the robot.
 	 */
@@ -160,7 +231,7 @@ public class RobotExpData {
 		
 		while (e.hasMoreElements()) {
 			PathEdge pe = e.nextElement();
-			for (int i=0; i < pe.numLocations(); i++) {
+			for (int i=0; i < pe.getNumLocations(); i++) {
 				result.add(pe.getLocation(i));
 			}
 		}
@@ -195,5 +266,9 @@ public class RobotExpData {
 	 */
 	public double getLatenessTo(int wayPoint) {
 		return pathEdges.get(wayPoint).getLateness();
+	}
+	
+	public static void main(String[] args) {
+		new RobotExpData(args[0]);
 	}
 }
