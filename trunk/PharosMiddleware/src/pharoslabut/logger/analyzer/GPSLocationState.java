@@ -20,7 +20,13 @@ public class GPSLocationState {
 	public Location getLocation() {
 		return new Location(gpsLoc);
 	}
-	
+
+	/**
+	 * Returns the local time stamp.  This is the value of the local
+	 * system clock and obtained using System.currentTimeMillis().
+	 *  
+	 * @return The local time stamp.
+	 */
 	public long getTimeStamp() {
 		return timeStamp;
 	}
