@@ -927,43 +927,56 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
     
 	// Update Running tally of acceleration
         // Correcting because input is fixed point w/ resolution of .001 M/S^2
-	INS_Acceleration_New = ((float) acceleration)/ 1000;
+	if (axis != 2) {
+        // Fixed point to floating point (1000:1)
+        INS_Acceleration_New = ((float) acceleration)/ 1000;
     
-    if (axis == 0) { // X axis;
-        Acceleration_Old = r->statusINSAccelerationX;
-        INS_Speed_Old = r->statusINSSpeedX;
-        tickNumberOld = r->statusINSTickX;
-    }
-    else if (axis == 1) {// Y axis;
-        Acceleration_Old = r->statusINSAccelerationY;
-        INS_Speed_Old = r->statusINSSpeedY;
-        tickNumberOld = r->statusINSTickY;
-    }
-    else return FAIL;
-    
-	// Update Running tally of speed
-        // Gonna be assuming straight line from last value to this one, instead of, say, a step value.
-    INS_Speed_New = INS_Speed_Old +
-                        ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
-                        ( (INS_Acceleration_New + Acceleration_Old)  /  2 );
-                        
-    displacement = ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
-                        ((INS_Speed_Old + INS_Speed_New) / 2 );
-    
-    // Update displacement, Acceleration, etc:
-    if (axis==0) {
-        r-> statusINSAccelerationX = INS_Acceleration_New;
-        r-> statusINSSpeedX = INS_Speed_New;
-        r-> statusINSTickX = tickNumberNew;
-        // Update displacements
-        r-> statusINSDisplaceX += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
-        r-> statusINSDisplaceY += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
-    } else if (axis == 1) {
-        r-> statusINSAccelerationY = INS_Acceleration_New;
-        r-> statusINSSpeedY = INS_Speed_New;
-        r-> statusINSTickY = tickNumberNew;
-        // Update displacements
-        r-> statusINSDisplaceX += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
-        r-> statusINSDisplaceY += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        if (axis == 0) { // X axis;
+            Acceleration_Old = r->statusINSAccelerationX;
+            INS_Speed_Old = r->statusINSSpeedX;
+            tickNumberOld = r->statusINSTickX;
+        }
+        else if (axis == 1) {// Y axis;
+            Acceleration_Old = r->statusINSAccelerationY;
+            INS_Speed_Old = r->statusINSSpeedY;
+            tickNumberOld = r->statusINSTickY;
+        }
+        else return FAIL;
+        
+        // Update Running tally of speed
+            // Gonna be assuming straight line from last value to this one, instead of, say, a step value.
+        INS_Speed_New = INS_Speed_Old +
+                            ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
+                            ( (INS_Acceleration_New + Acceleration_Old)  /  2 );
+                            
+        displacement = ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+                            ((INS_Speed_Old + INS_Speed_New) / 2 );
+        
+        // Update displacement, Acceleration, etc:
+        if (axis==0) {
+            r-> statusINSAccelerationX = INS_Acceleration_New;
+            r-> statusINSSpeedX = INS_Speed_New;
+            r-> statusINSTickX = tickNumberNew;
+            // Update displacements
+            r-> statusINSDisplaceX += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+            r-> statusINSDisplaceY += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        } else if (axis == 1) {
+            r-> statusINSAccelerationY = INS_Acceleration_New;
+            r-> statusINSSpeedY = INS_Speed_New;
+            r-> statusINSTickY = tickNumberNew;
+            // Update displacements
+            r-> statusINSDisplaceX += sin(r->statusINSOrientation * DEG2RADIAN) * displacement;
+            r-> statusINSDisplaceY += cos(r->statusINSOrientation * DEG2RADIAN) * displacement;
+        }
+    } else {
+        // This is really a gyroscope! 
+        // Convert from fixed point to floating point (100:1)
+        float INS_GyroSpeed_New = ((float) acceleration)/ 100;
+        tickNumberOld = r-> statusINSTickGyro;
+        r -> statusINSOrientation = r -> statusINSOrientation + 
+                                    ( (unsigned char) tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+                                    ( (r -> statusINSGyroSpeed + INS_GyroSpeed_New) / 2);
+        r -> statusINSGyroSpeed = INS_GyroSpeed_New;
+        r-> statusINSTickGyro = tickNumberNew;
     }
 }

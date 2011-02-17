@@ -29,6 +29,7 @@
 			}
 AddFifo(Xaxis, 40, FIFO_Item, 1, 0);
 AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
+AddFifo(Gyro, 40, FIFO_Item, 1, 0);
 
 void INS_Init() {
     ADC1_Init();
@@ -39,8 +40,10 @@ void INS_Init() {
 
 
 // TODO: Create real tables that don't suck
-ADC_Accel ADC0_Table[] = {{0,-2000},{1025,2000}};
-ADC_Accel ADC1_Table[] = {{0,-2000},{1025,2000}};
+ADC_Accel ADC0_Table[] = {{0,-19620},{1025,19620}};
+ADC_Accel ADC1_Table[] = {{0,-19620},{1025,19620}};
+
+ADC_Accel Gyro_Table[] = {{0,-50000},{676,50000}};
 ADC_Accel *ADC_Table[] = {&ADC0_Table, &ADC1_Table};
 
 // Foreground thread:
@@ -71,6 +74,18 @@ void INSPeriodicFG(){
     }
     accelAverage = sum / itemCount;
 	Command_sendAccelerometerPacket( (uint8_t) output.tick, 1, (uint16_t) accelAverage);
+    
+        sum = 0;
+    accelAverage = 0;
+    itemCount =0;
+    while (GyroFifo_Get(&output) == 1 ){
+        // Translate and output value to the x86.
+        int value = INS_Translate(output.value, ADC_Table[output.label]);
+        itemCount ++;
+        sum += value;
+    }
+    accelAverage = sum / itemCount;
+	Command_sendAccelerometerPacket( (uint8_t) output.tick, 2, (uint16_t) accelAverage);
 }
 
 
@@ -99,6 +114,15 @@ interrupt 14 void INSPeriodicBG(void){
         tick++;
         // Actual translation of values is done in main();
         YaxisFifo_Put(putMe);
+    }
+    for(;0 /*ATD pins for gyroscope*/;i++){
+                FIFO_Item putMe;
+        putMe.label = i;
+        putMe.value = ADC1_In(i);
+        putMe.tick  = tick;
+        tick++;
+        // Actual translation of values is done in main();
+        GyroFifo_Put(putMe);
     }
     TaskHandler_postTask(&INSPeriodicFG);
 	
