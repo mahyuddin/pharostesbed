@@ -3,6 +3,7 @@
 
 #include "INS.h"
 
+
 #define AddFifo(NAME,SIZE,TYPE, SUCCESS,FAIL) \
 			unsigned long volatile PutI ## NAME;  \
 			unsigned long volatile GetI ## NAME;  \
@@ -31,23 +32,23 @@ AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
 
 void INS_Init() {
     ADC1_Init();
-    TIOS |= 0x02;    // activate TC1 as output compare
-    TIE  |= 0x02;    // arm OC1
-    TC1   = TCNT+75; // First interrupt right away.
+    TIOS |= 0x40;    // activate TC6 as output compare
+    TIE  |= 0x40;    // arm OC6
+    TC6   = TCNT+75; // First interrupt right away.
 }
 
 
 // TODO: Create real tables that don't suck
 ADC_Accel ADC0_Table[] = {{0,-2000},{1025,2000}};
 ADC_Accel ADC1_Table[] = {{0,-2000},{1025,2000}};
-ADC_Accel *ADC_Table[&ADC0_Table, &ADC1_Table]
+ADC_Accel *ADC_Table[] = {&ADC0_Table, &ADC1_Table};
 
 // Foreground thread:
 // Does ADC translation, pipes the translated info to the 
 void INSPeriodicFG(){
     // Pull values from FIFO
     FIFO_Item output;
-    double sum = 0;
+    signed long sum = 0;
     int accelAverage = 0;
     int itemCount =0;
     while (XaxisFifo_Get(&output) == 1 ){
@@ -57,7 +58,7 @@ void INSPeriodicFG(){
         sum += value;
     }
     accelAverage = sum / itemCount;
-	sendAccelerometerPacket( (uint8_t)output.tick, 0, (uint16_t) accelAverage);
+	Command_sendAccelerometerPacket( (uint8_t)output.tick, 0, (uint16_t) accelAverage);
     
     sum = 0;
     accelAverage = 0;
@@ -69,18 +70,18 @@ void INSPeriodicFG(){
         sum += value;
     }
     accelAverage = sum / itemCount;
-	sendAccelerometerPacket( (uint8_t) output.tick, 1, (uint16_t) accelAverage);
+	Command_sendAccelerometerPacket( (uint8_t) output.tick, 1, (uint16_t) accelAverage);
 }
 
 
-interrupt 9 void INSPeriodicBG(void){
+interrupt 14 void INSPeriodicBG(void){
     // Read the relevant ADC inputs, shove onto a FIFO.
     // unsigned short input = ADC1_In(0);
     // TODO: Figure out what ATD pins are available.
-    TFLG1 = 0x02;         // acknowledge OC1
-	TC1 = TCNT + 10000000000 / (SAMPLEFREQ * 3333);
-    static unsigned short tick = 0;
     int i = 0;
+    static unsigned short tick = 0;
+    TFLG1 = 0x40;         // acknowledge OC6
+    TC6 = TC6 + 3000300 / INS_SAMPLE_FREQ;    // 3 000 300 = 10 000 000 000 / 3 333
     for (;0/*Used ATD pins in X */; i++){
         FIFO_Item putMe;
         putMe.label = i;
@@ -88,7 +89,7 @@ interrupt 9 void INSPeriodicBG(void){
         putMe.tick  = tick;
         tick++;
         // Actual translation of values is done in main();
-        XaxisFifo_Put();
+        XaxisFifo_Put(putMe);
     }
     for (;0/*Used ATD pins in Y */; i++){
         FIFO_Item putMe;
@@ -97,7 +98,7 @@ interrupt 9 void INSPeriodicBG(void){
         putMe.tick  = tick;
         tick++;
         // Actual translation of values is done in main();
-        YaxisFifo_Put();
+        YaxisFifo_Put(putMe);
     }
     TaskHandler_postTask(&INSPeriodicFG);
 	
@@ -114,17 +115,17 @@ interrupt 9 void INSPeriodicBG(void){
 //      Otherwise, you run the risk of an infinite loop as the function spins off into infinity.
 int INS_Translate(unsigned short translate, ADC_Accel *TableStart){
     int result;
-    int a_1, a_2, v_1, v2;
-    ADC_Accel TTE1, TTE2;
+    ADC_Accel* TTE1;
+    ADC_Accel *TTE2;
     TTE1 = TableStart;
     TTE2 = TableStart + 1;
     // Find the two TTE (Translation Table Entries) which the input lies between
-    while !((TTE1-> ADC <= translate && translate <  TTE2->ADC)){
+    while ( ! (TTE1-> ADC <= translate && translate <  TTE2->ADC)){
         TTE1++;
         TTE2++;
     }
     // Linear interpolation between the two TTEs
         // Multiply first, or else you'll get bitten by truncation
-    result = ( (TTE2->Accel - TTE1->Accel) * (translate - TTE1->ADC)    )   /   (TTE2->ADC - TTE1->ADC);
-    return result + TTE1->Accel;
+    result = ( (TTE2->X - TTE1->X) * (translate - TTE1->ADC)    )   /   (TTE2->ADC - TTE1->ADC);
+    return result + TTE1->X;
 }
