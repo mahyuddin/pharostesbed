@@ -26,7 +26,8 @@
 			    GetI ## NAME ## ++;                              \
 			    return(SUCCESS);                                 \
 			}
-AddFifo(Tx, 40, FIFO_Item, 1, 0);
+AddFifo(Xaxis, 40, FIFO_Item, 1, 0);
+AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
 
 void INS_Init() {
     ADC1_Init();
@@ -40,7 +41,6 @@ void INS_Init() {
 ADC_Accel ADC0_Table[] = {{0,-2000},{1025,2000}};
 ADC_Accel ADC1_Table[] = {{0,-2000},{1025,2000}};
 ADC_Accel *ADC_Table[&ADC0_Table, &ADC1_Table]
-#define SAMPLEFREQ 3000
 
 // Foreground thread:
 // Does ADC translation, pipes the translated info to the 
@@ -50,14 +50,26 @@ void INSPeriodicFG(){
     double sum = 0;
     int accelAverage = 0;
     int itemCount =0;
-    while (TxFifo_Get(&output) == 1 ){
+    while (XaxisFifo_Get(&output) == 1 ){
         // Translate and output value to the x86.
         int value = INS_Translate(output.value, ADC_Table[output.label]);
         itemCount ++;
         sum += value;
     }
     accelAverage = sum / itemCount;
-	sendAccelerometerPacket(output.tick, accelAverage);
+	sendAccelerometerPacket( (uint8_t)output.tick, 0, (uint16_t) accelAverage);
+    
+    sum = 0;
+    accelAverage = 0;
+    itemCount =0;
+    while (YaxisFifo_Get(&output) == 1 ){
+        // Translate and output value to the x86.
+        int value = INS_Translate(output.value, ADC_Table[output.label]);
+        itemCount ++;
+        sum += value;
+    }
+    accelAverage = sum / itemCount;
+	sendAccelerometerPacket( (uint8_t) output.tick, 1, (uint16_t) accelAverage);
 }
 
 
@@ -67,16 +79,25 @@ interrupt 9 void INSPeriodicBG(void){
     // TODO: Figure out what ATD pins are available.
     TFLG1 = 0x02;         // acknowledge OC1
 	TC1 = TCNT + 10000000000 / (SAMPLEFREQ * 3333);
-    static int tick = 0;
+    static unsigned short tick = 0;
     int i = 0;
-    for (;0/*Used ATD pins*/; i++){
+    for (;0/*Used ATD pins in X */; i++){
         FIFO_Item putMe;
         putMe.label = i;
         putMe.value = ADC1_In(i);
         putMe.tick  = tick;
         tick++;
         // Actual translation of values is done in main();
-        TxFifo_Put();
+        XaxisFifo_Put();
+    }
+    for (;0/*Used ATD pins in Y */; i++){
+        FIFO_Item putMe;
+        putMe.label = i;
+        putMe.value = ADC1_In(i);
+        putMe.tick  = tick;
+        tick++;
+        // Actual translation of values is done in main();
+        YaxisFifo_Put();
     }
     TaskHandler_postTask(&INSPeriodicFG);
 	
