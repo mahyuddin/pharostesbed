@@ -91,12 +91,12 @@ public class ReflectiveDivergenceAnalyzer {
 		logFileNames.add("M11/M11-Results/M11-Exp5/M11-Exp5-Wynkoop_20101206075054.log");
 		captionName.add("M11-Exp5-Wynkoop");
 		
-		Vector<ExpData> allExpData = new Vector<ExpData>();
+		Vector<RobotExpData> allExpData = new Vector<RobotExpData>();
 		
 		
 		for (int i=0; i < logFileNames.size(); i++) {
 			log("Processing " + logFileNames.get(i));
-			ExpData ed = LogFileReader.readLogFile(logFileNames.get(i));
+			RobotExpData ed = new RobotExpData(logFileNames.get(i));
 			allExpData.add(ed);
 		}
 		

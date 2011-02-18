@@ -49,10 +49,6 @@ public class ExpConfigReader {
 						try {
 							String[] elem = line.split("[\\s]+");
 							RobotExpSettings rs = new RobotExpSettings();
-							//							System.out.println("Read in line: " + line);
-							//							for (int i=0; i < elem.length; i++) {
-							//								System.out.println(i + ": " + elem[i]);
-							//							}
 							rs.setName(elem[1]);
 							rs.setIPAddress(elem[2]);
 							rs.setPort(Integer.valueOf(elem[3]));
