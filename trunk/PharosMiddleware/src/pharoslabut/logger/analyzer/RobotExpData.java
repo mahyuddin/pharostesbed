@@ -37,6 +37,16 @@ public class RobotExpData {
 	private double calibratedTimeOffset;
 	
 	/**
+	 * Records when the TelosB receives a broadcasts.
+	 */
+	private Vector<TelosBRxRecord> telosBRxHist = new Vector<TelosBRxRecord>();
+	
+	/**
+	 * Records when the TelosB sends a broadcast.
+	 */
+	private Vector<TelosBTxRecord> telosBTxHist = new Vector<TelosBTxRecord>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the experiment log file.
@@ -89,19 +99,10 @@ public class RobotExpData {
 				if (currLoc != null) {
 					currEdge.setStartLoc(new Location(currLoc));
 				}
-				
-//				int i = 0;
-//				while (tokens.hasMoreElements()) {
-//					System.out.println(i++ + ": " + tokens.nextToken());
-//				}
-				
 			}
 			else if (line.contains("GPSDataBuffer: New GPS Data:")) {
 				
 				String[] tokens = line.split("[:=(), ]");
-//				for (int i=0; i < tokens.length; i++) {
-//					System.out.println(i + ": " + tokens[i]);
-//				}
 				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
 				currLoc = new PlayerGpsData();
 				currLoc.setAltitude(Integer.valueOf(tokens[18]));
@@ -124,6 +125,35 @@ public class RobotExpData {
 						currEdge.setStartLoc(new Location(currLoc));
 				}
 			}
+			else if (line.contains("RadioSignalMeter: SEND_BCAST")) {
+				// The format of this line is:
+				// [local time stamp] RadioSignalMeter: SEND_BCAST [node id] [seqno]
+				String[] tokens = line.split("(\\s|\\[|\\])");
+				TelosBTxRecord txRec = new TelosBTxRecord(
+						Long.valueOf(tokens[1]), // timestamp
+						Integer.valueOf(tokens[5]), // sender ID
+						Integer.valueOf(tokens[6])); // seqno
+				telosBTxHist.add(txRec);
+				
+			}
+			else if (line.contains("RadioSignalMeter: RADIO_CC2420_RECEIVE")) {
+				// The format of this line is:
+				// [local time stamp] RadioSignalMeter: RADIO_CC2420_RECEIVE [receiver id] [sender id] [seqno] [RSSI] [LQI] [mote timestamp]
+				String[] tokens = line.split("(\\s|\\[|\\])");
+//				for (int i=0; i < tokens.length; i++) {
+//					System.out.println(i + ": " + tokens[i]);
+//				}
+				TelosBRxRecord rxRec = new TelosBRxRecord(
+						Long.valueOf(tokens[1]), // timestamp
+						Integer.valueOf(tokens[5]), // sndrID
+						Integer.valueOf(tokens[6]), // rcvrID
+						Integer.valueOf(tokens[7]), // seqno
+						Integer.valueOf(tokens[8]), // rssi
+						Integer.valueOf(tokens[9]), // lqi
+						Integer.valueOf(tokens[10])); // moteTimestamp
+				telosBRxHist.add(rxRec);
+			}
+
 			else if (line.contains("Arrived at destination")) {
 				// Save the end time of the experiment
 				String[] tokens = line.split("[:= ]");
@@ -190,6 +220,14 @@ public class RobotExpData {
 		return Math.round(timestamp - calibratedTimeOffset);
 	}
 	
+	public Vector<TelosBRxRecord> getTelosBRxHist() {
+		return telosBRxHist;
+	}
+	
+	public Vector<TelosBTxRecord> getTelosBTxHist() {
+		return telosBTxHist;
+	}
+
 	/**
 	 * Gets the path edge history.
 	 * 
