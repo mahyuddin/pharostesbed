@@ -51,7 +51,8 @@ enum {
 	PROTEUS_TACHOMETER_PACKET,
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
-	PROTEUS_TEXT_MESSAGE_PACKET
+	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ACK_PACKET
 };
 
 /**
@@ -114,5 +115,11 @@ void Command_stopSendingData(void);
 void Command_sendStatus(void);
 //void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
+
+/**
+ * Sends an acknowledgement to the x86 telling it that it is done
+ * executing the previous command.
+ */
+void Command_sendAckPacket(void);
 
 #endif /* _PROTEUS_COMMAND_H */

@@ -14,6 +14,7 @@
  * Modified by Chien-Liang Fok <liangfok@mail.utexas.edu> on 02/19/2011.
  *  - Changed motor control (Servo 1) to be a second steering servo for tilting
  *    the camera.
+ *  - Added the sending of an Ack after the servo is done moving.
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -26,9 +27,10 @@
 
 uint8_t ActualSetpoint1 = 128, ActualSetpoint2 = 128, ActualSetpoint3 = 128, ActualSetpoint4 = 128;
 uint8_t TargetSetpoint1 = 128, TargetSetpoint2 = 128, TargetSetpoint3 = 128, TargetSetpoint4 = 128;
-uint8_t MaxChangePerPeriod = 6;
+uint8_t MaxChangePerPeriod = 4;
 
 bool Servo1Enabled, Servo2Enabled, Servo3Enabled, Servo4Enabled;
+bool sendAck = FALSE;
 
 /**
  * Enable PWM channels 0-7.
@@ -89,9 +91,17 @@ uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
 	else if(actualSP + MaxChangePerPeriod < targetSP) 
 		// Target is higher than actual plus the max change per period
 		return actualSP + MaxChangePerPeriod;
-	else
-		// The change is smaller than the max change per period.  Just jump to the target value.
+	else {
+		// The change is smaller than the max change per period.  
+		// Send an ack if necessary and jump to the target value.
+		
+		if (sendAck) {
+			sendAck = FALSE;
+			Command_sendAckPacket();
+		}
+		
 		return targetSP;
+	}
 }
 
 /**
@@ -361,6 +371,7 @@ uint8_t getServoTarget(int16_t angle) {
 void Servo_setCameraTiltAngle(int16_t angle) {
 	uint8_t target = getServoTarget(angle);
 	Servo_set1(target); // sets the target set point
+	sendAck = TRUE;
 }
 
 /**
@@ -372,6 +383,7 @@ void Servo_setCameraTiltAngle(int16_t angle) {
 void Servo_setCameraPanAngle(int16_t angle) {
 	uint8_t target = getServoTarget(angle);
 	Servo_set2(target); // sets the target set point
+	sendAck = TRUE;
 }
 
 /**

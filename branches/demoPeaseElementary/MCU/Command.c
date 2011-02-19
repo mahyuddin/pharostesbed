@@ -210,6 +210,16 @@ void Command_sendMessagePacket(char* message) {
 }
 
 /**
+ * Sends an acknowledgement to the x86 telling it that it is done
+ * executing the previous command.
+ */
+void Command_sendAckPacket() {
+	SerialDriver_sendByte(PROTEUS_BEGIN);
+	SerialDriver_sendByte(PROTEUS_ACK_PACKET);
+	SerialDriver_sendByte(PROTEUS_END);
+}
+
+/**
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
 void Command_sendData() {
