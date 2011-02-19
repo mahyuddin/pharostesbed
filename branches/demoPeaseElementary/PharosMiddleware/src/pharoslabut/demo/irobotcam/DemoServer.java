@@ -181,7 +181,7 @@ public class DemoServer implements MessageReceiver {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.irobotcam <options>\n");
+		print("Usage: pharoslabut.demo.irobotcam.DemoServer <options>\n");
 		print("Where <options> include:");
 		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-pPort <port number>: The Player Server's port number (default 6665)");

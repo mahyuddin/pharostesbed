@@ -62,7 +62,7 @@ public class DemoClient {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.validation.MotorStressTest <options>\n");
+		print("Usage: pharoslabut.demo.irobotcam.DemoClient <options>\n");
 		print("\t-server <ip address>: The IP address of the Demo Server (default localhost)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
 		print("\t-file <file name>: name of file in which to save results (default DemoClient.log)");
