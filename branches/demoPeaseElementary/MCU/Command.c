@@ -135,7 +135,7 @@ uint16_t saveTwoBytes(uint8_t* buff, uint16_t indx, int16_t data) {
 /**
  * Sends an odometry packet to the x86 computer.
  */
-void Command_sendOdometryPacket() {
+/*void Command_sendOdometryPacket() {
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
 	uint16_t i;
@@ -149,13 +149,13 @@ void Command_sendOdometryPacket() {
 	for(i = 0; i < indx; i++){
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
-}
+}*/
 
 /**
  * Sends a message containing the previous motor power and current speed.
  * This is called whenever the motor controller reports a safety event.
  */
-void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed) {
+/*void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed) {
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
 	uint16_t i;
@@ -168,13 +168,13 @@ void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed
 	for(i = 0; i < indx; i++){
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
-}
+}*/
 
 /**
  * Sends a compass packet to the x86 computer.
  * This is called by Compass.c after it gets the compass reading.
  */
-void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
+/*void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
 	uint16_t i;
@@ -190,7 +190,7 @@ void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 	for(i = 0; i < indx; i++){
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
-}
+}*/
 
 /**
  * Sends a text message to the x86 computer.
@@ -229,10 +229,8 @@ void Command_sendStatus() {
 	uint16_t i;
 	outToSerial[indx++] = PROTEUS_BEGIN;
 	outToSerial[indx++] = PROTEUS_STATUS_PACKET;
-	indx = saveTwoBytes(outToSerial, indx, Tach_getVelocity()); // velocity in cm/s
-	indx = saveTwoBytes(outToSerial, indx, MotorControl_getTargetSpeed()); // target velocity in cm/s
-	indx = saveTwoBytes(outToSerial, indx, MotorControl_getMotorPower()); // motor power being sent to the motor controller
-	indx = saveTwoBytes(outToSerial, indx, Servo_getSteeringAngle()); // steering angle in units of .0001 radians 
+	indx = saveTwoBytes(outToSerial, indx, Servo_getCameraTiltAngle()); // the camera tilt angle in 0.0001 radians
+	indx = saveTwoBytes(outToSerial, indx, Servo_getCameraPanAngle()); // the camera pan angle in 0.0001 radians
 	outToSerial[indx++] = PROTEUS_END;
 	
 	for(i = 0; i < indx; i++){

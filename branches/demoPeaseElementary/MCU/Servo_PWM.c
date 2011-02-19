@@ -40,8 +40,11 @@ void Servo_init() {
 	DDRT |= 0x04;     // set directional bit PT2--output
 	PWME = 0x00;      // disable channels 0-7
 	PWMPOL |= 0xFF;   // PP0-7 high then low
-	PWMCLK |= 0xFC;   // use clock SA,SB on channels 7-2
-	PWMCLK &= ~0x02;  // use clock A on channel1 (motor)
+	
+	//PWMCLK |= 0xFC;   // use clock SA,SB on channels 7-2 (1111 1100)
+	//PWMCLK &= ~0x02;  // use clock A on channel1 (motor) (1111 1101)
+	PWMCLK |= 0xFF;   // use clock SA or SB on PWM channels 0-7
+	
 	PWMPRCLK = 0x00;  // A,B = ECLK = 24MHz
 	PWMCAE = 0x00;    // all left aligned
 	PWMCTL = 0xF0;    // 4 16-bit channels
@@ -229,7 +232,7 @@ uint8_t Servo_get4(void) {
  */
 int16_t getAngle(int32_t target) {
 	int32_t center = 128 + SERVO_CENTER_CALIB;
-	
+	int16_t angle;
 	if(target <= center) { //steering left
 	
 		// Suppose target = 20

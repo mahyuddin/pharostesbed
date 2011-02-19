@@ -102,7 +102,7 @@ uint8_t Servo_get4(void);
  * Input:  none
  * Output: The camera's current tilt angle, signed .0001 radian angle, +: up, -: down
  */
-int16_t Servo_getCameraTiltAngle();
+int16_t Servo_getCameraTiltAngle(void);
 
 /**
  * Returns the camera's current pan angle.
@@ -110,7 +110,7 @@ int16_t Servo_getCameraTiltAngle();
  * Input:  none
  * Output: The camera's current pan angle, signed .0001 radian angle, +: left, -: right
  */
-int16_t Servo_getCameraPanAngle();
+int16_t Servo_getCameraPanAngle(void);
 
 /**
  * Sets the camera's tilt angle.

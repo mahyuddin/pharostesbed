@@ -15,22 +15,22 @@
 #include "LED.h"
 #include "Command.h"
 #include "SerialDriver.h"
-#include "MotorControl.h"
+//#include "MotorControl.h"
 #include "Servo_PWM.h"
 #include "TaskHandler.h"
-#include "Tach.h"
-#include "Compass.h"
+//#include "Tach.h"
+//#include "Compass.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
 	Timer_Init(); // TCNT @ 333.3ns, TOF @ 21.84ms
 	LED_Init();
 	
-	MotorControl_init();
+	//MotorControl_init();
 	TaskHandler_init();
 	Servo_init();
-	Tach_init();
-	Compass_init();
+	//Tach_init();
+	//Compass_init();
 	SerialDriver_init(57600);
 	Command_init();
 	

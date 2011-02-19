@@ -71,10 +71,12 @@ typedef struct ProteusCompassPacket {
 } proteusCompassPkt;
 
 typedef struct CameraPanPacket {
+  uint8_t opcode; // should be PROTEUS_OPCODE_CAMERA_PAN
 	int16_t panAngle;
 } cameraPanPkt;
 
 typedef struct CameraTiltPacket {
+	uint8_t opcode; // should be PROTEUS_OPCODE_CAMERA_TILT
 	int16_t tiltAngle;
 } cameraTiltPkt;
 
@@ -110,7 +112,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size);
 void Command_startSendingData(void);
 void Command_stopSendingData(void);
 void Command_sendStatus(void);
-void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
+//void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
 
 #endif /* _PROTEUS_COMMAND_H */
