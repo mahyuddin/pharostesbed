@@ -21,6 +21,9 @@
  *  - Removed the InterfaceFG, commands are now processed synchronously as they are
  *    assembled by the SerialDriver.
  *  - Added interrupt 9 (ECT ch 1) for periodically delivering sensor data to x86.
+ *
+ * Modified by Chien-Liang Fok on 11/25/2010
+ *  - Added camera pan/tilt commands.
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -64,7 +67,7 @@ void Command_init() {
  * @param pkt The command received from the x86.
  * @param numBytes The number of bytes within the command
  */
-void processDriveCmd(uint8_t* pkt, uint16_t numBytes) {
+/*void processDriveCmd(uint8_t* pkt, uint16_t numBytes) {
 	
 	// Verify that the number of bytes received is the amount expected.
 	if (numBytes == sizeof(proteusDrivePkt)) {
@@ -75,6 +78,42 @@ void processDriveCmd(uint8_t* pkt, uint16_t numBytes) {
 		char message[50];
 		if (sprintf(message, "ERROR: Cmd drive size %i != %i [%x %x %x %x %x]", numBytes, sizeof(proteusDrivePkt),
 			pkt[0], pkt[1], pkt[2], pkt[3], pkt[4]) > 0)
+		  Command_sendMessagePacket(message);
+	}
+}*/
+
+/**
+ * Takes the camera pan cmd sends it to the servo.
+ *
+ * @param pkt The command received from the x86.
+ * @param numBytes The number of bytes within the command
+ */
+void processCameraPanCmd(uint8_t* pkt, uint16_t numBytes) {
+	// Verify that the number of bytes received is the amount expected.
+	if (numBytes == sizeof(cameraPanPkt)) {
+		struct CameraPanPacket* panPkt = (struct CameraPanPacket*)pkt;
+		Servo_setCameraPanAngle(panPkt->panAngle);
+	} else {
+		char message[50];
+		if (sprintf(message, "ERROR: Cmd camera pan size %i != %i", numBytes, sizeof(cameraPanPkt)) > 0)
+		  Command_sendMessagePacket(message);
+	}
+}
+
+/**
+ * Takes the camera tilt cmd sends it to the servo.
+ *
+ * @param pkt The command received from the x86.
+ * @param numBytes The number of bytes within the command
+ */
+void processCameraTiltCmd(uint8_t* pkt, uint16_t numBytes) {
+	// Verify that the number of bytes received is the amount expected.
+	if (numBytes == sizeof(cameraTiltPkt)) {
+		struct CameraTiltPacket* tiltPkt = (struct CameraTiltPacket*)pkt;
+		Servo_setCameraTiltAngle(tiltPkt->tiltAngle);
+	} else {
+		char message[50];
+		if (sprintf(message, "ERROR: Cmd camera tilt size %i != %i", numBytes, sizeof(cameraTiltPkt)) > 0)
 		  Command_sendMessagePacket(message);
 	}
 }
@@ -176,8 +215,8 @@ void Command_sendMessagePacket(char* message) {
 void Command_sendData() {
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
-		Command_sendOdometryPacket();
-		Compass_getHeading();
+		//Command_sendOdometryPacket();
+		//Compass_getHeading();
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
@@ -240,19 +279,27 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			// TODO: what does this command do?
 			break;
 		case PROTEUS_OPCODE_SAFE: 
-			MotorControl_enableSafeMode(); // Sets the mode of operation to be "safe"
+			//MotorControl_enableSafeMode(); // Sets the mode of operation to be "safe"
 			break;
 		case PROTEUS_OPCODE_FULL:
-			MotorControl_disableSafeMode(); // Sets the mode of operation to be "full"
+			//MotorControl_disableSafeMode(); // Sets the mode of operation to be "full"
 			break;
 		case PROTEUS_OPCODE_STOP:
 			Command_stopSendingData();
-			MotorControl_setTargetSpeed(0); // stop the robot
-			Servo_setSteeringAngle(0); // straighten the front wheels
+		//	MotorControl_setTargetSpeed(0); // stop the robot
+		//	Servo_setSteeringAngle(0); // straighten the front wheels
+			Servo_setCameraTiltAngle(0); // straighten the camera
+			Servo_setCameraPanAngle(0);
 			LED_GREEN2 = OFF; // turn off LED5
 			break;
-		case PROTEUS_OPCODE_DRIVE:
-			processDriveCmd(cmd, size);
+		//case PROTEUS_OPCODE_DRIVE:
+		//	processDriveCmd(cmd, size);
+		//	break;
+		case PROTEUS_OPCODE_CAMERA_PAN:
+			processCameraPanCmd(cmd, size);
+			break;
+		case PROTEUS_OPCODE_CAMERA_TILT:
+			processCameraTiltCmd(cmd, size);
 			break;
 		/*case PROTEUS_OPCODE_LEDS:
 			// TODO...

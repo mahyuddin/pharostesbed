@@ -11,7 +11,9 @@
  * Modified by Chien-Liang Fok <liangfok@mail.utexas.edu> on 02/09/2011.
  *  - Added method Servo_calcNewSetPoint that simplifies the code within
  *    Servo_updatePosition.
- *  - 
+ * Modified by Chien-Liang Fok <liangfok@mail.utexas.edu> on 02/19/2011.
+ *  - Changed motor control (Servo 1) to be a second steering servo for tilting
+ *    the camera.
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -46,19 +48,18 @@ void Servo_init() {
 	PWMSCLA = 12;     // 1MHz SA clk
 	PWMSCLB = 12;     // 1MHz SB clk
 	
-	//  PWMPER1 = 255;    // Channel1 is 255*41.667ns=10.6us, 24MHz/255=94.1kHz
-	PWMPER01 = 2047;    // Channel1 is 2047*41.667ns=85.3us, 24MHz/2047=11.7kHz
+	PWMPER01 = SERVO_PULSE_PERIOD;
 	PWMPER23 = SERVO_PULSE_PERIOD;  
 	PWMPER45 = SERVO_PULSE_PERIOD;  
 	PWMPER67 = SERVO_PULSE_PERIOD;
 	
-	Motor_setSpeed(MOTOR_STOP);
-	_Servo2_set(128+SERVO_CENTER_CALIB);
+	_Servo1_set(128+SERVO_CENTER_CALIB); // camera tilt
+	_Servo2_set(128+SERVO_CENTER_CALIB); // camera pan
 	_Servo3_set(128);
 	_Servo4_set(128); 
 	
 	PWME = 0xFF;       // enable channels 0-7
-	//Servo1Enabled = 1; // ??Nick??? is this a bug?? should be 0??
+	Servo1Enabled = 1;
 	Servo2Enabled = 1;
 	Servo3Enabled = 1;
 	Servo4Enabled = 1;
@@ -72,7 +73,7 @@ void Servo_init() {
 /**
  * Compares the actual set point to the target set point, and adjusts the
  * actual set point closer to the target set point.  The maximum amount
- * of change is specified by MaxChangePerPeriod.
+ * of change is MaxChangePerPeriod.
  *
  * @param actualSP The actual set point.
  * @param targetSP The target set point.
@@ -97,154 +98,136 @@ uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
 void Servo_updatePosition(void) {
 	LED_BLUE1 ^= 1;
 	
+	ActualSetpoint1 = Servo_calcNewSetPoint(ActualSetpoint1, TargetSetpoint1);
 	ActualSetpoint2 = Servo_calcNewSetPoint(ActualSetpoint2, TargetSetpoint2);
 	ActualSetpoint3 = Servo_calcNewSetPoint(ActualSetpoint3, TargetSetpoint3);
 	ActualSetpoint4 = Servo_calcNewSetPoint(ActualSetpoint4, TargetSetpoint4);
 	
+	_Servo1_set(ActualSetpoint1);
 	_Servo2_set(ActualSetpoint2);   //128 straight
 	_Servo3_set(ActualSetpoint3);
 	_Servo4_set(ActualSetpoint4);
 }
 
-void Motor_disable(){
+void Servo1_disable() {
   PWME &= ~0x02; // disable channel 1
   Servo1Enabled = 0; 
 }
 
-void Motor_enable(){
-  PWME |= 0x02; //enable channel 1
+void Servo1_enable() {
+  PWME |= 0x02; // enable channel 1
   Servo1Enabled = 1; 
 }
 
-void Servo2_disable(){
+void Servo2_disable() {
   PWME &= ~0x08; //disable channel 3
   Servo2Enabled = 0; 
 }
 
-void Servo2_enable(){
+void Servo2_enable() {
   PWME |= 0x08; //enable channel 3
   Servo2Enabled = 1; 
 }
 
-void Servo3_disable(){
+void Servo3_disable() {
   PWME &= ~0x20; //disable channel 5
   Servo3Enabled = 0; 
 }
 
-void Servo3_enable(){
+void Servo3_enable() {
   PWME |= 0x20; //enable channel 5
   Servo3Enabled = 1; 
 }
 
-void Servo4_disable(){
+void Servo4_disable() {
   PWME &= ~0x80; //disable channel 7
   Servo4Enabled = 0; 
 }
 
-void Servo4_enable(){
+void Servo4_enable() {
   PWME |= 0x80; //enable channel 7
   Servo4Enabled = 1; 
 }
 
-unsigned char Motor_status(){
- return Servo1Enabled; 
+uint8_t Servo1_status() {
+	return Servo1Enabled;
 }
 
-unsigned char Servo2_status(){
- return Servo2Enabled; 
+uint8_t Servo2_status() {
+	return Servo2Enabled;
 }
 
-unsigned char Servo3_status(){
- return Servo3Enabled; 
+uint8_t Servo3_status() {
+	return Servo3Enabled;
 }
 
-unsigned char Servo4_status(){
- return Servo4Enabled; 
+uint8_t Servo4_status() {
+	return Servo4Enabled;
 }
 
-/**
- * This is called by MotorControl.c
- *
- * 0 stopped
- * 2047 full speed
- * Input is -2048 -> +2048
- */
-void Motor_setSpeed(int16_t setpoint) {
-	
-	// Output the direction signal, which is attached to PTT_PTT2
-	if(setpoint < 0) { 
-		PTT_PTT2 = 0;
-		setpoint *= -1;
-	} else
-		PTT_PTT2 = 1;
-		
-	// set the PWM signal
-	PWMDTY01 = setpoint;
+void _Servo1_set(uint8_t setpoint){   // Camera tilt (128 = straight)
+	unsigned short duty16;
+	duty16 = (setpoint * 75 / 16) + 900;
+	PWMDTY01 = duty16;
 }
 
-// 128 straight
-void _Servo2_set(unsigned char setpoint){   // steering
+void _Servo2_set(uint8_t setpoint){   // Camera pan (128 = straight)
 	unsigned short duty16;
 	duty16 = (setpoint * 75 / 16) + 900;
 	PWMDTY23 = duty16;
 }
 
-void _Servo3_set(unsigned char setpoint){
+void _Servo3_set(uint8_t setpoint){
 	unsigned short duty16;
 	duty16 = (setpoint * 75 / 16) + 900;
 	PWMDTY45 = duty16;
 }
 
-void _Servo4_set(unsigned char setpoint){
+void _Servo4_set(uint8_t setpoint){
 	unsigned short duty16;
 	duty16 = (setpoint * 75 / 16) + 900;
 	PWMDTY67 = duty16;
 }
 
-/*
-void Servo_set1(unsigned char setpoint){
+void Servo_set1(uint8_t setpoint){
 	TargetSetpoint1 = setpoint; 
-}*/
+}
 
 void Servo_set2(uint8_t setpoint){
 	TargetSetpoint2 = setpoint; 
 }
 
-void Servo_set3(unsigned char setpoint){
+void Servo_set3(uint8_t setpoint){
 	TargetSetpoint3 = setpoint; 
 }
 
-void Servo_set4(unsigned char setpoint){
+void Servo_set4(uint8_t setpoint){
 	TargetSetpoint4 = setpoint; 
 }
 
-unsigned short Motor_get(void){
-	return PWMDTY01; 
+uint8_t Servo_get1(void) {
+	return TargetSetpoint1;
 }
 
-unsigned char Servo_get2(void){
-	return TargetSetpoint2; 
+uint8_t Servo_get2(void) {
+	return TargetSetpoint2;
 }
 
-unsigned char Servo_get3(void){
+uint8_t Servo_get3(void) {
 	return TargetSetpoint3; 
 }
 
-unsigned char Servo_get4(void) {
+uint8_t Servo_get4(void) {
 	return TargetSetpoint4; 
 }
 
 /**
- * ************Servo_getSteeringAngle**************************
- * Gives steering angle (.0001 radians) for current servo position
- * Piecewise linear conversion (left and right)
- * Input:  none
- * Output: signed .0001 radian steering angle for current servo position
- *        +: left, -: right
+ * Converts the servo's target into a value with units 0.0001 radians.
+ *
+ * @param target The servo's target (between 0 and 255).
+ * @return The angle of the servo in 0.0001 radians.
  */
-int16_t Servo_getSteeringAngle() {
-	int16_t angle;
-	int32_t target = Servo_get2();
+int16_t getAngle(int32_t target) {
 	int32_t center = 128 + SERVO_CENTER_CALIB;
 	
 	if(target <= center) { //steering left
@@ -264,16 +247,36 @@ int16_t Servo_getSteeringAngle() {
 }
 
 /**
- * Sets the steering angle (.0001 radians) 
- * Piecewise linear conversion (left and right).
- * This converts the input angle from units of .0001 radians into 
- * into a unit-less value between 20 and 235.
+ * Returns the camera's current tilt angle.
  *
- * Input:  Steering angle (.0001 radians)
- * Output: none
- *        +: left, -: right
+ * Input:  none
+ * Output: The camera's current tilt angle, signed .0001 radian angle, +: up, -: down
  */
-void Servo_setSteeringAngle(int16_t angle) {
+int16_t Servo_getCameraTiltAngle() {
+	int32_t target = Servo_get1();
+	return getAngle(target);
+}
+
+/**
+ * Returns the camera's current pan angle.
+ *
+ * Input:  none
+ * Output: The camera's current pan angle, signed .0001 radian angle, +: left, -: right
+ */
+int16_t Servo_getCameraPanAngle() {
+	int32_t target = Servo_get2();
+	return getAngle(target);
+}
+
+/**
+ * This converts the input angle from units of .0001 radians into 
+ * into a unit-less value between 20 and 235 that can be used to 
+ * control the servo.
+ *
+ * Input:  The desired servo angle in .0001 radians
+ * Output: none
+ */
+uint8_t getServoTarget(int16_t angle) {
 	int32_t center = 128 + SERVO_CENTER_CALIB;
 	int32_t target32;
 	uint8_t target;
@@ -343,7 +346,28 @@ void Servo_setSteeringAngle(int16_t angle) {
 		if (sprintf(message, "Servo_setSteeringAngle: angle = %i, target32 = %li, target = %i", angle, target32, target) > 0)
 			Command_sendMessagePacket(message);
 	}*/
-	
+	return target;
+}
+
+/**
+ * Sets the camera's tilt angle.
+ *
+ * Input:  Camera tilt angle in .0001 radians, +: up, -: down
+ * Output: none
+ */
+void Servo_setCameraTiltAngle(int16_t angle) {
+	uint8_t target = getServoTarget(angle);
+	Servo_set1(target); // sets the target set point
+}
+
+/**
+ * Sets the camera's pan angle.
+ *
+ * Input:  Camera pan angle in .0001 radians, +: left, -: right
+ * Output: none
+ */
+void Servo_setCameraPanAngle(int16_t angle) {
+	uint8_t target = getServoTarget(angle);
 	Servo_set2(target); // sets the target set point
 }
 

@@ -25,10 +25,10 @@
    Output Compare 7 : handles graceful servo movement
 */
 
-#define MOTOR_STOP 0
+//#define MOTOR_STOP 0
 
-#define MOTOR_MAX_POWER_SOFT 1800
-#define MOTOR_MIN_POWER_SOFT 256
+//#define MOTOR_MAX_POWER_SOFT 1800
+//#define MOTOR_MIN_POWER_SOFT 256
 
 #define SERVO_UPDATE_HZ 50 //servo positions update
 
@@ -65,9 +65,8 @@ void Servo_init(void);
 
 
 //Enable/Disable functions save state
- 
-void Motor_disable(void);
-void Motor_enable(void);
+void Servo1_disable(void);
+void Servo1_enable(void);
 void Servo2_disable(void);
 void Servo2_enable(void);
 void Servo3_disable(void);
@@ -76,42 +75,58 @@ void Servo4_disable(void);
 void Servo4_enable(void);
 
 // returns status of servos
-
-unsigned char Motor_status(void);
+unsigned char Servo1_status(void);
 unsigned char Servo2_status(void);
 unsigned char Servo3_status(void);
 unsigned char Servo4_status(void);
 
 // Internal functions (immediate motion)
-void Motor_setSpeed(short setpoint);
-void _Servo2_set(unsigned char setpoint);
-void _Servo3_set(unsigned char setpoint);
-void _Servo4_set(unsigned char setpoint);
+void _Servo1_set(uint8_t setpoint);
+void _Servo2_set(uint8_t setpoint);
+void _Servo3_set(uint8_t setpoint);
+void _Servo4_set(uint8_t setpoint);
 
 // API functions (smooth motion)
+void Servo_set1(uint8_t setpoint);
+void Servo_set2(uint8_t setpoint);
+void Servo_set3(uint8_t setpoint);
+void Servo_set4(uint8_t setpoint);
+uint8_t Servo_get1(void);
+uint8_t Servo_get2(void);
+uint8_t Servo_get3(void);
+uint8_t Servo_get4(void);
 
-//void Servo_set1(unsigned char setpoint);
-void Servo_set2(unsigned char setpoint);
-void Servo_set3(unsigned char setpoint);
-void Servo_set4(unsigned char setpoint);
-unsigned short Motor_get(void);
-unsigned char Servo_get2(void);
-unsigned char Servo_get3(void);
-unsigned char Servo_get4(void);
+/**
+ * Returns the camera's current tilt angle.
+ *
+ * Input:  none
+ * Output: The camera's current tilt angle, signed .0001 radian angle, +: up, -: down
+ */
+int16_t Servo_getCameraTiltAngle();
 
-// ************Servo_getSteeringAngle**************************
-// Gives steering angle (.0001 radians) for current servo position
-// Input:  none
-// Output: signed .0001 radian steering angle for current servo position
-//         +: left, -: right
-int16_t Servo_getSteeringAngle(void);
+/**
+ * Returns the camera's current pan angle.
+ *
+ * Input:  none
+ * Output: The camera's current pan angle, signed .0001 radian angle, +: left, -: right
+ */
+int16_t Servo_getCameraPanAngle();
 
-// ************Servo_setSteeringAngle**************************
-// Sets steering angle (.0001 radians) 
-// Input:  Steering angle (.0001 radians)
-// Output: none
-//         +: left, -: right
-void Servo_setSteeringAngle(int16_t angle);
+/**
+ * Sets the camera's tilt angle.
+ *
+ * Input:  Camera tilt angle in .0001 radians, +: up, -: down
+ * Output: none
+ */
+void Servo_setCameraTiltAngle(int16_t angle);
+
+/**
+ * Sets the camera's pan angle.
+ *
+ * Input:  Camera pan angle in .0001 radians, +: left, -: right
+ * Output: none
+ */
+void Servo_setCameraPanAngle(int16_t angle);
 
 
 #endif /* _Servo_PWM_H */

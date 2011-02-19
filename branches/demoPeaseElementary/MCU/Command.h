@@ -31,6 +31,8 @@
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
+#define PROTEUS_OPCODE_CAMERA_PAN       0x6C
+#define PROTEUS_OPCODE_CAMERA_TILT      0x6D
 
 enum{
   PROTEUS_MODE_OFF,
@@ -68,6 +70,13 @@ typedef struct ProteusCompassPacket {
 	uint16_t heading;
 } proteusCompassPkt;
 
+typedef struct CameraPanPacket {
+	int16_t panAngle;
+} cameraPanPkt;
+
+typedef struct CameraTiltPacket {
+	int16_t tiltAngle;
+} cameraTiltPkt;
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE      5
 #define PROTEUS_IR_PACKET_SIZE           12
@@ -96,7 +105,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size);
 /**
  * Sends a compass packet to the x86.
  */
-void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading);
+//void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading);
 
 void Command_startSendingData(void);
 void Command_stopSendingData(void);
