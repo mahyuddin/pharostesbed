@@ -2,7 +2,7 @@ package pharoslabut.io;
 
 import pharoslabut.navigate.*;
 
-public class RelativeMotionScriptMsg implements Message {
+public class RelativeMotionScriptMsg extends Message {
 	private static final long serialVersionUID = 8723022641241659981L;
 	private RelativeMotionScript script;
 	

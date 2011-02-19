@@ -7,9 +7,11 @@ package pharoslabut.io;
  * @author Chien-Liang Fok
  * @version 3/17/2003
  */
-public interface Message extends java.io.Serializable {
+public abstract class Message implements java.io.Serializable {
     public static enum MsgType {RESET, STARTEXP, STOPEXP, LOAD_GPS_MOTION_SCRIPT,
     	LOAD_RELATIVE_MOTION_SCRIPT, CUSTOM};
+    
+    private ClientHandler ch;
     
     /**
      * Returns the type of the message.  Type possible
@@ -18,5 +20,13 @@ public interface Message extends java.io.Serializable {
      * @return the type of the message.  Type possible
      * types are defined within Message.
      */
-    public MsgType getType();
+    public abstract MsgType getType();
+    
+    public void setClientHandler(ClientHandler ch) {
+    	this.ch = ch;
+    }
+    
+    public ClientHandler getClientHandler() {
+    	return ch;
+    }
 }

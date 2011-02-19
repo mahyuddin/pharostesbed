@@ -2,7 +2,7 @@ package pharoslabut.io;
 
 import pharoslabut.ExpType;
 
-public class StartExpMsg implements Message {
+public class StartExpMsg extends Message {
 
 	private static final long serialVersionUID = -2260269827599336883L;
 

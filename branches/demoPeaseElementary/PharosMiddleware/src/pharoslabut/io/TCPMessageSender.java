@@ -14,10 +14,28 @@ import java.net.*;
  */
 public class TCPMessageSender implements MessageSender {
     
+	private Socket socket;
+	
+	private OutputStream os;
+	private InputStream is;
+	
+	private ObjectOutputStream oos;
+	
+	private ObjectInputStream ois;
+	
     /**
      * Creates a TCPMessageSender.
      */
-    public TCPMessageSender() {
+    public TCPMessageSender(InetAddress address, int port) throws IOException {
+    	log("Opening TCP socket to " + address + ":" + port);
+    	socket = new Socket(address, port);
+    	socket.setTcpNoDelay(true);
+
+    	os = socket.getOutputStream();
+    	is = socket.getInputStream();
+
+    	oos = new ObjectOutputStream(os);
+    	ois = new ObjectInputStream(is);
     }
     
     /**
@@ -37,19 +55,10 @@ public class TCPMessageSender implements MessageSender {
      *
      * @param msg the message to be sent.
      */
-    public void sendMessage(InetAddress address, int port, Message msg) {
-
-            
+    public void sendMessage( Message msg) {
             // open a TCP socket to the destination host
             try {
-				log("Opening TCP socket to " + address + ":" + port);
-                Socket socket = new Socket(address, port);
-                socket.setTcpNoDelay(true);
-                
-                OutputStream os = socket.getOutputStream();
-//                InputStream is = socket.getInputStream();
-                
-                ObjectOutputStream oos = new ObjectOutputStream(os);
+				
 //                ObjectInputStream ois = new ObjectInputStream(is);
                 
 				log("Sending the object to the destination.");
@@ -63,6 +72,20 @@ public class TCPMessageSender implements MessageSender {
             } catch(Exception e) {
                 e.printStackTrace();
             }
+    }
+    
+    public Message receiveMessage() {
+    	Object o = null;
+    	
+    	try {
+			o = ois.readObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+    	return (Message)o;
     }
 	
 	void log(String msg) {

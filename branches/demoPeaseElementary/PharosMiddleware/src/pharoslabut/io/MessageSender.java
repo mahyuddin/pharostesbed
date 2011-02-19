@@ -1,7 +1,5 @@
 package pharoslabut.io;
 
-import java.net.*;
-
 /**
  * Defines the interface of all MessageSenders.
  *
@@ -17,7 +15,7 @@ public interface MessageSender {
 	 *
 	 * @param msg the message to be sent.
 	 */
-	public void sendMessage(InetAddress address, int port, Message msg);
+	public void sendMessage(Message msg);
 	
 	/**
 	 * Returns the singlecast protocol type of this MessageSender.

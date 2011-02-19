@@ -2,7 +2,7 @@ package pharoslabut.io;
 
 import pharoslabut.navigate.*;
 
-public class GPSMotionScriptMsg implements Message {
+public class GPSMotionScriptMsg extends Message {
 	
 	private static final long serialVersionUID = -7631305555004386678L;
 	

@@ -1,6 +1,6 @@
 package pharoslabut.io;
 
-public class StopExpMsg implements Message {
+public class StopExpMsg extends Message {
 	private static final long serialVersionUID = 6593878637228833693L;
 
 	public StopExpMsg() {
