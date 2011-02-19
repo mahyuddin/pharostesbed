@@ -19,14 +19,18 @@ import playerclient.structures.PlayerConstants;
 public class DemoServer implements MessageReceiver {
 	
 	/**
-	 * This is the speed in m/s at which to move the robot.
+	 * The robot's speed in m/s.
 	 */
 	public static final double ROBOT_SPEED = 0.5;
 	
+	/**
+	 * The robot turn speed in radians per second.
+	 */
+	public static final double ROBOT_TURN_SPEED = 0.5;
+	
 	private FileLogger flogger = null;
 	private PlayerClient pclient = null;
-	private TCPMessageReceiver rcvr;
-	private TCPMessageSender sndr;
+	//private TCPMessageReceiver rcvr;
 	private MotionArbiter motionArbiter;
 	
 	/**
@@ -65,7 +69,7 @@ public class DemoServer implements MessageReceiver {
 		motionArbiter.setFileLogger(flogger);
 		
 		// Open the server port and start receiving messages...
-		rcvr = new TCPMessageReceiver(this, port);
+		new TCPMessageReceiver(this, port);
 	}
 	
 	@Override
@@ -98,14 +102,22 @@ public class DemoServer implements MessageReceiver {
 	
 	private void handleCameraTakeSnapshotMsg(CameraTakeSnapshotMsg takeSnapshotMsg) {
 		
+		// take a snapshot...
+		
+		
+		// Package snapshot into a CameraSnapshotMsg
+		CameraSnapshotMsg csm = new CameraSnapshotMsg(true /* successful */);
+		
+		// send resulting CameraSnapshotMsg to client...
+		ClientHandler ch = takeSnapshotMsg.getClientHandler();
+		ch.sendMsg(csm);
 	}
 	
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
 		int duration = (int)(dist / ROBOT_SPEED * 1000); // in milliseconds
-		MotionTask currTask;
 		
-		currTask = new MotionTask(Priority.SECOND, ROBOT_SPEED, 0 /* heading */);
+		MotionTask currTask = new MotionTask(Priority.SECOND, ROBOT_SPEED, 0 /* heading */);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
@@ -115,16 +127,29 @@ public class DemoServer implements MessageReceiver {
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
-		sendAck(true); // success
+		sendAck(true, moveMsg.getClientHandler()); // success
 	}
 	
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
+		double angle = turnMsg.getAngle() / 180 * Math.PI;
+		int duration = (int)(angle / ROBOT_TURN_SPEED * 1000); // in milliseconds
 		
+		MotionTask currTask = new MotionTask(Priority.SECOND, 0 /* speed */, ROBOT_TURN_SPEED);
+		log("Submitting: " + currTask);
+		motionArbiter.submitTask(currTask);
+		
+		pause(duration);
+		
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		log("Submitting: " + currTask);
+		motionArbiter.submitTask(currTask);
+		
+		sendAck(true, turnMsg.getClientHandler()); // success
 	}
 	
-	private void sendAck(boolean success) {
+	private void sendAck(boolean success, ClientHandler ch) {
 		CmdDoneMsg cdm = new CmdDoneMsg(success);
-		
+		ch.sendMsg(cdm);
 	}
 	
 	/**
