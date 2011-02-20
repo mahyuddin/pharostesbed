@@ -27,10 +27,11 @@
 
 uint8_t ActualSetpoint1 = 128, ActualSetpoint2 = 128, ActualSetpoint3 = 128, ActualSetpoint4 = 128;
 uint8_t TargetSetpoint1 = 128, TargetSetpoint2 = 128, TargetSetpoint3 = 128, TargetSetpoint4 = 128;
-uint8_t MaxChangePerPeriod = 4;
+uint8_t MaxChangePerPeriod = 1;
 
 bool Servo1Enabled, Servo2Enabled, Servo3Enabled, Servo4Enabled;
-bool sendAck = FALSE;
+bool sendAck1 = FALSE;
+bool sendAck2 = FALSE;
 
 /**
  * Enable PWM channels 0-7.
@@ -92,14 +93,8 @@ uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
 		// Target is higher than actual plus the max change per period
 		return actualSP + MaxChangePerPeriod;
 	else {
-		// The change is smaller than the max change per period.  
-		// Send an ack if necessary and jump to the target value.
-		
-		if (sendAck) {
-			sendAck = FALSE;
-			Command_sendAckPacket();
-		}
-		
+	  // The change is smaller than the max change per period.  
+	  // Jump to the target value.	
 		return targetSP;
 	}
 }
@@ -109,12 +104,29 @@ uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
  * This should be executed at 50Hz.
  */
 void Servo_updatePosition(void) {
+	uint8_t newActualSP1, newActualSP2, newActualSP3, newActualSP4;
+	
 	LED_BLUE1 ^= 1;
 	
-	ActualSetpoint1 = Servo_calcNewSetPoint(ActualSetpoint1, TargetSetpoint1);
-	ActualSetpoint2 = Servo_calcNewSetPoint(ActualSetpoint2, TargetSetpoint2);
-	ActualSetpoint3 = Servo_calcNewSetPoint(ActualSetpoint3, TargetSetpoint3);
-	ActualSetpoint4 = Servo_calcNewSetPoint(ActualSetpoint4, TargetSetpoint4);
+	newActualSP1 = Servo_calcNewSetPoint(ActualSetpoint1, TargetSetpoint1);
+	newActualSP2 = Servo_calcNewSetPoint(ActualSetpoint2, TargetSetpoint2);
+	newActualSP3 = Servo_calcNewSetPoint(ActualSetpoint3, TargetSetpoint3);
+	newActualSP4 = Servo_calcNewSetPoint(ActualSetpoint4, TargetSetpoint4);
+	
+	
+	if (sendAck1 && newActualSP1 == ActualSetpoint1) {
+	  sendAck1 = FALSE;
+	  Command_sendAckPacket();
+	}
+	if (sendAck2 && newActualSP2 == ActualSetpoint2) {
+	  sendAck2 = FALSE;
+	  Command_sendAckPacket();
+	}
+	
+	ActualSetpoint1 = newActualSP1;
+	ActualSetpoint2 = newActualSP2;
+	ActualSetpoint3 = newActualSP3;
+	ActualSetpoint4 = newActualSP4;
 	
 	_Servo1_set(ActualSetpoint1);
 	_Servo2_set(ActualSetpoint2);   //128 straight
@@ -371,7 +383,7 @@ uint8_t getServoTarget(int16_t angle) {
 void Servo_setCameraTiltAngle(int16_t angle) {
 	uint8_t target = getServoTarget(angle);
 	Servo_set1(target); // sets the target set point
-	sendAck = TRUE;
+	sendAck1 = TRUE;
 }
 
 /**
@@ -383,15 +395,14 @@ void Servo_setCameraTiltAngle(int16_t angle) {
 void Servo_setCameraPanAngle(int16_t angle) {
 	uint8_t target = getServoTarget(angle);
 	Servo_set2(target); // sets the target set point
-	sendAck = TRUE;
+	sendAck2 = TRUE;
 }
 
 /**
- * This interrupt must occur every 20ms (50Hz).
- * It was measured to generate an interupt every 20.02ms.
+ * This interrupt occurs every 10ms (100Hz).
  */
 interrupt 10 void int10Handler(void) {;       
 	TFLG1 = TFLG1_CH2_INT10_BIT;       // acknowledge ECT, Output Compare 2
 	TaskHandler_postTask(&Servo_updatePosition);
-	TC2 = TCNT + TCNT_20MS_INTERVAL;
+	TC2 = TCNT + TCNT_10MS_INTERVAL;
 }

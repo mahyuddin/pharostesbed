@@ -31,10 +31,10 @@
 #include "LED.h"
 #include "Command.h"
 #include "Servo_PWM.h"
-#include "Tach.h"
-#include "MotorControl.h"
+//#include "Tach.h"
+//#include "MotorControl.h"
 #include "TaskHandler.h"
-#include "Compass.h"
+//#include "Compass.h"
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
