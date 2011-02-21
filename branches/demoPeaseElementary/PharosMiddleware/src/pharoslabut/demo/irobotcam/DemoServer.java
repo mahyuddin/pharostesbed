@@ -17,22 +17,18 @@ import playerclient.structures.PlayerConstants;
  * @author Chien-Liang Fok
  */
 public class DemoServer implements MessageReceiver {
-	
-	/**
-	 * The robot's speed in m/s.
-	 */
-	public static final double ROBOT_SPEED = 0.5;
-	
-	/**
-	 * The robot turn speed in radians per second.
-	 */
-	public static final double ROBOT_TURN_SPEED = 0.5;
-	
 	private FileLogger flogger = null;
-	private PlayerClient pclient = null;
-	//private TCPMessageReceiver rcvr;
-	private MotionArbiter motionArbiter;
 	
+	//private TCPMessageReceiver rcvr;
+	
+	/**
+	 * This is for controlling the movements of the robot.
+	 */
+	private RobotInterface ri;
+	
+	/**
+	 * This is for controlling the movements of the camera.
+	 */
 	private MCUInterface mcu;
 	
 	/**
@@ -50,25 +46,7 @@ public class DemoServer implements MessageReceiver {
 			flogger = new FileLogger(fileName);
 		}
 		
-		// Connect to the Player server...
-		try {
-			pclient = new PlayerClient(pServerIP, pServerPort);
-		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
-			System.exit (1);
-		}
-		
-		// Get the Position2D interface for controlling the robot's movements...
-		Position2DInterface motors = pclient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (motors == null) {
-			log("motors is null");
-			System.exit(1);
-		}
-		
-		// Create the motion arbiter...
-		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
-		motionArbiter.setFileLogger(flogger);
+		ri = new RobotInterface(pServerIP, pServerPort, flogger);
 		
 		// Create the MCU interface...
 		mcu = new MCUInterface(mcuPort, flogger);
@@ -122,56 +100,19 @@ public class DemoServer implements MessageReceiver {
 	
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
-		int duration = (int)(dist / ROBOT_SPEED * 1000); // in milliseconds
-		
-		MotionTask currTask = new MotionTask(Priority.SECOND, ROBOT_SPEED, 0 /* heading */);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
-		pause(duration);
-		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
+		ri.move(dist);
 		sendAck(true, moveMsg.getClientHandler()); // success
 	}
 	
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
 		double angle = turnMsg.getAngle() / 180 * Math.PI;
-		int duration = (int)(angle / ROBOT_TURN_SPEED * 1000); // in milliseconds
-		
-		MotionTask currTask = new MotionTask(Priority.SECOND, 0 /* speed */, ROBOT_TURN_SPEED);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
-		pause(duration);
-		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
+		ri.turn(angle);
 		sendAck(true, turnMsg.getClientHandler()); // success
 	}
 	
 	private void sendAck(boolean success, ClientHandler ch) {
 		CmdDoneMsg cdm = new CmdDoneMsg(success);
 		ch.sendMsg(cdm);
-	}
-	
-	/**
-	 * Pauses the calling thread for the specified duration.
-	 * 
-	 * @param duration The time to pause the thread in milliseconds.
-	 */
-	private void pause(int duration) {
-		synchronized(this) {
-			try {
-				wait(duration);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
 	}
 	
 	private void log(String msg) {
