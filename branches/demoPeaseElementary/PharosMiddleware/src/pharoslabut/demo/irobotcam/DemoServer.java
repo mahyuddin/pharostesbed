@@ -1,14 +1,7 @@
 package pharoslabut.demo.irobotcam;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
-import pharoslabut.tasks.MotionTask;
-import pharoslabut.tasks.Priority;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
 
 /**
  * This server runs on the robot, and accepts camera commands from the client.
