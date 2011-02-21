@@ -24,7 +24,8 @@ public class RobotInterface {
 	/**
 	 * The adjustment need to ensure robot rotates at desired rate.
 	 */
-	public static final double CALIBRATION_TURN_FACTOR = 0.6475;
+	//public static final double CALIBRATION_TURN_FACTOR = 0.6475;
+	public static final double CALIBRATION_TURN_FACTOR = 1;
 	
 	/**
 	 * The robot's speed in m/s.
@@ -140,13 +141,14 @@ public class RobotInterface {
 		int heading = 0;
 		
 		MotionTask currTask = new MotionTask(Priority.SECOND, direction * ROBOT_SPEED, heading);
-		//log("Submitting: " + currTask);
+		log("Move: Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
+		log("Move: Pausing for " + duration);
 		pause(duration);
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		//log("Submitting: " + currTask);
+		log("Move: Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 	}
 	
@@ -168,13 +170,14 @@ public class RobotInterface {
 		int duration = (int)(Math.abs(angle) / ROBOT_TURN_SPEED * 1000 * CALIBRATION_TURN_FACTOR); // in milliseconds
 		
 		MotionTask currTask = new MotionTask(Priority.SECOND, speed, direction * ROBOT_TURN_SPEED);
-		//log("Submitting: " + currTask);
+		log("Turn: Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
+		log("Turn: Pausing for " + duration);
 		pause(duration);
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		//log("Submitting: " + currTask);
+		log("Turn: Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 	}
 	
@@ -295,85 +298,88 @@ public class RobotInterface {
 		}
 	}
 	
-	/**
-	 * Some debug tests.
-	 * 
-	 * @param args command line arguments.
-	 */
-	public static final void main(String[] args) {
-		RobotInterface ri = new RobotInterface("localhost", 6665, null);
-		
-		ri.move(0.5);
-
-		synchronized(ri) {
-			try {
-				ri.wait(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-
-		ri.move(-0.5);
-
-		synchronized(ri) {
-			try {
-				ri.wait(1000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-//		double right90 = -1 * Math.PI / 2;
-//		double left90 = Math.PI / 2;
-//		
-//		while(true) {
-//			ri.turn(right90);
-//			synchronized(ri) {
-//				try {
-//					ri.wait(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//			ri.turn(left90);
-//			synchronized(ri) {
-//				try {
-//					ri.wait(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//			ri.turn(left90);
-//			synchronized(ri) {
-//				try {
-//					ri.wait(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//			ri.turn(right90);
-//			synchronized(ri) {
-//				try {
-//					ri.wait(1000);
-//				} catch (InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		}
+	private static void print(String msg) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println("DemoServer: " + msg);
+	}
 	
-//		ri.stopPlayer();
-//		System.out.println("Player running? " + ri.isPlayerRunning());
-//		
-//		
-//		System.out.println("Starting player...");
-//		ri.startPlayer();
-//		
-//		System.out.println("Player running? " + ri.isPlayerRunning());
-//		
-//		System.out.println("Stopping player...");
-//		ri.stopPlayer();
-//		
-//		System.out.println("Player running? " + ri.isPlayerRunning());
+	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
+		print("Usage: pharoslabut.demo.irobotcam.RobotInterface <options>\n");
+		print("Where <options> include:");
+		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
+		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
+		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
+		print("\t-file <file name>: name of file in which to save results (default null)");
+		print("\t-move <distance>: Move the robot forward or backwards.");
+		print("\t-turn <angle>: Turn the robot side to side.");
+		print("\t-debug: enable debug mode");
+	}
+	
+	public static void main(String[] args) {
+		String pServerIP = "localhost";
+		int pServerPort = 6665;
+		String fileName = null;
 		
+		boolean doMove = false;
+		boolean doTurn = false;
+		double moveDist = 0;
+		double turnAngle = 0;
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-pServer")) {
+					pServerIP = args[++i];
+				}
+				else if (args[i].equals("-pPort")) {
+					pServerPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-file")) {
+					fileName = args[++i];
+				}
+				else if (args[i].equals("-mcuPort")) {
+					fileName = args[++i];
+				}
+				else if (args[i].equals("-move")) {
+					doMove = true;
+					moveDist = Double.valueOf(args[++i]).doubleValue();
+					
+				}
+				else if (args[i].equals("-turn")) {
+					doTurn = true;
+					turnAngle = Double.valueOf(args[++i]).doubleValue();
+				}
+				else if (args[i].equals("-debug") || args[i].equals("-d")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
+				}
+				else {
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			usage();
+			System.exit(1);
+		}
+		
+		if (!doMove && !doTurn) {
+			usage();
+			System.exit(1);
+		}
+		
+		FileLogger flogger = null;
+		if (fileName != null) 
+			flogger = new FileLogger(fileName);
+		
+		RobotInterface ri = new RobotInterface(pServerIP, pServerPort, flogger);
+		
+		if (doMove) {
+			ri.move(moveDist);
+		} else if (doTurn) {
+			ri.turn(turnAngle / 180 * Math.PI);
+		}
+		
+		System.exit(0);
 	}
 }
