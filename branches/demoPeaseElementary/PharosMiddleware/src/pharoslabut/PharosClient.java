@@ -31,7 +31,7 @@ public class PharosClient implements BeaconListener {
 	 */
     private int mCastPort = 6000;
     
-    private TCPMessageSender sender;
+    //private TCPMessageSender sender;
     
     /**
      * The constructor.
@@ -46,7 +46,7 @@ public class PharosClient implements BeaconListener {
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
-		sender = new TCPMessageSender();
+		//sender = new TCPMessageSender();
 		
 //		if (!initBeaconRcvr()) {
 //			log("Unable to initialize beacon receiver!");
@@ -66,7 +66,9 @@ public class PharosClient implements BeaconListener {
 				
 				GPSMotionScript script = GPSTraceReader.readTraceFile(currRobot.getMotionScript());
 				GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
-				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), gpsMsg);
+				TCPMessageSender sender = currRobot.getSender();
+				if (sender != null)
+					sender.sendMessage(gpsMsg);
 			}
 			
 			// Pause two seconds to ensure each robot receives their motion script.
@@ -93,7 +95,9 @@ public class PharosClient implements BeaconListener {
 						ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
 				
 				log("Sending start exp message to robot " + currRobot.getName() + "...");
-				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), sem);
+				TCPMessageSender sender = currRobot.getSender();
+				if (sender != null)
+					sender.sendMessage(sem);
 				
 				// Update the delay between each robot.
 				delay += expConfig.getStartInterval();
