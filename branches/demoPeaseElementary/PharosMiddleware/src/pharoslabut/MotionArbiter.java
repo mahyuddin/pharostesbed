@@ -64,6 +64,11 @@ public class MotionArbiter implements Runnable {
 	 */
 	private boolean isStopped = false;
 	
+	/**
+	 * Whether the MotionArbiter's thread remains running.
+	 */
+	private boolean threadAlive;
+	
 	//private AccelerationControl accelControl = new AccelerationControl();
 	
 	/**
@@ -82,6 +87,7 @@ public class MotionArbiter implements Runnable {
 //		taskQueue = new Vector<MotionTask>();
 		
 		// The MotionArbiter has its own thread that processes MotionTasks
+		threadAlive = true;
 		new Thread(this).start();
 	}
 	
@@ -155,6 +161,16 @@ public class MotionArbiter implements Runnable {
 //		return currTask;
 //	}
 	
+	/**
+	 * Stops this motion arbiter.
+	 */
+	public void stop() {
+		threadAlive = false;
+		synchronized(this) {
+			notifyAll();
+		}
+	}
+	
 	private void sendMotionCmd(double velocity, double heading) {
 		log("Sending the following motion command: velocity=" + velocity + ", heading=" + heading);
 		
@@ -183,7 +199,7 @@ public class MotionArbiter implements Runnable {
 		// Ensure robot is not moving
 		//sendMotionCmd(MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 		
-		while(true) {
+		while(threadAlive) {
 			synchronized(this) {
 				motionTask = currTask; //getHighestPriorityTask();
 				if (motionTask != null) {
