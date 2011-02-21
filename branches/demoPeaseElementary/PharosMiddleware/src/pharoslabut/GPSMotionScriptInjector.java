@@ -37,14 +37,14 @@ public class GPSMotionScriptInjector {
 
 			InetAddress ipAddr = InetAddress.getByName(address);
 
-			sender = new TCPMessageSender();
+			sender = new TCPMessageSender(ipAddr, port);
 
 			log("Reading the motion script...");
 			GPSMotionScript script = GPSTraceReader.readTraceFile(scriptFileName);
 			
 			log("Sending the motion script to server " + ipAddr + ":" + port + "...");
 			GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
-			sender.sendMessage(ipAddr, port, gpsMsg);
+			sender.sendMessage(gpsMsg);
 
 			
 			synchronized(this) {
@@ -52,7 +52,7 @@ public class GPSMotionScriptInjector {
 			}
 			
 			log("Sending the experiment start message to server " + ipAddr + ":" + port + "...");
-			sender.sendMessage(ipAddr, port, new StartExpMsg(expName, robotName, ExpType.FOLLOW_GPS_MOTION_SCRIPT));
+			sender.sendMessage(new StartExpMsg(expName, robotName, ExpType.FOLLOW_GPS_MOTION_SCRIPT));
 
 		} catch(Exception e) {
 			e.printStackTrace();
