@@ -113,11 +113,11 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null) {
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
-				notify();
+				notifyAll();
 			} // else discard task (higher priority task is already running			
 		} else {
 			currTask = mt;
-			notify();
+			notifyAll();
 		}
 	}
 	
@@ -130,7 +130,7 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null && currTask.equals(mt)) {
 			currTask = null;
 			//accelControl.reset();
-			notify();
+			notifyAll();
 		} // else the task was never accepted, ignore the revocation request
 	}
 	
@@ -200,116 +200,48 @@ public class MotionArbiter implements Runnable {
 		//sendMotionCmd(MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 		
 		while(threadAlive) {
-			synchronized(this) {
-				motionTask = currTask; //getHighestPriorityTask();
-				if (motionTask != null) {
-					
-					// get the current speed to send it to the robot
-					//double currSpeed = motionTask.getVelocity();   
-					
-					// This was removed because the MCU firmware now controls the acceleration
-					// double currSpeed = accelControl.getDampenedSpeed(motionTask.getVelocity());
-					
-					sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
-					
-					// no point in periodically sending a stop motion command...
-					if (motionTask.isStop()) {
-						log("MotionTask is stop, resorting to initial state");
-						currTask = null;
-					}
-				} else {
-					// There is no motion task to execute...
-					
-					if (!isStopped) {
-						// The robot is not stopped...stop the robot.
-						sendMotionCmd(MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-					}
-					
-					// Task queue is empty and there is no task to run, wait for a motion task to 
-					// be inserted into the taskQueue.
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+			motionTask = currTask; //getHighestPriorityTask();
+			if (motionTask != null) {
+
+				// get the current speed to send it to the robot
+				//double currSpeed = motionTask.getVelocity();   
+
+				// This was removed because the MCU firmware now controls the acceleration
+				// double currSpeed = accelControl.getDampenedSpeed(motionTask.getVelocity());
+
+				sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
+
+				// no point in periodically sending a stop motion command...
+				if (motionTask.isStop()) {
+					log("MotionTask is stop, resorting to initial state");
+					currTask = null;
+				}
+			} else {
+				// There is no motion task to execute...
+
+				if (!isStopped) {
+					// The robot is not stopped...stop the robot.
+					sendMotionCmd(MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 				}
 
+				// Task queue is empty and there is no task to run, wait for a motion task to 
+				// be inserted into the taskQueue.
 				try {
-					wait(CYCLE_TIME);
+					synchronized(this) {
+						wait();
+					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
 			}
+
+			try {
+				synchronized(this) {
+					wait(CYCLE_TIME);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
-	
-	/**
-	 * Controls the rate at which the robot accelerates.  It prevents
-	 * the robot from receiving a very high step function, which may
-	 * cause such a large current to be drawn that the motor battery's fuse is
-	 * tripped.
-	 * 
-	 * The tunable variables in this class are deltaTime and deltaSpeed.  The
-	 * rate of acceleration is controlled as follows: For every deltaTime, the speed
-	 * command can change by at most deltaSpeed.  For example, if deltaTime is 500ms
-	 * and deltaSpeed is 0.2m/s, then for every 500ms, the speed can change at most 0.2m/s.
-	 * Thus, if the robot is stoped and receives a command to go at 1m/s, it will take
-	 * (1m/s) / (0.2m/s) * 0.5s = 2.5s to reach that speed.
-	 * 
-	 * @author Chien-Liang Fok
-	 */
-//	private class AccelerationControl {
-//		private final long deltaTime = 200; // The time step interval in milliseconds
-//		private final double deltaSpeed = 0.5; // The speed step interval in in m/s
-//		
-//		private double currSpeed; 
-//		
-//		private long lastUpdateTime;
-//		
-//		public AccelerationControl() {
-//			reset();
-//		}
-//		
-//		public void reset() {
-//			currSpeed = 0; // assume the robot always starts at speed 0m/s
-//			lastUpdateTime = System.currentTimeMillis();
-//		}
-//		
-//		private double calcNewSpeed(double currSpeed, double targetSpeed) {
-//			double result;
-//			if (targetSpeed > currSpeed) {
-//				result = currSpeed + deltaSpeed;
-//				if (result > targetSpeed)
-//					result = targetSpeed; // ensure the target speed is not exceeded positively
-//			} else {
-//				result = currSpeed - deltaSpeed;
-//				if (result < targetSpeed)
-//					result = targetSpeed; // ensure the target speed is not exceeded negatively
-//			}
-//			return result;
-//		}
-//		
-//		public double getDampenedSpeed(double targetSpeed) {
-//			if (currSpeed == targetSpeed) {
-//				// The current speed is already the target speed, 
-//				// no need to dampen the acceleration
-//				return targetSpeed;
-//			} else {
-//				long currTime = System.currentTimeMillis();
-//				long delta = currTime - lastUpdateTime;
-//				lastUpdateTime = currTime; // update the last update time to be now
-//				if (delta > deltaTime) {
-//					// The target speed differs from the current speed, and the update
-//					// time has passed.  Calculate the new current speed.
-//					currSpeed = calcNewSpeed(currSpeed, targetSpeed);
-//					return currSpeed;
-//				} else {
-//					// The speed step interval has not yet passed, 
-//					// maintain the current speed command
-//					return currSpeed;
-//				}
-//			}
-//			
-//		}
-//	}
 }
