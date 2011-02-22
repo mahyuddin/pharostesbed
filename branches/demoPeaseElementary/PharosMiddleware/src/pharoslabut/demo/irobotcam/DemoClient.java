@@ -45,7 +45,7 @@ public class DemoClient {
 		cmdExec = new CmdExec(tcpSender, flogger);
 		
 		// Create a GUI for allowing users to interact with the system...
-		gui = new ProgramEntryGUI(cmdExec);
+		gui = new ProgramEntryGUI(cmdExec, flogger);
 	}
 	
 	private void log(String msg) {
