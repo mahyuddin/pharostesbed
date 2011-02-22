@@ -19,6 +19,7 @@ public class ProgramEntryGUI implements ActionListener {
 	private FileLogger flogger;
 	private JTextArea textArea;
 	private JButton submitButton;
+	private JFrame frame;
 	
 	/**
 	 * The constructor.
@@ -35,9 +36,10 @@ public class ProgramEntryGUI implements ActionListener {
 		
 		textArea = new JTextArea();
 		submitButton = new JButton("Submit");
+		submitButton.addActionListener(this);
 		JLabel instrLabel = new JLabel("Enter Program:");
 		
-		JFrame frame = new JFrame("iRobot Create Camera Demo");
+		frame = new JFrame("iRobot Create Camera Demo");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().add(instrLabel, BorderLayout.NORTH);
 		frame.getContentPane().add(textArea, BorderLayout.CENTER);
@@ -61,6 +63,7 @@ public class ProgramEntryGUI implements ActionListener {
 			e.printStackTrace();
 		} catch(ParseException pe) {
 			pe.printStackTrace();
+			JOptionPane.showMessageDialog(frame, pe.getMessage());
 		}
 	}
 	
@@ -70,6 +73,7 @@ public class ProgramEntryGUI implements ActionListener {
 	 * @param lineOfCode The line of code.
 	 */
 	private void parseLine(int lineno, String lineOfCode) throws ParseException {
+		log("Parsing line " + lineno + ": " + lineOfCode);
 		String[] tokens = lineOfCode.split("[\\s]+");
 		String instr;
 		
@@ -79,7 +83,7 @@ public class ProgramEntryGUI implements ActionListener {
 		else
 			instr = tokens[0];
 		
-		if(instr.equals("DRIVE")) {
+		if(instr.equals("DRIVE") || instr.equals("MOVE")) {
 			if (tokens.length < 2)
 				throw new ParseException("Missing drive argument on line " + lineno + ".");
 			
@@ -92,7 +96,7 @@ public class ProgramEntryGUI implements ActionListener {
 			
 			cmdExec.moveRobot(dist);
 		}
-		else if(instr.equals("ROTATE")) {
+		else if(instr.equals("ROTATE") || instr.equals("TURN")) {
 			if (tokens.length < 2)
 				throw new ParseException("Missing rotate argument on line " + lineno + ".");
 
@@ -103,7 +107,7 @@ public class ProgramEntryGUI implements ActionListener {
 				throw new ParseException("Invalid rotate argument on line " + lineno + ": " + tokens[1]);
 			}
 		
-			cmdExec.turnRobot(angle / 180 * Math.PI); // convert angle to radians
+			cmdExec.turnRobot(angle); // convert angle to radians
 		}
 		else if(instr.equals("PAN")) {  
 			if (tokens.length < 2)
@@ -142,7 +146,7 @@ public class ProgramEntryGUI implements ActionListener {
 			}
 		}
 		else {
-			throw new ParseException("Unknown instruction \"" + tokens[0]);
+			throw new ParseException("Unknown instruction \"" + instr + "\" on line " + lineno);
 		}	
 
 	}
@@ -150,10 +154,10 @@ public class ProgramEntryGUI implements ActionListener {
 	
 	private void log(String msg) {
 		String result = "ProgramEntryGUI: " + msg;
-		System.out.println(result);
-		if (flogger != null) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 	
 	public static final void main(String[] args) {

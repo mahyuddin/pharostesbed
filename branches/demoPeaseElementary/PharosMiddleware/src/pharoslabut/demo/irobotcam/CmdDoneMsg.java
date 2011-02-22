@@ -29,4 +29,8 @@ public class CmdDoneMsg extends Message {
 	public MsgType getType() {
 		return MsgType.CUSTOM;
 	}
+	
+	public String toString() {
+		return "CmdDoneMsg, success = " + success;
+	}
 }

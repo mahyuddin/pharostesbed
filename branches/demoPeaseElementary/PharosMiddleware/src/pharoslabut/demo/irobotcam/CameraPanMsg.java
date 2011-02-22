@@ -19,7 +19,7 @@ public class CameraPanMsg extends Message {
 	/**
 	 * Returns the desired pan angle.
 	 * 
-	 * @return the pan angle.
+	 * @return the pan angle in degrees.
 	 */
 	public double getPanAngle() {
 		return panAngle;

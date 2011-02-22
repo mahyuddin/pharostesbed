@@ -102,7 +102,7 @@ public class RobotInterface {
 		try {
 			pclient = new PlayerClient(playerIP, playerPort);
 		} catch(PlayerException e) {
-			log("connect: ERROR conecting to player sever " + playerIP + " on port " + playerPort + ": " + e.toString());
+			log("connect: ERROR: unable to conect to player sever at " + playerIP + ":" + playerPort + ", Player running = " + isPlayerRunning() + ", Error message: " + e.toString());
 			return false;
 		}
 		
@@ -130,8 +130,12 @@ public class RobotInterface {
 	 * @param dist The distance to move in meters.  Positive if forward, negative is backwards.
 	 */
 	public void move(double dist) {
+		if (dist == 0) {
+			log("Move: dist is zero, aborting...");
+		}
+		
 		if (!isPlayerRunning()) {
-			log("move: player not running, reconnecting...");
+			log("Move: player not running, reconnecting...");
 			connect();
 		}
 		
@@ -158,8 +162,13 @@ public class RobotInterface {
 	 * @param angle The angle to turn in radians.  Left is positive, right is negative.
 	 */
 	public void turn(double angle) {
+		if (angle == 0) {
+			log("Turn: angle is zero, returning without moving robot");
+			return;
+		}
+		
 		if (!isPlayerRunning()) {
-			log("turn: player not running, reconnecting...");
+			log("Turn: player not running, reconnecting...");
 			connect();
 		}
 		

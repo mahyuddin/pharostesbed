@@ -11,11 +11,11 @@ public class CameraTiltMsg extends Message {
 	}
 	
 	/**
-	 * Returns the desired pan angle.
+	 * Returns the desired tilt angle.
 	 * 
-	 * @return the pan angle.
+	 * @return the tilt angle in degrees.
 	 */
-	public double getPanAngle() {
+	public double getTiltAngle() {
 		return tiltAngle;
 	}
 	

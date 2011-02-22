@@ -31,8 +31,13 @@ public class CmdExec {
 	private boolean getAck() {
 		log("Waiting for acknowledgment...");
 		CmdDoneMsg ackMsg = (CmdDoneMsg)tcpSender.receiveMessage();
-		log("Ack received, success = " + ackMsg.getSuccess());
-		return ackMsg.getSuccess(); // success
+		if (ackMsg != null) {
+			log("Ack received, success = " + ackMsg.getSuccess());
+			return ackMsg.getSuccess(); // success
+		} else {
+			log("Ack not received...");
+			return false;
+		}
 	}
 	
 	/**
@@ -69,7 +74,7 @@ public class CmdExec {
 			return false;
 		}
 		
-		log("Sending turn command to DemoServer...");
+		log("Sending turn command (" + angle + ") to DemoServer...");
 		RobotTurnMsg turnMsg = new RobotTurnMsg(angle);
 		tcpSender.sendMessage(turnMsg);
 		
@@ -152,7 +157,8 @@ public class CmdExec {
 	
 	private void log(String msg) {
 		String result = "CmdExec: " + msg;
-		System.out.println(result);
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
 		if (flogger != null) {
 			flogger.log(result);
 		}

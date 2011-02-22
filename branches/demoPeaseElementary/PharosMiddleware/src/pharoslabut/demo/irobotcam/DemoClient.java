@@ -58,14 +58,16 @@ public class DemoClient {
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("DemoClient: " + msg);
+			System.out.println(msg);
 	}
 	
 	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.demo.irobotcam.DemoClient <options>\n");
+		print("Where <options> include:");
 		print("\t-server <ip address>: The IP address of the Demo Server (default localhost)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
-		print("\t-file <file name>: name of file in which to save results (default DemoClient.log)");
+		print("\t-log <log file name>: name of file in which to save results (default DemoClient.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -85,7 +87,7 @@ public class DemoClient {
 				else if (args[i].equals("-port")) {
 					serverPort = Integer.valueOf(args[++i]);
 				}
-				else if (args[i].equals("-file")) {
+				else if (args[i].equals("-log")) {
 					logfileName = args[++i];
 				}
 

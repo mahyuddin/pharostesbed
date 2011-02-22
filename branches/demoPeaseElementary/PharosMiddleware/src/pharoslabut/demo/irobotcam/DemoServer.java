@@ -69,12 +69,14 @@ public class DemoServer implements MessageReceiver {
 	}
 	
 	private void handleCameraPanMsg(CameraPanMsg panMsg) {
+		log("Panning camera to " + panMsg.getPanAngle() + " degrees...");
 		mcu.setCameraPan(panMsg.getPanAngle());
 		sendAck(true, panMsg.getClientHandler()); // success
 	}
 	
 	private void handleCameraTiltMsg(CameraTiltMsg tiltMsg) {
-		mcu.setCameraTilt(tiltMsg.getPanAngle());
+		log("Tilting camera to " + tiltMsg.getTiltAngle() + " degrees...");
+		mcu.setCameraTilt(tiltMsg.getTiltAngle());
 		sendAck(true, tiltMsg.getClientHandler()); // success
 	}
 	
@@ -93,13 +95,17 @@ public class DemoServer implements MessageReceiver {
 	
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
+		log("Moving robot " + dist + " meters...");
 		ri.move(dist);
+		log("Done moving robot, sending ack...");
 		sendAck(true, moveMsg.getClientHandler()); // success
 	}
 	
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
 		double angle = turnMsg.getAngle() / 180 * Math.PI;
+		log("Turning robot " + turnMsg.getAngle() + " degrees...");
 		ri.turn(angle);
+		log("Done turning robot, sending ack...");
 		sendAck(true, turnMsg.getClientHandler()); // success
 	}
 	
@@ -110,10 +116,10 @@ public class DemoServer implements MessageReceiver {
 	
 	private void log(String msg) {
 		String result = "DemoServer: " + msg;
-		System.out.println(result);
-		if (flogger != null) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 	
 	private static void print(String msg) {
