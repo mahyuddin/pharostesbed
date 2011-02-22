@@ -1,5 +1,10 @@
 package pharoslabut.demo.irobotcam;
 
+import java.awt.*;
+import java.awt.event.*;
+import java.io.*;
+
+import javax.swing.*;
 import pharoslabut.logger.*;
 
 /**
@@ -8,10 +13,12 @@ import pharoslabut.logger.*;
  * @author Chien-Liang Fok
  * @author Lifan Zhang
  */
-public class ProgramEntryGUI {
+public class ProgramEntryGUI implements ActionListener {
 
 	private CmdExec cmdExec;
 	private FileLogger flogger;
+	private JTextArea textArea;
+	private JButton submitButton;
 	
 	/**
 	 * The constructor.
@@ -21,6 +28,40 @@ public class ProgramEntryGUI {
 	public ProgramEntryGUI(CmdExec cmdExec, FileLogger flogger) {
 		this.cmdExec = cmdExec;
 		this.flogger = flogger;
+		createGUI();
+	}
+	
+	private void createGUI() {
+		
+		textArea = new JTextArea();
+		submitButton = new JButton("Submit");
+		JLabel instrLabel = new JLabel("Enter Program:");
+		
+		JFrame frame = new JFrame("iRobot Create Camera Demo");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(instrLabel, BorderLayout.NORTH);
+		frame.getContentPane().add(textArea, BorderLayout.CENTER);
+		frame.getContentPane().add(submitButton, BorderLayout.SOUTH);
+		frame.setSize(new Dimension(400,500));
+		frame.setLocationRelativeTo(null); // center frame
+		//frame.pack();
+		frame.setVisible(true);
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+		BufferedReader reader = new BufferedReader(new StringReader(textArea.getText()));
+		String line;
+		int linecount = 1;
+		try {
+			while ((line = reader.readLine()) != null) {
+				parseLine(linecount++, line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch(ParseException pe) {
+			pe.printStackTrace();
+		}
 	}
 	
 	/**
@@ -28,7 +69,7 @@ public class ProgramEntryGUI {
 	 * 
 	 * @param lineOfCode The line of code.
 	 */
-	private void LineParser(int lineno, String lineOfCode) throws ParseException {
+	private void parseLine(int lineno, String lineOfCode) throws ParseException {
 		String[] tokens = lineOfCode.split("[\\s]+");
 		String instr;
 		
@@ -115,4 +156,7 @@ public class ProgramEntryGUI {
 		}
 	}
 	
+	public static final void main(String[] args) {
+		new ProgramEntryGUI(null, null);
+	}
 }
