@@ -4,6 +4,7 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.nio.ByteBuffer;
+import pharoslabut.*;
 import pharoslabut.logger.*;
 import pharoslabut.radioMeter.cc2420.RadioSignalMeterException;
 
@@ -13,7 +14,7 @@ import pharoslabut.radioMeter.cc2420.RadioSignalMeterException;
  * @author Chien-Liang Fok
  *
  */
-public class UDPRxTx implements Runnable, pharoslabut.RobotIPAssignments {
+public class UDPRxTx implements Runnable {
 	
 	private int port;
 	private DatagramSocket socket;
@@ -29,13 +30,14 @@ public class UDPRxTx implements Runnable, pharoslabut.RobotIPAssignments {
 	 * The last octal of each robot's IP address
 	 */
 	int[] destAddrs = {
-			SHINER,
-			MANNY,
-			GUINNESS,
-			ZIEGEN,
-			WYNKOOP,
-			SPATEN,
-			CZECHVAR};
+			RobotIPAssignments.SHINER,
+			RobotIPAssignments.MANNY,
+			RobotIPAssignments.GUINNESS,
+			RobotIPAssignments.ZIEGEN,
+			RobotIPAssignments.WYNKOOP,
+			RobotIPAssignments.SPATEN,
+			RobotIPAssignments.CZECHVAR
+	};
 	
 	/**
 	 * Whether this object's thread should remain running.
