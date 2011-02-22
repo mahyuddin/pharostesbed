@@ -68,6 +68,7 @@ public class ClientHandler implements Runnable {
 	 * @param msg The message to send.
 	 */
 	public void sendMsg(Message msg) {
+		log("Sending msg: " + msg);
 		try {
 			out.writeObject(msg);
 		} catch (IOException e) {

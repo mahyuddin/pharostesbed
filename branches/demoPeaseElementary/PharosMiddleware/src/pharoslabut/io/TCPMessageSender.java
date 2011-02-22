@@ -66,8 +66,8 @@ public class TCPMessageSender implements MessageSender {
                 oos.flush();
                 os.flush();
                 
-				log("Closing the socket to the destination host.");
-                socket.close();
+				//log("Closing the socket to the destination host.");
+                //socket.close();
                 
             } catch(Exception e) {
                 e.printStackTrace();
