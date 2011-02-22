@@ -331,6 +331,12 @@ public class PlayerClient extends Thread implements PlayerConstants {
 			byte[] buffer = new byte[PlayerMsgHdr.PLAYERXDR_MSGHDR_SIZE];
 			// Read the header from the network
 			is.readFully (buffer, 0, PlayerMsgHdr.PLAYERXDR_MSGHDR_SIZE);
+			
+			/*System.out.println("header start");
+			for(int i = 0; i<40; i++){
+				System.out.println(buffer[i]);
+			}
+			System.out.println("header stop");*/
 
 			// Begin decoding the XDR buffer
 			XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
@@ -770,6 +776,8 @@ public class PlayerClient extends Thread implements PlayerConstants {
 			if (isDebugging) log("read(): Waiting for next header to arrive... ");
 			// Read the Player header
 			header = readHeader();
+			
+			//System.out.println(header.toString());
 
 			if (isDebugging) log("read(): " + header);
 
