@@ -3,6 +3,8 @@ package pharoslabut.demo.irobotcam;
 import java.net.*;
 import java.io.*;
 
+import javax.swing.JOptionPane;
+
 import pharoslabut.logger.FileLogger;
 import pharoslabut.io.*;
 
@@ -36,16 +38,20 @@ public class DemoClient {
 		// Create the connection to the server...
 		try {
 			tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort);
+			
+			// Create the component that executes the commands of the user-provided program...
+			cmdExec = new CmdExec(tcpSender, flogger);
+			
+			// Create a GUI for allowing users to interact with the system...
+			gui = new ProgramEntryGUI(cmdExec, flogger);
 		} catch(IOException ioe) {
-			log("Unable to connect to the server...");
+			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure its DemoServer is running."; 
+			JOptionPane.showMessageDialog(null, msg);
+			log(msg);
 			ioe.printStackTrace();
 		}
 		
-		// Create the component that executes the commands of the user-provided program...
-		cmdExec = new CmdExec(tcpSender, flogger);
-		
-		// Create a GUI for allowing users to interact with the system...
-		gui = new ProgramEntryGUI(cmdExec, flogger);
+
 	}
 	
 	private void log(String msg) {
