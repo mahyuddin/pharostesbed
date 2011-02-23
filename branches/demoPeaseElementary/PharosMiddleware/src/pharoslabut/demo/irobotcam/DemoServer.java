@@ -1,7 +1,10 @@
 package pharoslabut.demo.irobotcam;
 
+import java.awt.Image;
+
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.sensors.camera.axis.*;
 
 /**
  * This server runs on the robot, and accepts camera commands from the client.
@@ -10,6 +13,9 @@ import pharoslabut.logger.FileLogger;
  * @author Chien-Liang Fok
  */
 public class DemoServer implements MessageReceiver {
+	public static final int IMAGE_WIDTH = 640;
+	public static final int IMAGE_HEIGHT = 480;
+	
 	private FileLogger flogger = null;
 	
 	//private TCPMessageReceiver rcvr;
@@ -25,14 +31,20 @@ public class DemoServer implements MessageReceiver {
 	private MCUInterface mcu;
 	
 	/**
+	 * This is for taking snapshots from the camera.
+	 */
+	private AxisCameraInterface camera;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param pServerIP The IP address of the server.
 	 * @param pServerPort The port of the server.
 	 * @param port The port on which to listen for demo client messages.
+	 * @param cameraIP The IP address of the camera.
 	 * @param fileName The log file name for recording execution state.
 	 */
-	public DemoServer(String pServerIP, int pServerPort, int port, String mcuPort, String fileName) {
+	public DemoServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP, String fileName) {
 		
 		// Create the file logger if necessary...
 		if (fileName != null) {
@@ -43,6 +55,9 @@ public class DemoServer implements MessageReceiver {
 		
 		// Create the MCU interface...
 		mcu = new MCUInterface(mcuPort, flogger);
+		
+		String cameraURL = "http://" + cameraIP + "/axis-cgi/jpg/image.cgi?resolution=" + IMAGE_WIDTH + "x" + IMAGE_HEIGHT;
+		camera = new AxisCameraInterface(cameraURL, "root", "longhorn", flogger);
 		
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
@@ -82,13 +97,20 @@ public class DemoServer implements MessageReceiver {
 	
 	private void handleCameraTakeSnapshotMsg(CameraTakeSnapshotMsg takeSnapshotMsg) {
 		
-		// take a snapshot...
+		// Take a snapshot...
+		Image image = camera.getSnapshot();
 		
+		CameraSnapshotMsg csm = null;
+		if (image != null) {
+			// Package snapshot into a CameraSnapshotMsg
+			csm = new CameraSnapshotMsg(true /* successful */);
+			csm.setImage(image, IMAGE_WIDTH, IMAGE_HEIGHT);
+		} else {
+			csm = new CameraSnapshotMsg(false /* not successful */);
+		}
 		
-		// Package snapshot into a CameraSnapshotMsg
-		CameraSnapshotMsg csm = new CameraSnapshotMsg(true /* successful */);
-		
-		// send resulting CameraSnapshotMsg to client...
+		// Send resulting CameraSnapshotMsg to client...
+		log("Sending camera snapshot result to client...");
 		ClientHandler ch = takeSnapshotMsg.getClientHandler();
 		ch.sendMsg(csm);
 	}
@@ -134,6 +156,7 @@ public class DemoServer implements MessageReceiver {
 		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
 		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
+		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
 		print("\t-file <file name>: name of file in which to save results (default DemoServer.log)");
 		print("\t-debug: enable debug mode");
 	}
@@ -144,6 +167,7 @@ public class DemoServer implements MessageReceiver {
 		int pServerPort = 6665;
 		String fileName = "DemoServer.log";
 		String mcuPort = "/dev/ttyS0";
+		String cameraIP = "192.168.0.20";
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -161,6 +185,9 @@ public class DemoServer implements MessageReceiver {
 				}
 				else if (args[i].equals("-mcuPort")) {
 					mcuPort = args[++i];
+				}
+				else if (args[i].equals("-cameraIP")) {
+					cameraIP = args[++i];
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -180,6 +207,6 @@ public class DemoServer implements MessageReceiver {
 		print("Demo Server port: " + port);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new DemoServer(pServerIP, pServerPort, port, mcuPort, fileName);
+		new DemoServer(pServerIP, pServerPort, port, mcuPort, cameraIP, fileName);
 	}
 }

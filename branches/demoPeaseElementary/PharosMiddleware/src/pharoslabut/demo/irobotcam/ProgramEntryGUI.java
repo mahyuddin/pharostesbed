@@ -139,8 +139,13 @@ public class ProgramEntryGUI implements ActionListener {
 		}
 		else if(instr.equals("SNAPSHOT")) {
 			try {
-				if (!cmdExec.takeSnapshot()) 
-					log("Unable to take snapshot...");
+				Image img = cmdExec.takeSnapshot();
+				if (img == null) 
+					throw new ParseException("Unable to take snapshot (line " + lineno + "...");
+				else {
+					// Display the image...
+					SnapshotFrame sf = new SnapshotFrame(img);
+				}
 			} catch(Exception e) {
 				throw new ParseException("Problem while taking snapshot on line " + lineno);
 			}
@@ -158,9 +163,5 @@ public class ProgramEntryGUI implements ActionListener {
 			System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
-	}
-	
-	public static final void main(String[] args) {
-		new ProgramEntryGUI(null, null);
 	}
 }

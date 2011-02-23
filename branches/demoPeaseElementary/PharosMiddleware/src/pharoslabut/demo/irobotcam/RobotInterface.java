@@ -280,19 +280,19 @@ public class RobotInterface {
 		if (!isPlayerRunning()) return true;  // abort if player is not running...
 		
 		try {
-			String cmd = "sudo killall player";
+			String cmd = "sudo killall -s 15 player";
 			
 			Runtime rt = Runtime.getRuntime();
 			Process pr = rt.exec(cmd);
 			
 			int exitVal = pr.waitFor();
 			if (exitVal != 0) {
-				log("sudo killall player exited with code " + exitVal);
+				log("stopPlayer: player exited with code " + exitVal);
 				return false;
 			} else
 				return true;
 		} catch(Exception e) {
-			String eMsg = "Error while killing player server: " + e.toString();
+			String eMsg = "stopPlayer: Error while stopping player: " + e.toString();
 			System.err.println(eMsg);
 			log(eMsg);
 			return false;
