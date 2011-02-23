@@ -1,13 +1,16 @@
 package pharoslabut.experiment;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import pharoslabut.io.*;
 
 public class RobotExpSettings {
 	private String robotName;
 	private String scriptFileName;
 	private InetAddress ipAddr;
 	private int port;
+	private TCPMessageSender sender;
 	
 	public RobotExpSettings() {
 	}
@@ -28,6 +31,16 @@ public class RobotExpSettings {
 		this.scriptFileName = fileName;
 	}
 	
+	public TCPMessageSender getSender() {
+		if (sender == null) {
+			try {
+				sender = new TCPMessageSender(ipAddr, port);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		return sender;
+	}
 	public String getName() {
 		return robotName;
 	}
