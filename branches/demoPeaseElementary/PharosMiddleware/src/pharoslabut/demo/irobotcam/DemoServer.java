@@ -97,6 +97,14 @@ public class DemoServer implements MessageReceiver {
 	
 	private void handleCameraTakeSnapshotMsg(CameraTakeSnapshotMsg takeSnapshotMsg) {
 		
+		// Pause 2 second to allow camera to stop vibrating
+		synchronized(this) {
+			try {
+				wait(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		// Take a snapshot...
 		Image image = camera.getSnapshot();
 		
