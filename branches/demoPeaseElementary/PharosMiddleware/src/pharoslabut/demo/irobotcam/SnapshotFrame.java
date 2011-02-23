@@ -11,7 +11,11 @@ import java.awt.event.*;
 //import java.awt.image.BufferedImage;
 import javax.swing.*;
 
-
+/**
+ * Displays a snapshot from the camera.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class SnapshotFrame extends JFrame {
 	
 	private static final long serialVersionUID = 3325123392308489256L;
@@ -56,6 +60,7 @@ public class SnapshotFrame extends JFrame {
 		 * the CameraFrame.
 		 */
 		JPanel imagPanel = new ImagePanel(img);
+		imagPanel.setPreferredSize(new Dimension(DemoServer.IMAGE_WIDTH, DemoServer.IMAGE_HEIGHT));
 		//content.setLayout(new BoxLayout(content, BoxLayout.PAGE_AXIS));
 		//content.add(this);	//paints CameraFrame
 		//content.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
@@ -81,7 +86,7 @@ public class SnapshotFrame extends JFrame {
 //		this.getContentPane().add(controlPane, BorderLayout.PAGE_END);
 
 		// Set the size of the window.
-		this.setSize(650, 590);
+		//this.setSize(650, 590);
 
 		// Set the window's location.
 //		this.setLocation(100, 100);
@@ -100,7 +105,7 @@ public class SnapshotFrame extends JFrame {
 //		});
 		
 		setLocationRelativeTo(null); // center frame
-		//frame.pack();
+		pack();
 		setVisible(true);
 		
 		// Add a window close listener
