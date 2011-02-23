@@ -106,21 +106,23 @@ public class SnapshotFrame extends JFrame {
 		// Add a window close listener
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent we) {
-				synchronized(this) {
+				synchronized(lock) {
 					lock.notifyAll();
 				}
 			}
 		});
-		
+	} // end public CameraFrame ( Camera camera )
+	
+	public void waitTillClosed() {
 		// Pause the execution thread until the window closes.
-		synchronized(this) {
+		synchronized(lock) {
 			try {
 				lock.wait();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-	} // end public CameraFrame ( Camera camera )
+	}
 	
 	
 	private class ImagePanel extends JPanel{

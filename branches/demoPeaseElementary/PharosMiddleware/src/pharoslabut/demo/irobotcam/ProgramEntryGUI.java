@@ -52,19 +52,23 @@ public class ProgramEntryGUI implements ActionListener {
 	
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
-		BufferedReader reader = new BufferedReader(new StringReader(textArea.getText()));
-		String line;
-		int linecount = 1;
-		try {
-			while ((line = reader.readLine()) != null) {
-				parseLine(linecount++, line);
+		new Thread(new Runnable() {
+			public void run() {
+				BufferedReader reader = new BufferedReader(new StringReader(textArea.getText()));
+				String line;
+				int linecount = 1;
+				try {
+					while ((line = reader.readLine()) != null) {
+						parseLine(linecount++, line);
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				} catch(ParseException pe) {
+					pe.printStackTrace();
+					JOptionPane.showMessageDialog(frame, pe.getMessage());
+				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch(ParseException pe) {
-			pe.printStackTrace();
-			JOptionPane.showMessageDialog(frame, pe.getMessage());
-		}
+		}).start();
 	}
 	
 	/**
@@ -145,6 +149,7 @@ public class ProgramEntryGUI implements ActionListener {
 				else {
 					// Display the image...
 					SnapshotFrame sf = new SnapshotFrame(img);
+					sf.waitTillClosed();
 				}
 			} catch(Exception e) {
 				throw new ParseException("Problem while taking snapshot on line " + lineno);
