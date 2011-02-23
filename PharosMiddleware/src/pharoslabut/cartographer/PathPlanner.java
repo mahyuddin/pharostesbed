@@ -25,16 +25,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
-	public boolean RotateDegrees(double radians, MotionArbiter robot){
-		MotionTask currTask;
-		int time = 5000;
-		//double radiansPerSecond = radians/time;
-		currTask = new MotionTask(Priority.SECOND, 0, -radians);
-		log("Submitting: " + currTask);
-		robot.submitTask(currTask);
-		pause(time);
-		return true;
-	}
+		
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -49,18 +40,18 @@ public class PathPlanner implements Position2DListener, IRListener {
 				PlayerConstants.PLAYER_OPEN_MODE);
 		
 		motors.resetOdometry();
-		if (motors == null){
-			log("unable to connect to Position2D interface");
-			System.exit(1);
-		}
+//		if (motors == null){
+//			log("unable to connect to Position2D interface");
+//			System.exit(1);
+//		}
 		motors.addPos2DListener(this); 
 		MotionArbiter motionArbiter = null;
 		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
-		
-//		if (fileName != null) {
-//		flogger = new FileLogger(fileName);
-//		motionArbiter.setFileLogger(flogger);
-//		}
+
+		if (fileName != null) {
+			flogger = new FileLogger(fileName);
+			motionArbiter.setFileLogger(flogger);
+		}
 		
 		
 		/////////// IR INTERFACE ///////////////
@@ -70,44 +61,56 @@ public class PathPlanner implements Position2DListener, IRListener {
 			System.out.println("unable to connect to IR interface");
 			System.exit(1);
 		}
-//		System.out.print("established\n");
+		System.out.print("established\n");
 		
 		ir.addIRListener(this);
+		pause(2000);
 		
 		MotionTask currTask;
 		double speedStep = .2;
 		
-		//pause(2000);
-		
 		motors.resetOdometry();
-		RotateDegrees(Math.PI/16, motionArbiter);
-		//while(ir.getData().getRanges()[1]>1000){
+		//RotateDegrees(Math.PI/16, motionArbiter);
 		
-//		while(true){
-//			currTask = new MotionTask(Priority.FIRST, .2, MotionTask.STOP_HEADING);
-//			log("Submitting: " + currTask);
-//			motionArbiter.submitTask(currTask);
-//		}
-		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
-		pause(1000);
-		
-		//log("Test complete!");
-		//System.exit(0);
-		
-		while (true) {}
-		
+		while(true){
+			//while no obstacle detected, move forward
+			while((ir.getData()).getRanges()[1]>1000){
+				currTask = new MotionTask(Priority.FIRST, .2, MotionTask.STOP_HEADING);
+				log("Submitting: " + currTask);
+				motionArbiter.submitTask(currTask);
+				pause(1000);
+			}
+			//stop
+			currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+			log("Submitting: " + currTask);
+			motionArbiter.submitTask(currTask);
+			pause(1000);
+			
+			//turn 90 degrees
+			RotateDegrees((Math.PI)/16,motionArbiter);
+		}
+		/*log("Test complete!");
+		System.exit(0);*/
 		///////////// END OF IR INTERFACING ///////////////
 
+	}
+	
+	public boolean RotateDegrees(double radians, MotionArbiter robot){
+		MotionTask currTask;
+		int time = 5000;
+		//double radiansPerSecond = radians/time;
+		currTask = new MotionTask(Priority.SECOND, 0, -radians);
+		log("Submitting: " + currTask);
+		robot.submitTask(currTask);
+		pause(time);
+		return true;
 	}
 
 	//@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose pp = data.getPos();
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-				+ ", vel=" + data.getVel() + ", stall=" + data.getStall());
+				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
