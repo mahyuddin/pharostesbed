@@ -13,6 +13,8 @@ import java.net.*;
  * @version 3/17/2003
  */
 public class TCPMessageSender implements MessageSender {
+    private InetAddress address;
+    private int port;
     
 	private Socket socket;
 	
@@ -27,6 +29,12 @@ public class TCPMessageSender implements MessageSender {
      * Creates a TCPMessageSender.
      */
     public TCPMessageSender(InetAddress address, int port) throws IOException {
+    	this.address = address;
+    	this.port = port;
+    	connect();
+    }
+    
+    private void connect() throws IOException {
     	log("Opening TCP socket to " + address + ":" + port);
     	socket = new Socket(address, port);
     	socket.setTcpNoDelay(true);
@@ -43,6 +51,12 @@ public class TCPMessageSender implements MessageSender {
      * functioning.
      */
     public void kill() {
+    	try {
+    		socket.close();
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    	}
+    	socket = null;
     }
 
     @Override
@@ -54,34 +68,51 @@ public class TCPMessageSender implements MessageSender {
      * Sends a message via a TCP socket.
      *
      * @param msg the message to be sent.
+     * @return Whether the send was successful.
      */
-    public void sendMessage( Message msg) {
-            // open a TCP socket to the destination host
-            try {
-				
-//                ObjectInputStream ois = new ObjectInputStream(is);
-                
-				log("Sending the object to the destination.");
-                oos.writeObject(msg);
-                oos.flush();
-                os.flush();
-                
-				//log("Closing the socket to the destination host.");
-                //socket.close();
-                
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
+    public boolean sendMessage( Message msg) {
+    	
+    	// If a connection to the server was not established, establish it.
+    	while (socket == null) {
+    		try {
+				connect();
+			} catch (IOException e) {
+				log("Unable to connect to server.  Pausing 1 second and then trying again...");
+				//e.printStackTrace();
+				synchronized(this) {
+					try {
+						wait(1000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+				}
+			}
+    	}
+    	
+    	try {                
+    		log("Sending the object to the destination.");
+    		oos.writeObject(msg);
+    		oos.flush();
+    		os.flush();
+    		return true;
+    	} catch(Exception e) {
+    		kill();
+    		e.printStackTrace();
+    		return false;
+    	}
     }
     
+    /**
+     * Receives a message over TCP.
+     * 
+     * @return The message received or null if error.
+     */
     public Message receiveMessage() {
     	Object o = null;
     	
     	try {
 			o = ois.readObject();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
