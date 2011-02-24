@@ -18,7 +18,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
  */
 public class CompassLoggerEvent implements DeviceLogger, Position2DListener, OpaqueListener {
 	
-	private String serverIP = null;
+	//private String serverIP = null;
 	private Position2DInterface compass = null;
 	private CompassLoggerGUI gui;
 	private FileLogger flogger;
@@ -37,7 +37,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	 */
 	public CompassLoggerEvent(String serverIP, int serverPort, int deviceIndex, boolean showGUI, boolean getStatusMsgs) {
 		PlayerClient client = null;
-		this.serverIP = serverIP;
+		//this.serverIP = serverIP;
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
