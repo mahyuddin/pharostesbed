@@ -34,7 +34,7 @@ public class RobotExpSettings {
 	public TCPMessageSender getSender() {
 		if (sender == null) {
 			try {
-				sender = new TCPMessageSender(ipAddr, port);
+				sender = new TCPMessageSender(ipAddr, port, null);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
