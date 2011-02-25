@@ -1,5 +1,7 @@
 package pharoslabut.logger.analyzer;
 
+import pharoslabut.RobotIPAssignments;
+
 /**
  * This records each time the TelosB mote broadcasts a message.
  * 
@@ -17,6 +19,16 @@ public class TelosBTxRecord {
 		this.seqno = seqno;
 	}
 	
+	/**
+	 * Recalibrates the time based on the GPS timestamps.
+	 * 
+	 * @param timeOffset The offset between the system time and GPS time,
+	 * accurate to within a second.
+	 */
+	public void calibrateTime(double timeOffset) {
+		timestamp = RobotExpData.getCalibratedTime(timestamp, timeOffset);
+	}
+	
 	public long getTimeStamp() {
 		return timestamp;
 	}
@@ -30,7 +42,7 @@ public class TelosBTxRecord {
 	}
 	
 	public String toString() {
-		return timestamp + "\t" + senderID + "\t" + seqno;
+		return timestamp + "\t" + senderID + " (" + RobotIPAssignments.getRobotName(senderID) + ")\t" + seqno;
 	}
 	
 }
