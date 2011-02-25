@@ -132,10 +132,10 @@ public class ReflectiveDivergenceAnalyzer {
 				sb.append(pctComplete);
 				
 				for (int goldenIndx = 0; goldenIndx < allExpData.size()-1; goldenIndx++) {
-					PathEdge goldenEdge = allExpData.get(goldenIndx).getEdge(edgeIndx);
+					PathEdge goldenEdge = allExpData.get(goldenIndx).getPathEdge(edgeIndx);
 					Location goldLoc = goldenEdge.getLocationPct(pctComplete);	
 					for (int i = goldenIndx + 1; i < allExpData.size(); i++) {
-						Location actualLoc = allExpData.get(i).getEdge(edgeIndx).getLocationPct(pctComplete);
+						Location actualLoc = allExpData.get(i).getPathEdge(edgeIndx).getLocationPct(pctComplete);
 						double dist = goldLoc.distanceTo(actualLoc);
 						sb.append("\t" + dist);
 					}
