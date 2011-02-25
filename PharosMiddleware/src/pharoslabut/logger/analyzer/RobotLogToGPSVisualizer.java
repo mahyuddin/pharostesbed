@@ -115,9 +115,10 @@ public class RobotLogToGPSVisualizer {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.logger.analyzer.GPSVisualizerScriptGenerator <options>\n");
+		System.setProperty ("PharosMiddleware.debug", "true");
+		print("Usage: pharoslabut.logger.analyzer.RobotLogToGPSVisualizer <options>\n");
 		print("Where <options> include:");
-		print("\t-file <file name>: The specification file. (required)");
+		print("\t-spec <spec file name>: The specification file. (required)");
 		print("\t\tSyntax of specification file:");
 		print("\t\t\tOUTPUT_FILE <name of output file>");
 		print("\t\t\tLOG_FILE <name of log file> <caption> <color>");
@@ -131,7 +132,7 @@ public class RobotLogToGPSVisualizer {
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-file")) {
+				if (args[i].equals("-spec")) {
 					fileName = args[++i];
 				} 
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
@@ -145,13 +146,11 @@ public class RobotLogToGPSVisualizer {
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
-			System.setProperty ("PharosMiddleware.debug", "true");
 			usage();
 			System.exit(1);
 		}
 		
 		if (fileName == null) {
-			System.setProperty ("PharosMiddleware.debug", "true");
 			usage();
 			System.exit(1);
 		}
