@@ -37,7 +37,7 @@ public class GPSMotionScriptInjector {
 
 			InetAddress ipAddr = InetAddress.getByName(address);
 
-			sender = new TCPMessageSender(ipAddr, port);
+			sender = new TCPMessageSender(ipAddr, port, null);
 
 			log("Reading the motion script...");
 			GPSMotionScript script = GPSTraceReader.readTraceFile(scriptFileName);
