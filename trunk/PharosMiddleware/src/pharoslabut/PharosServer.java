@@ -343,6 +343,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	}
 	
 	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.PharosServer <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
@@ -391,7 +392,6 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 					pharosPort = Integer.valueOf(args[++i]);
 				}
 				else {
-					System.setProperty ("PharosMiddleware.debug", "true");
 					usage();
 					System.exit(1);
 				}
