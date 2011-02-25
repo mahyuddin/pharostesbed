@@ -46,6 +46,29 @@ public class ProgramEntryGUI implements ActionListener {
 		frame.getContentPane().add(submitButton, BorderLayout.SOUTH);
 		frame.setSize(new Dimension(400,500));
 		frame.setLocationRelativeTo(null); // center frame
+		
+		// Create a menu bar
+		
+		JMenuItem resetPlayerMI = new JMenuItem("Reset Player Server");
+		resetPlayerMI.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent ae) {
+				cmdExec.resetPlayer();
+			}
+		});
+		JMenu robotMenu = new JMenu("Robot");
+		robotMenu.add(resetPlayerMI);
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(robotMenu);
+		frame.setJMenuBar(menuBar);
+		
+		// Add a window close listener
+		frame.addWindowListener(new WindowAdapter() {
+			public void windowClosed(WindowEvent we) {
+				cmdExec.stop();
+			}
+		});
+		
+		
 		//frame.pack();
 		frame.setVisible(true);
 	}
@@ -143,7 +166,14 @@ public class ProgramEntryGUI implements ActionListener {
 		}
 		else if(instr.equals("SNAPSHOT")) {
 			try {
+				JDialog d = new JDialog(frame, "Taking snapshot...", false);
+				d.getContentPane().add(new JLabel("Taking snapshot..."));
+				d.setSize(new Dimension(300,100));
+				d.setLocationRelativeTo(null); // center dialog
+				d.setVisible(true);
+				
 				Image img = cmdExec.takeSnapshot();
+				d.setVisible(false);
 				if (img == null) 
 					throw new ParseException("Unable to take snapshot (line " + lineno + "...");
 				else {

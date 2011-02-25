@@ -25,7 +25,7 @@ public class RobotInterface {
 	 * The adjustment need to ensure robot rotates at desired rate.
 	 */
 	//public static final double CALIBRATION_TURN_FACTOR = 0.6475;
-	public static final double CALIBRATION_TURN_FACTOR = 1;
+	//public static final double CALIBRATION_TURN_FACTOR = 1;
 	
 	/**
 	 * The robot's speed in m/s.
@@ -42,7 +42,11 @@ public class RobotInterface {
 	private int playerPort;
 	
 	private PlayerClient pclient = null;
-	private MotionArbiter motionArbiter = null;
+	/**
+	 * The interface to control the motors that move the robot.
+	 */
+	private Position2DInterface motors;
+	//private MotionArbiter motionArbiter = null;
 	
 	/**
 	 * The constructor.
@@ -56,7 +60,8 @@ public class RobotInterface {
 		this.playerIP = playerIP;
 		this.playerPort = playerPort;
 		
-		connect();
+		//connect();
+		stopPlayer();
 	}
 	
 	/**
@@ -86,6 +91,7 @@ public class RobotInterface {
 		if (pclient != null) {
 			pclient.close();
 			pclient = null;
+			stopPlayer();
 		}
 		
 		// Start the player server if it is not running...
@@ -107,19 +113,19 @@ public class RobotInterface {
 		}
 		
 		// Get the Position2D interface for controlling the robot's movements...
-		Position2DInterface motors = pclient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		motors = pclient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
 			log("connect: ERROR: motors is null");
 			return false;
 		}
 		
 		// Stop the old motion arbiter if it exists...
-		if (motionArbiter != null)
-			motionArbiter.stop();
+		//if (motionArbiter != null)
+		//	motionArbiter.stop();
 		
 		// Create the motion arbiter...
-		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
-		motionArbiter.setFileLogger(flogger);
+		//motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
+		//motionArbiter.setFileLogger(flogger);
 		
 		return true;
 	}
@@ -132,6 +138,7 @@ public class RobotInterface {
 	public void move(double dist) {
 		if (dist == 0) {
 			log("Move: dist is zero, aborting...");
+			return;
 		}
 		
 		if (!isPlayerRunning()) {
@@ -139,21 +146,34 @@ public class RobotInterface {
 			connect();
 		}
 		
+		// Calibrate the distance
+		double calibratedDist = (dist + 0.0755) / 0.933;
+		log("Move: Desired distance = " + dist + ", Calibrated distance = " + calibratedDist);
+		
+		dist = calibratedDist;
+		
 		int direction = dist < 0 ? -1 : 1;
 		
 		int duration = (int)(Math.abs(dist) / ROBOT_SPEED * 1000); // in milliseconds
 		int heading = 0;
 		
-		MotionTask currTask = new MotionTask(Priority.SECOND, direction * ROBOT_SPEED, heading);
-		log("Move: Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
+		//MotionTask currTask = new MotionTask(Priority.SECOND, direction * ROBOT_SPEED, heading);
+		//log("Move: Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		log("Move: Start move: " + (direction * ROBOT_SPEED) + ", " + heading);
+		motors.setSpeed(direction * ROBOT_SPEED, heading);
 		
 		log("Move: Pausing for " + duration);
 		pause(duration);
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Move: Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
+		//currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		//log("Move: Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		log("Move: Stopping move");
+		motors.setSpeed(0, 0);
+		
+		//log("Move: Stopping player");
+		//stopPlayer();
 	}
 	
 	/**
@@ -174,20 +194,36 @@ public class RobotInterface {
 		
 		int direction = angle < 0 ? -1 : 1;
 		
+		// Calibrate the the turn
+		//double calibratedAngle = (angle + 0.0636) / 1.1741;
+		double calibratedAngle = (Math.abs(angle) + 0.2611) / 1.9504;
+		log("Turn: Desired angle = " + angle + ", Calibrated angle = " + 
+				(angle < 0 ? -1 * calibratedAngle : calibratedAngle));
+		angle = calibratedAngle;
+		
+		
 		double speed = 0;
 		
-		int duration = (int)(Math.abs(angle) / ROBOT_TURN_SPEED * 1000 * CALIBRATION_TURN_FACTOR); // in milliseconds
+		int duration = (int)(Math.abs(angle) / ROBOT_TURN_SPEED * 1000); // in milliseconds
 		
-		MotionTask currTask = new MotionTask(Priority.SECOND, speed, direction * ROBOT_TURN_SPEED);
-		log("Turn: Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
+		//MotionTask currTask = new MotionTask(Priority.SECOND, speed, direction * ROBOT_TURN_SPEED);
+		//log("Turn: Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		log("Turn: turning robot: " + speed + ", " + direction * ROBOT_TURN_SPEED);
+		motors.setSpeed(speed, direction * ROBOT_TURN_SPEED);
 		
 		log("Turn: Pausing for " + duration);
 		pause(duration);
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Turn: Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);
+		//currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		//log("Turn: Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		log("Move: Stopping turn...");
+		motors.setSpeed(0, 0);
+		
+		//log("Move: Stopping player: " + currTask);
+		//log("Move: Stopping player");
+		//stopPlayer();
 	}
 	
 	/**
@@ -237,14 +273,15 @@ public class RobotInterface {
 			
 			int exitVal = pr.waitFor();
 			if (exitVal != 0)
-				log("ps aux exited with code " + exitVal);
+				log("isPlayerRunning: Command ps aux exited with code " + exitVal);
 			
 			if (!errResponseText.equals(""))
-				log("Error while running ps aux: " + errResponseText);
+				log("isPlayerRunning: Error while running ps aux: " + errResponseText);
 			
+			log("isPlayerRunning: playerRunning = " + playerRunning);
 			return playerRunning;
 		} catch(Exception e) {
-			String eMsg = "Unable check if Player server is running : " + e.toString();
+			String eMsg = "isPlayerRunning: Unable check if Player server is running : " + e.toString();
 			System.err.println(eMsg);
 			log(eMsg);
 			return false;
@@ -259,12 +296,86 @@ public class RobotInterface {
 	public boolean startPlayer() {
 		if (isPlayerRunning()) return true;  // Do not start player if it is already running...
 		
+		// Try to detect which port the iRobot Create appears as
+		String robotPort = null;
+		try {
+			String cmd = "dmesg";
+			
+			Runtime rt = Runtime.getRuntime();
+			Process pr = rt.exec(cmd);
+			
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+			BufferedReader errInput = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+			
+			String errResponseText = "";
+			String line;
+			
+			while((line = stdInput.readLine()) != null) {
+				if (line.contains("cp210x converter now attached to")) {
+					String[] tokens = line.split("[\\s]");
+					for (int i=0; i < tokens.length; i++) {
+						if (tokens[i].contains("tty")) {
+							robotPort = "/dev/" + tokens[i];
+						}
+					}
+				}
+			}
+			
+			while((line = errInput.readLine()) != null) {
+				errResponseText += line + "\n";
+			}
+			
+			int exitVal = pr.waitFor();
+			if (exitVal != 0)
+				log("startPlayer: Command 'dmesg' exited with code " + exitVal);
+			
+			if (!errResponseText.equals(""))
+				log("startPlayer: Error while running command 'dmesg': " + errResponseText);
+			
+		} catch(Exception e) {
+			String eMsg = "isPlayerRunning: Unable find iRobot Create port : " + e.toString();
+			System.err.println(eMsg);
+			log(eMsg);
+			return false;
+		}
+		
+		// Create a Player config file...
+		if (robotPort != null) {
+			log("startPlayer: Robot detected on port " + robotPort);
+			
+			String configText = "driver\n"
+				+ "(\n"
+				+ "  name \"roomba\"\n"
+				+ "  provides [\"position2d:0\"]\n"
+				+ "  port \"" + robotPort + "\"\n"
+				+ "  safe 1\n"
+				+ "  alwayson 1\n"
+				+ ")";
+			
+			try {
+				FileWriter fw = new FileWriter(PLAYER_CONFIG_FILE);
+				PrintWriter out = new PrintWriter(fw);
+				out.print(configText);
+				out.close();
+			} catch (IOException e){
+				e.printStackTrace();
+			}
+
+			log("startPlayer: Robot config file saved to " + PLAYER_CONFIG_FILE);
+		} else {
+			String eMsg = "isPlayerRunning: ERROR: iRobot Create's port is null";
+			System.err.println(eMsg);
+			log(eMsg);
+			return false;
+		}
+		
 		try {
 			Runtime rt = Runtime.getRuntime();
+			log("startPlayer: Launching player server...");
 			rt.exec(PLAYER_SERVER + " " + PLAYER_CONFIG_FILE);
 			return true;
 		} catch(Exception e) {
-			String eMsg = "Unable launch player server: " + e.toString();
+			String eMsg = "startPlayer: ERROR: Unable launch player server: " + e.toString();
 			System.err.println(eMsg);
 			log(eMsg);
 			return false;
@@ -272,7 +383,7 @@ public class RobotInterface {
 	}
 	
 	/**
-	 * Stops the player server.
+	 * Stops the player server and removed reference to the player client.
 	 * 
 	 * @return true if successful.
 	 */
@@ -284,6 +395,7 @@ public class RobotInterface {
 			
 			Runtime rt = Runtime.getRuntime();
 			Process pr = rt.exec(cmd);
+			pclient = null;
 			
 			int exitVal = pr.waitFor();
 			if (exitVal != 0) {
@@ -382,13 +494,14 @@ public class RobotInterface {
 			flogger = new FileLogger(fileName);
 		
 		RobotInterface ri = new RobotInterface(pServerIP, pServerPort, flogger);
+		ri.startPlayer();
 		
-		if (doMove) {
-			ri.move(moveDist);
-		} else if (doTurn) {
-			ri.turn(turnAngle / 180 * Math.PI);
-		}
+//		if (doMove) {
+//			ri.move(moveDist);
+//		} else if (doTurn) {
+//			ri.turn(turnAngle / 180 * Math.PI);
+//		}
 		
-		System.exit(0);
+//		System.exit(0);
 	}
 }

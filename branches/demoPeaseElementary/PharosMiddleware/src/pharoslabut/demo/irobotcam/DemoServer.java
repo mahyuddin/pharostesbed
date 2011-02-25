@@ -81,6 +81,12 @@ public class DemoServer implements MessageReceiver {
 		else if (msg instanceof RobotTurnMsg) {
 			handleRobotTurnMsg((RobotTurnMsg)msg);
 		}
+		else if (msg instanceof ResetPlayerMsg) {
+			ri.stopPlayer();
+		}
+		else {
+			log("Unkown message: " + msg);
+		}
 	}
 	
 	private void handleCameraPanMsg(CameraPanMsg panMsg) {

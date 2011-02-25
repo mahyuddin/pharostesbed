@@ -26,6 +26,13 @@ public class CmdExec {
 	}
 	
 	/**
+	 * Halts the program.
+	 */
+	public void stop() {
+		tcpSender.kill();
+	}
+	
+	/**
 	 * Waits for an acknowledgment from the server.
 	 * 
 	 * @return the success value within the acknowledgment.
@@ -54,9 +61,19 @@ public class CmdExec {
 		
 		log("Sending move command to DemoServer...");
 		RobotMoveMsg moveMsg = new RobotMoveMsg(dist);
-		tcpSender.sendMessage(moveMsg);
-		
-		return getAck();
+		if (tcpSender.sendMessage(moveMsg))
+			return getAck();
+		else
+			return false;
+	}
+	
+	/**
+	 * Shuts down the player server.
+	 */
+	public void resetPlayer() {
+		log("Resetting the player server...");
+		ResetPlayerMsg msg = new ResetPlayerMsg();
+		tcpSender.sendMessage(msg);
 	}
 	
 	/**
@@ -78,9 +95,10 @@ public class CmdExec {
 		
 		log("Sending turn command (" + angle + ") to DemoServer...");
 		RobotTurnMsg turnMsg = new RobotTurnMsg(angle);
-		tcpSender.sendMessage(turnMsg);
-		
-		return getAck();
+		if (tcpSender.sendMessage(turnMsg))
+			return getAck();
+		else
+			return false;
 	}
 	
 	/**
@@ -101,9 +119,10 @@ public class CmdExec {
 		
 		log("Sending pan camera command to DemoServer...");
 		CameraPanMsg panMsg = new CameraPanMsg(angle);
-		tcpSender.sendMessage(panMsg);
-		
-		return getAck();
+		if (tcpSender.sendMessage(panMsg))
+			return getAck();
+		else
+			return false;
 	}
 	
 	/**
@@ -123,9 +142,10 @@ public class CmdExec {
 		
 		log("Sending tilt camera command to DemoServer...");
 		CameraTiltMsg tiltMsg = new CameraTiltMsg(angle);
-		tcpSender.sendMessage(tiltMsg);
-		
-		return getAck();
+		if (tcpSender.sendMessage(tiltMsg))
+			return getAck();
+		else
+			return false;
 	}
 	
 	/**
@@ -134,30 +154,28 @@ public class CmdExec {
 	 * @return The image taken, or null if error.
 	 */
 	public Image takeSnapshot() {
-		
 		log("Sending take camera snapshot command to DemoServer...");
 		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
-		tcpSender.sendMessage(takeSnapshotMsg);
+		if (tcpSender.sendMessage(takeSnapshotMsg)) {
 		
-		log("Waiting for camera snapshot result message...");
-		CameraSnapshotMsg ackMsg = (CameraSnapshotMsg)tcpSender.receiveMessage();
+			log("Waiting for camera snapshot result message...");
+			CameraSnapshotMsg ackMsg = (CameraSnapshotMsg)tcpSender.receiveMessage();
 		
-		log("Received camera snapshot results, success = " + ackMsg.getSuccess());
-		if (ackMsg.getSuccess()) {
-			return ackMsg.getImage();
-		}
-		else {
+			log("Received camera snapshot results, success = " + ackMsg.getSuccess());
+			if (ackMsg.getSuccess())
+				return ackMsg.getImage();
+			else 
+				return null;
+		} else
 			return null;
-		}
 	}
 	
 	private void log(String msg) {
 		String result = "CmdExec: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
-		if (flogger != null) {
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 
 }

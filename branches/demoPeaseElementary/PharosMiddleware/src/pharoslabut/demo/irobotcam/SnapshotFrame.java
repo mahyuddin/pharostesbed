@@ -19,20 +19,6 @@ import javax.swing.*;
 public class SnapshotFrame extends JFrame {
 	
 	private static final long serialVersionUID = 3325123392308489256L;
-
-	//private boolean closedThreadState = false;
-	
-	// IMAGE RELATED OBJECTS
-	//private Image cameraStream;
-	//private BufferedImage bufferedCamera;
-	
-	// CAMERA CONTROL FIELDS
-	//private boolean error = false;
-
-	// The following components are GUI-level objects used in the
-	// actual application GUI.
-	//private JButton closeButton = null;
-	//private JTextField mouseCoordinates = null;
 	
 	/**
 	 * This is used to pause the thread that creates this frame until the frame closes.
@@ -47,63 +33,16 @@ public class SnapshotFrame extends JFrame {
 	public SnapshotFrame(Image img) {
 
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);	//disposes frame upon exiting
-		//this.setSize(680, 480);
 		
-		// Create the close button and add an action listener
-		// to it.
-		//this.closeButton = new JButton("Close");
-		//this.closeButton.setActionCommand("close");
-		//this.closeButton.addActionListener(this);
-
 		/*
 		 * The following block of code builds and attaches all GUI components to
 		 * the CameraFrame.
 		 */
 		JPanel imagPanel = new ImagePanel(img);
 		imagPanel.setPreferredSize(new Dimension(DemoServer.IMAGE_WIDTH, DemoServer.IMAGE_HEIGHT));
-		//content.setLayout(new BoxLayout(content, BoxLayout.PAGE_AXIS));
-		//content.add(this);	//paints CameraFrame
-		//content.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-//		this.mouseCoordinates = new JTextField("Mouse Coordinates:  (0,0)");
-//		this.mouseCoordinates.setPreferredSize(new Dimension(20, 20));
-//		this.mouseCoordinates.setEditable(false);
-//		this.mouseCoordinates.setHorizontalAlignment(JTextField.RIGHT);
-//		this.mouseCoordinates.setFont(new Font("Arial", Font.BOLD, 12));
-//		this.mouseCoordinates.setBackground(new Color(200, 200, 200));
-
-//		JPanel controlPane = new JPanel();
-//		controlPane.add(this.closeButton);
-//		controlPane.add(Box.createRigidArea(new Dimension(100, 0)));
-//
-//		controlPane.setLayout(new BoxLayout(controlPane, BoxLayout.LINE_AXIS));
-//		controlPane.setBorder(BorderFactory.createEmptyBorder(5, 0, 5, 0));
-//		controlPane.add(Box.createHorizontalGlue());
-
-		//this.getContentPane().add(this.mouseCoordinates,
-		//		BorderLayout.PAGE_START);
 		this.getContentPane().add(imagPanel, BorderLayout.CENTER);
-//		this.getContentPane().add(controlPane, BorderLayout.PAGE_END);
 
-		// Set the size of the window.
-		//this.setSize(650, 590);
-
-		// Set the window's location.
-//		this.setLocation(100, 100);
-//		this.setResizable(false);
-
-		// For the (x,y) coordinates which are displayed in the Camera Window.
-		// Add the action listener to the frame.
-//		this.addMouseListener(this);
-//		this.addMouseMotionListener(this);
-//		
-//		this.addKeyListener( new KeyAdapter() {
-//			@Override
-//			public void keyPressed(KeyEvent ke) {
-//				// Do something cool here, I guess
-//			}
-//		});
-		
 		setLocationRelativeTo(null); // center frame
 		pack();
 		setVisible(true);

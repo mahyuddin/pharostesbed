@@ -37,7 +37,7 @@ public class DemoClient {
 		
 		// Create the connection to the server...
 		try {
-			tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort);
+			tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort, flogger);
 			
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(tcpSender, flogger);
