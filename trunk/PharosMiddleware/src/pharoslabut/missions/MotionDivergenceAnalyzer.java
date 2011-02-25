@@ -270,7 +270,7 @@ public class MotionDivergenceAnalyzer {
 		/*
 		 * Calculate
 		 */
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
+		long edgeEndTime = edge.getDuration()/ 1000;
 		
 		// Some debug tests...
 //		System.out.println("Equation of Perfect Route: " + perfectRoute);
@@ -284,7 +284,7 @@ public class MotionDivergenceAnalyzer {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
+			long time = (currGpsLoc.getTimestamp() - edge.getStartTime())/1000;
 			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
 			//System.out.println("time=" + time + ", edgeEndTime=" + edgeEndTime);
 			result.add(new ResultDatumEdge(i+1, time, pctComplete, distToOptimal));
@@ -310,7 +310,7 @@ public class MotionDivergenceAnalyzer {
 		 */
 		Line perfectRoute = new Line(startLoc, edge.getDest());
 		
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
+		long edgeEndTime = edge.getDuration() / 1000;
 		
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Relative)");
 		
@@ -318,7 +318,7 @@ public class MotionDivergenceAnalyzer {
 		for (int i = 0; i < edge.getNumLocations(); i++) {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
+			long time = (currGpsLoc.getTimestamp() - edge.getStartTime())/1000;
 			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
 			
@@ -359,7 +359,7 @@ public class MotionDivergenceAnalyzer {
 	private ResultEdge analyzeEdgeRelativeDivergenceSpeed(PathEdge edge) {
 		Location startLoc = edge.getStartLoc();
 		//long prevTime = edge.getAbsoluteStartTime();
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
+		long edgeEndTime = edge.getDuration() / 1000;
 		
 		/*
 		 * The initial perfect route is the straight line from the start position
@@ -373,7 +373,7 @@ public class MotionDivergenceAnalyzer {
 			GPSLocationState currGpsLoc = edge.getLocation(i);
 			Location currLoc = new Location(currGpsLoc.getLoc());
 			
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
+			long time = (currGpsLoc.getTimestamp() - edge.getStartTime())/1000;
 			
 			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
 			
