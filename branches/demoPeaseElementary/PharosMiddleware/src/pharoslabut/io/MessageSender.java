@@ -14,8 +14,9 @@ public interface MessageSender {
 	 * Sends a message.
 	 *
 	 * @param msg the message to be sent.
+	 * @return Whether the send was successful.
 	 */
-	public void sendMessage(Message msg);
+	public boolean sendMessage(Message msg);
 	
 	/**
 	 * Returns the singlecast protocol type of this MessageSender.

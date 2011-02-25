@@ -3,6 +3,8 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.logger.FileLogger;
+
 /**
  * Sends messages to other LimeLiteServers using TCP.
  * A TCP connection to another host is kept alive until a
@@ -15,6 +17,7 @@ import java.net.*;
 public class TCPMessageSender implements MessageSender {
     private InetAddress address;
     private int port;
+    private FileLogger flogger = null;
     
 	private Socket socket;
 	
@@ -28,9 +31,10 @@ public class TCPMessageSender implements MessageSender {
     /**
      * Creates a TCPMessageSender.
      */
-    public TCPMessageSender(InetAddress address, int port) throws IOException {
+    public TCPMessageSender(InetAddress address, int port, FileLogger flogger) throws IOException {
     	this.address = address;
     	this.port = port;
+    	this.flogger = flogger;
     	connect();
     }
     
@@ -120,7 +124,10 @@ public class TCPMessageSender implements MessageSender {
     }
 	
 	void log(String msg) {
+		String result = "TCPMessageSender: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("TCPMessageSender: " + msg);
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 }

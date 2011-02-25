@@ -82,7 +82,7 @@ public class ClientHandler implements Runnable {
 	public void run() {
 		try {
 			while(!done) {
-				log("Reading in object");
+				log("Awaiting messages from client...");
 				Object o = in.readObject();
 			
 				if (o!= null) {
@@ -102,13 +102,15 @@ public class ClientHandler implements Runnable {
 			e.printStackTrace();
 		} finally {
 			try {
+				log("Closing socket...");
 				socket.close();
 			} catch(Exception e) {}
 		}
 	}
 	
 	void log(String msg) {
+		String result = "ClientHandler: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("TCPMessageReceiver: ClientHandler: " + msg);
+			System.out.println(result);
 	}
 }

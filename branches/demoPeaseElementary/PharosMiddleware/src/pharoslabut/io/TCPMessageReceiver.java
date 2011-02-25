@@ -76,8 +76,9 @@ public class TCPMessageReceiver implements Runnable {
     }
 	
 	void log(String msg) {
+		String result = "TCPMessageReceiver: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("TCPMessageReceiver: " + msg);
+			System.out.println(result);
 	}
     
     /**
@@ -91,7 +92,7 @@ public class TCPMessageReceiver implements Runnable {
 				Socket s = null;
 				log("Waiting for a connection on port " + port);
 				if ((s = ss.accept()) != null) {
-					log("Connection accepted, passing to client handler.");
+					log("Connection accepted from " + s.getInetAddress());
 					s.setTcpNoDelay(true);
 					new ClientHandler(s, receiver);
 				}
