@@ -101,7 +101,7 @@ public class MCUInterface implements MCUConstants {
 		for (int i = 2; i < tempVec.size() - 1; i++) {
 			if (tempVec.get(i) == PROTEUS_ESCAPE || tempVec.get(i) == PROTEUS_BEGIN
 					|| tempVec.get(i) == PROTEUS_END) {
-				tempVec.add(i, PROTEUS_ESCAPE); 
+				tempVec.add(i++, PROTEUS_ESCAPE);
 			}
 		}
 		
