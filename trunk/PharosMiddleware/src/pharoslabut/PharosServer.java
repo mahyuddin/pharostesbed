@@ -339,7 +339,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("PharosServer: " + msg);
+			System.out.println(msg);
 	}
 	
 	private static void usage() {
