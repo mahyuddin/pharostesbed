@@ -24,10 +24,39 @@ public class TelosBRxRecord {
 		this.sndrID = sndrID;
 		this.rcvrID = rcvrID;
 		this.seqno = seqno;
-		this.rssi = rssi;
+		
+		// The incoming rssi as recorded by the log files is an 8-bit two's-complement integer.
+		// Thus, convert this into a standard Java integer.
+		// See: CC2420 datasheet: http://pharos.ece.utexas.edu/wiki/images/6/65/Cc2420-datasheet.pdf
+		if ((rssi & 0x80) > 0) {
+			// negative value, flip all the bits then add one
+			int bitFlipped = rssi ^ 0xff;
+			int addOne = bitFlipped + 1;
+			this.rssi = -1 * addOne;
+			
+			// Debug output
+//			System.out.println("TelosBRxRecord: raw RSSI = 0x" + Integer.toHexString(rssi) + "(" + rssi + ")"
+//					+ ", bitFlipped = 0x" + Integer.toHexString(bitFlipped) + "(" + bitFlipped + ")"
+//					+ ", addOne = 0x" + Integer.toHexString(addOne) + "(" + addOne + ")"
+//					+ ", rssi = 0x" + Integer.toHexString(this.rssi) + "(" + this.rssi + ")");
+		} else {
+			// positive value, just leave as is
+			this.rssi = rssi;
+//			System.out.println("TelosBRxRecord: RSSI = 0x" + Integer.toHexString(rssi));
+		}
+		
+		this.rssi = this.rssi - 45; // convert to dBm units.
+//		System.out.println("TelosBRxRecord: RSSI = " + this.rssi + "dBm");
 		this.lqi = lqi;
 		this.moteTimestamp = moteTimestamp;
 	}
+	
+//	public boolean hasValidRSSI() {
+//		if (rssi >= 0)
+//			return false;
+//		else
+//			return true;
+//	}
 	
 	/**
 	 * Recalibrates the time based on the GPS timestamps.
