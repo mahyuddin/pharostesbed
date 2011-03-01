@@ -1,7 +1,6 @@
 package pharoslabut.logger.analyzer;
 
 import java.io.*;
-import java.lang.reflect.Field;
 import java.util.*;
 
 import pharoslabut.logger.*;
@@ -16,9 +15,9 @@ import playerclient.structures.gps.PlayerGpsData;
  */
 public class RobotExpData {
 	/**
-	 * Details of a single edge in the path the robot traveled.
+	 * The name of the experiment log file.
 	 */
-	private Vector<PathEdge> pathEdges = new Vector<PathEdge>();
+	private String fileName;
 	
 	/**
 	 *  The start time of the experiment. It is when the PharosServer
@@ -27,9 +26,9 @@ public class RobotExpData {
 	private long expStartTime;
 	
 	/**
-	 * The name of the experiment log file.
+	 * Details of a single edge in the path the robot traveled.
 	 */
-	private String fileName;
+	private Vector<PathEdge> pathEdges = new Vector<PathEdge>();
 	
 	/**
 	 * The offset in ms between the local timestamps and the GPS timestamps.
@@ -38,7 +37,12 @@ public class RobotExpData {
 	 * 
 	 * True time = Local timestamp - timeOffset.
 	 */
-	private double timeOffset;
+	//private double timeOffset;
+	
+	/**
+	 * The locations of the robot as it traversed this edge.
+	 */
+	private Vector <GPSLocationState> locations = new Vector<GPSLocationState>();
 	
 	/**
 	 * Records when the TelosB receives a broadcasts.
@@ -187,8 +191,8 @@ public class RobotExpData {
 				currLoc.setUtm_n(Double.valueOf(tokens[22]));
 				currLoc.setVdop(Integer.valueOf(tokens[30]));
 				
+				locations.add(new GPSLocationState(timeStamp, currLoc));
 				if (currEdge != null) {
-					currEdge.addLocation(new GPSLocationState(timeStamp, currLoc));
 					if (!currEdge.hasStartLoc())
 						currEdge.setStartLoc(new Location(currLoc));
 				}
@@ -272,7 +276,7 @@ public class RobotExpData {
 		}
 		
 		// Calculate the average offset and use it to calibrate all of the local timestamps.
-		timeOffset = diffSum / locs.size() * 1000;
+		double timeOffset = diffSum / locs.size() * 1000;
 		
 //		String str = "CalibratedTimeOffset: " + calibratedTimeOffset;
 //		System.out.println(str);
@@ -280,6 +284,11 @@ public class RobotExpData {
 		
 		// Calibrate all of the timestamps...
 		expStartTime = RobotExpData.getCalibratedTime(expStartTime, timeOffset);
+		
+		for (int i=0; i < locations.size(); i++) {
+			GPSLocationState currLoc = locations.get(i);
+			currLoc.calibrateTime(timeOffset);
+		}
 		
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge currEdge = pathEdges.get(i);
@@ -390,26 +399,25 @@ public class RobotExpData {
 	}
 	
 	/**
-	 * Goes through each of the path edges and gathers all of the GPS data
-	 * into a single vector.  Returns this vector.
+	 * Returns the GPS data collected by the robot as it performed this experiment.
 	 * 
-	 * @return The vector containing the entire path history of the robot.
+	 * @return The vector containing the entire GPS history of the robot.
 	 */
 	public Vector<GPSLocationState> getGPSHistory() {
-		Vector<GPSLocationState> result = new Vector<GPSLocationState>();
-		
-		Enumeration<PathEdge> e = pathEdges.elements();
-		
-		while (e.hasMoreElements()) {
-			PathEdge pe = e.nextElement();
-			
-			Enumeration<GPSLocationState> locEnum = pe.getLocationsEnum();
-			while (locEnum.hasMoreElements()) {
-				result.add(locEnum.nextElement());
-			}
-		}
-		
-		return result;
+//		Vector<GPSLocationState> result = new Vector<GPSLocationState>();
+//		
+//		Enumeration<PathEdge> e = pathEdges.elements();
+//		
+//		while (e.hasMoreElements()) {
+//			PathEdge pe = e.nextElement();
+//			
+//			Enumeration<GPSLocationState> locEnum = pe.getLocationsEnum();
+//			while (locEnum.hasMoreElements()) {
+//				result.add(locEnum.nextElement());
+//			}
+//		}
+//		
+		return locations;
 	}
 	
 	/**
@@ -442,6 +450,28 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Returns the initial location of the robot when the experiment began.
+	 * 
+	 * @return the initial location of the robot when the experiment began.
+	 */
+	public Location getBeginLocation() {
+		return locations.get(0).getLocation();
+	}
+	
+	/**
+	 * Returns the final location of the robot after it finishes this experiment.
+	 * 
+	 * @return The final location of the robot.
+	 */
+	public Location getEndLocation() {
+		return locations.get(locations.size()-1).getLocation();
+	}
+	
+	public Enumeration<GPSLocationState> getLocationsEnum() {
+		return locations.elements();
+	}
+	
+	/**
 	 * Returns the location of the robot at the specified time.
 	 * Uses a linear interpolation of the robot's location when necessary.
 	 * 
@@ -449,21 +479,90 @@ public class RobotExpData {
 	 * @return The location of the robot at the specified time.
 	 */
 	public Location getLocation(long timestamp) {
-		PathEdge edge = getPathEdge(timestamp);
-		if (edge != null)
-			return edge.getLocation(timestamp);
-		else {
-			if (timestamp >= expStartTime) {
-				//log("getLocation(timestamp): timestamp is after experiment started but prior to robot starting on first edge.");
-				return pathEdges.get(0).getLocation(0).getLocation();
-			} else if (timestamp > getPathEdge(numEdges()-1).getEndTime()) {
-				PathEdge finalEdge = getPathEdge(numEdges()-1); 
-				return finalEdge.getFinalLocation();
-			} else {
-				logErr("ERROR: getLocation(timestamp): No edge at time " + timestamp);
-				return null;
+		if (timestamp < getExpStartTime()) {
+			log("WARNING: getLocation(timestamp): timestamp prior to beginning of experiment. (" + timestamp + " < " + getExpStartTime() + ")");
+			return getBeginLocation();
+		}
+		
+		if (timestamp > getExpEndTime()) {
+			log("WARNING: getLocation(timestamp): timestamp after end of experiment. (" + getExpEndTime() + " < " + timestamp + ")");
+			return getEndLocation();
+		}
+		
+		// calculate the percent edge traversal...
+		//double pctTraversed = ((double)(timestamp - startTime)) / ((double)(endTime - startTime)) * 100.0;
+		//log("Path Edge pct traveled: " + pctTraversed);
+		
+		// Find the index of the locations immediately before or after the
+		// desired timestamp
+		int beforeIndx = 0; 
+		int afterIndx = 0;
+		
+		boolean afterIndxFound = false;
+		
+		for (int i=0; i < locations.size(); i++) {
+			GPSLocationState currLocation = locations.get(i);
+			if (currLocation.getTimestamp() <= timestamp)
+				beforeIndx = i;
+			if (!afterIndxFound && currLocation.getTimestamp() >= timestamp) {
+				afterIndxFound = true;
+				afterIndx = i;
 			}
 		}
+		
+		log("getLocation(timestamp): timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		
+		if (beforeIndx == afterIndx)
+			return new Location(locations.get(beforeIndx).getLoc());
+		else {
+			GPSLocationState bLoc = locations.get(beforeIndx);
+			GPSLocationState aLoc = locations.get(afterIndx);
+			
+			// Now we need to interpolate.  Create two lines both with time as the x axis.
+			// One line has the longitude as the Y-axis while the other has the latitude.
+			Location latBeforeLoc = new Location(bLoc.getLocation().latitude(), bLoc.getTimestamp());
+			Location latAfterLoc = new Location(aLoc.getLocation().latitude(), aLoc.getTimestamp());
+			Line latLine = new Line(latBeforeLoc, latAfterLoc);
+			double interpLat = latLine.getLatitude(timestamp);
+			
+			Location lonBeforeLoc = new Location(bLoc.getTimestamp(), bLoc.getLocation().longitude());
+			Location lonAfterLoc = new Location(aLoc.getTimestamp(), aLoc.getLocation().longitude());
+			Line lonLine = new Line(lonBeforeLoc, lonAfterLoc);
+			double interpLon = lonLine.getLongitude(timestamp);
+			
+			Location result = new Location(interpLat, interpLon);
+			
+			log("getLocation(timestamp):");
+			log("\tBefore Location @" + bLoc.getTimestamp() + ": " + bLoc.getLocation());
+			log("\tAfter Location @" + aLoc.getTimestamp() + ": " + aLoc.getLocation());
+			log("\tInterpolated Location @" + timestamp + ": " + result);
+			return result;
+		}
+		
+//		PathEdge edge = getPathEdge(timestamp);
+//		if (edge != null)
+//			return edge.getLocation(timestamp);
+//		else {
+//			if (timestamp >= expStartTime) {
+//				//log("getLocation(timestamp): timestamp is after experiment started but prior to robot starting on first edge.");
+//				return pathEdges.get(0).getLocation(0).getLocation();
+//			} else if (timestamp > getPathEdge(numEdges()-1).getEndTime()) {
+//				PathEdge finalEdge = getPathEdge(numEdges()-1); 
+//				return finalEdge.getEndLocation();
+//			} else {
+//				logErr("ERROR: getLocation(timestamp): No edge at time " + timestamp);
+//				return null;
+//			}
+//		}
+	}
+	
+	/**
+	 * Returns the number of waypoints in the experiment.
+	 * 
+	 * @return the number of waypoints in the experiment.
+	 */
+	public double getNumWaypoints() {
+		return pathEdges.size();
 	}
 	
 	/**
@@ -473,6 +572,12 @@ public class RobotExpData {
 	 * @return The lateness of the robot arriving at the waypoint.
 	 */
 	public double getLatenessTo(int wayPoint) {
+		if (wayPoint > getNumWaypoints()) {
+			System.err.println("ERROR: RobotExpData.getLatenessTo: Specified waypoint greater than number of waypoints (" 
+					+ wayPoint + " " + getNumWaypoints());
+			System.exit(1); // fatal error
+		}
+		
 		return pathEdges.get(wayPoint).getLateness();
 	}
 	

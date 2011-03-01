@@ -1,16 +1,17 @@
 package pharoslabut.logger.analyzer;
 
-import java.util.*;
+//import java.util.*;
 import pharoslabut.navigate.Location;
 
 /**
- * Contains the data collected as the robot travels along a single edge of a motion script.
+ * Contains the data about a single edge in a motion script.
  * 
  * @author Chien-Liang Fok
  */
 public class PathEdge {
-	private Location dest;
-	private Location startLoc = null;
+	
+	private Location endLoc;
+	private Location startLoc;
 	
 	/**
 	 * The time at which the robot started to traverse this edge.
@@ -33,25 +34,21 @@ public class PathEdge {
 	private double speed;
 	
 	/**
-	 * The locations of the robot as it traversed this edge.
-	 */
-	private Vector <GPSLocationState> locations = new Vector<GPSLocationState>();
-	
-	/**
 	 * The constructor.
 	 * 
-	 * @param dest the destination location
-	 * @param startTime The time of starting to traverse the edge.
-	 * @param speed The speed at which the robot was supposed to move.
+	 * @param endLoc The ideal destination location as specified by the motion script.
+	 * @param startTime The time at which the robot started to traverse the edge.
+	 * @param speed The ideal speed at which the robot was supposed to move,
+	 * as specified by the motion script.
 	 */
-	public PathEdge(Location dest, long startTime, double speed) {
-		this.dest = dest;
+	public PathEdge(Location endLoc, long startTime, double speed) {
+		this.endLoc = endLoc;
 		this.startTime = startTime;
 		this.speed = speed;
 	}
 	
 	/**
-	 * Recalibrates the time based on the GPS timestamps.
+	 * Calibrates the time based on the GPS timestamps.
 	 * 
 	 * @param timeOffset The offset between the system time and GPS time,
 	 * accurate to within a second.
@@ -59,10 +56,6 @@ public class PathEdge {
 	public void calibrateTime(double timeOffset) {
 		startTime = RobotExpData.getCalibratedTime(startTime, timeOffset);
 		endTime = RobotExpData.getCalibratedTime(endTime, timeOffset);
-		for (int i=0; i < locations.size(); i++) {
-			GPSLocationState currLoc = locations.get(i);
-			currLoc.calibrateTime(timeOffset);
-		}
 	}
 	
 	/**
@@ -71,33 +64,35 @@ public class PathEdge {
 	 * 
 	 * @return The distance in meters.
 	 */
-	public double finalDistFromDest() {
-		return getLocation(getNumLocations()-1).getLocation().distanceTo(dest);
-	}
+//	public double finalDistFromDest() {
+//		return getLocation(getNumLocations()-1).getLocation().distanceTo(dest);
+//	}
 	
 	/**
 	 * Calculates the lateness of the robot arriving at the destination
 	 * 
-	 * @return The lateness of the robot arriving at the destination.
+	 * @return The lateness of the robot arriving at the destination.  This 
+	 * is in milliseconds.
 	 */
-	public double getLateness() {
-		double averageSpeed = getAvgSpeed();
+	public long getLateness() {
+		// First calculate the distance traveled
+		double dist = startLoc.distanceTo(endLoc);
 		
+		// Calculate the ideal duration in milliseconds...
+		long idealDuration = (long) (dist / speed * 1000);
 		
+		// Calculate the actual duration in milliseconds...
+		long actualDuration = endTime - startTime;
 		
-		double actualDistance = startLoc.distanceTo(dest);
+		// Calculate the difference
+		long lateness = actualDuration - idealDuration;
 		
+		log("getLateness: dist: " + dist);
+		log("getLateness: ideal duration: " + idealDuration);
+		log("getLateness: actualDuration: " + actualDuration);
+		log("getLateness: lateness: " + lateness);
 		
-		double expectedTime = actualDistance / averageSpeed;
-		double actualTime = (endTime - startTime) / 1000.0;
-		
-		System.out.println("PathEdge.getLateness(): average speed: " + averageSpeed);
-		System.out.println("PathEdge.getLateness(): actual distance: " + actualDistance);
-		System.out.println("PathEdge.getLateness(): expected time: " + expectedTime);
-		System.out.println("PathEdge.getLateness(): actualTime: " + actualTime);
-		System.out.println("PathEdge.getLateness(): finalDistFromDest: " + finalDistFromDest());
-		
-		return actualTime - expectedTime;
+		return lateness;
 	}
 	
 	/**
@@ -107,27 +102,27 @@ public class PathEdge {
 	 * 
 	 * @return The average speed of the robot in m/s.
 	 */
-	public double getAvgSpeed() {
+//	public double getAvgSpeed() {
 //		double dist = startLoc.distanceTo(dest); // the distance in meters
 //		long deltaTime = endTime - startTime; // the length of time in milliseconds
 //		return dist / (deltaTime / 1000.0);
-		
-		double sum = 0; // the total distance traveled
-		for (int i = 1; i < getNumLocations(); i++) {
-			GPSLocationState startLoc = getLocation(i-1);
-			GPSLocationState endLoc = getLocation(i);
-			sum += startLoc.getLocation().distanceTo(endLoc.getLocation());
-		}
-		
-		double deltaTime = ((endTime - startTime) / 1000.0);
-		double result = sum / deltaTime;
-		
-		System.out.println("PathEdge.getAvgSpeed(): robot travel distance: " + sum);
-		System.out.println("PathEdge.getAvgSpeed(): robot travel time: " + deltaTime);
-		System.out.println("PathEdge.getAvgSpeed(): robot speed: " + result);
-		
-		return result;
-	}
+//		
+//		double sum = 0; // the total distance traveled
+//		for (int i = 1; i < getNumLocations(); i++) {
+//			GPSLocationState startLoc = getLocation(i-1);
+//			GPSLocationState endLoc = getLocation(i);
+//			sum += startLoc.getLocation().distanceTo(endLoc.getLocation());
+//		}
+//		
+//		double deltaTime = ((endTime - startTime) / 1000.0);
+//		double result = sum / deltaTime;
+//		
+//		System.out.println("PathEdge.getAvgSpeed(): robot travel distance: " + sum);
+//		System.out.println("PathEdge.getAvgSpeed(): robot travel time: " + deltaTime);
+//		System.out.println("PathEdge.getAvgSpeed(): robot speed: " + result);
+//		
+//		return result;
+//	}
 	
 	/**
 	 * Sets the start location of this edge.
@@ -149,6 +144,8 @@ public class PathEdge {
 	
 	/**
 	 * Returns the starting location of the robot as it traverses this edge.
+	 * This is the actual start location, not the ideal which is the previous edge's
+	 * ideal end location.
 	 * 
 	 * @return The starting location.
 	 */
@@ -175,8 +172,10 @@ public class PathEdge {
 	//}
 	
 	/**
-	 * Returns the absolute end time of this edge.
-	 * The units is milliseconds.
+	 * Returns the actual time when the robot arrives at the final waypoint of
+	 * this edge. The units is in milliseconds since the epoch.
+	 * 
+	 * @return the actual time when the robot reached the end waypoint of this edge.
 	 */
 	public long getEndTime() {
 		return endTime;
@@ -191,13 +190,15 @@ public class PathEdge {
 //	}
 	
 	/**
-	 * Returns the end time relative to the start of edge traversal and
-	 * normalized based on the last GPS reading received before the final
-	 * destination was reached.
+	 * Returns the duration of the edge traversal.  This is the difference
+	 * between the start time and end time.
+	 * 
+	 * @return The duration of the edge in milliseconds.
 	 */
 	public long getDuration() {
-		GPSLocationState lastLoc = locations.get(locations.size()-1);
-		return lastLoc.getTimestamp() - startTime;
+//		GPSLocationState lastLoc = locations.get(locations.size()-1);
+//		return lastLoc.getTimestamp() - startTime;
+		return getEndTime() - getStartTime();
 	}
 	
 	/**
@@ -205,9 +206,9 @@ public class PathEdge {
 	 * 
 	 * @return  the final location of the robot when it finishes traversing this edge.
 	 */
-	public Location getFinalLocation() {
-		return locations.get(locations.size()-1).getLocation();
-	}
+//	public Location getFinalLocation() {
+//		return locations.get(locations.size()-1).getLocation();
+//	}
 	
 	/**
 	 * Returns the location of the robot at the specified time.
@@ -216,7 +217,7 @@ public class PathEdge {
 	 * @param timestamp The time of interest. 
 	 * @return The location of the robot at the specified time.
 	 */
-	public Location getLocation(long timestamp) {
+//	public Location getLocation(long timestamp) {
 //		GPSLocationState beforeLoc = null;
 //		GPSLocationState afterLoc = null;
 //		
@@ -227,65 +228,7 @@ public class PathEdge {
 //			if (afterLoc == null && currLoc.getTimestamp() >= timestamp)
 //				afterLoc = currLoc;
 //		}
-		
-		if (startTime > timestamp) {
-			log("WARNING: getLocation(timestamp): timestamp prior to beginning of edge. (" + startTime + " > " + timestamp + ")");
-			return startLoc;
-		}
-		
-		if (endTime < timestamp) {
-			log("WARNING: getLocation(timestamp): timestamp after finishing edge. (" + endTime + " < " + timestamp + ")");
-			return getFinalLocation();
-		}
-		
-		// calculate the percent edge traversal...
-		//double pctTraversed = ((double)(timestamp - startTime)) / ((double)(endTime - startTime)) * 100.0;
-		//log("Path Edge pct traveled: " + pctTraversed);
-		
-		int beforeIndx = 0; // the index within locations vector that is immediately before the timestamp
-		int afterIndx = 0; // the index within locations vector that is immediately after the timestamp
-		
-		boolean afterIndxFound = false;
-		
-		for (int i=0; i < locations.size(); i++) {
-			GPSLocationState currLocation = locations.get(i);
-			if (currLocation.getTimestamp() <= timestamp)
-				beforeIndx = i;
-			if (!afterIndxFound && currLocation.getTimestamp() >= timestamp) {
-				afterIndxFound = true;
-				afterIndx = i;
-			}
-		}
-		
-		log("Timestamp = " + timestamp + ", BeforeIndx = " + beforeIndx + ", AfterIndx = " + afterIndx);
-		
-		if (beforeIndx == afterIndx)
-			return new Location(locations.get(beforeIndx).getLoc());
-		else {
-			GPSLocationState bLoc = locations.get(beforeIndx);
-			GPSLocationState aLoc = locations.get(afterIndx);
-			
-			// Now we need to interpolate, create two lines both with time as the x axis.
-			// One line has the longitude as the Y-axis while the other has the latitude.
-			Location latBeforeLoc = new Location(bLoc.getLocation().latitude(), bLoc.getTimestamp());
-			Location latAfterLoc = new Location(aLoc.getLocation().latitude(), aLoc.getTimestamp());
-			Line latLine = new Line(latBeforeLoc, latAfterLoc);
-			double interpLat = latLine.getLatitude(timestamp);
-			
-			Location lonBeforeLoc = new Location(bLoc.getTimestamp(), bLoc.getLocation().longitude());
-			Location lonAfterLoc = new Location(aLoc.getTimestamp(), aLoc.getLocation().longitude());
-			Line lonLine = new Line(lonBeforeLoc, lonAfterLoc);
-			double interpLon = lonLine.getLongitude(timestamp);
-			
-			Location result = new Location(interpLat, interpLon);
-			
-			log("PathEdge.getLocation(timestamp):");
-			log("\tBefore Location @" + bLoc.getTimestamp() + ": " + bLoc.getLocation());
-			log("\tAfter Location @" + aLoc.getTimestamp() + ": " + aLoc.getLocation());
-			log("\tInterpolated Location @" + timestamp + ": " + result);
-			return result;
-		}
-	}
+//	}
 	
 	/**
 	 * Returns the location of the robot at the specified
@@ -296,19 +239,30 @@ public class PathEdge {
 	 * @param pct The percentage of the path that has been traversed.
 	 * @return The location of the robot at that percentage in time.
 	 */
-	public Location getLocationPct(double pct) {
-		
-		// Determine the time at the percentage completion...
-		long timestamp = (long)((endTime - startTime) * (pct / 100.0)) + startTime;
-		if (timestamp > endTime)
-			timestamp = endTime;
-		
-		return getLocation(timestamp);
+//	public Location getLocationPct(double pct) {
+//		
+//		// Determine the time at the percentage completion...
+//		long timestamp = (long)((endTime - startTime) * (pct / 100.0)) + startTime;
+//		if (timestamp > endTime)
+//			timestamp = endTime;
+//		
+//		return getLocation(timestamp);
+//	}
+	
+	/**
+	 * Returns the time when the robot has finished traversing a specified
+	 * percentage of the edge.
+	 * 
+	 * @return The time when the robot has finished traversing a specified
+	 * percentage of the edge.
+	 */
+	public long getTimePctComplete(double pctComplete) {
+		return (long) ((getEndTime() - getStartTime()) * pctComplete + getStartTime());
 	}
 	
-	public void addLocation(GPSLocationState ls) {
-		locations.add(ls);
-	}
+//	public void addLocation(GPSLocationState ls) {
+//		locations.add(ls);
+//	}
 	
 	/**
 	 * The GPS sensor reports location information approximately at 1Hz.
@@ -328,9 +282,9 @@ public class PathEdge {
 	 * 
 	 * @return the number of GPS locations recorded during this edge.
 	 */
-	public Enumeration<GPSLocationState> getLocationsEnum() {
-		return locations.elements();
-	}
+//	public Enumeration<GPSLocationState> getLocationsEnum() {
+//		return locations.elements();
+//	}
 	
 	/**
 	 * The GPS sensor reports location information approximately at 1Hz.
@@ -339,9 +293,9 @@ public class PathEdge {
 	 * 
 	 * @return the number of GPS locations recorded during this edge.
 	 */
-	public int getNumLocations() {
-		return locations.size();
-	}
+//	public int getNumLocations() {
+//		return locations.size();
+//	}
 	
 	/**
 	 * The GPS sensor reports location information approximately at 1Hz.
@@ -352,12 +306,15 @@ public class PathEdge {
 	 * the value returned by getNumLocations.
 	 * @return the number of GPS locations recorded during this edge.
 	 */
-	public GPSLocationState getLocation(int indx) {
-		return locations.get(indx);
-	}
+//	public GPSLocationState getLocation(int indx) {
+//		return locations.get(indx);
+//	}
 	
-	public Location getDest() {
-		return dest;
+	/**
+	 * Returns the ideal final location of the edge.
+	 */
+	public Location getEndLocation() {
+		return endLoc;
 	}
 	
 	/**
@@ -369,13 +326,20 @@ public class PathEdge {
 		return startTime;
 	}
 	
-	public double getSpeed() {
+	/**
+	 * Returns the ideal speed of the robot.  This is the speed that the
+	 * motion script specified.  The actual speed may differ based on
+	 * the calibration of the encoder, misalignment of the front wheels, etc.
+	 * 
+	 * @return The ideal speed of the robot as specified by the motion script.
+	 */
+	public double getIdealSpeed() {
 		return speed;
 	}
 	
-	public double getDistanceToDest(int indx) {
-		return dest.distanceTo(new Location(getLocation(indx).getLoc()));
-	}
+//	public double getDistanceToDest(int indx) {
+//		return dest.distanceTo(new Location(getLocation(indx).getLoc()));
+//	}
 	
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -384,17 +348,17 @@ public class PathEdge {
 	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("Start Location: " + getStartLoc() + ", Destination: " + getDest() + "\n");
+		sb.append("Start Location: " + getStartLoc() + ", Destination: " + getEndLocation() + "\n");
 		sb.append("Start time: " + getStartTime() + ", End Time: " + getEndTime() + "\n");
-		sb.append("Speed of travel: " + getSpeed() + "\n");
-		sb.append("Number of GPS records: " + getNumLocations()  + "\n");
-		sb.append("GPS History: " + "\n");
-		for (int i = 0; i < getNumLocations(); i++) {
-			GPSLocationState loc = getLocation(i);
-			sb.append("\t" + (i+1) + ":\n\t\tTime:" + (loc.getTimestamp() - startTime + "\n") 
-					+ "\t\tLocation:" + loc.getLoc() + "\n");
-			sb.append("\t\tDistance to Destination (m): " + getDistanceToDest(i)+ "\n");
-		}
+		sb.append("Speed of travel: " + getIdealSpeed() + "\n");
+//		sb.append("Number of GPS records: " + getNumLocations()  + "\n");
+//		sb.append("GPS History: " + "\n");
+//		for (int i = 0; i < getNumLocations(); i++) {
+//			GPSLocationState loc = getLocation(i);
+//			sb.append("\t" + (i+1) + ":\n\t\tTime:" + (loc.getTimestamp() - startTime + "\n") 
+//					+ "\t\tLocation:" + loc.getLoc() + "\n");
+//			sb.append("\t\tDistance to Destination (m): " + getDistanceToDest(i)+ "\n");
+//		}
 		return sb.toString();
 	}
 }
