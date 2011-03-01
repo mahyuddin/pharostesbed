@@ -3,12 +3,12 @@ package pharoslabut.cartographer;
 import java.util.*;
 
 class LocationElement {
-	private int xCoord;
-	private int yCoord;
+	private Integer xCoord;
+	private Integer yCoord;
 	private double confidence; // percentage 
 	private double elevation;
 	
-	public LocationElement (int x, int y) {
+	public LocationElement (Integer x, Integer y) {
 		this.xCoord = x;
 		this.yCoord = y;
 		this.confidence = .5;  // initialized to 50% 
@@ -16,10 +16,10 @@ class LocationElement {
 	}	
 	
 	/**************** GETTERS AND SETTERS ******************/
-	public int getxCoord() { return xCoord; }
-	public void setxCoord(int x) { this.xCoord = x;	}
-	public int getyCoord() { return yCoord;	}
-	public void setyCoord(int y) { this.yCoord = y;	}
+	public Integer getxCoord() { return xCoord; }
+	public void setxCoord(Integer x) { this.xCoord = x;	}
+	public Integer getyCoord() { return yCoord;	}
+	public void setyCoord(Integer y) { this.yCoord = y;	}
 	public double getConfidence() {	return confidence; }
 	public void setConfidence(double c) { this.confidence = c; }
 	public double getElevation() { return elevation; }
@@ -28,25 +28,148 @@ class LocationElement {
 	
 }
 
+
+class OrderedPair {
+	
+	Integer x;
+	Integer y;
+	
+	public OrderedPair(Integer xValue, Integer yValue) {
+		this.x = xValue;
+		this.y = yValue;
+	}
+	
+	/**************** GETTERS AND SETTERS ******************/
+	public Integer getX() { return x; }
+	public void setX(Integer x) { this.x = x; }
+	public Integer getY() {	return y; }
+	public void setY(Integer y) { this.y = y; }
+	/*************** END GETTERS AND SETTERS ****************/
+
+}
+
+
 public class WorldView {
-	private static List<ArrayList<LocationElement>> world;
+	private static List<ArrayList<LocationElement>> world; // full 2-D matrix, world view
+	
+	public static final double RESOLUTION 				= 0.05; // 5 cm
+	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.08; // 8 cm (is this correct??) 
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 4.00; // 4 m  (is this correct??)
 	
 	
 	public WorldView() {
 		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>());
-		for (int i = 0; i < 100; i++) { // iterate through each x coordinate
+		for (Integer i = 0; i < 100; i++) { // iterate through each x coordinate
  
 			//add a new list for all the y coordinates at that x coordinate
 			world.add(new ArrayList<LocationElement>());  
 			
-			for (int j = 0; j < 100; j++) { // iterate through each y coordinate
-				world.get(i).add(j, new LocationElement(i,j)); // add 	
+			for (Integer j = 0; j < 100; j++) { // iterate through each y coordinate
+				world.get(i).add(j, new LocationElement(i,j)); // add a LocationElement at that coordinate
 			}	
 		}
 	}
 	
 	
-	public static synchronized void writeConfidence(int x, int y, double c) {
+	/**
+	 * this is called by LocationTracker whenever updateLocation is called 
+	 * @author Kevin
+	 * @param xPos
+	 * @param yPos
+	 */
+	public static synchronized void recordLocation(double xPos, double yPos) {
+		double [] pos = {xPos, yPos};
+		Integer [] coordinates = locToCoord(pos);
+		
+		// coordinates[0] is xCoord, coordinates[1] is yCoord
+		// since we have passed through this location, we are full confident an object doesn't exist there
+		//   so the confidence value should be set to zero to indicate no obstacle is present
+		writeConfidence(coordinates[0], coordinates[1], 0);   
+	}
+	
+	
+	/**
+	 * @author Kevin
+	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RL, RC, RR
+	 */
+	public static synchronized void recordObstacles(float [] dist) {
+		// extract IR data from dist[], dist data is in mm
+		float frontLeft	 	= dist[0];
+		float frontCenter 	= dist[1];
+		float frontRight 	= dist[2];
+		float rearLeft 		= dist[3];
+		float rearCenter 	= dist[4];
+		float rearRight 	= dist[5];
+		
+		double [] curLoc = LocationTracker.getCurrentLocation();
+		double xPos = curLoc[0]; 
+		double yPos = curLoc[1];
+		double angle = curLoc[2];
+		
+		// 2-D ArrayList of spaces to clear 
+		// (these need to be calculated and added to the list before the "synchronized (world)" block below)
+		ArrayList<OrderedPair> locationsToClear = new ArrayList<OrderedPair>();
+		ArrayList<OrderedPair> locationsToIncrease = new ArrayList<OrderedPair>();
+		
+		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
+		Integer [] obstacleCoord;
+		double [] obstaclePos = curLoc; // start with the current location, add IR values to it below
+		
+		// calculate where the object should be recorded
+		
+		if ((frontLeft <= MIN_USEFUL_IR_DISTANCE) && (frontLeft >= MAX_USEFUL_IR_DISTANCE)) {
+			
+		}
+		
+		if ((frontCenter <= MIN_USEFUL_IR_DISTANCE) && (frontCenter >= MAX_USEFUL_IR_DISTANCE)) {
+			obstaclePos[1] += frontCenter; // add IR value to yPos, cuz it's directly in front
+			obstacleCoord = locToCoord(obstaclePos); // convert from actual position to coordinate
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
+			
+			
+			
+		}
+
+		if ((frontRight <= MIN_USEFUL_IR_DISTANCE) && (frontRight >= MAX_USEFUL_IR_DISTANCE)) {
+	
+		}
+		
+		if ((rearLeft <= MIN_USEFUL_IR_DISTANCE) && (rearLeft >= MAX_USEFUL_IR_DISTANCE)) {
+			
+		}
+		
+		if ((rearCenter <= MIN_USEFUL_IR_DISTANCE) && (rearCenter >= MAX_USEFUL_IR_DISTANCE)) {
+			
+		}
+		
+		if ((rearRight <= MIN_USEFUL_IR_DISTANCE) && (rearRight >= MAX_USEFUL_IR_DISTANCE)) {
+			
+		}
+					
+			
+			
+		
+		
+		
+		
+		
+		
+		synchronized (world) {
+			// 1) increase confidence value at (xCoord,yCoord)
+			
+			// 2) decrease confidence values at coordinates in a straight line of sight 
+			//    from the curLoc to the sensed position (cuz the IR is seeing through blank space,
+			//    so there probably isn't something there in it's path
+			
+			
+		}
+		
+		
+	}
+	
+	
+	
+	public static synchronized void writeConfidence(Integer x, Integer y, double c) {
 	synchronized (world) {
 		// set (x,y)'s confidence = c
 		world.get(x).get(y).setConfidence(c);
@@ -54,13 +177,36 @@ public class WorldView {
 	}
 	
 	
-	public static synchronized double readConfidence(int x, int y) {
+	public static synchronized double readConfidence(Integer x, Integer y) {
 	synchronized (world) {
 		// return confidence at (x,y);
 		return world.get(x).get(y).getConfidence();
 	}
 	}
 	
+	
+	/**
+	 * converts actual x and y positions to x and y coordinates for indexing the WorldView 2-D matrix
+	 * @param loc array of doubles = {x, y, angle}  (angle is not used)
+	 * @return array of Integers = {xCoord, yCoord}
+	 */
+	private static Integer [] locToCoord(double [] loc) {
+		double xValue = loc[0];
+		double yValue = loc[1];
+		//double angle = loc[2]; // this is probably not needed
+		
+		Long x = Math.round(xValue/RESOLUTION);
+		Long y = Math.round(yValue/RESOLUTION);
+		
+		Integer [] coord = {x.intValue(), y.intValue()};
+		return coord;
+	}
+	
+	
+	
+	private static double calibrateIR(double data) {
+		return data;
+	}
 
 }
 
