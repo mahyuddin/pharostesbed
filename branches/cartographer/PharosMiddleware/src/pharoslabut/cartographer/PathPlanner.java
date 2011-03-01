@@ -24,6 +24,7 @@ import playerclient.IRListener;
 public class PathPlanner implements Position2DListener, IRListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
+	private static Position2DInterface motors; 
 	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
 		
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
@@ -36,10 +37,10 @@ public class PathPlanner implements Position2DListener, IRListener {
 		}
 		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
-		Position2DInterface motors = client.requestInterfacePosition2D(0, 
+		motors = client.requestInterfacePosition2D(0, 
 				PlayerConstants.PLAYER_OPEN_MODE);
 		
-		motors.resetOdometry();
+		
 //		if (motors == null){
 //			log("unable to connect to Position2D interface");
 //			System.exit(1);
@@ -69,7 +70,8 @@ public class PathPlanner implements Position2DListener, IRListener {
 		MotionTask currTask;
 		double speedStep = .2;
 		
-		motors.resetOdometry();
+		
+		
 		//RotateDegrees(Math.PI/16, motionArbiter);
 		
 		while(true){
@@ -92,8 +94,20 @@ public class PathPlanner implements Position2DListener, IRListener {
 		/*log("Test complete!");
 		System.exit(0);*/
 		///////////// END OF IR INTERFACING ///////////////
-
+		
 	}
+	
+	
+	public static void writeOdometry(double newX, double newY, double newAngle) {
+		PlayerPose newPose = new PlayerPose();
+		newPose.setPx(newX);
+		newPose.setPy(newY);
+		newPose.setPa(newAngle);
+		(PathPlanner.motors).setOdometry(newPose);
+		return;
+	}
+	
+	
 	
 	public boolean RotateDegrees(double radians, MotionArbiter robot){
 		MotionTask currTask;
@@ -109,12 +123,14 @@ public class PathPlanner implements Position2DListener, IRListener {
 	//@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose pp = data.getPos();
+		LocationTracker.updateLocation(pp);
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
 				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
 		float[] dist = data.getRanges();
+		WorldView.recordObstacles(dist);
 		log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
 				dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
 				dist[5]);
