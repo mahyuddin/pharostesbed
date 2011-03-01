@@ -139,7 +139,7 @@ public class SignalStrengthVsDist {
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("PharosClient: " + msg);
+			System.out.println(msg);
 	}
 	
 	private static void usage() {
