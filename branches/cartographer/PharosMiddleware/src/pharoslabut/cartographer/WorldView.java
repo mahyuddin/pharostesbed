@@ -122,10 +122,18 @@ public class WorldView {
 		}
 		
 		if ((frontCenter <= MIN_USEFUL_IR_DISTANCE) && (frontCenter >= MAX_USEFUL_IR_DISTANCE)) {
+			
+			// this is wrong... it needs to factor in the current angle
+			
 			obstaclePos[1] += frontCenter; // add IR value to yPos, cuz it's directly in front
 			obstacleCoord = locToCoord(obstaclePos); // convert from actual position to coordinate
 			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
 			
+			// xCoord and obstacleCoord[0] should be the same (they should have the same x value)
+			// keep xCoord the same, iterate through all the yCoords from current Y coord to obstacle's y coord
+			for (int y = curCoords[1]; y < obstacleCoord[1]; y++) {
+				locationsToClear.add(new OrderedPair(curCoords[0], y));
+			}
 			
 			
 		}
