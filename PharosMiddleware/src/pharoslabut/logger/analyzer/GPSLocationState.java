@@ -4,6 +4,12 @@ import playerclient.structures.gps.PlayerGpsData;
 
 import pharoslabut.navigate.*;
 
+/**
+ * A pairing between a PlayerGpsData provider by Player and the timestamp at which it was received.
+ * 
+ * @author Chien-Liang Fok
+ *
+ */
 public class GPSLocationState {
 	private PlayerGpsData gpsLoc;
 	private long timestamp;
