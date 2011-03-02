@@ -53,8 +53,10 @@ public class WorldView {
 	private static List<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
-	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.08; // 8 cm (is this correct??) 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 4.00; // 4 m  (is this correct??)
+	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.20; // minimum short range distance is 20 cm 
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 3.00; // max short range distance is 150 cm
+																// looks like the max long range distance detectable is ~550 cm 
+																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
 	
 	
