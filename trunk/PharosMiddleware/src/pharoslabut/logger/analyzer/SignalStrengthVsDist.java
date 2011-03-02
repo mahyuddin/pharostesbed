@@ -216,6 +216,11 @@ public class SignalStrengthVsDist {
 			
 			// Save the results
 			FileLogger outputLogger = new FileLogger(outputFile, false);
+			print("# Experiment Directory: " + expDir, outputLogger);
+			if (nodeID != -1)
+				print("# Node ID: " + nodeID, outputLogger);
+			else
+				print("# All Nodes", outputLogger);
 			print(results.get(0).getTableHeader(), outputLogger);
 			for (int i=0; i < results.size(); i++) {
 				print(results.get(i).toString(), outputLogger);
