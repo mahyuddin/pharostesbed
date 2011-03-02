@@ -55,6 +55,7 @@ public class WorldView {
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.08; // 8 cm (is this correct??) 
 	public static final double MAX_USEFUL_IR_DISTANCE 	= 4.00; // 4 m  (is this correct??)
+	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
 	
 	
 	public WorldView() {
@@ -72,19 +73,37 @@ public class WorldView {
 	
 	
 	/**
-	 * this is called by LocationTracker whenever updateLocation is called 
+	 * This is called by LocationTracker whenever updateLocation is called. <br> <
+	 * Clears the confidence values at the roomba's location, which spans several coordinates 
+	 * depending on <b>ROOMBA_RADIUS</b> and the <b>RESOLUTION</b> of the map  
 	 * @author Kevin
-	 * @param xPos
-	 * @param yPos
+	 * @param xPos current x position of the Roomba (the center point of the robot)
+	 * @param yPos current y position of the Roomba (the center point of the robot)
 	 */
 	public static synchronized void recordLocation(double xPos, double yPos) {
 		double [] pos = {xPos, yPos};
-		Integer [] coordinates = locToCoord(pos);
+		Integer [] coordinates = locToCoord(pos); // coordinates[0] is xCoord, coordinates[1] is yCoord 
+		// "coordinates" corresponds to the middle of the Roomba, 
+		//    and we'll need to clear the locations that cover the whole circular area of the Roomba  
 		
-		// coordinates[0] is xCoord, coordinates[1] is yCoord
-		// since we have passed through this location, we are full confident an object doesn't exist there
-		//   so the confidence value should be set to zero to indicate no obstacle is present
-		writeConfidence(coordinates[0], coordinates[1], 0);   
+		// calculate the boundaries of Roomba in terms of position (in meters)
+		double [] upperLeftPos = {xPos - ROOMBA_RADIUS, yPos + ROOMBA_RADIUS};
+		double [] lowerRightPos = {xPos + ROOMBA_RADIUS, yPos - ROOMBA_RADIUS};
+		
+		// convert Roomba boundaries to coordinates
+		Integer [] upperLeftCoord = locToCoord(upperLeftPos);
+		Integer [] lowerRightCoord = locToCoord(lowerRightPos);
+		
+		// add all coordinates from upperLeftCoord to lowerRightCoord to the locationsToClear list
+		for (int x = upperLeftCoord[0]; x <= lowerRightCoord[0]; x++) { // iterate through all xCoords, from left to right 
+			for (int y = upperLeftCoord[1]; y >= lowerRightCoord[1]; x--) { // iterate through all yCoords, from top to bottom
+				
+				// since we have passed through this location, we are full confident an object doesn't exist there
+				//   so the confidence value should be set to zero to indicate no obstacle is present
+				writeConfidence(x, y, 0);   		
+			}
+		}
+		
 	}
 	
 	
@@ -108,7 +127,7 @@ public class WorldView {
 		
 		// 2-D ArrayList of spaces to clear 
 		// (these need to be calculated and added to the list before the "synchronized (world)" block below)
-		ArrayList<OrderedPair> locationsToClear = new ArrayList<OrderedPair>();
+		ArrayList<OrderedPair> locationsToDecrease = new ArrayList<OrderedPair>();
 		ArrayList<OrderedPair> locationsToIncrease = new ArrayList<OrderedPair>();
 		
 		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
@@ -117,11 +136,11 @@ public class WorldView {
 		
 		// calculate where the object should be recorded
 		
-		if ((frontLeft <= MIN_USEFUL_IR_DISTANCE) && (frontLeft >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((frontLeft >= MIN_USEFUL_IR_DISTANCE) && (frontLeft <= MAX_USEFUL_IR_DISTANCE)) {
 			
 		}
 		
-		if ((frontCenter <= MIN_USEFUL_IR_DISTANCE) && (frontCenter >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((frontCenter >= MIN_USEFUL_IR_DISTANCE) && (frontCenter <= MAX_USEFUL_IR_DISTANCE)) {
 			
 			// this is wrong... it needs to factor in the current angle
 			
@@ -132,25 +151,25 @@ public class WorldView {
 			// xCoord and obstacleCoord[0] should be the same (they should have the same x value)
 			// keep xCoord the same, iterate through all the yCoords from current Y coord to obstacle's y coord
 			for (int y = curCoords[1]; y < obstacleCoord[1]; y++) {
-				locationsToClear.add(new OrderedPair(curCoords[0], y));
+				locationsToDecrease.add(new OrderedPair(curCoords[0], y));
 			}
 			
 			
 		}
 
-		if ((frontRight <= MIN_USEFUL_IR_DISTANCE) && (frontRight >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((frontRight >= MIN_USEFUL_IR_DISTANCE) && (frontRight <= MAX_USEFUL_IR_DISTANCE)) {
 	
 		}
 		
-		if ((rearLeft <= MIN_USEFUL_IR_DISTANCE) && (rearLeft >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearLeft >= MIN_USEFUL_IR_DISTANCE) && (rearLeft <= MAX_USEFUL_IR_DISTANCE)) {
 			
 		}
 		
-		if ((rearCenter <= MIN_USEFUL_IR_DISTANCE) && (rearCenter >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearCenter >= MIN_USEFUL_IR_DISTANCE) && (rearCenter <= MAX_USEFUL_IR_DISTANCE)) {
 			
 		}
 		
-		if ((rearRight <= MIN_USEFUL_IR_DISTANCE) && (rearRight >= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearRight >= MIN_USEFUL_IR_DISTANCE) && (rearRight <= MAX_USEFUL_IR_DISTANCE)) {
 			
 		}
 					
