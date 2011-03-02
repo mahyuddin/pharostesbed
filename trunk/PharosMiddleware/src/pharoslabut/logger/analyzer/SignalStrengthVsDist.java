@@ -137,6 +137,13 @@ public class SignalStrengthVsDist {
 			flogger.log(result);
 	}
 	
+	private static void print(String msg, FileLogger flogger) {
+		System.out.println(msg);
+		if (flogger != null) {
+			flogger.log(msg);
+		}
+	}
+	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(msg);
@@ -150,14 +157,16 @@ public class SignalStrengthVsDist {
 		print("\t-log <log file name>: The file in which to log results (default null)");
 		print("\t-telos: Analyze signal strength vs. distance of TelosB mote.");
 		print("\t-nodeID <node ID>: The ID of the transmitter to examine.");
+		print("\t-output <output file name>: The name of the file in which the results are saved (required).");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String expDir = null;
+		String outputFile = null;
 		boolean analyzeTelos = false;
 		int nodeID = -1;
-		FileLogger flogger = null;
+		FileLogger flogger = null; // for saving debug output
 		
 		// Process the command line arguments...
 		try {
@@ -173,6 +182,8 @@ public class SignalStrengthVsDist {
 					analyzeTelos = true;
 				else if (args[i].equals("-nodeID"))
 					nodeID = Integer.valueOf(args[++i]);
+				else if (args[i].equals("-output"))
+					outputFile = args[++i];
 				else {
 					usage();
 					System.exit(1);
@@ -184,16 +195,17 @@ public class SignalStrengthVsDist {
 			System.exit(1);
 		}
 		
-		if (expDir == null) {
+		if (expDir == null || outputFile == null) {
 			usage();
 			System.exit(1);
 		}
 		
-		// Perform the actual analysis...
+		
 		SignalStrengthVsDist analyzer = new SignalStrengthVsDist(expDir, flogger);
 		Vector<TelosBSignalStrengthResult> results = null;
 		
 		if (analyzeTelos) {
+			// Perform the actual analysis...
 			if (nodeID != -1) {
 				log("Analyzing TelosB node " + nodeID + "'s signal strength vs. distance in experiment " + expDir + "...", flogger);
 				results = analyzer.analyzeTelosBSignal(nodeID);
@@ -201,22 +213,13 @@ public class SignalStrengthVsDist {
 				log("Analyzing all TelosB signal vs. distance in experiment " + expDir + "...", flogger);
 				results = analyzer.analyzeTelosBSignal();
 			}
-		}
-		
-		// Plot the signal strength vs. distance data in a meaningful way
-		if (analyzeTelos) {
-			// print the results
-			log(results.get(0).getTableHeader(), flogger);
+			
+			// Save the results
+			FileLogger outputLogger = new FileLogger(outputFile, false);
+			print(results.get(0).getTableHeader(), outputLogger);
 			for (int i=0; i < results.size(); i++) {
-				log(results.get(i).toString(), flogger);
+				print(results.get(i).toString(), outputLogger);
 			}
-			
-//			RawScatterPlot rsp = new RawScatterPlot("chart tile", results);
-			
-//			final SignalStrengthVsDistScatterPlot scatterPlot = new SignalStrengthVsDistScatterPlot("Fast Scatter Plot Demo");
-//	        scatterPlot.pack();
-//	        RefineryUtilities.centerFrameOnScreen(scatterPlot);
-//	        scatterPlot.setVisible(true);
 			
 		}
 	}
