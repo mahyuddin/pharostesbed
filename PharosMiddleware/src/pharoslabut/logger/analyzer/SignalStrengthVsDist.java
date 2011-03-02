@@ -154,10 +154,10 @@ public class SignalStrengthVsDist {
 		print("Usage: pharoslabut.logger.analyzer.SignalStrengthVsDist <options>\n");
 		print("Where <options> include:");
 		print("\t-expDir <experiment data directory>: The directory containing experiment data (required)");
-		print("\t-log <log file name>: The file in which to log results (default null)");
+		print("\t-log <log file name>: The file in which to log debug statements (default null)");
 		print("\t-telos: Analyze signal strength vs. distance of TelosB mote.");
 		print("\t-nodeID <node ID>: The ID of the transmitter to examine.");
-		print("\t-output <output file name>: The name of the file in which the results are saved (required).");
+		print("\t-output <output file name>: The file in which the results are saved (required).");
 		print("\t-debug: enable debug mode");
 	}
 	
