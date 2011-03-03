@@ -111,7 +111,8 @@ public class SignalStrengthVsDist {
 		Enumeration<RobotExpData> robotEnum = expData.getRobotEnum();
 		while (robotEnum.hasMoreElements()) {
 			RobotExpData currTxRobot = robotEnum.nextElement();
-			results.addAll(analyzeTelosBSignal(currTxRobot.getRobotID()));
+			if (currTxRobot.numEdges() > 0) // If the robot actually traveled in this experiment...
+				results.addAll(analyzeTelosBSignal(currTxRobot.getRobotID()));
 		}
 		
 		return results;
