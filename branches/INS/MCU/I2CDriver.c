@@ -152,7 +152,7 @@ bool I2CDriver_readCompass() {
 	  //  Command_sendMessagePacket("INFO: I2CDriver: init compass read");
 	  //}
 	  
-		LED_BLUE2 ^= 1; // to indicate compass read activity
+		//LED_BLUE2 ^= 1; // to indicate compass read activity
 		_i2cBusyCount = 0;
 		
 		// Update the state of this driver
@@ -171,8 +171,8 @@ bool I2CDriver_readCompass() {
 	} else {
 		_i2cBusyCount++;
 		if (_i2cBusyCount == 3) {
-			LED_BLUE2 ^= 1; // to indicate i2c reset condidion
-			LED_RED1 ^= 1;
+			//LED_BLUE2 ^= 1; // to indicate i2c reset condidion
+			//LED_RED1 ^= 1;
 			
 			Command_sendMessagePacket("ERROR: I2CDriver: compass read failed!");
 			
@@ -274,7 +274,7 @@ interrupt 31 void I2CInterruptHandler(void) {
 			I2C_updateState();
 		} else {
 			// received an I2C interrupt when we did not expect it.
-			LED_RED1 ^= 1;
+			//LED_RED1 ^= 1;
 		}
 	}
 

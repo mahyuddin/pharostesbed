@@ -72,7 +72,7 @@ void addToRxSerialBuffer(uint8_t data) {
 		_rxBuffEndIndx = nxtEndIndx; // advance the Rx buffer's end index
 	} else {
 		// The serial buffer overflowed!
-		LED_RED2 ^= 1;
+		//LED_RED2 ^= 1;
 	}
 }
 
@@ -101,7 +101,7 @@ bool addToTxSerialBuffer(uint8_t data) {
 		return TRUE;
 	} else {
 		// The serial buffer overflowed!
-		LED_RED3 ^= 1;
+		//LED_RED3 ^= 1;
 		return FALSE;
 	}
 }
@@ -148,7 +148,7 @@ void SerialDriver_processRxBytes() {
 				// In escape mode, just add the next byte to the command
 				_inEscapeMode = FALSE;
 				if(_cmd_buf_idx >= MAX_CMD_LEN) {  // Ensure the command is not too long
-					LED_RED2 ^= 1; // error, packet too long, discard it
+					//LED_RED2 ^= 1; // error, packet too long, discard it
 					_cmdState = INACTIVE;
 					_cmd_buf_idx = 0;
 				} else
@@ -163,7 +163,7 @@ void SerialDriver_processRxBytes() {
 						_cmd_buf_idx = 0;
 					} else {
 						if(_cmd_buf_idx >= MAX_CMD_LEN) {  // Ensure the command is not too long
-							LED_RED2 ^= 1; // error, packet too long, discard it
+							//LED_RED2 ^= 1; // error, packet too long, discard it
 							_cmdState = INACTIVE;
 							_cmd_buf_idx = 0;
 						} else

@@ -198,12 +198,12 @@ void Command_sendMessagePacket(char* message) {
  */
 void Command_sendData() {
 	if (_heartbeatReceived) {
-		LED_GREEN2 ^= 1;
+		//LED_GREEN2 ^= 1;
 		Command_sendOdometryPacket();
 		Compass_getHeading();
 	} else {
-		LED_GREEN2 = LED_OFF;
-		LED_BLUE2 = LED_OFF;
+		//LED_GREEN2 = LED_OFF;
+		//LED_BLUE2 = LED_OFF;
 	}
 }
 
@@ -272,7 +272,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			Command_stopSendingData();
 			MotorControl_setTargetSpeed(0); // stop the robot
 			Servo_setSteeringAngle(0); // straighten the front wheels
-			LED_GREEN2 = OFF; // turn off LED5
+			//LED_GREEN2 = OFF; // turn off LED5
 			break;
 		case PROTEUS_OPCODE_DRIVE:
 			processDriveCmd(cmd, size);

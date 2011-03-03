@@ -111,6 +111,8 @@ requires Player to be restarted
 #define PI 3.14159265
 #endif
 
+#define DEBUG 1
+
 class Proteus : public Driver {
 	public:
 		Proteus(ConfigFile* cf, int section);
@@ -145,6 +147,7 @@ class Proteus : public Driver {
 		void publishOpaqueMsg(uint8_t* msgBuffer);
 		
 		void updatePos2D();
+		void updatePos2DINS();
 		void updateCompass();
 		//void updateIR();
 		//void updateSonar();
@@ -405,6 +408,40 @@ void Proteus::updatePos2D() {
 		(void*)&posdata);
 }
 
+void Proteus::updatePos2DINS() {
+	////////////////////////////
+	// Update position2d data
+	// Update odometry info first
+	// First-order odometric integration for a car
+	/* this->proteus_dev->oa += this->proteus_dev->distance *
+		atan(this->proteus_dev->steering_angle) / PROTEUS_FRONT_TO_REAR_AXLE;*/
+	
+	//clip rotation to +/-PI
+	/*if(this->proteus_dev->oa > PI)  this->proteus_dev->oa -= 2*PI;
+	if(this->proteus_dev->oa < -PI)  this->proteus_dev->oa += 2*PI;*/
+	
+	/*float prev_x_pos = this->proteus_dev->ox;
+	this->proteus_dev->ox += this->proteus_dev->distance * cos(this->proteus_dev->oa);
+	this->proteus_dev->oy += this->proteus_dev->distance * sin(this->proteus_dev->oa);*/
+	
+	player_position2d_data_t posdata;
+	memset(&posdata,0,sizeof(posdata));
+	
+	posdata.pos.px = this->proteus_dev->statusINSDisplaceX;
+	posdata.pos.py = this->proteus_dev->statusINSDisplaceY;
+	posdata.pos.pa = this->proteus_dev->statusINSOrientation;
+	posdata.vel.px = this->proteus_dev->statusINSSpeedX;
+	posdata.stall = this->proteus_dev->motor_stall;
+	
+	//printf("Publishing the following position2D data: px=%f, py=%f, pa=%f, vel=%f, stall=%i\n",
+	//	posdata.pos.px, posdata.pos.py, posdata.pos.pa, posdata.vel.px, posdata.stall);
+	
+	// publish the new position2d data
+	this->Publish(this->position_addr,
+		PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
+		(void*)&posdata);
+}
+
 /**
  * Take a new compass heading reading and publish it.
  */
@@ -564,12 +601,27 @@ void Proteus::Main() {
 		//printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
+				#if DEBUG
+				int i = 0;
+				#endif
 				//printf("proteus_driver: main: checking for new data to publish...\n");
-				
+				/*
 				if (this->proteus_dev->newOdometryData) {
 					//printf("proteus_driver: main: Publishing new odometry data!\n");
 					this->updatePos2D();
 					this->proteus_dev->newOdometryData = false;
+				} */
+				
+				if (this->proteus_dev->newINSData) {
+					#if DEBUG
+					if(i++ > 800) {
+						printf("proteus_driver: main: Publishing new INS data!\n");
+						printf("Forward Accel: %d",this->proteus_dev->statusINSAccelerationX);
+						i = 0;
+					}
+					#endif
+					this->updatePos2DINS();
+					this->proteus_dev->newINSData = false;
 				} 
 				
 				if (this->proteus_dev->newCompassData) {

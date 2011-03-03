@@ -3,7 +3,7 @@
 #include <mc9s12dp512.h>
 
 
-#define INS_SAMPLE_FREQ 3000
+#define INS_SAMPLE_FREQ 800
 
 // Making a table from 10-bit ADC to M/S^2
 // Accel is in signed, fixed point, where 1 = 0.001 M/S^2

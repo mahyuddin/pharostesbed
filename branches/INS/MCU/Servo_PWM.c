@@ -70,7 +70,7 @@ void Servo_init() {
 void Servo_updatePosition(void) {
 	short as2, ts2, as3, ts3, as4, ts4, mcpp;
 	
-	LED_BLUE1 ^= 1;
+	//LED_BLUE1 ^= 1;
 	
 	as2 = (short) ActualSetpoint2;
 	ts2 = (short) TargetSetpoint2;
@@ -164,10 +164,10 @@ void Motor_setSpeed(int16_t setpoint) {
 	
 	// Output the direction signal, which is attached to PTT_PTT2
 	if(setpoint < 0) { 
-		PTT_PTT2 = 0;
+		//PTT_PTT2 = 0;
 		setpoint *= -1;
 	} else
-		PTT_PTT2 = 1;
+		//PTT_PTT2 = 1;
 		
 	// set the PWM signal
 	PWMDTY01 = setpoint;

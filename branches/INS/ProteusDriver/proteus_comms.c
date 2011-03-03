@@ -979,4 +979,5 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
         r -> statusINSGyroSpeed = INS_GyroSpeed_New;
         r-> statusINSTickGyro = tickNumberNew;
     }
+	r -> newINSData = true;
 }

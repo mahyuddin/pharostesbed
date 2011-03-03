@@ -20,7 +20,7 @@
 // Errors: will hang if PLL does not stabilize 
 void PLL_Init(void){  
   SYNR = 0x02;
-  REFDV = 0x01;
+  REFDV = 0x01; // 0x01 for Proteus board, 0x00 for studen board.
   
   /*PLLCLK = 2 * OSCCLK * (SYNR + 1) / (REFDV + 1)
 	Values above give PLLCLK of 24 MHz with 16 MHz crystal. 

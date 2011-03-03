@@ -152,7 +152,7 @@ void MotorControl_updateSpeed(void) {
 		// Do some sanity checks... see if the tach has a resonable value
 		if (_previousMotorPower > 500 && currentSpeed < 5) {
 			_currentMotorPower = 0;
-			LED_ORANGE2 ^= 1;
+			//LED_ORANGE2 ^= 1;
 		}
 		
 		// clip the power to be within the max
@@ -202,13 +202,13 @@ void MotorControl_disableSafeMode() {
  * If not, it submits a command that halts the motor.
  */
 void MotorControl_doSafetyCheck() {
-	LED_GREEN1 ^= 1; // Toggle LED4 to indicate the micro-controller is performing a safety check.
+	//LED_GREEN1 ^= 1; // Toggle LED4 to indicate the micro-controller is performing a safety check.
 	if(_motorSafe) {
 		// A recent motor command was received and thus we are still safe.
 		// Reset the _motorSafe variable.
 		_motorSafe = FALSE;
 	} else {
-		LED_ORANGE1 ^= 1; // Toggle LED7 to indicate motor being shutdown due to unsafe situation
+		//LED_ORANGE1 ^= 1; // Toggle LED7 to indicate motor being shutdown due to unsafe situation
 		_targetSpeed = 0;
 		_currentMotorPower = MOTOR_STOP;
 		Motor_setSpeed(_currentMotorPower); // Stop the motor
