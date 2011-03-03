@@ -221,7 +221,7 @@ public class SignalStrengthVsDist {
 				print("# Node ID: " + nodeID, outputLogger);
 			else
 				print("# All Nodes", outputLogger);
-			print(results.get(0).getTableHeader(), outputLogger);
+			print("# " + results.get(0).getTableHeader(), outputLogger);
 			for (int i=0; i < results.size(); i++) {
 				print(results.get(i).toString(), outputLogger);
 			}
