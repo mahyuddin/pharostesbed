@@ -72,6 +72,16 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Determines whether the robot actually ran in the experiment.
+	 * It ran in the experiment if it traversed at least one edge.
+	 * 
+	 * @return true if the robot ran in the experiment.
+	 */
+	public boolean ranExperiment() {
+		return numEdges() > 0;
+	}
+	
+	/**
 	 * Determines whether this robot received the specified beacon.
 	 * 
 	 * @param robotID The transmitter's ID.
@@ -436,7 +446,8 @@ public class RobotExpData {
 	 */
 	public long getExpEndTime() {
 		if (numEdges() == 0) {
-			logErr("getExpEndTime: Cannot get experiment end time because numEdges is zero!");
+			logErr("getExpEndTime: Cannot get experiment end time because numEdges is zero! Log File: " + fileName);
+			new Exception().printStackTrace(); // get a stack trace for debugging...
 			System.exit(1);
 		}
 		PathEdge lastEdge = getPathEdge(numEdges()-1);
@@ -586,8 +597,8 @@ public class RobotExpData {
 	}
 	
 	private void logErr(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.err.println("RobotExpData: " + msg);
+		//if (System.getProperty ("PharosMiddleware.debug") != null)
+		System.err.println("RobotExpData: " + msg);
 	}
 	
 	private void log(String msg) {
