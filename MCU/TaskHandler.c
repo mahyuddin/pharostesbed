@@ -63,7 +63,7 @@ void TaskHandler_postTask(void(*funcptr)(void)) {
 		}
 	} else {
 		// task is already pending...ignore request
-		LED_YELLOW2 ^= 1;
+		//LED_YELLOW2 ^= 1;
 	}
 }
 

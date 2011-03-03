@@ -31,7 +31,7 @@ void main(void) {
 	// Compass_init();
 	SerialDriver_init(57600);
 	Command_init();
-    INS_Init(); // in INS.h
+	INS_Init(); // in INS.h
 	
 	asm cli  // Enable interrupts
 	

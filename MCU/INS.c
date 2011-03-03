@@ -32,7 +32,7 @@ AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
 AddFifo(Gyro, 40, FIFO_Item, 1, 0);
 
 void INS_Init() {
-    ADC1_Init();
+    ADC0_Init();
     TIOS |= 0x40;    // activate TC6 as output compare
     TIE  |= 0x40;    // arm OC6
     TC6   = TCNT+75; // First interrupt right away.
@@ -91,34 +91,41 @@ void INSPeriodicFG(){
 
 interrupt 14 void INSPeriodicBG(void){
     // Read the relevant ADC inputs, shove onto a FIFO.
-    // unsigned short input = ADC1_In(0);
+    // unsigned short input = ADC0_In(0);
     // TODO: Figure out what ATD pins are available.
     int i = 0;
     static unsigned short tick = 0;
     TFLG1 = 0x40;         // acknowledge OC6
     TC6 = TC6 + 3000300 / INS_SAMPLE_FREQ;    // 3 000 300 = 10 000 000 000 / 3 333
-    for (;0/*Used ATD pins in X */; i++){
+    /*Used ATD pins in X */
+    for (i = 0; i < 2; i++){
         FIFO_Item putMe;
         putMe.label = i;
-        putMe.value = ADC1_In(i);
+        putMe.value = ADC0_In(i);
         putMe.tick  = tick;
         tick++;
+        if (i == 1){
+          DDRT = 0xFF;
+          PTT  = putMe.value;
+        }
         // Actual translation of values is done in main();
         XaxisFifo_Put(putMe);
     }
-    for (;0/*Used ATD pins in Y */; i++){
+    /*Used ATD pins in Y */
+    for (i = 2;i < 4; i++){
         FIFO_Item putMe;
         putMe.label = i;
-        putMe.value = ADC1_In(i);
+        putMe.value = ADC0_In(i);
         putMe.tick  = tick;
         tick++;
         // Actual translation of values is done in main();
         YaxisFifo_Put(putMe);
     }
-    for(;0 /*ATD pins for gyroscope*/;i++){
+    /*ATD pins for gyroscope*/
+    for(i = 4;i == 4;i++){
                 FIFO_Item putMe;
         putMe.label = i;
-        putMe.value = ADC1_In(i);
+        putMe.value = ADC0_In(i);
         putMe.tick  = tick;
         tick++;
         // Actual translation of values is done in main();

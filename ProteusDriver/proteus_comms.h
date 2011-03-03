@@ -49,6 +49,7 @@ extern "C" {
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
 
 #define PROTEUS_DELAY_MODECHANGE_MS       5
+#define INS_SAMPLE_FREQ 800
 
 enum{
   PROTEUS_MODE_OFF,                  
@@ -195,6 +196,8 @@ typedef struct {
 	int16_t statusMotorPower;
 	int16_t statusSteeringAngle;
     
+	uint8_t newINSData;
+	
     /* INS Status stuff go! */
     double statusINSSpeedX;
     float statusINSAccelerationX;
@@ -204,7 +207,9 @@ typedef struct {
     float statusINSAccelerationY;
     unsigned char statusINSTickY;
     
+    float statusINSGyroSpeed;
     float statusINSOrientation;
+    unsigned char statusINSTickGyro;
     
     float statusINSDisplaceX;
     float statusINSDisplaceY;

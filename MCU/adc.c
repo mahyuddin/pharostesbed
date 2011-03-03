@@ -35,7 +35,7 @@
 // bit 2-0 CC,CB,CA channel number 0 to 7
 // example  data = ADC_In(0x82); // samples right-justified channel 2
 unsigned short ADC0_In(unsigned short chan){ 
-  ATD0CTL5 = (unsigned char)chan;  // start sequence
+  ATD0CTL5 = (unsigned char)chan | 0x80;  // start sequence
   while((ATD0STAT1&0x01)==0){};    // wait for CCF0 
   return ATD0DR0; 
 }
@@ -65,7 +65,7 @@ void ADC0_Init(){
   // bit 1 FRZ1=0 no freeze
   // bit 0 FRZ0=0 
   
-  ATD0CTL4 = 0x85; // enable ADC
+  ATD0CTL4 = 0x05; // enable ADC    0x85
   // bit 7 SRES8=0 A/D Resolution Select
   //      1 => n=8 bit resolution
   //      0 => n=10 bit resolution
@@ -91,14 +91,14 @@ void ADC0_Init(){
 }
 
 void ADC1_Init(){
-LED_GREEN1 = 1;
+//LED_GREEN1 = 1;
   ATD1CTL2 = 0x80;
   ATD1CTL3 = 0x08;
-  ATD1CTL4 = 0x85;
+  ATD1CTL4 = 0x05;
 }
 unsigned short ADC1_In(unsigned short chan){
-LED_RED1 ^=1; 
-  ATD1CTL5 = (unsigned char)chan;  // start sequence
+//LED_RED1 ^=1; 
+  ATD1CTL5 = (unsigned char)chan | 0x80;  // start sequence
   while((ATD1STAT1&0x01)==0){};    // wait for CCF0 
   return ATD1DR0; 
 }
