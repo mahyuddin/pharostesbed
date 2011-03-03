@@ -435,6 +435,10 @@ public class RobotExpData {
 	 * @return The experiment end time.
 	 */
 	public long getExpEndTime() {
+		if (numEdges() == 0) {
+			logErr("getExpEndTime: Cannot get experiment end time because numEdges is zero!");
+			System.exit(1);
+		}
 		PathEdge lastEdge = getPathEdge(numEdges()-1);
 		return lastEdge.getEndTime();
 	}
