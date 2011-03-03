@@ -70,27 +70,46 @@ public class PathPlanner implements Position2DListener, IRListener {
 		MotionTask currTask;
 		double speedStep = .2;
 		
+		PathPlanner.writeOdometry(5.0, 5.0, 0.0);
+		
 		
 		
 		//RotateDegrees(Math.PI/16, motionArbiter);
+		currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
+		log("Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		motors.setSpeed(0.2, 0);
+		pause(1000);
 		
-		while(true){
-			//while no obstacle detected, move forward
-			while((ir.getData()).getRanges()[1]>1000){
-				currTask = new MotionTask(Priority.FIRST, .2, MotionTask.STOP_HEADING);
-				log("Submitting: " + currTask);
-				motionArbiter.submitTask(currTask);
-				pause(1000);
-			}
-			//stop
-			currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-			log("Submitting: " + currTask);
-			motionArbiter.submitTask(currTask);
-			pause(1000);
-			
-			//turn 90 degrees
-			RotateDegrees((Math.PI)/16,motionArbiter);
-		}
+		motors.setSpeed(0, -Math.PI/8);
+		pause(2000);
+		
+		motors.setSpeed(0.2,0);
+		pause(500);
+		
+		currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
+		log("Submitting: " + currTask);
+		//motionArbiter.submitTask(currTask);
+		motors.setSpeed(0, 0);
+		pause(2000);
+		
+//		while(true){
+//			//while no obstacle detected, move forward
+//			while((ir.getData()).getRanges()[1]>1000){
+//				currTask = new MotionTask(Priority.FIRST, .2, MotionTask.STOP_HEADING);
+//				log("Submitting: " + currTask);
+//				motionArbiter.submitTask(currTask);
+//				pause(1000);
+//			}
+//			//stop
+//			currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+//			log("Submitting: " + currTask);
+//			motionArbiter.submitTask(currTask);
+//			pause(1000);
+//			
+//			//turn 90 degrees
+//			RotateDegrees((Math.PI)/16,motionArbiter);
+//		}
 		/*log("Test complete!");
 		System.exit(0);*/
 		///////////// END OF IR INTERFACING ///////////////
@@ -123,17 +142,18 @@ public class PathPlanner implements Position2DListener, IRListener {
 	//@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose pp = data.getPos();
-		LocationTracker.updateLocation(pp);
+		//motors.setOdometry(pp);
+		//LocationTracker.updateLocation(pp);
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
 				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
 		float[] dist = data.getRanges();
-		WorldView.recordObstacles(dist);
-		log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
-				dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
-				dist[5]);
+		//WorldView.recordObstacles(dist);
+		//log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
+			//	dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
+				//dist[5]);
 	}
 	
 	private void pause(int duration) {
@@ -170,7 +190,8 @@ public class PathPlanner implements Position2DListener, IRListener {
 	 *****************************************************/
 	public static void main(String[] args) {
 		String fileName = "log.txt";
-		String serverIP = "10.11.12.10"; // server for SAINTARNOLD
+		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
+		String serverIP = "192.168.12.106";
 		int serverPort = 6665;
 
 		try {
