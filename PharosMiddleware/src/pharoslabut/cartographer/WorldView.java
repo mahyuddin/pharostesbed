@@ -59,6 +59,30 @@ public class WorldView {
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
 	
+	public static final double FRONT_LEFT_IR_ANGLE		= -Math.PI/4; 	// -45 deg (45 deg left of forward)
+	public static final double FRONT_CENTER_IR_ANGLE	= 0; 			// 0 deg (directly ahead)
+	public static final double FRONT_RIGHT_IR_ANGLE		= Math.PI/4; 	// -45 deg (45 deg right of forward)
+	public static final double REAR_LEFT_IR_ANGLE		= -3*Math.PI/4;	// -135 deg (45 deg left of forward)
+	public static final double REAR_CENTER_IR_ANGLE		= Math.PI; 		// 180 deg (directly behind)
+	public static final double REAR_RIGHT_IR_ANGLE		= 3*Math.PI/4; 	// 135 deg (135 deg right of forward)
+	
+	// the POSE values need to be measured ... it is distance from center of roomba to each IR sensor
+	public static final double [] FRONT_LEFT_IR_POSE		= {-0.05, 0.014};	//
+	public static final double [] FRONT_CENTER_IR_POSE		= {0, 0.014}; 		//
+	public static final double [] FRONT_RIGHT_IR_POSE		= {0.05, 0.014};	//
+	public static final double [] REAR_LEFT_IR_POSE			= {-0.05, -0.014};	//	
+	public static final double [] REAR_CENTER_IR_POSE		= {0, -0.020};		//
+	public static final double [] REAR_RIGHT_IR_POSE		= {0.05, -0.014};	//
+	
+	// uses pythagorean theorem to find hypotenuse (distance from Roomba's center) of the IR sensor's position 
+	public static final double FRONT_LEFT_IR_POSE_HYP		= Math.sqrt(Math.pow(FRONT_LEFT_IR_POSE[0], 2) + Math.pow(FRONT_LEFT_IR_POSE[1], 2));	//
+	public static final double FRONT_CENTER_IR_POSE_HYP		= Math.sqrt(Math.pow(FRONT_CENTER_IR_POSE[0], 2) + Math.pow(FRONT_CENTER_IR_POSE[1], 2));	//
+	public static final double FRONT_RIGHT_IR_POSE_HYP		= Math.sqrt(Math.pow(FRONT_RIGHT_IR_POSE[0], 2) + Math.pow(FRONT_RIGHT_IR_POSE[1], 2));	//
+	public static final double REAR_LEFT_IR_POSE_HYP		= Math.sqrt(Math.pow(REAR_LEFT_IR_POSE[0], 2) + Math.pow(REAR_LEFT_IR_POSE[1], 2));	//	
+	public static final double REAR_CENTER_IR_POSE_HYP		= Math.sqrt(Math.pow(REAR_CENTER_IR_POSE[0], 2) + Math.pow(REAR_CENTER_IR_POSE[1], 2));	//
+	public static final double REAR_RIGHT_IR_POSE_HYP		= Math.sqrt(Math.pow(REAR_RIGHT_IR_POSE[0], 2) + Math.pow(REAR_RIGHT_IR_POSE[1], 2));	//
+	
+	
 	
 	public WorldView() {
 		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>());
@@ -113,14 +137,14 @@ public class WorldView {
 	 * @author Kevin
 	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RL, RC, RR
 	 */
-	public static synchronized void recordObstacles(float [] dist) {
+	public static synchronized void recordObstacles(float [] distIR) {
 		// extract IR data from dist[], dist data is in mm
-		float frontLeft	 	= dist[0];
-		float frontCenter 	= dist[1];
-		float frontRight 	= dist[2];
-		float rearLeft 		= dist[3];
-		float rearCenter 	= dist[4];
-		float rearRight 	= dist[5];
+		float frontLeft	 	= distIR[0];
+		float frontCenter 	= distIR[1];
+		float frontRight 	= distIR[2];
+		float rearLeft 		= distIR[3];
+		float rearCenter 	= distIR[4];
+		float rearRight 	= distIR[5];
 		
 		double [] curLoc = LocationTracker.getCurrentLocation();
 		double xPos = curLoc[0]; 
@@ -134,27 +158,33 @@ public class WorldView {
 		
 		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
 		Integer [] obstacleCoord;
-		double [] obstaclePos = curLoc; // start with the current location, add IR values to it below
+		double [] obstaclePos = {0,0}; // 
 		
 		// calculate where the object should be recorded
 		
 		if ((frontLeft >= MIN_USEFUL_IR_DISTANCE) && (frontLeft <= MAX_USEFUL_IR_DISTANCE)) {
+			obstaclePos[0] = curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(angle - Math.PI/2 - Math.acos(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])); // X position of the FL IR sensor
+			obstaclePos[1] = curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(angle - Math.PI/2 - Math.acos(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])); // Y position of the FL IR sensor
+			// ^^^^ these are still incorrect calculations... they work for some angles but not all
+			
+			
 			
 		}
 		
 		if ((frontCenter >= MIN_USEFUL_IR_DISTANCE) && (frontCenter <= MAX_USEFUL_IR_DISTANCE)) {
 			
-			// this is wrong... it needs to factor in the current angle
-			
-			obstaclePos[1] += frontCenter; // add IR value to yPos, cuz it's directly in front
-			obstacleCoord = locToCoord(obstaclePos); // convert from actual position to coordinate
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
-			
-			// xCoord and obstacleCoord[0] should be the same (they should have the same x value)
-			// keep xCoord the same, iterate through all the yCoords from current Y coord to obstacle's y coord
-			for (int y = curCoords[1]; y < obstacleCoord[1]; y++) {
-				locationsToDecrease.add(new OrderedPair(curCoords[0], y));
-			}
+//			
+//			// this is wrong... it needs to factor in the current angle
+//			
+//			obstaclePos[1] += frontCenter; // add IR value to yPos, cuz it's directly in front
+//			obstacleCoord = locToCoord(obstaclePos); // convert from actual position to coordinate
+//			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
+//			
+//			// xCoord and obstacleCoord[0] should be the same (they should have the same x value)
+//			// keep xCoord the same, iterate through all the yCoords from current Y coord to obstacle's y coord
+//			for (int y = curCoords[1]; y < obstacleCoord[1]; y++) {
+//				locationsToDecrease.add(new OrderedPair(curCoords[0], y));
+//			}
 			
 			
 		}
