@@ -201,10 +201,17 @@ public class RobotExpData {
 				currLoc.setUtm_n(Double.valueOf(tokens[22]));
 				currLoc.setVdop(Integer.valueOf(tokens[30]));
 				
-				locations.add(new GPSLocationState(timeStamp, currLoc));
-				if (currEdge != null) {
-					if (!currEdge.hasStartLoc())
-						currEdge.setStartLoc(new Location(currLoc));
+				// Only add the GPSLocation if it is valid.  It is valid if the 
+				// latitude is 
+				Location l = new Location(currLoc);
+				if (pharoslabut.navigate.GPSDataBuffer.isValid(l)) {
+					locations.add(new GPSLocationState(timeStamp, currLoc));
+					if (currEdge != null) {
+						if (!currEdge.hasStartLoc())
+							currEdge.setStartLoc(l);
+					}
+				} else {
+					log("Rejecting invalid location: " + currLoc);
 				}
 			}
 			else if (line.contains("RadioSignalMeter: SEND_BCAST")) {
@@ -441,14 +448,19 @@ public class RobotExpData {
 	
 	/**
 	 * Gets the experiment end time.  This is the end time of the last edge traversed.
+	 * If no edges were traversed, this is the time of the last GPS measurement recorded.
 	 * 
 	 * @return The experiment end time.
 	 */
 	public long getExpEndTime() {
 		if (numEdges() == 0) {
-			logErr("getExpEndTime: Cannot get experiment end time because numEdges is zero! Log File: " + fileName);
-			new Exception().printStackTrace(); // get a stack trace for debugging...
-			System.exit(1);
+			if (locations.size() > 0)
+				return locations.get(locations.size()-1).getTimestamp();
+			else {
+				logErr("getExpEndTime: Cannot get experiment end time because numEdges and locations are both zero! Log File: " + fileName);
+				new Exception().printStackTrace(); // get a stack trace for debugging...
+				System.exit(1);
+			}
 		}
 		PathEdge lastEdge = getPathEdge(numEdges()-1);
 		return lastEdge.getEndTime();

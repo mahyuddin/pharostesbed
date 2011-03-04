@@ -89,6 +89,11 @@ public class SignalStrengthVsDist {
 				// Calculate the distance between the sender and receiver...
 				double distance = txLoc.distanceTo(rxLoc);
 				
+				if (distance > 10000) {
+					logErr("Distance is huge: txLoc=" + txLoc + ", rxLoc=" + rxLoc + ", dist=" + distance + ", rxTimestamp=" + rxTimestamp + ", rxRobot=" + currRxRobot);
+					System.exit(1);
+				}
+				
 				// Save the results...
 				TelosBSignalStrengthResult result = new TelosBSignalStrengthResult(currRxRec, distance);
 				results.add(result);
@@ -120,8 +125,8 @@ public class SignalStrengthVsDist {
 	
 	private void logErr(String msg) {
 		String result = "SignalStrengthVsDist: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.err.println(result);
+		//if (System.getProperty ("PharosMiddleware.debug") != null) 
+		System.err.println(result);
 		if (flogger != null)
 			flogger.log(result);
 	}

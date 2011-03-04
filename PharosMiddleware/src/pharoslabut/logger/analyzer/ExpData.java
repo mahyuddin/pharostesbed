@@ -39,10 +39,18 @@ public class ExpData {
 		}
 	}
 	
+	/**
+	 * Returns all of the robots that received the specified Telosb transmission.
+	 * 
+	 * @param robotID The transmitting robot's ID (last octal of IP address)
+	 * @param seqno The sequence number within the transmission.
+	 * @return
+	 */
 	public Vector<RobotExpData> getTelosBRxNodes(int robotID, int seqno) {
 		Vector<RobotExpData> result = new Vector<RobotExpData>();
 		for (int i=0; i < robots.size(); i++) {
 			RobotExpData currRobot = robots.get(i);
+			
 			if (currRobot.rcvdTelosBTx(robotID, seqno)) {
 				result.add(currRobot);
 			}

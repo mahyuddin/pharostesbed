@@ -146,10 +146,12 @@ public class TelosBSSvDAvgGenerator {
 		// and their confidence intervals 
 		for (int i=0; i < maxDist; i += AVERAGE_WINDOW_SIZE) {
 			Vector<TelosBSignalStrengthResult> currBucket = buckets.get(i);
-			double avgDist = calcAvgDist(currBucket);
-			double avgRSSI = calcAvgRSSI(currBucket);
-			double confRSSI = calcConfRSSI(currBucket, avgRSSI);
-			print(avgDist + "\t" + avgRSSI + "\t" + confRSSI, outFlogger);
+			if (currBucket.size() > 0) {
+				double avgDist = calcAvgDist(currBucket);
+				double avgRSSI = calcAvgRSSI(currBucket);
+				double confRSSI = calcConfRSSI(currBucket, avgRSSI);
+				print(avgDist + "\t" + avgRSSI + "\t" + confRSSI, outFlogger);
+			}
 		}
 		
 		
@@ -169,10 +171,12 @@ public class TelosBSSvDAvgGenerator {
 		// and their confidence intervals 
 		for (int i=0; i < maxDist; i += AVERAGE_WINDOW_SIZE) {
 			Vector<TelosBSignalStrengthResult> currBucket = buckets.get(i);
-			double avgDist = calcAvgDist(currBucket);
-			double avgLQI = calcAvgLQI(currBucket);
-			double confLQI = calcConfLQI(currBucket, avgLQI);
-			print(avgDist + "\t" + avgLQI + "\t" + confLQI, outFlogger);
+			if (currBucket.size() > 0) {
+				double avgDist = calcAvgDist(currBucket);
+				double avgLQI = calcAvgLQI(currBucket);
+				double confLQI = calcConfLQI(currBucket, avgLQI);
+				print(avgDist + "\t" + avgLQI + "\t" + confLQI, outFlogger);
+			}
 		}
 	}
 	
