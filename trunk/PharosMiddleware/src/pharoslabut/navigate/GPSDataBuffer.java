@@ -38,6 +38,16 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 		start();
 	}
 	
+	public static boolean isValid(Location loc) {
+		if (loc == null) return false; // a null location is inherently invalid
+		// For now, let's constrain the longitude to be -97.xxx degrees, and the latitude to be 30.xxx degrees
+		if (((int)loc.longitude()) != -97 || ((int)loc.latitude()) != 30) {
+			//log("isValid(...): Invalid loc: " + loc);
+			return false;
+		} else
+			return true;
+	}
+	
 	/**
 	 * Sets the file logger.  If the file logger is not null, this component
 	 * logs GPS data to a file.
