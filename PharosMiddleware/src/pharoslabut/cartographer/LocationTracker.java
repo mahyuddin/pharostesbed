@@ -6,47 +6,61 @@ import playerclient.structures.PlayerPose;
 public class LocationTracker {
 	
 	// change initial values to reflect the robot's starting orientation
-	private static final double initialBearing = 0;
-	private static final double initialX = 0;
-	private static final double initialY = 0;
+	private static final double initialX = WorldView.ROOMBA_RADIUS;
+	private static final double initialY = WorldView.ROOMBA_RADIUS;
 	
 	private static double currentX;
 	private static double currentY;
 	
 	private static double bearing; // -PI to +PI
-	// 0 is north, -PI/2 is west, -PI or +PI are both south, and PI/2 is east
+	// 0 is east, PI/2 is north, PI and -PI are west, and -PI/2 is south
 	
 	
 	public LocationTracker() {
-		// robot begins in upper-left corner with a bearing of "initialBearing"
-		currentX = initialX; currentY = initialY; bearing = initialBearing; 
+		// robot begins in lower-left corner with a bearing of 0, facing east
+		currentX = initialX; currentY = initialY; 
 		
 		// To reset the robot's odometry to (x, y, yaw) = (0,0,0), send
 		// a PLAYER_POSITION2D_REQ_RESET_ODOM request.  Null response.
 		// note: the PlayerClient pkgs refer to the turn angle as "yaw"
-		PathPlanner.writeOdometry(initialX, initialY, initialBearing);		
+		
+//		PathPlanner.writeOdometry(initialX, initialY, 0);		
 		
 	}
 	
 	
 	public static void updateLocation(PlayerPose newLoc) { 
 		
-		currentX = calibrateX(newLoc.getPx());
-		currentY = calibrateY(newLoc.getPy());
+		currentX = calibrateX(newLoc.getPx() + initialX);
+		currentY = calibrateY(newLoc.getPy() + initialY);
+		bearing = calibrateAngle(newLoc.getPa());
 		
-		// if the writeOdometry line in the Constructor works, then we don't need to add initialBearing to the calibrated new location
-		bearing = (Math.abs(initialBearing + calibrateAngle(newLoc.getPa()))); 
+		//boundary checking
+		if (currentX < 0) {
+			System.out.println("currentX was neg");
+			currentX = 0;
+		}
+		if (currentY < 0) {
+			System.out.println("currentY was neg");
+			currentY = 0;
+		}	
+//		PathPlanner.writeOdometry(currentX, currentY, bearing);
+		
+		bearing = bearing % (2*Math.PI);
+		
 		if (bearing < -Math.PI) { 
-			bearing = (bearing % (2*Math.PI)) + Math.PI;
+			bearing += 2*Math.PI;
 		} else if (bearing > Math.PI) {
-			bearing = (bearing % (2*Math.PI)) - Math.PI;
+			bearing -= 2*Math.PI;
 		}
 		
+//		System.out.println("Being sent to recordLocation: " + currentX + ", " + currentY);
 		WorldView.recordLocation(currentX, currentY);
 	}
 	
 	
 	/**
+	 * returns current location in terms of position (meters)
 	 * @author Kevin
 	 * @return array of doubles: {currentX, currentY, bearing}
 	 */
@@ -55,6 +69,25 @@ public class LocationTracker {
 		return loc;
 	}
 	
+	/**
+	 * returns current location in terms of coordinates, an (x,y) ordered pair
+	 * @author Kevin
+	 * @return array of Integers: {xCoord, yCoord}
+	 */
+	public static Integer [] getCurrentCoordinates() {
+		Integer [] coords = WorldView.locToCoord(getCurrentLocation());
+		return coords;
+	}
+	
+	
+	public static String printCurrentLocation() {
+		return "{" + currentX + ", " + currentY + ", " + bearing + "}";
+	}
+	
+	public static String printCurrentCoordinates() {
+		Integer [] c = getCurrentCoordinates();
+		return "{" + c[0] + ", " + c[1] + "}";
+	}
 	
 	private static double calibrateX(double xValue) {
 		// take odometer value and convert to accurate X distance
