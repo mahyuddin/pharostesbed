@@ -2,19 +2,25 @@ package pharoslabut.cartographer;
 
 import java.util.*;
 
+
 class LocationElement {
 	private Integer xCoord;
 	private Integer yCoord;
 	private double confidence; // percentage 
-	private double elevation;
+	private Integer traversedCount;
 	
 	public LocationElement (Integer x, Integer y) {
 		this.xCoord = x;
 		this.yCoord = y;
 		this.confidence = .5;  // initialized to 50% 
-		this.elevation = 0;    // initialized to 0, floor level		
+		this.traversedCount = 0;    // initialized to 0, unexplored		
 	}	
 	
+	@Override
+	public String toString() {
+		return "[(" + xCoord + "," + yCoord + ") " + confidence + ", " + traversedCount + "]";
+	}
+
 	/**************** GETTERS AND SETTERS ******************/
 	public Integer getxCoord() { return xCoord; }
 	public void setxCoord(Integer x) { this.xCoord = x;	}
@@ -22,9 +28,13 @@ class LocationElement {
 	public void setyCoord(Integer y) { this.yCoord = y;	}
 	public double getConfidence() {	return confidence; }
 	public void setConfidence(double c) { this.confidence = c; }
-	public double getElevation() { return elevation; }
-	public void setElevation(double e) { this.elevation = e; }
+	public Integer getTraversed() { return traversedCount; }
+	public void setTraversed(Integer i) { this.traversedCount = i; }
 	/*************** END GETTERS AND SETTERS ****************/
+	
+	public void incTraversed() { this.traversedCount++; }
+	
+	
 	
 }
 
@@ -50,7 +60,8 @@ class OrderedPair {
 
 
 public class WorldView {
-	private static List<ArrayList<LocationElement>> world; // full 2-D matrix, world view
+	
+	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.20; // minimum short range distance is 20 cm 
@@ -84,22 +95,54 @@ public class WorldView {
 	
 	
 	
+	/* Y  | | | | | | | | | | | | | | | | | | | | | | | | 20,20
+	 *    | | | | | | | | | | | | | | | | | | | | | | | | 
+	 * ^  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * |  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * |  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * |  | | | | | | | | | | | | | | | | | | | | | | | |
+	 *    | | | | | | | | | | | | | | | | | | | | | | | |
+	 * y  | | | | | | | | | | | | | | | | | | | | | | | | 20,10 
+	 *    | | | | | | | | | | | | | | | | | | | | | | | |
+	 * l  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * l  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * a  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * m  | | | | | | | | | | | | | | | | | | | | | | | |
+	 * s  | | | | | | | | | | | | | | | | | | | | | | | |
+	 *    | | | | | | | | | | | | | | | | | | | | | | | |
+	 *    | | | | | | | | | | | | | | | | | | | | | | | | 20,0 
+	 *0,0       small x   ----->   large x        
+	 */
 	public WorldView() {
-		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>());
+		world = new ArrayList<ArrayList<LocationElement>>(100);
+//		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>(100));
+	
 		for (Integer i = 0; i < 100; i++) { // iterate through each x coordinate
  
 			//add a new list for all the y coordinates at that x coordinate
-			world.add(new ArrayList<LocationElement>());  
+			world.add(new ArrayList<LocationElement>(100)); 
+
 			
 			for (Integer j = 0; j < 100; j++) { // iterate through each y coordinate
-				world.get(i).add(j, new LocationElement(i,j)); // add a LocationElement at that coordinate
+				(world.get(i)).add(new LocationElement(i,j)); // add a LocationElement at that coordinate
 			}	
 		}
+		
+		/* try printing out initialized world array
+		for (Integer i = 0; i < 100; i++) { // iterate through each x coordinate  
+			
+			for (Integer j = 0; j < 100; j++) { // iterate through each y coordinate
+				System.out.print(world.get(i).get(j));
+			}	
+		}
+		*/
+		
+		
 	}
 	
 	
 	/**
-	 * This is called by LocationTracker whenever updateLocation is called. <br> <
+	 * This is called by LocationTracker whenever updateLocation is called. <br>
 	 * Clears the confidence values at the roomba's location, which spans several coordinates 
 	 * depending on <b>ROOMBA_RADIUS</b> and the <b>RESOLUTION</b> of the map  
 	 * @author Kevin
@@ -115,6 +158,8 @@ public class WorldView {
 		// calculate the boundaries of Roomba in terms of position (in meters)
 		double [] upperLeftPos = {xPos - ROOMBA_RADIUS, yPos + ROOMBA_RADIUS};
 		double [] lowerRightPos = {xPos + ROOMBA_RADIUS, yPos - ROOMBA_RADIUS};
+//		System.out.println("upperLeftPos: " + upperLeftPos[0] + ", " + upperLeftPos[1]);
+//		System.out.println("lowerRightPos: " + lowerRightPos[0] + ", " + lowerRightPos[1]);
 		
 		// convert Roomba boundaries to coordinates
 		Integer [] upperLeftCoord = locToCoord(upperLeftPos);
@@ -122,13 +167,20 @@ public class WorldView {
 		
 		// add all coordinates from upperLeftCoord to lowerRightCoord to the locationsToClear list
 		for (int x = upperLeftCoord[0]; x <= lowerRightCoord[0]; x++) { // iterate through all xCoords, from left to right 
-			for (int y = upperLeftCoord[1]; y >= lowerRightCoord[1]; x--) { // iterate through all yCoords, from top to bottom
+			for (int y = lowerRightCoord[1]; y <= upperLeftCoord[1]; y++) { // iterate through all yCoords, from top to bottom
 				
 				// since we have passed through this location, we are full confident an object doesn't exist there
 				//   so the confidence value should be set to zero to indicate no obstacle is present
-				writeConfidence(x, y, 0);   		
+				writeConfidence(x, y, 0); 
+//				synchronized (world) {
+//					((world.get(x)).get(y)).incTraversed();
+//				}
+				
 			}
 		}
+		
+//		System.out.println("Current Location (m): " + LocationTracker.printCurrentLocation());
+//		System.out.println("Current Coordinates: " + LocationTracker.printCurrentCoordinates());
 		
 	}
 	
@@ -159,6 +211,12 @@ public class WorldView {
 		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
 		Integer [] obstacleCoord;
 		double [] obstaclePos = {0,0}; // 
+
+		
+		
+		// WE NEED TO TRY USING THE Line2D class with the Point2D class for keeping track of coordinates... much MUCH better
+		// but both of those are abstract classes... we would need the "double type" implementation of each class
+		
 		
 		// calculate where the object should be recorded
 		
@@ -167,8 +225,7 @@ public class WorldView {
 			obstaclePos[1] = curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(angle - Math.PI/2 - Math.acos(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])); // Y position of the FL IR sensor
 			// ^^^^ these are still incorrect calculations... they work for some angles but not all
 			
-			
-			
+		
 		}
 		
 		if ((frontCenter >= MIN_USEFUL_IR_DISTANCE) && (frontCenter <= MAX_USEFUL_IR_DISTANCE)) {
@@ -229,18 +286,21 @@ public class WorldView {
 	
 	
 	public static synchronized void writeConfidence(Integer x, Integer y, double c) {
-	synchronized (world) {
+//	synchronized (world) {
 		// set (x,y)'s confidence = c
-		world.get(x).get(y).setConfidence(c);
-	}
+		System.out.println(x + ", " + y + ", " + c);
+		if ((c >= 0 && c <= 1) && ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size()))) {
+			((world.get(x)).get(y)).setConfidence(c);
+		}
+//	}
 	}
 	
 	
 	public static synchronized double readConfidence(Integer x, Integer y) {
-	synchronized (world) {
+//	synchronized (world) {
 		// return confidence at (x,y);
-		return world.get(x).get(y).getConfidence();
-	}
+		return ((world.get(x)).get(y)).getConfidence();
+//	}
 	}
 	
 	
@@ -249,15 +309,15 @@ public class WorldView {
 	 * @param loc array of doubles = {x, y, angle}  (angle is not used)
 	 * @return array of Integers = {xCoord, yCoord}
 	 */
-	private static Integer [] locToCoord(double [] loc) {
-		double xValue = loc[0];
-		double yValue = loc[1];
-		//double angle = loc[2]; // this is probably not needed
+	public static Integer [] locToCoord(double [] loc) {
 		
-		Long x = Math.round(xValue/RESOLUTION);
-		Long y = Math.round(yValue/RESOLUTION);
+		Integer x = (int) Math.round(loc[0]/RESOLUTION);
+		Integer y = (int) Math.round(loc[1]/RESOLUTION);
 		
-		Integer [] coord = {x.intValue(), y.intValue()};
+		if (x < 0) x = 0;
+		if (y < 0) y = 0;
+		
+		Integer [] coord = {x,y};
 		return coord;
 	}
 	
@@ -267,6 +327,24 @@ public class WorldView {
 		return data;
 	}
 
+	
+	public static void printWorldVew() {
+		System.out.println(""); // skip a line
+		
+		int x = 0;
+		
+		// print confidence values in a grid		
+		for (x = 0; x < world.size(); x++) {
+			System.out.print(x + "\t");
+		}
+		
+		for (int y = (world.get(x).size() - 1); y >= 0; y--) {
+			for (x = 0; x < world.size(); x++) {
+				System.out.print(y + "\t" + ((world.get(x)).get(y)).getConfidence() + "\t");			
+			}
+			System.out.println("");
+		}
+	}
 }
 
 
