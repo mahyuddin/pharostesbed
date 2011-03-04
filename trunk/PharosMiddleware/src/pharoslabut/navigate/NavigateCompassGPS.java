@@ -293,7 +293,7 @@ public class NavigateCompassGPS extends Navigate {
 			
 			try {
 				currLoc = gpsDataBuffer.getCurrLoc();
-				if (isValid(currLoc)) {
+				if (GPSDataBuffer.isValid(currLoc)) {
 					double currHeading = compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
 					done = doNextMotionTask(currLoc, currHeading, dest, velocity);
 					if (done) success = true;
@@ -320,16 +320,6 @@ public class NavigateCompassGPS extends Navigate {
 			}
 		}
 		return success;
-	}
-	
-	private boolean isValid(Location loc) {
-		if (loc == null) return false; // a null location is inherently invalid
-		// For now, let's constrain the longitude to be -97.xxx degrees, and the latitude to be 30.xxx degrees
-		if (((int)loc.longitude()) != -97 || ((int)loc.latitude()) != 30) {
-			log("isValid(...): Invalid loc: " + loc);
-			return false;
-		} else
-			return true;
 	}
 	
 	private void log(String msg) {
