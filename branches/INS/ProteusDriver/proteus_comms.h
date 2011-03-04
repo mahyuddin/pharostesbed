@@ -50,6 +50,7 @@ extern "C" {
 
 #define PROTEUS_DELAY_MODECHANGE_MS       5
 #define INS_SAMPLE_FREQ 800
+#define DEBUG 1
 
 enum{
   PROTEUS_MODE_OFF,                  

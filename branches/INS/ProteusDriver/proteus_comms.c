@@ -109,8 +109,9 @@ static inline result_t sendToMCU(proteus_comm_t* r, uint8_t* buff, size_t numByt
 		uint16_t i, eIndx;
 		uint8_t eBuff[eNumBytes]; // allocate memory for the escaped buffer
 		size_t numBytesWritten = 0;
-		
+		#if DEBUG
 		printf("proteus_comms: sendToMCU: numBytes = %i, eNumbytes = %i\n", numBytes, eNumBytes);
+		#endif
 		eIndx = 2;
 		eBuff[0] = buff[0]; // Should be PROTEUS_BEGIN
 		eBuff[1] = buff[1]; // Should be an opcode
@@ -119,7 +120,9 @@ static inline result_t sendToMCU(proteus_comm_t* r, uint8_t* buff, size_t numByt
 			// If the next character is special, escape it.
 			if (buff[i] == PROTEUS_BEGIN || buff[i] == PROTEUS_END || buff[i] == PROTEUS_ESCAPE) {
 				eBuff[eIndx++] = PROTEUS_ESCAPE;
+				#if DEBUG
 				printf("proteus_comms: sendToMCU: adding escape byte at index %i\n", eIndx-1);
+				#endif
 			}
 			eBuff[eIndx++] = buff[i];
 		}
@@ -764,8 +767,9 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		// Not enough space in rxSerialBuffer to hold a message.
 		return FAIL;
 	}
-	
-	//printf("proteus_comms: proteusProcessRxData: processing received bytes...\n");
+	#if DEBUG
+	printf("proteus_comms: proteusProcessRxData: processing received bytes...\n");
+	#endif
 	//printRxSerialBuff();
 	
 	//while (!done &&  /* Make sure there is at least enough bytes for a command header*/ 
@@ -826,12 +830,12 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 					return FAIL;
 		} // switch msg type
 	} 
-	// else {
-	//	uint8_t garbageData; // The front of the serial Rx buffer is not a message header,
+	else {
+		uint8_t garbageData; // The front of the serial Rx buffer is not a message header,
 		
-	//	popRxSerialBuff(r, &garbageData);// remove the extraneous byte
-		//printf("proteus_comms: proteusProcessRxData: discarding junk byte 0x%.2x\n", garbageData);
-	//}
+		popRxSerialBuff(r, &garbageData);// remove the extraneous byte
+		printf("proteus_comms: proteusProcessRxData: discarding junk byte 0x%.2x\n", garbageData);
+	}
 	return SUCCESS;
 }
 
@@ -906,6 +910,9 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
     double INS_Speed_Old;
     double INS_Speed_New;
     float displacement;
+	#if DEBUG
+	printf("INS DEBUG: Processing accelerometer packet.");
+	#endif
 	// Pull information from packet
 	if (rxSerialBufferSize(r) >= PROTEUS_COMPASS_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
 		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
@@ -980,4 +987,5 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
         r-> statusINSTickGyro = tickNumberNew;
     }
 	r -> newINSData = true;
+	return SUCCESS;
 }

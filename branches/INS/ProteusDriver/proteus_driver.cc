@@ -111,7 +111,9 @@ requires Player to be restarted
 #define PI 3.14159265
 #endif
 
+#ifndef DEBUG
 #define DEBUG 1
+#endif
 
 class Proteus : public Driver {
 	public:
@@ -221,6 +223,9 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 	
 	gettimeofday(&_currTime, NULL);
 	printf("%ld.%.6ld proteus_driver: constructor called\n", _currTime.tv_sec, _currTime.tv_usec);
+	#if DEBUG
+	printf("Hello from Francis Israel!\n");
+	#endif
 	
 	// Clear the device addresses...
 	memset(&this->position_addr,0,sizeof(player_devaddr_t));
@@ -560,6 +565,9 @@ void Proteus::Main() {
 	uint32_t loopCount = 0;
 	
 	//pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+	#if DEBUG
+	printf("Starting proteus main.");
+	#endif
 	
 	while(1) {
 		result_t commOK = SUCCESS;
@@ -594,17 +602,18 @@ void Proteus::Main() {
 			proteus_close(this->proteus_dev); // I'm not sure this is the right thing to do...perhaps disconnect and then re-connect?
 			return;
 		}*/
-		
-		//printf("proteus_driver: main: receiving serial data...\n");
+		#if DEBUG
+		printf("proteus_driver: main: receiving serial data...\n");
+		#endif
 		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
 		
-		//printf("proteus_driver: main: processing serial data...\n");
+		printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
 				#if DEBUG
 				int i = 0;
+				printf("proteus_driver: main: checking for new data to publish...\n");
 				#endif
-				//printf("proteus_driver: main: checking for new data to publish...\n");
 				/*
 				if (this->proteus_dev->newOdometryData) {
 					//printf("proteus_driver: main: Publishing new odometry data!\n");
@@ -614,11 +623,12 @@ void Proteus::Main() {
 				
 				if (this->proteus_dev->newINSData) {
 					#if DEBUG
-					if(i++ > 800) {
+//					if(i++ > 800) {
 						printf("proteus_driver: main: Publishing new INS data!\n");
-						printf("Forward Accel: %d",this->proteus_dev->statusINSAccelerationX);
+						printf("Forward Accel: %fL",this->proteus_dev->statusINSAccelerationX);
 						i = 0;
-					}
+					//}
+					//else i++;
 					#endif
 					this->updatePos2DINS();
 					this->proteus_dev->newINSData = false;
