@@ -52,7 +52,7 @@ public class ProgramEntryGUI implements ActionListener {
 		JMenuItem resetPlayerMI = new JMenuItem("Reset Player Server");
 		resetPlayerMI.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				cmdExec.resetPlayer();
+				cmdExec.stopPlayer();
 			}
 		});
 		JMenu robotMenu = new JMenu("Robot");
@@ -77,12 +77,23 @@ public class ProgramEntryGUI implements ActionListener {
 	public void actionPerformed(ActionEvent arg0) {
 		new Thread(new Runnable() {
 			public void run() {
+				
+				// Start the player server...
+				if (!cmdExec.startPlayer()) {
+					String errMsg = "Unable to start player server!";
+					JOptionPane.showMessageDialog(frame, errMsg);
+					log(errMsg);
+					return;
+				}
+				
+				// Execute the program...
 				BufferedReader reader = new BufferedReader(new StringReader(textArea.getText()));
 				String line;
 				int linecount = 1;
 				try {
 					while ((line = reader.readLine()) != null) {
-						parseLine(linecount++, line);
+						if (!line.equals(""))
+							parseLine(linecount++, line);
 					}
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -90,6 +101,14 @@ public class ProgramEntryGUI implements ActionListener {
 					pe.printStackTrace();
 					JOptionPane.showMessageDialog(frame, pe.getMessage());
 				}
+				
+				// Stop the player server...
+				if (!cmdExec.stopPlayer()) {
+					String errMsg = "Unable to stop player server!";
+					JOptionPane.showMessageDialog(frame, errMsg);
+					log(errMsg);
+				}
+				
 			}
 		}).start();
 	}
