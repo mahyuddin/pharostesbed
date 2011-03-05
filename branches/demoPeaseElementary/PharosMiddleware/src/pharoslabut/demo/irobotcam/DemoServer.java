@@ -63,30 +63,35 @@ public class DemoServer implements MessageReceiver {
 		new TCPMessageReceiver(this, port);
 	}
 	
-	@Override
+	//@Override
 	public void newMessage(Message msg) {
 		// This is called whenever a new message is received.
-		if (msg instanceof CameraPanMsg) {
+		if (msg instanceof CameraPanMsg)
 			handleCameraPanMsg((CameraPanMsg)msg);
-		}
-		else if (msg instanceof CameraTiltMsg) {
+		else if (msg instanceof CameraTiltMsg)
 			handleCameraTiltMsg((CameraTiltMsg)msg);
-		}
-		else if (msg instanceof CameraTakeSnapshotMsg) {
+		else if (msg instanceof CameraTakeSnapshotMsg)
 			handleCameraTakeSnapshotMsg((CameraTakeSnapshotMsg)msg);
-		}
-		else if (msg instanceof RobotMoveMsg) {
+		else if (msg instanceof RobotMoveMsg)
 			handleRobotMoveMsg((RobotMoveMsg)msg);
-		}
-		else if (msg instanceof RobotTurnMsg) {
+		else if (msg instanceof RobotTurnMsg)
 			handleRobotTurnMsg((RobotTurnMsg)msg);
-		}
-		else if (msg instanceof ResetPlayerMsg) {
-			ri.stopPlayer();
-		}
-		else {
+//		else if (msg instanceof ResetPlayerMsg)
+//			ri.stopPlayer();
+		else if (msg instanceof PlayerControlMsg)
+			handlePlayerControlMsg((PlayerControlMsg)msg);
+		else
 			log("Unkown message: " + msg);
-		}
+	}
+	
+	private void handlePlayerControlMsg(PlayerControlMsg playerCtrlMsg) {
+		if (playerCtrlMsg.getCmd() == PlayerControlCmd.STOP) {
+			ri.stopPlayer();
+			sendAck(true, playerCtrlMsg.getClientHandler());
+		} else if (playerCtrlMsg.getCmd() == PlayerControlCmd.START) {
+			
+		} else 
+			log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
 	}
 	
 	private void handleCameraPanMsg(CameraPanMsg panMsg) {
