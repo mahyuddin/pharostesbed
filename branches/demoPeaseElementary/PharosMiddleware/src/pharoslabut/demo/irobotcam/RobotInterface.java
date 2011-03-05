@@ -2,10 +2,7 @@ package pharoslabut.demo.irobotcam;
 
 import java.io.*;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.logger.*;
-import pharoslabut.tasks.MotionTask;
-import pharoslabut.tasks.Priority;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
 import playerclient.Position2DInterface;
@@ -294,7 +291,10 @@ public class RobotInterface {
 	 * @return true if successful.
 	 */
 	public boolean startPlayer() {
-		if (isPlayerRunning()) return true;  // Do not start player if it is already running...
+		if (isPlayerRunning()) {
+			log("startPlayer: player already running");
+			return true;  // Do not start player if it is already running...
+		}
 		
 		// Try to detect which port the iRobot Create appears as
 		String robotPort = null;
@@ -373,6 +373,15 @@ public class RobotInterface {
 			Runtime rt = Runtime.getRuntime();
 			log("startPlayer: Launching player server...");
 			rt.exec(PLAYER_SERVER + " " + PLAYER_CONFIG_FILE);
+			
+			// pause for half a second to allow player server to start
+			synchronized(this) {
+				try{
+					this.wait(1000);
+				} catch(InterruptedException ie) {
+					ie.printStackTrace();
+				}
+			}
 			return true;
 		} catch(Exception e) {
 			String eMsg = "startPlayer: ERROR: Unable launch player server: " + e.toString();
@@ -383,12 +392,17 @@ public class RobotInterface {
 	}
 	
 	/**
-	 * Stops the player server and removed reference to the player client.
+	 * Stops the player server and removes reference to the player client.
 	 * 
 	 * @return true if successful.
 	 */
 	public boolean stopPlayer() {
-		if (!isPlayerRunning()) return true;  // abort if player is not running...
+		if (!isPlayerRunning()) {
+			log("stopPlayer: player already stopped");
+			return true;  // abort if player is not running...
+		}
+		
+		log("stopPlayer: Stopping player...");
 		
 		try {
 			String cmd = "sudo killall -s 15 player";
@@ -413,10 +427,10 @@ public class RobotInterface {
 	
 	private void log(String msg) {
 		String result = "RobotInterface: " + msg;
-		System.out.println(result);
-		if (flogger != null) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 	
 	private static void print(String msg) {
@@ -437,6 +451,11 @@ public class RobotInterface {
 		print("\t-debug: enable debug mode");
 	}
 	
+	/**
+	 * Perform some basic tests on the RobotInterface.
+	 * 
+	 * @param args The command line arguments.
+	 */
 	public static void main(String[] args) {
 		String pServerIP = "localhost";
 		int pServerPort = 6665;
