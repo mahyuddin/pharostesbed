@@ -9,16 +9,18 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.io.*;
 
 /**
- * This is the main class that launches the demo application.
+ * This is the main class that launches client side of the demo application.
+ * Be sure the DemoServer is running prior to launching this class.
  * 
  * @author Chien-Liang Fok
+ * @see DemoServer
  */
 public class DemoClient {
 	
 	private FileLogger flogger = null;
 	private TCPMessageSender tcpSender;
 	private CmdExec cmdExec;
-	private ProgramEntryGUI gui;
+	//private ProgramEntryGUI gui;
 	
 	/**
 	 * The Constructor.
@@ -35,23 +37,21 @@ public class DemoClient {
 			
 		}
 		
-		// Create the connection to the server...
 		try {
+			// Create the connection to the server...
 			tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort, flogger);
 			
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(tcpSender, flogger);
 			
 			// Create a GUI for allowing users to interact with the system...
-			gui = new ProgramEntryGUI(cmdExec, flogger);
+			new ProgramEntryGUI(cmdExec, flogger);
 		} catch(IOException ioe) {
 			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure its DemoServer is running."; 
 			JOptionPane.showMessageDialog(null, msg);
 			log(msg);
 			ioe.printStackTrace();
 		}
-		
-
 	}
 	
 	private void log(String msg) {
