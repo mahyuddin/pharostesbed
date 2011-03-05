@@ -68,13 +68,34 @@ public class CmdExec {
 	}
 	
 	/**
+	 * Stops the player server.
+	 */
+	public boolean stopPlayer() {
+		log("Stopping the player server...");
+		PlayerControlMsg msg = new PlayerControlMsg(PlayerControlCmd.STOP);
+		if (tcpSender.sendMessage(msg))
+			return getAck();
+		else
+			return false;
+	}
+	
+	public boolean startPlayer() {
+		log("Starting the player server...");
+		PlayerControlMsg msg = new PlayerControlMsg(PlayerControlCmd.START);
+		if (tcpSender.sendMessage(msg))
+			return getAck();
+		else
+			return false;
+	}
+	
+	/**
 	 * Shuts down the player server.
 	 */
-	public void resetPlayer() {
-		log("Resetting the player server...");
-		ResetPlayerMsg msg = new ResetPlayerMsg();
-		tcpSender.sendMessage(msg);
-	}
+//	public void resetPlayer() {
+//		log("Resetting the player server...");
+//		ResetPlayerMsg msg = new ResetPlayerMsg();
+//		tcpSender.sendMessage(msg);
+//	}
 	
 	/**
 	 * Turns the robot right or left.  This is a blocking operation meaning the calling thread
