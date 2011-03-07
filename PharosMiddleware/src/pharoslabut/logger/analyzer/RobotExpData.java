@@ -478,6 +478,36 @@ public class RobotExpData {
 		
 		return result;
 	}
+	
+	/**
+	 * Returns the neighbor list of this robot.
+	 * 
+	 * @param timestamp The time at which the neighbor list should be determined.
+	 * @param windowSize The number of prior milliseconds over which to determine
+	 * neighbors.  That is, a node is a neighbor if its beacon was received during
+	 * the interval [timestamp - windowSize, timestamp].
+	 * @return The list of neighbors at the specified time.
+	 */
+	public Vector<Integer> getTelosBConnectivity(long timestamp, int windowSize) {
+		Vector<Integer> result = new Vector<Integer>();
+		
+		long startTime = timestamp - windowSize;
+		if (startTime < getRobotStartTime())
+			startTime = getRobotStartTime();
+		
+		long stopTime = timestamp;
+		if (stopTime > getRobotStopTime())
+			stopTime = getRobotStopTime();
+		
+		Enumeration<TelosBRxRecord> e = telosBRxHist.elements();
+		while (e.hasMoreElements()) {
+			TelosBRxRecord currRecord = e.nextElement();
+			if (currRecord.getTimeStamp() >= startTime && currRecord.getTimeStamp() <= stopTime) {
+				result.add(currRecord.getSenderID());
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * Gets the experiment log file name
