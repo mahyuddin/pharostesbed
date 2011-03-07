@@ -438,32 +438,45 @@ public class RobotExpData {
 	}
 	
 	/**
-	 * Gets the experiment start time
+	 * Gets the time at which the robot started.  This is the time at which the
+	 * robot received the StartExpMsg.
 	 * 
-	 * @return the experiment start time
+	 * @return The robot's start time.
 	 */
-	public long getExpStartTime() {
+	public long getRobotStartTime() {
 		return expStartTime;
 	}
 	
 	/**
-	 * Gets the experiment end time.  This is the end time of the last edge traversed.
-	 * If no edges were traversed, this is the time of the last GPS measurement recorded.
+	 * Gets the robot's end time.  This is the later of the end time of the last edge traversed,
+	 * or the last GPS measurement recorded.
 	 * 
 	 * @return The experiment end time.
 	 */
-	public long getExpEndTime() {
-		if (numEdges() == 0) {
-			if (locations.size() > 0)
-				return locations.get(locations.size()-1).getTimestamp();
-			else {
-				logErr("getExpEndTime: Cannot get experiment end time because numEdges and locations are both zero! Log File: " + fileName);
-				new Exception().printStackTrace(); // get a stack trace for debugging...
-				System.exit(1);
-			}
+	public long getRobotStopTime() {
+		long result = -1;
+		
+		// Find the time when the robot finished traversing the last edge.
+		if (numEdges() > 0) {
+			PathEdge lastEdge = getPathEdge(numEdges()-1);
+			result = lastEdge.getEndTime();
+		} 
+		
+		// If the last location is received *after* the end time of the last edge traversed,
+		// consider it to be the end time of the robot.
+		if (locations.size() > 0) {
+			long locEndTime = locations.get(locations.size()-1).getTimestamp();
+			if (locEndTime > result)
+				result = locEndTime;
+		} 
+		
+		if (result == -1) {
+			logErr("getRobotEndTime: Cannot get experiment end time because numEdges and locations are both zero! Log File: " + fileName);
+			new Exception().printStackTrace(); // get a stack trace for debugging...
+			System.exit(1);
 		}
-		PathEdge lastEdge = getPathEdge(numEdges()-1);
-		return lastEdge.getEndTime();
+		
+		return result;
 	}
 
 	/**
@@ -506,13 +519,13 @@ public class RobotExpData {
 	 * @return The location of the robot at the specified time.
 	 */
 	public Location getLocation(long timestamp) {
-		if (timestamp < getExpStartTime()) {
-			log("WARNING: getLocation(timestamp): timestamp prior to beginning of experiment. (" + timestamp + " < " + getExpStartTime() + ")");
+		if (timestamp < getRobotStartTime()) {
+			log("WARNING: getLocation(timestamp): timestamp prior to beginning of experiment. (" + timestamp + " < " + getRobotStartTime() + ")");
 			return getBeginLocation();
 		}
 		
-		if (timestamp > getExpEndTime()) {
-			log("WARNING: getLocation(timestamp): timestamp after end of experiment. (" + getExpEndTime() + " < " + timestamp + ")");
+		if (timestamp > getRobotStopTime()) {
+			log("WARNING: getLocation(timestamp): timestamp after end of experiment. (" + getRobotStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
@@ -664,17 +677,17 @@ public class RobotExpData {
 		
 		// Check whether the getLocation method is OK
 		print("Evaluating RobotExpData.getLocation(long timestamp)...");
-		print("\tExperiment start time: " + red.getExpStartTime());
+		print("\tExperiment start time: " + red.getRobotStartTime());
 		String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
 		FileLogger flogger = new FileLogger(testGetLocFileName, false);
 		
 		//int pathEdgeToCheck = 15;
 		
 		flogger.log("type,latitude,longitude,name,color");
-		long currTime = red.getExpStartTime();
+		long currTime = red.getRobotStartTime();
 		//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
 		boolean firstLoc = true;
-		while (currTime < red.getExpEndTime()) {
+		while (currTime < red.getRobotStopTime()) {
 		//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
 			Location currLoc = red.getLocation(currTime);
 			String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
