@@ -488,7 +488,7 @@ public class RobotExpData {
 	 * the interval [timestamp - windowSize, timestamp].
 	 * @return The list of neighbors at the specified time.
 	 */
-	public Vector<Integer> getTelosBConnectivity(long timestamp, int windowSize) {
+	public Vector<Integer> getTelosBConnectivity(long timestamp, long windowSize) {
 		Vector<Integer> result = new Vector<Integer>();
 		
 		long startTime = timestamp - windowSize;
@@ -503,7 +503,10 @@ public class RobotExpData {
 		while (e.hasMoreElements()) {
 			TelosBRxRecord currRecord = e.nextElement();
 			if (currRecord.getTimeStamp() >= startTime && currRecord.getTimeStamp() <= stopTime) {
-				result.add(currRecord.getSenderID());
+				
+				// only add it to the vector if it does not already contain the value.
+				if (!result.contains(currRecord.getSenderID()))
+					result.add(currRecord.getSenderID());
 			}
 		}
 		return result;
