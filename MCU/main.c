@@ -29,7 +29,7 @@ void main(void) {
 	// Servo_init();
 	// Tach_init();
 	// Compass_init();
-	SerialDriver_init(57600);
+	SerialDriver_init(57600);//57600 //115200
 	Command_init();
 	INS_Init(); // in INS.h
 	
@@ -46,5 +46,6 @@ void main(void) {
 		 * point in time in the TaskHandler.
 		 */
 		TaskHandler_processNextTask();
+		INSPeriodicFG();
 	} 
 }
