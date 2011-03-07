@@ -92,7 +92,7 @@ void ADC0_Init(){
 
 void ADC1_Init(){
 //LED_GREEN1 = 1;
-  ATD1CTL2 = 0x80;
+  ATD1CTL2 = 0x80; 
   ATD1CTL3 = 0x08;
   ATD1CTL4 = 0x05;
 }

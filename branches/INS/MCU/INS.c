@@ -2,6 +2,7 @@
 // Tries to model same style as Paine {n.a.paine@gmail.com}
 
 #include "INS.h"
+#include "LED.h"
 
 
 #define AddFifo(NAME,SIZE,TYPE, SUCCESS,FAIL) \
@@ -26,6 +27,20 @@
 			    *datapt = Fifo ## NAME[ GetI ## NAME &(SIZE-1)]; \
 			    GetI ## NAME ## ++;                              \
 			    return(SUCCESS);                                 \
+			}													 \
+			int NAME ## Fifo_Peak (TYPE *datapt){                \
+			    if( PutI ## NAME == GetI ## NAME ){              \
+			        return(FAIL);                                \
+			    }                                                \
+			    *datapt = Fifo ## NAME[ GetI ## NAME &(SIZE-1)]; \
+			    return(SUCCESS);                                 \
+			}													 \
+			int NAME ## Fifo_Remove (){                          \
+			    if( PutI ## NAME == GetI ## NAME ){              \
+			        return(FAIL);                                \
+			    }                                                \
+			    GetI ## NAME ## ++;                              \
+			    return(SUCCESS);                                 \
 			}
 AddFifo(Xaxis, 40, FIFO_Item, 1, 0);
 AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
@@ -40,74 +55,70 @@ void INS_Init() {
 
 
 // TODO: Create real tables that don't suck
-ADC_Accel ADC0_Table[] = {{0,-19620},{1025,19620}};
-ADC_Accel ADC1_Table[] = {{0,-19620},{1025,19620}};
+ADC_Accel TableX1[] = {{0,-19620},{1025,19620}};
+ADC_Accel TableX2[] = {{0,-19620},{1025,19620}};
+ADC_Accel TableY1[] = {{0,-19620},{1025,19620}};
+ADC_Accel TableY2[] = {{0,-19620},{1025,19620}};
 
 ADC_Accel Gyro_Table[] = {{0,-50000},{676,50000}};
-ADC_Accel *ADC_Table[] = {&ADC0_Table, &ADC1_Table};
+ADC_Accel *ADC_Table[] = {&TableX1, &TableX2, &TableY1, &TableY2, &Gyro_Table};
 
 // Foreground thread:
 // Does ADC translation, pipes the translated info to the 
 void INSPeriodicFG(){
     // Pull values from FIFO
     FIFO_Item output;
-    signed long sum = 0;
-    int accelAverage = 0;
-    int itemCount =0;
-    while (XaxisFifo_Get(&output) == 1 ){
-        // Translate and output value to the x86.
-        int value = INS_Translate(output.value, ADC_Table[output.label]);
-        itemCount ++;
-        sum += value;
-    }
-    accelAverage = sum / itemCount;
-	Command_sendAccelerometerPacket( (uint8_t)output.tick, 0, (uint16_t) accelAverage);
-    
-    sum = 0;
-    accelAverage = 0;
-    itemCount =0;
-    while (YaxisFifo_Get(&output) == 1 ){
-        // Translate and output value to the x86.
-        int value = INS_Translate(output.value, ADC_Table[output.label]);
-        itemCount ++;
-        sum += value;
-    }
-    accelAverage = sum / itemCount;
-	Command_sendAccelerometerPacket( (uint8_t) output.tick, 1, (uint16_t) accelAverage);
-    
-        sum = 0;
-    accelAverage = 0;
-    itemCount =0;
-    while (GyroFifo_Get(&output) == 1 ){
-        // Translate and output value to the x86.
-        int value = INS_Translate(output.value, ADC_Table[output.label]);
-        itemCount ++;
-        sum += value;
-    }
-    accelAverage = sum / itemCount;
-	Command_sendAccelerometerPacket( (uint8_t) output.tick, 2, (uint16_t) accelAverage);
+	int Xacc;
+	int Yacc;
+	int GyroRate;
+	unsigned short tick;
+	if (XaxisFifo_Get(&output) == 1) {
+		LED_RED1 = 1;
+	    tick = output.tick;
+		Xacc = INS_Translate(output.value, ADC_Table[output.label]);
+		if (XaxisFifo_Peak(&output) == 1){
+			if (output.tick ==tick){
+				XaxisFifo_Remove();
+				Xacc += INS_Translate(output.value, ADC_Table[output.label]);
+				Xacc = Xacc >> 1;
+			}
+		}
+		if (YaxisFifo_Get(&output) == 1) {
+			Yacc = INS_Translate(output.value, ADC_Table[output.label]);
+			if (YaxisFifo_Peak(&output) == 1){
+				if (output.tick ==tick){
+					YaxisFifo_Remove();
+					Yacc += INS_Translate(output.value, ADC_Table[output.label]);
+					Yacc = Yacc >> 1;
+				}
+			}
+		}
+		
+		if (GyroFifo_Get(&output) == 1 ){
+			// Translate and output value to the x86.
+			GyroRate = INS_Translate(output.value, ADC_Table[output.label]);
+		}
+		
+		Command_sendAccelerometerPacket(tick, Xacc, Yacc, GyroRate);
+		LED_RED1 = 0;
+	}
 }
 
 
 interrupt 14 void INSPeriodicBG(void){
     // Read the relevant ADC inputs, shove onto a FIFO.
     // unsigned short input = ADC0_In(0);
-    // TODO: Figure out what ATD pins are available.
     int i = 0;
     static unsigned short tick = 0;
     TFLG1 = 0x40;         // acknowledge OC6
     TC6 = TC6 + 3000300 / INS_SAMPLE_FREQ;    // 3 000 300 = 10 000 000 000 / 3 333
     /*Used ATD pins in X */
+    LED_GREEN1 = 1;
     for (i = 0; i < 2; i++){
         FIFO_Item putMe;
         putMe.label = i;
         putMe.value = ADC0_In(i);
         putMe.tick  = tick;
-        tick++;
-        if (i == 1){
-          DDRT = 0xFF;
-          PTT  = putMe.value;
-        }
         // Actual translation of values is done in main();
         XaxisFifo_Put(putMe);
     }
@@ -117,13 +128,12 @@ interrupt 14 void INSPeriodicBG(void){
         putMe.label = i;
         putMe.value = ADC0_In(i);
         putMe.tick  = tick;
-        tick++;
         // Actual translation of values is done in main();
         YaxisFifo_Put(putMe);
     }
     /*ATD pins for gyroscope*/
     for(i = 4;i == 4;i++){
-                FIFO_Item putMe;
+        FIFO_Item putMe;
         putMe.label = i;
         putMe.value = ADC0_In(i);
         putMe.tick  = tick;
@@ -131,7 +141,9 @@ interrupt 14 void INSPeriodicBG(void){
         // Actual translation of values is done in main();
         GyroFifo_Put(putMe);
     }
-    TaskHandler_postTask(&INSPeriodicFG);
+	tick++;
+    //TaskHandler_postTask(&INSPeriodicFG);
+    LED_GREEN1 = 0;
 	
 }
 
