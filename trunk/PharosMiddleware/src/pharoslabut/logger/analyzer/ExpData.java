@@ -40,6 +40,40 @@ public class ExpData {
 	}
 	
 	/**
+	 * Returns the experiment start time.  This is the time when the last
+	 * robot started.
+	 * 
+	 * @return The experiment start time.
+	 */
+	public long getExpStartTime() {
+		long result = 0;
+		Enumeration<RobotExpData> e = robots.elements();
+		while (e.hasMoreElements()) {
+			long currStartTime = e.nextElement().getRobotStartTime();
+			if (currStartTime > result)
+				result = currStartTime;
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns the experiment stop time.  This is the earliest stop time
+	 * among all the robots in the experiment.
+	 * 
+	 * @return The experiment stop time.
+	 */
+	public long getExpStopTime() {
+		long result = -1;
+		Enumeration<RobotExpData> e = robots.elements();
+		while (e.hasMoreElements()) {
+			long currStopTime = e.nextElement().getRobotStopTime();
+			if (result == -1 || currStopTime < result)
+				result = currStopTime;
+		}
+		return result;
+	}
+	
+	/**
 	 * Returns all of the robots that received the specified Telosb transmission.
 	 * 
 	 * @param robotID The transmitting robot's ID (last octal of IP address)
@@ -140,10 +174,10 @@ public class ExpData {
 		for (int i=0; i < expData.numRobots(); i++) {
 			RobotExpData robotData = expData.getRobot(i);
 			print(i + "\t" + robotData.getRobotName() + "\t" 
-					+ robotData.getExpStartTime() + "\t"
-					+ (robotData.getExpStartTime() - baseline.getExpStartTime()) + "\t"
-					+ robotData.getExpEndTime() + "\t"
-					+ (robotData.getExpEndTime() - baseline.getExpEndTime()) + "\t"
+					+ robotData.getRobotStartTime() + "\t"
+					+ (robotData.getRobotStartTime() - baseline.getRobotStartTime()) + "\t"
+					+ robotData.getRobotStopTime() + "\t"
+					+ (robotData.getRobotStopTime() - baseline.getRobotStopTime()) + "\t"
 					+ robotData.getPathEdge(0).getStartTime() + "\t"
 					+ (robotData.getPathEdge(0).getStartTime() - baseline.getPathEdge(0).getStartTime()));
 		}
