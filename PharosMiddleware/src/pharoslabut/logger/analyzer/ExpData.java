@@ -11,6 +11,7 @@ import java.io.*;
  */
 public class ExpData {
 	
+	private String expName = null;
 	private Vector<RobotExpData> robots = new Vector<RobotExpData>();
 	
 	/**
@@ -20,6 +21,23 @@ public class ExpData {
 	 */
 	public ExpData(String expDir) {
 	
+		// Parse out the name of the experiment.  The name of the experiment should follow
+		// the following format: "M##-Exp##".
+		String[] tokens = expDir.split("/");
+		for (int i=0; i < tokens.length; i++) {
+			//log("Analyzing token " + tokens[i]);
+			if (tokens[i].matches("M\\d+-Exp\\d+")) {
+				expName = tokens[i];
+				//log("Found experiment name \"" + expName + "\", expDir = " + expDir);
+			}
+		}
+		
+		if (expName == null) {
+			logErr("Unable to determine experiment name, expDir = " + expDir);
+			System.exit(1);
+		}
+		
+		// Get all of the robot logs from the experiment.
 		FilenameFilter filter = new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
 		        return !name.startsWith(".") && name.contains("-Pharos_") && name.contains(".log");
@@ -40,25 +58,38 @@ public class ExpData {
 	}
 	
 	/**
-	 * Returns the experiment start time.  This is the time when the last
-	 * robot started.
+	 * Returns the name of the experiment.  The experiment name is of the form
+	 * Mxx-Expyy where 'xx' and 'yy' are integers.
+	 * 
+	 * @return the name of the experiment.
+	 */
+	public String getExpName() {
+		return expName;
+	}
+	
+	/**
+	 * Returns the experiment start time.  This is the time when the first
+	 * robot that ran the experiment started.
 	 * 
 	 * @return The experiment start time.
 	 */
 	public long getExpStartTime() {
-		long result = 0;
+		long result = -1;
 		Enumeration<RobotExpData> e = robots.elements();
 		while (e.hasMoreElements()) {
-			long currStartTime = e.nextElement().getRobotStartTime();
-			if (currStartTime > result)
-				result = currStartTime;
+			RobotExpData currRobot = e.nextElement();
+			if (currRobot.ranExperiment()) {
+				long currStartTime = currRobot.getRobotStartTime();
+				if (result == -1 || currStartTime < result)
+					result = currStartTime;
+			}
 		}
 		return result;
 	}
 	
 	/**
-	 * Returns the experiment stop time.  This is the earliest stop time
-	 * among all the robots in the experiment.
+	 * Returns the experiment stop time.  This is the latest stop time
+	 * among all the robots in the experiment that ran the experiment.
 	 * 
 	 * @return The experiment stop time.
 	 */
@@ -66,9 +97,12 @@ public class ExpData {
 		long result = -1;
 		Enumeration<RobotExpData> e = robots.elements();
 		while (e.hasMoreElements()) {
-			long currStopTime = e.nextElement().getRobotStopTime();
-			if (result == -1 || currStopTime < result)
-				result = currStopTime;
+			RobotExpData currRobot = e.nextElement();
+			if (currRobot.ranExperiment()) {
+				long currStopTime = currRobot.getRobotStopTime();
+				if (result == -1 || currStopTime > result)
+					result = currStopTime;
+			}
 		}
 		return result;
 	}
@@ -134,6 +168,10 @@ public class ExpData {
 	 */
 	public Enumeration<RobotExpData> getRobotEnum() {
 		return robots.elements();
+	}
+	
+	private void logErr(String msg) {
+		System.err.println("ExpData: " + msg);
 	}
 	
 	private void log(String msg) {
