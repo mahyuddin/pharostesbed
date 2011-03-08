@@ -222,9 +222,9 @@ void proteus_Register(DriverTable* table) {
 Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new commands overwrite old commands*/, PLAYER_MSGQUEUE_DEFAULT_MAXLEN) {
 	
 	gettimeofday(&_currTime, NULL);
-	printf("%ld.%.6ld proteus_driver: constructor called\n", _currTime.tv_sec, _currTime.tv_usec);
 	#if DEBUG
-	printf("Hello from Francis Israel!\n");
+	//printf("%ld.%.6ld proteus_driver: constructor called\n", _currTime.tv_sec, _currTime.tv_usec);
+	//printf("Hello from Francis Israel! 2.0\n");
 	#endif
 	
 	// Clear the device addresses...
@@ -301,7 +301,7 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 			return;
 		}
 		b_opaque_interface = true;
-		printf("proteus_driver: opaque interface enabled.\n");
+		//printf("proteus_driver: opaque interface enabled.\n");
 	}
 	
 	/* 
@@ -566,7 +566,7 @@ void Proteus::Main() {
 	
 	//pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 	#if DEBUG
-	printf("Starting proteus main.");
+	printf("Starting proteus main.\n");
 	#endif
 	
 	while(1) {
@@ -603,16 +603,16 @@ void Proteus::Main() {
 			return;
 		}*/
 		#if DEBUG
-		printf("proteus_driver: main: receiving serial data...\n");
+		//printf("proteus_driver: main: receiving serial data...\n");
 		#endif
 		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
 		
-		printf("proteus_driver: main: processing serial data...\n");
+		//printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
 				#if DEBUG
 				int i = 0;
-				printf("proteus_driver: main: checking for new data to publish...\n");
+				//printf("proteus_driver: main: checking for new data to publish...\n");
 				#endif
 				/*
 				if (this->proteus_dev->newOdometryData) {
@@ -624,9 +624,9 @@ void Proteus::Main() {
 				if (this->proteus_dev->newINSData) {
 					#if DEBUG
 //					if(i++ > 800) {
-						printf("proteus_driver: main: Publishing new INS data!\n");
-						printf("Forward Accel: %fL",this->proteus_dev->statusINSAccelerationX);
-						i = 0;
+						//printf("proteus_driver: main: Publishing new INS data!\n");
+						printf("Forward Accel: %f\n",this->proteus_dev->statusINSAccelerationY);
+						//i = 0;
 					//}
 					//else i++;
 					#endif

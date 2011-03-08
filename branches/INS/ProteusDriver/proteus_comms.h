@@ -82,6 +82,7 @@ enum{
 #define PROTEUS_TACH_PACKET_SIZE 4
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
+#define PROTEUS_INS_PACKET_SIZE 7
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
 
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
@@ -202,15 +203,14 @@ typedef struct {
     /* INS Status stuff go! */
     double statusINSSpeedX;
     float statusINSAccelerationX;
-    unsigned char statusINSTickX;
     
     double statusINSSpeedY;
     float statusINSAccelerationY;
-    unsigned char statusINSTickY;
+    
+	unsigned char statusINSTick;
     
     float statusINSGyroSpeed;
     float statusINSOrientation;
-    unsigned char statusINSTickGyro;
     
     float statusINSDisplaceX;
     float statusINSDisplaceY;
