@@ -305,7 +305,7 @@ public class TelosBSSvDAvgGenerator {
 	 * @param data The data.
 	 * @return The maximum distance within the data.
 	 */
-	private double findMaxDist(Vector<TelosBSignalStrengthResult> data) {
+	public static double findMaxDist(Vector<TelosBSignalStrengthResult> data) {
 		double result = 0;
 		Enumeration<TelosBSignalStrengthResult> e = data.elements();
 		while (e.hasMoreElements()) {
