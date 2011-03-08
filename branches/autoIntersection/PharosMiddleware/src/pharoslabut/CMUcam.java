@@ -58,6 +58,7 @@ public class CMUcam
 		boolean right = false, left = false;
 		
 		int secondBlob_cnt = 0;
+		boolean blobDetect = false;
 		
 		while(true)
 		{
@@ -93,16 +94,17 @@ public class CMUcam
 						velocity = 0.0;
 					}
 					else {
-						velocity = .25;
+						velocity = .35;
 					}
 					
 					// detect secondary blob
 					// for now, pause for 3 seconds then resume
 					if(secondaryBlob != null){ // && pausing == false){
-						if(secondaryBlob.getArea() > 50) secondBlob_cnt++;
-						//pausing = true;
-						//p2di.setSpeed(0.0, 0.0);
-						//pause(3000);
+						if((secondaryBlob.getArea()) > 150 && blobDetect == false) {
+							secondBlob_cnt++;
+							blobDetect = true; 
+						}
+						else if(secondaryBlob.getArea() < 100) blobDetect = false;
 					}
 					System.out.println("there are " + secondBlob_cnt + " second blobs");
 					
@@ -114,7 +116,7 @@ public class CMUcam
 					angle = (int)((blob.getWidth()/2) - primaryBlob.getX());
 					System.out.println("raw angle is " + angle);
 					
-					angle /= 4; //maybe not enough?
+					angle /= 3; // 4 maybe not enough?
 					
 					System.out.println("relative angle is " + angle);
 					
@@ -133,16 +135,16 @@ public class CMUcam
 			} // end numBlobs > 0
 			
 			else {
-				if(left == true) angle = 6.0;
-				else if (right == true) angle = -6.0;
-				//p2di.setSpeed(velocity, dtor(angle));
+				if(left == true) angle = -6.0;
+				else if (right == true) angle = 6.0;
+
 				if(left == true) System.out.println("correcting left");
 				else if(right==true) System.out.println("correcting right");
 			}
 			
 			// set robot speed and angle
 			p2di.setSpeed(velocity, dtor(angle));
-			pause(10);
+			//pause(10);
 		} // end while(true)
 	}
 
