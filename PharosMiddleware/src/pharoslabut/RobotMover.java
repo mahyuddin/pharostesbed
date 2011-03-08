@@ -21,7 +21,9 @@
       	private PlayerClient client = null;
 
       	private FileLogger flogger = null;
-
+      	
+      	protected Position2DInterface motors = null;
+      	
       	public RobotMover(String serverIP, int serverPort,	String fileName, boolean showGUI) {
 
       		try {
@@ -38,7 +40,7 @@
 
       		}
 
-      		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+      		 motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 
       		if (motors == null) {
 
@@ -57,107 +59,58 @@
 
 
       		}
-
-      		MotionTask currTask;
+      		turnLeft();
+      		pause (10000);
+      		turnRight();
+      		pause (1000);
+      		stop();
+/*
+//      		MotionTask currTask;
 
       		double speed = 0.5;
       		double rotation = .5;
-      		currTask = new MotionTask(Priority.SECOND, speed, rotation);
-      		log("Submitting: " + currTask);
-      		motionArbiter.submitTask(currTask);
-      		//motors.setSpeed(speed,0);
-      		//pause(1000);
+//      		currTask = new MotionTask(Priority.SECOND, speed, rotation);
+//      		log("Submitting: " + currTask);
+//      		motionArbiter.submitTask(currTask);
+      		motors.setSpeed(speed,0);
+      		pause(1000);
       		
       		System.out.println("Turning robot...");
-//      		motors.setSpeed(0,.5);
-//      		pause(2000);
+      		motors.setSpeed(0,.5);
+      		pause(2000);
 
-      		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+//      		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
 
-      		log("Submitting: " + currTask);
-      		motionArbiter.submitTask(currTask);
+//      		log("Submitting: " + currTask);
+//      		motionArbiter.submitTask(currTask);
 
       		System.out.println("Stopping robot...");
-//      		motors.setSpeed(0,0);
+      		motors.setSpeed(0,0);
       		log("Test complete!");
-      		System.exit(0);
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
-      		
+      		System.exit(0);	
+      		*/
       	}
   
+      	public void turnLeft()
+      	{
+      		motors.setSpeed(0, .2);
+      	}
+      	
+      	public void turnRight()
+      	{
+      		motors.setSpeed(0, -.2);
+      	}
+      	
+      	public void moveForward()
+      	{
+      		motors.setSpeed(.01, 0);
+      	}
+      	
+      	public void stop()
+      	{
+      		motors.setSpeed(0, 0);
+      	}
+      	
       	private void pause(int duration) {
 
       		synchronized(this) {
