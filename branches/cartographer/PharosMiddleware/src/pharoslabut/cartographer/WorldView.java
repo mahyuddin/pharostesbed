@@ -330,20 +330,22 @@ public class WorldView {
 			
 			
 		
-		
-		
-		
-		
-		
-		synchronized (world) {
-			// 1) increase confidence value at (xCoord,yCoord)
-			
-			// 2) decrease confidence values at coordinates in a straight line of sight 
-			//    from the curLoc to the sensed position (cuz the IR is seeing through blank space,
-			//    so there probably isn't something there in it's path
-			
-			
+		// iterate through the "locationsToIncrease" list
+			// increase confidence value at (xCoord,yCoord)
+		ListIterator<OrderedPair> iter = locationsToIncrease.listIterator();
+		while (iter.hasNext()) {
+			// how much should we increase the confidence? +2, +3, etc?
+			OrderedPair cur = iter.next();
+			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY()); 
+			WorldView.writeConfidence( cur.getX(), cur.getY(), previousConfidence + 2); // might want to change this addition 
 		}
+		
+		
+		// iterate through the "locationsToDecrease" list
+			// decrease confidence values at (xCoord,yCoord)
+			
+			
+			
 		
 		
 	}
