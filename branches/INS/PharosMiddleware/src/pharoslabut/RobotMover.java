@@ -143,7 +143,7 @@
       		System.err.println("\t-file <file name>: name of file in which to save results (default log.txt)");
       		System.err.println("\t-gui: display GUI (default not shown)");
       	}
-      	public static void main(String[] args) {
+  /*    	public static void main(String[] args) {
       		String fileName = "log.txt";
       		String serverIP = "localhost";
       		int serverPort = 6665;
@@ -187,5 +187,5 @@
       		new RobotMover(serverIP, serverPort, fileName, showGUI);
 
       	}
-
+*/
       }
