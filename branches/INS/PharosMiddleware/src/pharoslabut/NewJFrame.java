@@ -1,6 +1,8 @@
 package pharoslabut;
 
 
+import javaclient2.structures.position2d.PlayerPosition2dData;
+
 import pharoslabut.RobotMover;
 
 /*
@@ -20,6 +22,7 @@ import pharoslabut.RobotMover;
 public class NewJFrame extends javax.swing.JFrame {
 
     /** Creates new form NewJFrame */
+    private static RobotMover XueHua;
     public NewJFrame() {
         initComponents();
     }
@@ -41,12 +44,6 @@ public class NewJFrame extends javax.swing.JFrame {
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
         jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
-        jButton8 = new javax.swing.JButton();
-        jButton9 = new javax.swing.JButton();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -56,6 +53,12 @@ public class NewJFrame extends javax.swing.JFrame {
         jTextField6 = new javax.swing.JTextField();
         jLabel6 = new javax.swing.JLabel();
         jButton10 = new javax.swing.JButton();
+        jButton4 = new javax.swing.JButton();
+        jButton5 = new javax.swing.JButton();
+        jButton6 = new javax.swing.JButton();
+        jButton7 = new javax.swing.JButton();
+        jButton8 = new javax.swing.JButton();
+        jButton9 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -95,6 +98,38 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jButton3.setText("NE");
 
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 332, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 251, Short.MAX_VALUE)
+        );
+
+        jLabel1.setText("Relative Xpos");
+
+        jLabel2.setText("Relative Ypos");
+
+        jLabel3.setText("Relative Orientation");
+
+        jLabel4.setText("Distance Traveled");
+
+        jLabel5.setText("Time Elapsed");
+
+        jTextField6.setText("Blocked/Open");
+
+        jLabel6.setText("Status");
+
+        jButton10.setText("Update");
+        jButton10.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton10ActionPerformed(evt);
+            }
+        });
+
         jButton4.setText("W");
         jButton4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -127,46 +162,13 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jButton9.setText("SE");
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 336, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 212, Short.MAX_VALUE)
-        );
-
-        jLabel1.setText("Relative Xpos");
-
-        jLabel2.setText("Relative Ypos");
-
-        jLabel3.setText("Relative Orientation");
-
-        jLabel4.setText("Distance Traveled");
-
-        jLabel5.setText("Time Elapsed");
-
-        jTextField6.setText("Blocked/Open");
-
-        jLabel6.setText("Status");
-
-        jButton10.setText("Update");
-        jButton10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton10ActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(181, 181, 181)
+                .addGap(101, 101, 101)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -183,58 +185,42 @@ public class NewJFrame extends javax.swing.JFrame {
                             .addComponent(jTextField4, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE)
                             .addComponent(jTextField2, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE)
                             .addComponent(jTextField3, javax.swing.GroupLayout.DEFAULT_SIZE, 82, Short.MAX_VALUE)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(214, 214, 214))
+                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 82, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jButton10)
-                        .addContainerGap())))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 115, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(25, 25, 25))
             .addGroup(layout.createSequentialGroup()
+                .addGap(8, 8, 8)
+                .addComponent(jButton1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton2)
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton8)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton9))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton4)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton6))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jButton2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton3)))
-                .addContainerGap(756, Short.MAX_VALUE))
+                .addComponent(jButton3)
+                .addContainerGap(475, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton6)
+                .addContainerGap(481, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jButton7)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton8)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButton9)
+                .addContainerGap(481, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 31, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton2)
-                            .addComponent(jButton3)
-                            .addComponent(jButton1))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton4)
-                            .addComponent(jButton5)
-                            .addComponent(jButton6))
-                        .addGap(5, 5, 5)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton9)
-                            .addComponent(jButton8)
-                            .addComponent(jButton7)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(33, 33, 33)
+                        .addGap(38, 38, 38)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -260,8 +246,26 @@ public class NewJFrame extends javax.swing.JFrame {
                             .addComponent(jTextField6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel6))
                         .addGap(31, 31, 31)
-                        .addComponent(jButton10)))
-                .addContainerGap())
+                        .addComponent(jButton10))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(19, 19, 19)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(36, 36, 36)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton1)
+                    .addComponent(jButton2)
+                    .addComponent(jButton3))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton4)
+                    .addComponent(jButton5)
+                    .addComponent(jButton6))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButton7)
+                    .addComponent(jButton8)
+                    .addComponent(jButton9))
+                .addGap(193, 193, 193))
         );
 
         pack();
@@ -269,6 +273,8 @@ public class NewJFrame extends javax.swing.JFrame {
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
+
+
     }//GEN-LAST:event_jTextField1ActionPerformed
 
     private void jTextField2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField2ActionPerformed
@@ -287,28 +293,37 @@ public class NewJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-         RobotMover   XueHua =  new RobotMover("log.txt", "localhost", 6665, false);
-            RobotMover.turnRight();
-            RobotMover.turnRight();
-            RobotMover.Moveforward();// Add code here        // TODO add your handling code here:
+          
+                     XueHua.turnRight();
+                     XueHua.moveForward();// Add code here        // TODO add your handling code here:
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
-        RobotMover.stop();// Add code here        // TODO add your handling code here:
+                     XueHua.stop();// Add code here        // TODO add your handling code here:
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-            RobotMover.moveForward();        // TODO add your handling code here:
+
+                     XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
+    
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-            RobotMover.turnRight();
-                      RobotMover.moveForward();        // TODO add your handling code here:
+         
+                     XueHua.turnRight();
+                     XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
     private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-        jTextField1.setText("20");// TODO add your handling code here: this is a temp button for manual updates from INS for now
+              PlayerPosition2dData XueHuaPosition = new PlayerPosition2dData();
+              String XueHuaX = Float.toString(XueHuaPosition.getPos().getPx()); // I suck at typecasting =(
+              String XueHuaY = Float.toString(XueHuaPosition.getPos().getPy());
+              jTextField1.setText(XueHuaX); 
+              jTextField2.setText(XueHuaY);
+
+
+// TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
 
 
@@ -316,7 +331,10 @@ public class NewJFrame extends javax.swing.JFrame {
     * @param args the command line arguments
     */
     public static void main(String args[]) {
+
+        XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
         java.awt.EventQueue.invokeLater(new Runnable() {
+            
             public void run() {
                 new NewJFrame().setVisible(true);
             }
