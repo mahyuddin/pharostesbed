@@ -1,5 +1,9 @@
 package pharoslabut.cartographer;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import pharoslabut.MotionArbiter;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.tasks.MotionTask;
@@ -11,9 +15,6 @@ import playerclient.PlayerException;
 import playerclient.Position2DInterface;
 import playerclient.Position2DListener;
 import playerclient.structures.*;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.PlayerDevAddr;
-import playerclient.structures.PlayerMsgHdr;
 import playerclient.structures.player.PlayerDeviceDevlist;
 import playerclient.structures.player.PlayerDeviceDriverInfo;
 import playerclient.structures.ir.PlayerIrData;
@@ -56,13 +57,11 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		
 		/////////// IR INTERFACE ///////////////
-//		System.out.print("Trying to Establish IR interface...");
 		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (ir == null) {
 			System.out.println("unable to connect to IR interface");
 			System.exit(1);
 		}
-		System.out.print("established\n");
 		
 		ir.addIRListener(this);
 		pause(2000);
@@ -70,28 +69,34 @@ public class PathPlanner implements Position2DListener, IRListener {
 		MotionTask currTask;
 		double speedStep = .2;
 		
-		PathPlanner.writeOdometry(5.0, 5.0, 0.0);
+		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
 		
 		
 		
 		//RotateDegrees(Math.PI/16, motionArbiter);
-		currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
-		log("Submitting: " + currTask);
+		//currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
+		//log("Submitting: " + currTask);
 		//motionArbiter.submitTask(currTask);
-		motors.setSpeed(0.2, 0);
-		pause(1000);
 		
-		motors.setSpeed(0, -Math.PI/8);
-		pause(2000);
-		
-		motors.setSpeed(0.2,0);
-		pause(500);
-		
-		currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
+		//currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
+		//log("Submitting: " + currTask);
 		//motionArbiter.submitTask(currTask);
+		
 		motors.setSpeed(0, 0);
-		pause(2000);
+		pause(5000);
+		
+		motors.setSpeed(0.1, 0);
+		pause(5000);
+		
+		motors.setSpeed(0, 0.1);
+		pause(10000);
+		
+		motors.setSpeed(.1, 0);
+		pause(5000);
+		
+		motors.setSpeed(0, 0);
+		pause(5000);
+		
 		
 //		while(true){
 //			//while no obstacle detected, move forward
@@ -110,8 +115,23 @@ public class PathPlanner implements Position2DListener, IRListener {
 //			//turn 90 degrees
 //			RotateDegrees((Math.PI)/16,motionArbiter);
 //		}
-		/*log("Test complete!");
-		System.exit(0);*/
+		log("Test complete!");
+		
+		try {
+			WorldView.printWorldView();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+			WorldView.fout.close();
+		} 
+		catch (Exception e) {
+		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
+		}	
+		
+		System.exit(0);
 		///////////// END OF IR INTERFACING ///////////////
 		
 	}
@@ -143,14 +163,16 @@ public class PathPlanner implements Position2DListener, IRListener {
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose pp = data.getPos();
 		//motors.setOdometry(pp);
-		//LocationTracker.updateLocation(pp);
+//		if (!(pp.equals(null))) {
+			LocationTracker.updateLocation(pp);
+//		}
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
 				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
 		float[] dist = data.getRanges();
-		//WorldView.recordObstacles(dist);
+		WorldView.recordObstacles(dist);
 		//log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
 			//	dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
 				//dist[5]);
@@ -167,11 +189,11 @@ public class PathPlanner implements Position2DListener, IRListener {
 	}
 	
 	private void log(String msg) {
-		String result = "PathPlanner: " + msg;
-		System.out.println(result);
-		if (flogger != null) {
-			flogger.log(result);
-		}
+//		String result = "PathPlanner: " + msg;
+//		System.out.println(result);
+//		if (flogger != null) {
+//			flogger.log(result);
+//		}
 	}
 	
 	private static void usage() {
@@ -191,7 +213,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 	public static void main(String[] args) {
 		String fileName = "log.txt";
 		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
-		String serverIP = "192.168.12.106";
+		String serverIP = "128.83.52.224";
 		int serverPort = 6665;
 
 		try {
@@ -218,6 +240,17 @@ public class PathPlanner implements Position2DListener, IRListener {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
+		
+		new LocationTracker();
+		new WorldView();
+		
+//		try {
+//			WorldView.printWorldView();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		
 		new PathPlanner(serverIP, serverPort, fileName);
 	}
 

@@ -6,8 +6,8 @@ import playerclient.structures.PlayerPose;
 public class LocationTracker {
 	
 	// change initial values to reflect the robot's starting orientation
-	private static final double initialX = WorldView.ROOMBA_RADIUS;
-	private static final double initialY = WorldView.ROOMBA_RADIUS;
+	private static final double initialX = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
+	private static final double initialY = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
 	
 	private static double currentX;
 	private static double currentY;
@@ -37,11 +37,11 @@ public class LocationTracker {
 		
 		//boundary checking
 		if (currentX < 0) {
-			System.out.println("currentX was neg");
+//			System.out.println("currentX was neg");
 			currentX = 0;
 		}
 		if (currentY < 0) {
-			System.out.println("currentY was neg");
+//			System.out.println("currentY was neg");
 			currentY = 0;
 		}	
 //		PathPlanner.writeOdometry(currentX, currentY, bearing);
