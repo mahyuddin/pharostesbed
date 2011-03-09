@@ -25,6 +25,7 @@ public class NewJFrame extends javax.swing.JFrame {
     private static RobotMover XueHua;
     public NewJFrame() {
         initComponents();
+          XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
     }
 
     /** This method is called from within the constructor to
@@ -332,9 +333,10 @@ public class NewJFrame extends javax.swing.JFrame {
     */
     public static void main(String args[]) {
 
-        XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
+      
         java.awt.EventQueue.invokeLater(new Runnable() {
             
+            @Override
             public void run() {
                 new NewJFrame().setVisible(true);
             }
