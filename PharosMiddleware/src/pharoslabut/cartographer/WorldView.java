@@ -213,12 +213,11 @@ public class WorldView {
 		locationsToDecrease.clear();
 		locationsToIncrease.clear();
 		
-		Line2D.Double lineToClear = new Line2D.Double(); 
 		
 		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
-		Integer [] obstacleCoord;
+		Integer [] obstacleCoord, sensorCoord;
 		double [] obstaclePos = {0,0}; // 
-
+		double [] sensorPos = {0,0};
 		
 		
 		// WE NEED TO TRY USING THE Line2D class with the Point2D class for keeping track of coordinates... much MUCH better
@@ -234,14 +233,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	frontLeftSensorPoint.getX() + frontLeftRange*Math.cos(curAngle + FRONT_LEFT_IR_ANGLE),
 										frontLeftSensorPoint.getY() + frontLeftRange*Math.sin(curAngle + FRONT_LEFT_IR_ANGLE)  );
 			
-			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
 			
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
 			
 			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
-		
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
 		}
 		
 		if ((frontCenterRange >= MIN_USEFUL_IR_DISTANCE) && (frontCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -252,14 +256,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	frontCenterSensorPoint.getX() + frontCenterRange*Math.cos(curAngle + FRONT_CENTER_IR_ANGLE),
 										frontCenterSensorPoint.getY() + frontCenterRange*Math.sin(curAngle + FRONT_CENTER_IR_ANGLE)  );
 
-			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
-
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
-
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
-			
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+		
 		}
 
 		if ((frontRightRange >= MIN_USEFUL_IR_DISTANCE) && (frontRightRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -269,14 +278,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + frontRightRange*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
 										frontRightSensorPoint.getY() + frontRightRange*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );
 			
-			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
-			
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
-
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			
 			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
-		}
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+	}
 		
 		if ((rearLeftRange >= MIN_USEFUL_IR_DISTANCE) && (rearLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
 			rearLeftSensorPoint.setLocation(	curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0])),
@@ -285,14 +299,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	rearLeftSensorPoint.getX() + rearLeftRange*Math.cos(curAngle + REAR_LEFT_IR_ANGLE),
 										rearLeftSensorPoint.getY() + rearLeftRange*Math.sin(curAngle + REAR_LEFT_IR_ANGLE)  );
 			
-			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
-			
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
 			
 			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
-		}
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+	}
 		
 		if ((rearCenterRange >= MIN_USEFUL_IR_DISTANCE) && (rearCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
 			// for the rear center IR, the curAngle + PI is equal to the sensor's angle from the center
@@ -302,14 +321,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	rearCenterSensorPoint.getX() + rearCenterRange*Math.cos(curAngle + REAR_CENTER_IR_ANGLE),
 										rearCenterSensorPoint.getY() + rearCenterRange*Math.sin(curAngle + REAR_CENTER_IR_ANGLE)  );
 
-			lineToClear.setLine(rearCenterSensorPoint, obstaclePoint);
-
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
-
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
+			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list			
-		}
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+	}
 		
 		if ((rearRightRange >= MIN_USEFUL_IR_DISTANCE) && (rearRightRange <= MAX_USEFUL_IR_DISTANCE)) {
 			rearRightSensorPoint.setLocation(	curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0])),
@@ -318,14 +342,19 @@ public class WorldView {
 			obstaclePoint.setLocation(	rearRightSensorPoint.getX() + rearRightRange*Math.cos(curAngle + REAR_RIGHT_IR_ANGLE),
 										rearRightSensorPoint.getY() + rearRightRange*Math.sin(curAngle + REAR_RIGHT_IR_ANGLE)  );
 			
-			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
-			
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();
+						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
 			
 			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
 			
-			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list	
-		}
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+	}
 					
 			
 			
@@ -349,8 +378,43 @@ public class WorldView {
 		
 		
 	}
-	
-	
+	/**
+	 * adds OrderedPairs on the line from sensor coordinate to obstacle coordinate to the list
+	 * that decreases the confidence of these locations 
+	 * 
+	 * @param locationsToDecrease Arraylist of OrderedPair
+	 * @param x1 Sensor X Coordinate
+	 * @param x2 Obstacle X Coordinate
+	 * @param y1 Sensor Y Coordinate
+	 * @param y2 Obstacle Y Coordinate
+	 */
+	private static void decreaseLineConfidence(ArrayList<OrderedPair> locationsToDecrease, Integer x1, Integer x2, Integer y1, Integer y2){
+		Integer xi,yi;
+		if ( x2 > x1 && y2 > y1 ){
+			for(xi = x1 + 1; xi < x2; xi++){
+				yi = y1 + (int) Math.round((xi - x1) * Math.tan(Math.atan((y2-y1)/(x2-x1))));
+				locationsToDecrease.add(new OrderedPair(xi,yi));
+			}
+		}
+		else if ( x2 < x1 && y2 > y1){
+			for(xi = x1; xi > x2; xi--){
+				yi = y1 + (int) Math.round((x1 - xi) * Math.tan(Math.atan((y2-y1)/(x1-x2))));
+				locationsToDecrease.add(new OrderedPair(xi,yi));
+			}
+		}
+		else if ( x2 > x1 && y2 < y1){
+			for(xi = x1; xi < x2; xi++){
+				yi = y1 - (int) Math.round((x1 - xi) * Math.tan(Math.atan((y1-y2)/(x2-x1))));
+				locationsToDecrease.add(new OrderedPair(xi,yi));
+			}
+		}
+		else if ( x2 < x1 && y2 < y1){
+			for(xi = x1; xi > x2; xi--){
+				yi = y1 - (int) Math.round((xi - x1) * Math.tan(Math.atan((y1-y2)/(x1-x2))));
+				locationsToDecrease.add(new OrderedPair(xi,yi));
+			}
+		}
+	}
 	
 	public static synchronized void writeConfidence(Integer x, Integer y, double c) {
 //	synchronized (world) {
@@ -394,6 +458,8 @@ public class WorldView {
 		return data;
 	}
 
+	
+	
 	
 	public static void printWorldVew() {
 		System.out.println(""); // skip a line
