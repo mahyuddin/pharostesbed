@@ -1,5 +1,7 @@
 package pharoslabut.cartographer;
 
+import java.awt.geom.Line2D;
+import java.awt.geom.Point2D;
 import java.util.*;
 
 
@@ -70,20 +72,22 @@ public class WorldView {
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
 	
-	public static final double FRONT_LEFT_IR_ANGLE		= -Math.PI/4; 	// -45 deg (45 deg left of forward)
-	public static final double FRONT_CENTER_IR_ANGLE	= 0; 			// 0 deg (directly ahead)
-	public static final double FRONT_RIGHT_IR_ANGLE		= Math.PI/4; 	// -45 deg (45 deg right of forward)
-	public static final double REAR_LEFT_IR_ANGLE		= -3*Math.PI/4;	// -135 deg (45 deg left of forward)
-	public static final double REAR_CENTER_IR_ANGLE		= Math.PI; 		// 180 deg (directly behind)
-	public static final double REAR_RIGHT_IR_ANGLE		= 3*Math.PI/4; 	// 135 deg (135 deg right of forward)
+	// the POSE values are distance from center of roomba to each IR sensor
+	// x value is distance from center left and right to back and front sensor
+	// y value is distance from center up and down to left midpoint and right midpoint
+	public static final double [] FRONT_LEFT_IR_POSE		= {0.09, 0.10};		// done measuring
+	public static final double [] FRONT_CENTER_IR_POSE		= {0.12, 0}; 		// done measuring
+	public static final double [] FRONT_RIGHT_IR_POSE		= {0.09, -0.10};	// done measuring
+	public static final double [] REAR_LEFT_IR_POSE			= {-0.175, 0.10};	// done measuring
+	public static final double [] REAR_CENTER_IR_POSE		= {-0.19, 0};		// done measuring
+	public static final double [] REAR_RIGHT_IR_POSE		= {-0.175, -0.10};	// done measuring
 	
-	// the POSE values need to be measured ... it is distance from center of roomba to each IR sensor
-	public static final double [] FRONT_LEFT_IR_POSE		= {-0.05, 0.014};	//
-	public static final double [] FRONT_CENTER_IR_POSE		= {0, 0.014}; 		//
-	public static final double [] FRONT_RIGHT_IR_POSE		= {0.05, 0.014};	//
-	public static final double [] REAR_LEFT_IR_POSE			= {-0.05, -0.014};	//	
-	public static final double [] REAR_CENTER_IR_POSE		= {0, -0.020};		//
-	public static final double [] REAR_RIGHT_IR_POSE		= {0.05, -0.014};	//
+	public static final double FRONT_LEFT_IR_ANGLE			= Math.PI/4; 	// -45 deg (45 deg left of forward)
+	public static final double FRONT_CENTER_IR_ANGLE		= 0; 			// 0 deg (directly ahead)
+	public static final double FRONT_RIGHT_IR_ANGLE			= -Math.PI/4; 	// -45 deg (45 deg right of forward)
+	public static final double REAR_LEFT_IR_ANGLE			= 3*Math.PI/4;	// -135 deg (45 deg left of forward)
+	public static final double REAR_CENTER_IR_ANGLE			= Math.PI; 		// 180 deg (directly behind)
+	public static final double REAR_RIGHT_IR_ANGLE			= -3*Math.PI/4; 	// 135 deg (135 deg right of forward)
 	
 	// uses pythagorean theorem to find hypotenuse (distance from Roomba's center) of the IR sensor's position 
 	public static final double FRONT_LEFT_IR_POSE_HYP		= Math.sqrt(Math.pow(FRONT_LEFT_IR_POSE[0], 2) + Math.pow(FRONT_LEFT_IR_POSE[1], 2));	//
@@ -127,17 +131,6 @@ public class WorldView {
 				(world.get(i)).add(new LocationElement(i,j)); // add a LocationElement at that coordinate
 			}	
 		}
-		
-		/* try printing out initialized world array
-		for (Integer i = 0; i < 100; i++) { // iterate through each x coordinate  
-			
-			for (Integer j = 0; j < 100; j++) { // iterate through each y coordinate
-				System.out.print(world.get(i).get(j));
-			}	
-		}
-		*/
-		
-		
 	}
 	
 	
@@ -190,23 +183,37 @@ public class WorldView {
 	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RL, RC, RR
 	 */
 	public static synchronized void recordObstacles(float [] distIR) {
-		// extract IR data from dist[], dist data is in mm
-		float frontLeft	 	= distIR[0];
-		float frontCenter 	= distIR[1];
-		float frontRight 	= distIR[2];
-		float rearLeft 		= distIR[3];
-		float rearCenter 	= distIR[4];
-		float rearRight 	= distIR[5];
+		// extract IR data from dist[], dist data is in mm, convert back to m
+		float frontLeftRange 	= distIR[0] / 1000;
+		float frontCenterRange 	= distIR[1] / 1000;
+		float frontRightRange 	= distIR[2] / 1000;
+		float rearLeftRange 	= distIR[3] / 1000;
+		float rearCenterRange 	= distIR[4] / 1000;
+		float rearRightRange 	= distIR[5] / 1000;
 		
 		double [] curLoc = LocationTracker.getCurrentLocation();
-		double xPos = curLoc[0]; 
-		double yPos = curLoc[1];
-		double angle = curLoc[2];
+		double xPos 	= curLoc[0]; 
+		double yPos 	= curLoc[1];
+		double curAngle	= curLoc[2];
 		
+		Point2D.Double curPoint = new Point2D.Double(xPos, yPos);
+		Point2D.Double obstaclePoint 			= new Point2D.Double();
+		Point2D.Double frontLeftSensorPoint		= new Point2D.Double();
+		Point2D.Double frontCenterSensorPoint 	= new Point2D.Double();
+		Point2D.Double frontRightSensorPoint 	= new Point2D.Double();
+		Point2D.Double rearLeftSensorPoint 		= new Point2D.Double();
+		Point2D.Double rearCenterSensorPoint 	= new Point2D.Double();
+		Point2D.Double rearRightSensorPoint		= new Point2D.Double();
+			
 		// 2-D ArrayList of spaces to clear 
 		// (these need to be calculated and added to the list before the "synchronized (world)" block below)
 		ArrayList<OrderedPair> locationsToDecrease = new ArrayList<OrderedPair>();
 		ArrayList<OrderedPair> locationsToIncrease = new ArrayList<OrderedPair>();
+		
+		locationsToDecrease.clear();
+		locationsToIncrease.clear();
+		
+		Line2D.Double lineToClear = new Line2D.Double(); 
 		
 		Integer [] curCoords = locToCoord(curLoc); // this might be useful later
 		Integer [] obstacleCoord;
@@ -220,46 +227,104 @@ public class WorldView {
 		
 		// calculate where the object should be recorded
 		
-		if ((frontLeft >= MIN_USEFUL_IR_DISTANCE) && (frontLeft <= MAX_USEFUL_IR_DISTANCE)) {
-			obstaclePos[0] = curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(angle - Math.PI/2 - Math.acos(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])); // X position of the FL IR sensor
-			obstaclePos[1] = curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(angle - Math.PI/2 - Math.acos(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])); // Y position of the FL IR sensor
-			// ^^^^ these are still incorrect calculations... they work for some angles but not all
+		if ((frontLeftRange >= MIN_USEFUL_IR_DISTANCE) && (frontLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
+			frontLeftSensorPoint.setLocation(	curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])),
+												curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0]))  );
+		
+			obstaclePoint.setLocation(	frontLeftSensorPoint.getX() + frontLeftRange*Math.cos(curAngle + FRONT_LEFT_IR_ANGLE),
+										frontLeftSensorPoint.getY() + frontLeftRange*Math.sin(curAngle + FRONT_LEFT_IR_ANGLE)  );
 			
+			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
+			
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 		
 		}
 		
-		if ((frontCenter >= MIN_USEFUL_IR_DISTANCE) && (frontCenter <= MAX_USEFUL_IR_DISTANCE)) {
+		if ((frontCenterRange >= MIN_USEFUL_IR_DISTANCE) && (frontCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
+			// for the front center IR, the curAngle is equal to the sensor's angle from the center
+			frontCenterSensorPoint.setLocation(	curLoc[0] + FRONT_CENTER_IR_POSE_HYP*Math.cos(curAngle),
+												curLoc[1] + FRONT_CENTER_IR_POSE_HYP*Math.sin(curAngle)  );
+
+			obstaclePoint.setLocation(	frontCenterSensorPoint.getX() + frontCenterRange*Math.cos(curAngle + FRONT_CENTER_IR_ANGLE),
+										frontCenterSensorPoint.getY() + frontCenterRange*Math.sin(curAngle + FRONT_CENTER_IR_ANGLE)  );
+
+			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
+
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
 			
-//			
-//			// this is wrong... it needs to factor in the current angle
-//			
-//			obstaclePos[1] += frontCenter; // add IR value to yPos, cuz it's directly in front
-//			obstacleCoord = locToCoord(obstaclePos); // convert from actual position to coordinate
-//			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
-//			
-//			// xCoord and obstacleCoord[0] should be the same (they should have the same x value)
-//			// keep xCoord the same, iterate through all the yCoords from current Y coord to obstacle's y coord
-//			for (int y = curCoords[1]; y < obstacleCoord[1]; y++) {
-//				locationsToDecrease.add(new OrderedPair(curCoords[0], y));
-//			}
-			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			
 		}
 
-		if ((frontRight >= MIN_USEFUL_IR_DISTANCE) && (frontRight <= MAX_USEFUL_IR_DISTANCE)) {
-	
+		if ((frontRightRange >= MIN_USEFUL_IR_DISTANCE) && (frontRightRange <= MAX_USEFUL_IR_DISTANCE)) {
+			frontRightSensorPoint.setLocation(	curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
+												curLoc[1] + FRONT_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0]))  );
+
+			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + frontRightRange*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
+										frontRightSensorPoint.getY() + frontRightRange*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );
+			
+			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
+			
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 		}
 		
-		if ((rearLeft >= MIN_USEFUL_IR_DISTANCE) && (rearLeft <= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearLeftRange >= MIN_USEFUL_IR_DISTANCE) && (rearLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
+			rearLeftSensorPoint.setLocation(	curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0])),
+												curLoc[1] + REAR_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]))  );
 			
+			obstaclePoint.setLocation(	rearLeftSensorPoint.getX() + rearLeftRange*Math.cos(curAngle + REAR_LEFT_IR_ANGLE),
+										rearLeftSensorPoint.getY() + rearLeftRange*Math.sin(curAngle + REAR_LEFT_IR_ANGLE)  );
+			
+			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
+			
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 		}
 		
-		if ((rearCenter >= MIN_USEFUL_IR_DISTANCE) && (rearCenter <= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearCenterRange >= MIN_USEFUL_IR_DISTANCE) && (rearCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
+			// for the rear center IR, the curAngle + PI is equal to the sensor's angle from the center
+			rearCenterSensorPoint.setLocation(	curLoc[0] + REAR_CENTER_IR_POSE_HYP*Math.cos(curAngle + Math.PI),
+												curLoc[1] + REAR_CENTER_IR_POSE_HYP*Math.sin(curAngle + Math.PI)  );
+
+			obstaclePoint.setLocation(	rearCenterSensorPoint.getX() + rearCenterRange*Math.cos(curAngle + REAR_CENTER_IR_ANGLE),
+										rearCenterSensorPoint.getY() + rearCenterRange*Math.sin(curAngle + REAR_CENTER_IR_ANGLE)  );
+
+			lineToClear.setLine(rearCenterSensorPoint, obstaclePoint);
+
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));
 			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list			
 		}
 		
-		if ((rearRight >= MIN_USEFUL_IR_DISTANCE) && (rearRight <= MAX_USEFUL_IR_DISTANCE)) {
+		if ((rearRightRange >= MIN_USEFUL_IR_DISTANCE) && (rearRightRange <= MAX_USEFUL_IR_DISTANCE)) {
+			rearRightSensorPoint.setLocation(	curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0])),
+												curLoc[1] + REAR_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]))  );
 			
+			obstaclePoint.setLocation(	rearRightSensorPoint.getX() + rearRightRange*Math.cos(curAngle + REAR_RIGHT_IR_ANGLE),
+										rearRightSensorPoint.getY() + rearRightRange*Math.sin(curAngle + REAR_RIGHT_IR_ANGLE)  );
+			
+			lineToClear.setLine(frontCenterSensorPoint, obstaclePoint);
+			
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			
+			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			
+			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list	
 		}
 					
 			
