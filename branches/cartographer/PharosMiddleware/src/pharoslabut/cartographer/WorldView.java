@@ -3,6 +3,7 @@ package pharoslabut.cartographer;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.*;
+import java.io.*;
 
 
 class LocationElement {
@@ -63,6 +64,10 @@ class OrderedPair {
 
 public class WorldView {
 	
+	public static FileWriter fstream; 
+    public static BufferedWriter fout; 
+	
+	public static final int WORLD_SIZE = 50;					// initial dimensions of "world" (below)
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
@@ -117,20 +122,32 @@ public class WorldView {
 	 *    | | | | | | | | | | | | | | | | | | | | | | | | 20,0 
 	 *0,0       small x   ----->   large x        
 	 */
-	public WorldView() {
-		world = new ArrayList<ArrayList<LocationElement>>(100);
-//		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>(100));
 	
-		for (Integer i = 0; i < 100; i++) { // iterate through each x coordinate
+	
+	public WorldView() {
+		
+		world = new ArrayList<ArrayList<LocationElement>>();
+//		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>(WORLD_SIZE));
+	
+		for (int i = 0; i < WORLD_SIZE; i++) { // iterate through each x coordinate
  
 			//add a new list for all the y coordinates at that x coordinate
-			world.add(new ArrayList<LocationElement>(100)); 
+			world.add(new ArrayList<LocationElement>()); 
 
 			
-			for (Integer j = 0; j < 100; j++) { // iterate through each y coordinate
+			for (int j = 0; j < WORLD_SIZE; j++) { // iterate through each y coordinate
 				(world.get(i)).add(new LocationElement(i,j)); // add a LocationElement at that coordinate
 			}	
 		}
+		
+		
+		try {
+			fstream = new FileWriter("world.txt");
+			fout = new BufferedWriter(fstream);
+		} 
+		catch (Exception e) {
+		      System.err.println("Error opening file stream for 'world.txt': " + e.getMessage());
+		}	
 	}
 	
 	
@@ -164,7 +181,7 @@ public class WorldView {
 				
 				// since we have passed through this location, we are full confident an object doesn't exist there
 				//   so the confidence value should be set to zero to indicate no obstacle is present
-				writeConfidence(x, y, 0); 
+				WorldView.writeConfidence(x, y, 0); 
 //				synchronized (world) {
 //					((world.get(x)).get(y)).incTraversed();
 //				}
@@ -365,8 +382,10 @@ public class WorldView {
 		while (iter.hasNext()) {
 			// how much should we increase the confidence? +2, +3, etc?
 			OrderedPair cur = iter.next();
-			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY()); 
-			WorldView.writeConfidence( cur.getX(), cur.getY(), previousConfidence + 2); // might want to change this addition 
+			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY());
+			if (previousConfidence != -1) {
+				WorldView.writeConfidence( cur.getX(), cur.getY(), previousConfidence + 0.02); // might want to change this addition 
+			}
 		}
 		
 		
@@ -416,10 +435,11 @@ public class WorldView {
 		}
 	}
 	
+	
 	public static synchronized void writeConfidence(Integer x, Integer y, double c) {
 //	synchronized (world) {
 		// set (x,y)'s confidence = c
-		System.out.println(x + ", " + y + ", " + c);
+//		System.out.println(x + ", " + y + ", " + c);
 		if ((c >= 0 && c <= 1) && ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size()))) {
 			((world.get(x)).get(y)).setConfidence(c);
 		}
@@ -430,7 +450,9 @@ public class WorldView {
 	public static synchronized double readConfidence(Integer x, Integer y) {
 //	synchronized (world) {
 		// return confidence at (x,y);
-		return ((world.get(x)).get(y)).getConfidence();
+		if ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size())) {
+			return ((world.get(x)).get(y)).getConfidence();
+		} else return -1; // error, out of bounds
 //	}
 	}
 	
@@ -461,22 +483,40 @@ public class WorldView {
 	
 	
 	
-	public static void printWorldVew() {
-		System.out.println(""); // skip a line
-		
+	public static void printWorldView() throws IOException {
 		int x = 0;
 		
-		// print confidence values in a grid		
+		WorldView.fout.write("\n\n");
+		
+		// print column headers (x coordinates)		
+		WorldView.fout.write(String.format("%6s", " "));
+		
 		for (x = 0; x < world.size(); x++) {
-			System.out.print(x + "\t");
+			WorldView.fout.write(String.format("%6d", x));
+
 		}
 		
-		for (int y = (world.get(x).size() - 1); y >= 0; y--) {
+		x = 0;
+		// print confidence values in a grid
+//		System.out.println(world.size() + ", " + world.get(0).size());
+		for (int y = ((world.get(x)).size() - 1); y >= 0; y--) {
+			
+			WorldView.fout.write("\n" + String.format("%6d", y));
 			for (x = 0; x < world.size(); x++) {
-				System.out.print(y + "\t" + ((world.get(x)).get(y)).getConfidence() + "\t");			
+				double conf = WorldView.readConfidence(x, y);
+				
+				if (conf == 0.50) {
+					WorldView.fout.write(String.format("%6s", " "));
+				} else {
+					if (conf != -1) {
+						WorldView.fout.write(String.format("%6.2f", (float) WorldView.readConfidence(x, y)));
+					}
+				}
+				
 			}
-			System.out.println("");
+			
 		}
+		
 	}
 }
 
