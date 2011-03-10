@@ -9,13 +9,18 @@ import java.util.PriorityQueue;
  */
 public class RobotsPriorityQueue
 {
-    private static final int DEFAULT_CAPACITY = 25;
+    private static final int DEFAULT_CAPACITY = 15;
     private static Comparator<Robot> comparator = new RobotsComparator();
     private static PriorityQueue<Robot> queue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
 
     public static PriorityQueue<Robot> getQueue()
     {
         return queue;
+    }
+
+    public static int getDefaultCapacity()
+    {
+        return DEFAULT_CAPACITY;
     }
 
     /**

@@ -18,6 +18,15 @@ public class Main {
     public static void main(String[] args) throws InterruptedException  {
         RobotsPriorityQueue.test();
         new UDPServer();
+
+
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new aim.GUI.MainWindow().setVisible(true);
+            }
+        });
+
+
  //       Thread IM = new IntersectionManager();
  //       IM.start();
     }
