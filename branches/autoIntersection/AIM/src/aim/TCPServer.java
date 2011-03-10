@@ -3,23 +3,28 @@ package aim;
 import java.io.*;
 import java.net.*;
 
+
+
+/////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// Class Connect //////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
 /**
  * The server to which the robots will connect
- * @author ut
+ * @author Michael Hanna
  */
-public class Server extends Thread
+public class TCPServer extends Thread
 {
     private ServerSocket srvr;
 
     public static void main(String [] args)
     {
-        new Server();
+        new TCPServer();
     }
 
     /**
      * The server starts a new socket on port 6665
      */
-    public Server()
+    public TCPServer()
     {
         try {
             srvr = new ServerSocket(6665);
@@ -46,7 +51,7 @@ public class Server extends Thread
 
                 /*
                 String data = "HELOO AIMMM";
-                System.out.print("Server has connected!\n");
+                System.out.print("TCPServer has connected!\n");
                 PrintWriter out = new PrintWriter(skt.getOutputStream(), true);
                 System.out.print("Sending string: '" + data + "'\n");
                 out.print(data);
@@ -66,11 +71,6 @@ public class Server extends Thread
 
 
 }
-
-
-/////////////////////////////////////////////////////////////////////////////////
-//////////////////////////////// Class Connect //////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////
 
 
 

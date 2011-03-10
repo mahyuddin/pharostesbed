@@ -1,26 +1,26 @@
 package aim;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.PriorityQueue;
 
 
 /**
  * The intersection manager defines the strategy for AIM
- * @author ut
+ * @author Michael Hanna
  */
 
-public class IntersectionManager extends Thread {
+public class IntersectionManager {
 
-    private static long nextAvailableETC;
+    private static long nextAvailableETC = -1;
 
     /**
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
-     */
+     
     public IntersectionManager()
     {
         nextAvailableETC = -1;
     }
+    */
 
     /**
      * This method decides whether a robot is allowed to go through the intersection or not
@@ -43,43 +43,30 @@ public class IntersectionManager extends Thread {
      * - set up the strategy for the intersection
      * - granting/canceling reservations by dealing with the queue and setting the robots' times of arrival
      * </pre>
+     * @return robot - an object robot to be sent back to the client
      */
-    public void run()
+    public static Robot manageIntersection()
     {
-        Queue.makeEmpty();
-        new Server();
-        while(true)
+        PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueue();
+        if(! queue.isEmpty())
         {
-            if(! Queue.isEmpty())
+            Robot robot = queue.peek();
+            if(isAllowedAccess(robot) )
             {
-                Robot robot = Queue.getFront();
-                if(isAllowedAccess(robot) )
-                {
-                    nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
-                    Queue.dequeue();
-                }
-                else
-                {
-                    long timeDifference = robot.getETC() - robot.getETA();
-                    robot.setETA(nextAvailableETC);
-                    nextAvailableETC = nextAvailableETC + timeDifference;
-                    robot.setETC(nextAvailableETC);
-                    Queue.dequeue();
-                }
+                nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
+                queue.remove();
             }
             else
             {
-                try {
-                    Thread.sleep(500);
-                }
-                catch (InterruptedException ex) {
-                    Logger.getLogger(IntersectionManager.class.getName()).log(Level.SEVERE, null, ex);
-                }
+                long timeDifference = robot.getETC() - robot.getETA();
+                robot.setETA(nextAvailableETC);
+                nextAvailableETC = nextAvailableETC + timeDifference;
+                robot.setETC(nextAvailableETC);
+                queue.remove();
             }
+            return robot;
         }
-//        String hostname = "192.168.1.22";
-//        String hostname = "localhost";
-//        List allRobots = Collections.synchronizedList(new ArrayList());
+        return null;
     }
 
 }

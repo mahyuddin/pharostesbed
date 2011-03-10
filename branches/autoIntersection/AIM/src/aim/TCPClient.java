@@ -7,9 +7,9 @@ import java.util.logging.Logger;
 
 /**
  * Each robot is a client
- * @author ut
+ * @author Michael Hanna
  */
-public class Client extends Thread
+public class TCPClient extends Thread
 {
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
@@ -23,7 +23,7 @@ public class Client extends Thread
      *  - starts a thread
      * </pew>
      */
-    public Client()
+    public TCPClient()
     {
         oos = null;
         ois = null;
@@ -62,20 +62,20 @@ public class Client extends Thread
             {
                 if( robot.getETA() < 5000000 )
                 {
-                    Queue.enqueue(robot);
+                    oldQueue.enqueue(robot);
                     robot.setEnqueued(true);
                 }
             }
             try {
                 Thread.sleep(1000);                 // wait 1 sec and resend
             } catch (InterruptedException ex) {
-                Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(TCPClient.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
 
     public static void main(String [] args)
     {
-        new Client();
+        new TCPClient();
     }
 }

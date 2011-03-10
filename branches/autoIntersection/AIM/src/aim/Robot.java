@@ -1,9 +1,11 @@
 package aim;
 
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * Creates a new Object Robot
+ * @author Michael Hanna
  */
 public class Robot implements Serializable {
     private int id;
@@ -24,8 +26,8 @@ public class Robot implements Serializable {
     public Robot(int id, String laneSpecs, long ETA, long ETC, float velocity) {
         this.id = id;
         this.laneSpecs = laneSpecs;
-        this.ETA = ETA;
-        this.ETC = ETC;
+        this.ETA = new Date().getTime() - Main.startTime + ETA;
+        this.ETC = new Date().getTime() - Main.startTime + ETC;
         this.velocity = velocity;
         enqueued = false;
     }
@@ -56,7 +58,7 @@ public class Robot implements Serializable {
      * @param eta The estimated time of arrival
      */
     public void setETA(long eta) {
-        this.ETA = eta;
+        this.ETA = eta + new Date().getTime() - Main.startTime;
     }
 
     /**
@@ -71,7 +73,7 @@ public class Robot implements Serializable {
      * @param etc The estimated time of clearance
      */
     public void setETC(long etc) {
-        this.ETC = etc;
+        this.ETC = etc + new Date().getTime() - Main.startTime;
     }
 
     /**
@@ -101,6 +103,7 @@ public class Robot implements Serializable {
      * This method overrides the toString() method
      * @return String with all the robot attributes
      */
+    @Override
     public String toString()
     {
         String output = "id : " + id + "\n";

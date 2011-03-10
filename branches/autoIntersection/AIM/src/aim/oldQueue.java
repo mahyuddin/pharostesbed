@@ -2,9 +2,9 @@ package aim;
 
 /**
  * The reservation queue. It is a queue of robots
- * @author ut
+ * @author Michael Hanna
  */
-public class Queue {
+public class oldQueue {
 
     private static final int DEFAULT_CAPACITY = 25;
     private static Robot[] RobotsArray;
@@ -14,7 +14,7 @@ public class Queue {
 
 
     /*
-    public Queue() {
+    public oldQueue() {
         RobotsArray = new Robot[DEFAULT_CAPACITY];
         makeEmpty();
     }
