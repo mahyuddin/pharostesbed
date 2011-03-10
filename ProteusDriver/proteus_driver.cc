@@ -561,7 +561,6 @@ void Proteus::publishOpaqueMsg(uint8_t* msgBuffer) {
  *   3. Process and publish the new data from the micro-controller.
  */
 void Proteus::Main() {
-	
 	uint32_t loopCount = 0;
 	
 	//pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
@@ -610,8 +609,7 @@ void Proteus::Main() {
 		//printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
-				#if DEBUG
-				int i = 0;
+				#if DEBUG 
 				//printf("proteus_driver: main: checking for new data to publish...\n");
 				#endif
 				/*
@@ -623,12 +621,6 @@ void Proteus::Main() {
 				
 				if (this->proteus_dev->newINSData) {
 					#if DEBUG
-//					if(i++ > 800) {
-						//printf("proteus_driver: main: Publishing new INS data!\n");
-						printf("Forward Accel: %f\n",this->proteus_dev->statusINSAccelerationY);
-						//i = 0;
-					//}
-					//else i++;
 					#endif
 					this->updatePos2DINS();
 					this->proteus_dev->newINSData = false;
