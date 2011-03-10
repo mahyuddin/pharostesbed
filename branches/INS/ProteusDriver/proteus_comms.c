@@ -68,6 +68,22 @@ proteus_comm_t* proteus_create(const char* serial_port) {
 	strncpy(r->serial_port,serial_port,sizeof(r->serial_port)-1); // save the name of the serial port.
 	r->rxBuffStartIndx = 0;
 	r->rxBuffEndIndx = 0;
+    
+    // Initialize INS stuff
+    r-> newINSData = 0;
+    r-> statusINSSpeedX= 0;
+    r-> statusINSAccelerationX= 0;
+    
+    r-> statusINSSpeedY= 0;
+    r-> statusINSAccelerationY= 0;
+    
+	r-> statusINSTick= 0;
+    
+    r-> statusINSGyroSpeed= 0;
+    r-> statusINSOrientation= 0;
+    
+    r-> statusINSDisplaceX= 0;
+    r-> statusINSDisplaceY= 0;
 	return r;
 }
 
@@ -110,7 +126,7 @@ static inline result_t sendToMCU(proteus_comm_t* r, uint8_t* buff, size_t numByt
 		uint8_t eBuff[eNumBytes]; // allocate memory for the escaped buffer
 		size_t numBytesWritten = 0;
 		#if DEBUG
-		printf("proteus_comms: sendToMCU: numBytes = %i, eNumbytes = %i\n", numBytes, eNumBytes);
+		//printf("proteus_comms: sendToMCU: numBytes = %i, eNumbytes = %i\n", numBytes, eNumBytes);
 		#endif
 		eIndx = 2;
 		eBuff[0] = buff[0]; // Should be PROTEUS_BEGIN
@@ -121,7 +137,7 @@ static inline result_t sendToMCU(proteus_comm_t* r, uint8_t* buff, size_t numByt
 			if (buff[i] == PROTEUS_BEGIN || buff[i] == PROTEUS_END || buff[i] == PROTEUS_ESCAPE) {
 				eBuff[eIndx++] = PROTEUS_ESCAPE;
 				#if DEBUG
-				printf("proteus_comms: sendToMCU: adding escape byte at index %i\n", eIndx-1);
+				//printf("proteus_comms: sendToMCU: adding escape byte at index %i\n", eIndx-1);
 				#endif
 			}
 			eBuff[eIndx++] = buff[i];
@@ -143,11 +159,11 @@ static inline result_t sendToMCU(proteus_comm_t* r, uint8_t* buff, size_t numByt
 		}
 		
 		
-		printf("proteus_comms: sendToMCU: Wrote the following bytes: ");
+		/*printf("proteus_comms: sendToMCU: Wrote the following bytes: ");
 		for (i=0; i < eNumBytes; i++) {
 			printf("0x%x ", eBuff[i]);
 		}
-		printf("\n");
+		printf("\n");*/
 			
 		return SUCCESS;
 	} else {
@@ -508,8 +524,8 @@ result_t processOdometryPacket(proteus_comm_t* r) {
 		
 		r->newOdometryData = 1;
 		
-		printf("proteus_comms: OdometryPacket: distance = %f, steering angle = %f, motor limited = %i\n",
-			r->distance, r->steering_angle, r->motor_stall);
+		//printf("proteus_comms: OdometryPacket: distance = %f, steering angle = %f, motor limited = %i\n",
+			//	r->distance, r->steering_angle, r->motor_stall);
 		
 		return SUCCESS;
 	} else {
@@ -720,16 +736,16 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 		}
 		textMessage[strlen(textMessage)] = '\0';
 		
-		//printf("proteus_comms: MCU_MSG: StrSize: %i, Message: \"%s\"\n", strSize, textMessage);
+		printf("proteus_comms: MCU_MSG: StrSize: %i, Message: \"%s\"\n", strSize, textMessage);
 		
 		strcpy((char*)r->messageBuffer, textMessage);
 		r->newMessage = 1; // indicate that a new message was received
 		
 		return SUCCESS;
 	} else {
-		//printf("proteus_comms: processTextMessagePacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(),
-		//	strSize + PROTEUS_PACKET_OVERHEAD);
-		//printRxSerialBuff();
+		printf("proteus_comms: processTextMessagePacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(r),
+			strSize + PROTEUS_PACKET_OVERHEAD);
+		printRxSerialBuff(r);
 		return FAIL;
 	}
 }
@@ -768,7 +784,7 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		return FAIL;
 	}
 	#if DEBUG
-	// printf("proteus_comms: proteusProcessRxData: processing received bytes...\n");
+	//printf("proteus_comms: proteusProcessRxData: processing received bytes...\n");
 	#endif
 	//printRxSerialBuff();
 	
@@ -781,38 +797,43 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		getRxSerialBuff(r, 1, &msgType); // the message type is the byte after the begin message
 		switch(msgType) {
 			case PROTEUS_ODOMETRY_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
+				printf("proteus_comms: odometry packet!\n");
 				if (processOdometryPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
+				//numPktsPproteusReceiveSerialDatarocessed++;
 				break;
 			case PROTEUS_COMPASS_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
+				printf("proteus_comms: compass packet!\n");
 				if (processCompassPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_TACHOMETER_PACKET:
+				printf("proteus_comms: tachometer packet!\n");
 				if (processTachPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_STATUS_PACKET:
+				printf("proteus_comms: processing status packet!\n");
 				if (processStatusPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_MOTOR_SAFETY_PACKET:
+				printf("proteus_comms: motor safety packet!\n");
 				if (processMotorSafetyPacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_TEXT_MESSAGE_PACKET:
+				printf("proteus_comms: text message packet!\n");
 				if (processTextMessagePacket(r) == FAIL) return FAIL;
 					//done = true; // no point in processing more packets from the MCU
 				//numPktsProcessed++;
 				break;
 			case PROTEUS_ACCELEROMETER_PACKET:
+				//printf("proteus_comms: accelerometer compass packet!\n");
 				if (processAccelerometerPacket(r) == FAIL) return FAIL;
 				break;
 			default:
@@ -836,6 +857,7 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		popRxSerialBuff(r, &garbageData);// remove the extraneous byte
 		printf("proteus_comms: proteusProcessRxData: discarding junk byte 0x%.2x\n", garbageData);
 	}
+	// printf("Process return success\n");
 	return SUCCESS;
 }
 
@@ -906,13 +928,13 @@ result_t proteusReceiveSerialData(proteus_comm_t* r) {
 #define DEG2RADIAN 3.14159265/180
 // Added by Francis Rei Lao Israel for processing accelerometer packets.
 result_t processAccelerometerPacket(proteus_comm_t* r) {
-	uint8_t tickNumberNew;
-    uint8_t tickNumberOld;
+	uint16_t tickNumberNew;
+    uint16_t tickNumberOld;
 	uint8_t data;
-	int acceleration;
-	int Xacc;
-	int Yacc;
-	int GyroSpd;
+	int16_t acceleration;
+	int16_t Xacc;
+	int16_t Yacc;
+	int16_t GyroSpd;
     float XFloat;
 	float XFloat_Old;
 	float XSpeed_Old;
@@ -934,7 +956,10 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, NULL); // pop message type
 		
 		// Figure out tick number (so we can figure out speed later)
-		popRxSerialBuff(r, &tickNumberNew);
+		popRxSerialBuff(r, &data);
+		tickNumberNew = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		tickNumberNew += (data & 0x00FF);
 		
 		// Pop Xacc
 		popRxSerialBuff(r, &data);
@@ -957,7 +982,7 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 	} else return FAIL;
     // convert fixed point to floating point
 	XFloat = ((float) Xacc )/ 1000;
-	YFloat = ((float) Xacc )/ 1000;
+	YFloat = ((float) Yacc )/ 1000;
 	// Update running tally of speed
 		// Old values
 	XFloat_Old = r->statusINSAccelerationX;
@@ -967,21 +992,21 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 	tickNumberOld = r->statusINSTick;
 		// New values
 	XSpeed_New = XSpeed_Old +
-                            ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
+                            (float)( tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
                             ( (XFloat + XFloat_Old)  /  2 );
 	YSpeed_New = YSpeed_Old +
-                            ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
+                            (float)( tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
                             ( (YFloat + YFloat_Old)  /  2 );
-	XDisplace = ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+	XDisplace = (float)(tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
                             ((XSpeed_Old + XSpeed_New) / 2 );
-	YDisplace = ( (unsigned char)tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
+	YDisplace = (float)(tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
                             ((YSpeed_Old + YSpeed_New) / 2 );
 	// Update displacement, Acceleration, etc to match new calculations
 	r -> statusINSAccelerationX = XFloat;
 	r -> statusINSAccelerationY = YFloat;
 	
 	r -> statusINSTick = tickNumberNew;
-	
+
 	r -> statusINSSpeedX = XSpeed_New;
 	r -> statusINSSpeedY = YSpeed_New;
 	
@@ -1000,6 +1025,14 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 	r -> statusINSGyroSpeed = GyroFloat;
 	
 	r -> newINSData = true;
+	#if DEBUG
+	if (1){//tickNumberNew % 50 == 0) {
+		printf("Tick: %d\n",tickNumberNew);
+		printf("YAccel: %f\n",YFloat);
+		printf("YSpeed: %f\n",YSpeed_New);
+		printf("GyroRate: %d\n",GyroSpd);
+	}
+	#endif
 	
 	return SUCCESS;
 }

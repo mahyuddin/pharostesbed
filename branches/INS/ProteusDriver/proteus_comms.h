@@ -49,7 +49,7 @@ extern "C" {
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
 
 #define PROTEUS_DELAY_MODECHANGE_MS       5
-#define INS_SAMPLE_FREQ 800
+#define INS_SAMPLE_FREQ 500
 #define DEBUG 1
 
 enum{
@@ -82,7 +82,7 @@ enum{
 #define PROTEUS_TACH_PACKET_SIZE 4
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
-#define PROTEUS_INS_PACKET_SIZE 7
+#define PROTEUS_INS_PACKET_SIZE 8
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
 
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
@@ -207,7 +207,7 @@ typedef struct {
     double statusINSSpeedY;
     float statusINSAccelerationY;
     
-	unsigned char statusINSTick;
+	unsigned short statusINSTick;
     
     float statusINSGyroSpeed;
     float statusINSOrientation;
@@ -222,7 +222,7 @@ typedef struct {
 	uint8_t serialRxBuffer[SERIAL_RX_BUFFER_SIZE];
 	uint16_t rxBuffStartIndx; // points to the next Rx byte to process
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
-    
+    int wait;
 } proteus_comm_t;
 
 proteus_comm_t* proteus_create(const char* serial_port);
