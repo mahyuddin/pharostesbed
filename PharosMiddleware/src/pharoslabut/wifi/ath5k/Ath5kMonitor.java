@@ -176,7 +176,7 @@ public class Ath5kMonitor implements Runnable {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.wifi.ath5k.NoFurtherTxBuffMonitor <options>\n");
+		print("Usage: pharoslabut.wifi.ath5k.Ath5kMonitor <options>\n");
 		print("Where <options> include:");
 		print("\t-checkInterval <check interval>: The period between checking for the error in milliseconds");
 	}
