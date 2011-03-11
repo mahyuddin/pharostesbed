@@ -36,8 +36,33 @@ public class Ath5kMonitor implements Runnable {
 			pw = new PrintWriter(fw);
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.err.println("Unable to open log file, try running as super user.");
+			System.exit(1);
 		}
+		log("Starting to monitor for Ath5k faults at " + getDateString() + "...");
 		new Thread(this).start();
+	}
+	
+	private double getTime(String line) {
+		String[] tokens = line.split("[\\[|\\]]");
+		double result = 0;
+		boolean found = false;
+		
+		for (int i=0; i < tokens.length && !found; i++) {
+			//System.out.println("Checking token " + tokens[i]);
+			try {
+				result = Double.valueOf(tokens[i]);
+				found = true;
+			} catch(Exception e) {
+				// ignore token as it is not a double
+			}
+		}
+
+		if (!found) {
+			log("ERROR: Unable to determine timestmp of line \"" + line + "\"");
+			result = -1;
+		}
+		return result;
 	}
 	
 	/**
@@ -47,58 +72,68 @@ public class Ath5kMonitor implements Runnable {
 	 * @return true if error occurred.
 	 */
 	public boolean errorDetected() {
+		boolean errorFound = false;
+		
 		try {
 			Runtime rt = Runtime.getRuntime();
-			String cmd = "tail -n 1 /var/log/syslog";
+			String cmd = "tail -n 20 /var/log/syslog";
 			
 			Process pr = rt.exec(cmd);
 
 			BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
 			String nextLine = null;
-			StringBuffer lineBuff = new StringBuffer();
+			Vector<String> lineBuff = new Vector<String>();
 
 			while((nextLine=input.readLine()) != null) {
-				lineBuff.append(nextLine);
+				lineBuff.add(nextLine);
 			}
 
-			int exitVal = pr.waitFor();
+			//int exitVal = 
+			pr.waitFor();
 			
-			String line = lineBuff.toString();
-			//log("line = \"" + line + "\"");
-			String[] tokens = line.split("[\\s+|\\]]");
-			//for (int i=0; i < tokens.length; i++) {
-			//	log(i + ": " + tokens[i]);
-			//}
-			if (line.contains("no further txbuf available, dropping packet")) {
-					double timestamp = Double.valueOf(tokens[7]);
-					if (timestamp != lastTimeStampNoTxBuff) {
-						lastTimeStampNoTxBuff = timestamp;
-						logErrorDetected("No Further Tx Buf");
-						return true;
-					} else {
-						//log("duplicate error, ignoring");
+			// Search text backwards to find most recent error first...
+			for (int i=lineBuff.size()-1; i > 0 && !errorFound; i--) {
+				String currLine = lineBuff.get(i);
+				//log("line = \"" + line + "\"");
+				String[] tokens = currLine.split("[\\s+|\\]]");
+				//for (int i=0; i < tokens.length; i++) {
+				//	log(i + ": " + tokens[i]);
+				//}
+				if (currLine.contains("no further txbuf available, dropping packet")) {
+					try {
+						double timestamp = getTime(currLine);
+						if (timestamp != -1 && timestamp > lastTimeStampNoTxBuff) {
+							lastTimeStampNoTxBuff = timestamp;
+							log("No Further Tx Buf Error Detected at " + getDateString() + ", resetting interface...");
+							errorFound = true;
+						}
+					} catch(Exception e) {
+						e.printStackTrace();
+						log("ERROR: Unable to parse: " + currLine);
 					}
-			}
-			
-			else if (line.contains("unsupported jumbo")) {
-				double timestamp = Double.valueOf(tokens[7]);
-				if (timestamp != lastTimeStampUnsupportedJumbo) {
-					lastTimeStampUnsupportedJumbo = timestamp;
-					logErrorDetected("Unsupported Jumbo");
-					return true;
-				} else {
-					//log("duplicate error, ignoring");
 				}
-		}
-			
+				else if (currLine.contains("unsupported jumbo")) {
+					try {
+						double timestamp = getTime(currLine);
+						if (timestamp != -1 && timestamp > lastTimeStampUnsupportedJumbo) {
+							lastTimeStampUnsupportedJumbo = timestamp;
+							log("Unsupported Jumbo Error Detected at " + getDateString() + ", resetting interface...");
+							errorFound = true;
+						}
+					} catch(Exception e) {
+						e.printStackTrace();
+						log("ERROR: Unable to parse: " + currLine);
+					}
+				}
+			}
 		} catch(Exception e) {
 			String eMsg = "Unable to run command: " + e.toString();
 			System.err.println(eMsg);
 			log(eMsg);
 			System.exit(1);
 		}
-		return false;
+		return errorFound;
 	}
 	
 	private void resetWirelessInterface() {
@@ -108,13 +143,18 @@ public class Ath5kMonitor implements Runnable {
 			String cmd = "sudo ifdown wlan0";
 			Process pr = rt.exec(cmd);
 			int exitVal = pr.waitFor();
-			log("exitVal of ifdown: " + exitVal);
+			if (exitVal == 0)
+				log("sudo ifdown wlan0 executed OK");
+			else
+				log("sudo ifdown wlan0 exited with error code " + exitVal);
 			
 			cmd = "sudo ifup wlan0";
 			pr = rt.exec(cmd);
 			exitVal = pr.waitFor();
-			log("exitVal of ifup: " + exitVal);
-			
+			if (exitVal == 0)
+				log("sudo ifup wlan0 executed OK");
+			else
+				log("sudo ifup wlan0 exited with error code " + exitVal);
 		} catch(Exception e) {
 			String eMsg = "Unable to run command: " + e.toString();
 			System.err.println(eMsg);
@@ -124,25 +164,24 @@ public class Ath5kMonitor implements Runnable {
 		log("Wireless interface restarted...");
 	}
 	
-	/**
-	 * Logs the error detection event.
-	 */
-	private void logErrorDetected(String errorType) {
+	private void log(String msg) {
+		msg = "[" + System.currentTimeMillis() + "] " + msg;
 		if (pw != null) {
-			Calendar cal = Calendar.getInstance();
-			int sec = cal.get(Calendar.SECOND);
-			int min = cal.get(Calendar.MINUTE);
-			int hour = cal.get(Calendar.HOUR_OF_DAY);
-			int day = cal.get(Calendar.DATE);
-			int month = cal.get(Calendar.MONTH) + 1;
-			int year = cal.get(Calendar.YEAR);
-			
-			String msg = "[" + System.currentTimeMillis() + "] " + errorType + " Error Detected at " + year + "-" 
-				+ month + "-" + day + " " + hour + ":" + min + ":" + sec + ", resetting interface...";
-			
 			pw.println(msg);
 			pw.flush();
 		}
+		System.out.println(msg);
+	}
+	
+	private String getDateString() {
+		Calendar cal = Calendar.getInstance();
+		int sec = cal.get(Calendar.SECOND);
+		int min = cal.get(Calendar.MINUTE);
+		int hour = cal.get(Calendar.HOUR_OF_DAY);
+		int day = cal.get(Calendar.DATE);
+		int month = cal.get(Calendar.MONTH) + 1;
+		int year = cal.get(Calendar.YEAR);
+		return year + "-" + month + "-" + day + " " + hour + ":" + min + ":" + sec;
 	}
 	
 	/**
@@ -165,10 +204,6 @@ public class Ath5kMonitor implements Runnable {
 				}
 			}
 		}
-	}
-	
-	private void log(String msg) {
-		System.out.println(msg);
 	}
 	
 	private static void print(String msg) {
