@@ -49,13 +49,11 @@ public class BeaconBroadcaster implements Runnable {
      * @param mCastPort the multicast port to use.
      * @param beacon the initial beacon to broadcast.
      */
-    public BeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, Beacon beacon, 
-    		long minPeriod, long maxPeriod) {
+    public BeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, Beacon beacon) {
     	
         this.mCastAddr = mCastAddr;
         this.mCastPort = mCastPort;
         this.beacon = beacon;
-        setPeriod(minPeriod, maxPeriod);
         
         try{
         	InetSocketAddress ina = new InetSocketAddress(interfaceIPAddr, mCastPort);
@@ -91,27 +89,46 @@ public class BeaconBroadcaster implements Runnable {
     	return beacon;
     }
     
-    public void start() {
+    /**
+     * Starts the beaconing process.
+     * 
+     * @param minPeriod The minimum beacon period.
+     * @param maxPeriod The maximum beacon period.
+     * @return true if successful.
+     */
+    public boolean start(long minPeriod, long maxPeriod) {
+    	
     	if (!running) {
     		running = true;
+    		
+    		this.minPeriod = minPeriod;
+    	    this.maxPeriod = maxPeriod;
+    	        
     		new Thread(this).start();
+    		
+    		return true;
+    	} else {
+    		log("ERROR: Tried to start the beacon broadcaster when it was already running.");
+    		return false;
     	}
     }
     
+    /**
+     * Stops the transmission of WiFi beacons.
+     */
     public void stop() {
     	running = false;
     }
     
-    /**
-     * Changes the period of beacon broadcasting.
-     *
-     * @param minPeriod The minimum beaconing period in milliseconds
-     * @param maxPeriod The maximum beaconing period in milliseconds
-     */
-    public void setPeriod(long minPeriod, long maxPeriod) {
-        this.minPeriod = minPeriod;
-        this.maxPeriod = maxPeriod;
-    }
+//    /**
+//     * Changes the period of beacon broadcasting.
+//     *
+//     * @param minPeriod The minimum beaconing period in milliseconds
+//     * @param maxPeriod The maximum beaconing period in milliseconds
+//     */
+//    public void setPeriod(long minPeriod, long maxPeriod) {
+//       
+//    }
 
     /**
      * Performs the broadcasting of a beacon to a multicast address.
@@ -236,8 +253,7 @@ public class BeaconBroadcaster implements Runnable {
 		
 		long minPeriod = 1000;
 		long maxPeriod = 2000;
-		BeaconBroadcaster bb = new BeaconBroadcaster(mCastGroupAddress, interfaceIP, 
-				mCastPort, beacon, minPeriod, maxPeriod);
-		bb.start();
+		BeaconBroadcaster bb = new BeaconBroadcaster(mCastGroupAddress, interfaceIP, mCastPort, beacon);
+		bb.start(minPeriod, maxPeriod);
     }
 }
