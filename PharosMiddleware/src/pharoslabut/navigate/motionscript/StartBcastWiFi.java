@@ -16,11 +16,12 @@ public class StartBcastWiFi extends StartBcastTelosB {
 	/**
 	 * The constructor.
 	 * 
-	 * @param period The beacon period in milliseconds.
+	 * @param minPeriod The minimum beacon period in milliseconds.
+	 * @param maxPeriod The maximum beacon period in milliseconds.
 	 * @param txPowerLevel The transmit power.
 	 */
-	public StartBcastWiFi(long period, int txPowerLevel) {
-		super(period, txPowerLevel);
+	public StartBcastWiFi(long minPeriod, long maxPeriod, int txPowerLevel) {
+		super(minPeriod, maxPeriod, txPowerLevel);
 	}
 	
 	@Override
@@ -29,7 +30,8 @@ public class StartBcastWiFi extends StartBcastTelosB {
 	}
 	
 	public String toString() {
-		return "START_BCAST_WIFI period = " + period + ", tx power = " + txPowerLevel;
+		return "START_BCAST_WIFI min period = " + minPeriod + ", max period = " + maxPeriod 
+		+ ", tx power = " + txPowerLevel;
 	}
 
 }

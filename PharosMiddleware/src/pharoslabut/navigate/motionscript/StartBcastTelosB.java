@@ -13,22 +13,28 @@ public class StartBcastTelosB extends Instruction {
 	 */
 	private static final long serialVersionUID = -8333186443038424512L;
 
-	long period;
+	long minPeriod, maxPeriod;
 	int txPowerLevel;
 	
 	/**
 	 * The constructor.
 	 * 
-	 * @param period The beacon period in milliseconds.
+	 * @param minPeriod The minimum beacon period in milliseconds.
+	 * @param maxPeriod The maximum beacon period in milliseconds.
 	 * @param txPowerLevel The transmit power.
 	 */
-	public StartBcastTelosB(long period, int txPowerLevel) {
-		this.period = period;
+	public StartBcastTelosB(long minPeriod, long maxPeriod, int txPowerLevel) {
+		this.minPeriod = minPeriod;
+		this.maxPeriod = maxPeriod;
 		this.txPowerLevel = txPowerLevel;
 	}
 	
-	public long getPeriod() {
-		return period;
+	public long getMinPeriod() {
+		return minPeriod;
+	}
+	
+	public long geMaxPeriod() {
+		return maxPeriod;
 	}
 	
 	public int getTxPowerLevel() {
@@ -51,6 +57,7 @@ public class StartBcastTelosB extends Instruction {
 	}
 
 	public String toString() {
-		return "START_BCAST_TELOSB period = " + period + ", tx power = " + txPowerLevel;
+		return "START_BCAST_TELOSB min period = " + minPeriod + ", max period = " + maxPeriod 
+			+ ", tx power = " + txPowerLevel;
 	}
 }
