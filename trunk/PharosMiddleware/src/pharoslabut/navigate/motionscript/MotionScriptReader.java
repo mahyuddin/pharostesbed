@@ -46,15 +46,17 @@ public class MotionScriptReader {
 							}
 							else if (line.contains("START_BCAST_TELOSB")) {
 								String[] elem = line.split("[\\s]+");
-								long pauseTime = Long.valueOf(elem[1]);
-								int txPower = Integer.valueOf(elem[2]);
-								result.addInstruction(new StartBcastTelosB(pauseTime, txPower));
+								long minPauseTime = Long.valueOf(elem[1]);
+								long maxPauseTime = Long.valueOf(elem[2]);
+								int txPower = Integer.valueOf(elem[3]);
+								result.addInstruction(new StartBcastTelosB(minPauseTime, maxPauseTime, txPower));
 							}
 							else if (line.contains("START_BCAST_WIFI")) {
 								String[] elem = line.split("[\\s]+");
-								long pauseTime = Long.valueOf(elem[1]);
-								int txPower = Integer.valueOf(elem[2]);
-								result.addInstruction(new StartBcastWiFi(pauseTime, txPower));
+								long minPauseTime = Long.valueOf(elem[1]);
+								long maxPauseTime = Long.valueOf(elem[2]);
+								int txPower = Integer.valueOf(elem[3]);
+								result.addInstruction(new StartBcastWiFi(minPauseTime, maxPauseTime, txPower));
 							}
 							else if (line.contains("STOP_BCAST_TELOSB")) {
 								result.addInstruction(new StopBcastTelosB());
