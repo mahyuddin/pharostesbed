@@ -15,7 +15,7 @@ import pharoslabut.navigate.Location;
 public class MotionScriptReader {
 
 	public static MotionScript readTraceFile(String fileName) {
-		MotionScript result = new MotionScript();
+		MotionScript result = new MotionScript(fileName);
 		try {
 			BufferedReader input =  new BufferedReader(new FileReader(fileName));
 			try {

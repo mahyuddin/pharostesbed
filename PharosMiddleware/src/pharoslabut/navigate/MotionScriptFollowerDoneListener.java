@@ -6,14 +6,15 @@ package pharoslabut.navigate;
  * 
  * @author Chien-Liang Fok
  */
-public interface WayPointFollowerDoneListener {
+public interface MotionScriptFollowerDoneListener {
 	
 	/**
 	 * This is called when the WayPointFoller finishes execution.
 	 * 
 	 * @param success True if it successfully finished following the waypoints.
-	 * @param finalWayPoint The final waypoint that the robot reached.  
-	 * If successful, this should be equal to the number of waypoints in the motion script.
+	 * @param finalIntructionIndx The final instruction within the motion script
+	 * that was executed.  If successful, this should be equal to the number of 
+	 * instructions in the motion script.
 	 */
-	public void wayPointFollowerDone(boolean success, int finalWayPoint);
+	public void motionScriptDone(boolean success, int finalIntructionIndx);
 }
