@@ -19,9 +19,25 @@ public class MotionScript implements java.io.Serializable {
 	private Vector<Instruction> instructions = new Vector<Instruction>();;
 	
 	/**
+	 * The name of the file containing the motion script specification.
+	 */
+	private String fileName;
+	
+	/**
 	 * The constructor.  Creates an empty motion script.
 	 */
-	public MotionScript() {}
+	public MotionScript(String fileName) {
+		this.fileName = fileName;
+	}
+	
+	/**
+	 * An accessor to the file containing the actual motion script.
+	 * 
+	 * @return the file containing the actual motion script.
+	 */
+	public String getFileName() {
+		return fileName;
+	}
 	
 	/**
 	 * Returns in instruction at the specified index.  The index must be
