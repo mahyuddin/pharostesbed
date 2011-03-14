@@ -5,12 +5,12 @@ import java.net.InetAddress;
 /**
  * This is the beacon periodically broadcasted by the BeaconBroadcaster.
  * It consists of the IP address and the port number of the server 
- * emitting the beacon.
+ * transmitting the beacon.
  *
  * @author Chien-Liang Fok
  * @version 11/09/2010
  */
-public class Beacon implements java.io.Serializable {
+public class WiFiBeacon implements java.io.Serializable {
 	private static final long serialVersionUID = 5257691949384329827L;
 
 	/**
@@ -31,7 +31,7 @@ public class Beacon implements java.io.Serializable {
 	/**
 	 * Default constructor for the beacon.
 	 */
-	public Beacon(InetAddress address, int port) {
+	public WiFiBeacon(InetAddress address, int port) {
 		this.address = address;
 		this.port = port;
 	}

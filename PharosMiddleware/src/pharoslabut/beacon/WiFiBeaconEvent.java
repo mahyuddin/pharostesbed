@@ -6,14 +6,14 @@ package pharoslabut.beacon;
   * @author Chien-Liang Fok
   * @version 7/5/2002
   */
-public class BeaconEvent {
-	private Beacon beacon;
+public class WiFiBeaconEvent {
+	private WiFiBeacon beacon;
 
-	public BeaconEvent(Beacon beacon) {   
+	public WiFiBeaconEvent(WiFiBeacon beacon) {   
 		this.beacon = beacon;
 	}
 
-	public Beacon getBeacon() {
+	public WiFiBeacon getBeacon() {
 		return beacon;
 	}
 

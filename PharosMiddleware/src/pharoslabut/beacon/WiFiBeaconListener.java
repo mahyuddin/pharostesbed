@@ -9,12 +9,12 @@ import java.util.*;
   * @author Chien-Liang Fok
   * @version 7/5/2002
   */
-public interface BeaconListener extends EventListener {
+public interface WiFiBeaconListener extends EventListener {
 
 	/**
 	  * Called whenever a beacon is received.
 	  *
 	  * @param be the BeaconEvent containing the beacon received.
 	  */
-	public void beaconReceived(BeaconEvent be);
+	public void beaconReceived(WiFiBeaconEvent be);
 }
