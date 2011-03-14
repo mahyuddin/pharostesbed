@@ -9,12 +9,13 @@ public class RadioSignalMeterTester {
 		FileLogger flogger = new FileLogger("RadioSignalMeterTester-" 
 				+ FileLogger.getUniqueNameExtension() + ".log");
 		
-		RadioSignalMeter rsm;
+		TelosBeaconBroadcaster rsm;
 		try {
-			rsm = new RadioSignalMeter();
+			rsm = new TelosBeaconBroadcaster();
 			rsm.setFileLogger(flogger);
-			rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
-		} catch (RadioSignalMeterException e) {
+			long minPeriod = 1000, maxPeriod = 4000;
+			rsm.start(minPeriod, maxPeriod);
+		} catch (TelosBeaconException e) {
 			String msg = "Failed to start CC2420 radio signal meter.";
 			flogger.log(msg);
 			System.err.println(msg);
