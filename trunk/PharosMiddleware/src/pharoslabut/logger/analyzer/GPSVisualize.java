@@ -1,7 +1,7 @@
 package pharoslabut.logger.analyzer;
 
 import java.io.*;
-import java.util.Vector;
+import java.util.*;
 
 import pharoslabut.logger.*;
 import pharoslabut.navigate.Location;
@@ -15,7 +15,11 @@ import pharoslabut.navigate.Location;
  *
  */
 public class GPSVisualize {
-
+	// These colors were taken from: http://www.angelfire.com/wa/rogerswhome/colorchart.html
+	public static final String[] COLORS = {"red", "blue", "purple", "orange",  "turquoise", "green", "gold", 
+			"hotpink", "olive", "purple", "tomato", "indianred", "lavender", "deeppink", 
+			"lemonchiffon", "lightsalmon", "lightsteelblue",  "lightblue", "lightslategray", 
+			"maroon", "peru", "saddlebrown"};
 	
 	/**
 	 * The constructor.
@@ -60,14 +64,37 @@ public class GPSVisualize {
 						String[] elem = line.split("[\\s]+");
 					
 						logFileNames.add(elem[1]);
-						captionNames.add(elem[2]);
-						traceColors.add(elem[3]);
-				
+						if (elem.length > 2)
+							captionNames.add(elem[2]);  // user specified the caption name
+						else {
+							String robotName = extractRobotName(elem[1]); // use the robot name as the caption
+							captionNames.add(robotName);
+						}
+						
+						if (elem.length > 3)
+							traceColors.add(elem[3]); // user specified the color
+						else {
+							String color = getColor(traceColors); // select a unique color automatically
+							traceColors.add(color);
+						}
 					}
 					else if (line.contains("WAYPOINT")) {
 						String[] elem = line.split("[\\s]+");
-						String name = line.substring(line.indexOf(elem[3]));
-						waypoints.add(new WayPoint(Double.valueOf(elem[1]), Double.valueOf(elem[2]), name));
+						
+						// If specification file includes name of waypoint, use it.
+						// Otherwise, give it a sequential name.
+						String name;
+						if (elem.length == 4)
+							name = line.substring(line.indexOf(elem[3]));
+						else
+							name = "Waypoint " + (waypoints.size()+1);
+						
+						double latlong1 = Double.valueOf(elem[1]);
+						double latlong2 = Double.valueOf(elem[2]);
+						if (latlong1 > 0) // assume the latitude is always > zero
+							waypoints.add(new WayPoint(latlong1, latlong2, name));
+						else
+							waypoints.add(new WayPoint(latlong2, latlong1, name));
 					}
 				}
 				lineno++;
@@ -78,6 +105,71 @@ public class GPSVisualize {
 		}
 		
 		createGPSVisualizerFile(outputFileName, logFileNames, captionNames, traceColors, waypoints);
+	}
+	
+	/**
+	 * Extract the robot's name from it's log file.  
+	 * Assumes the log file is of form "M##-Exp##-RobotName-Pharos_##.log"
+	 * 
+	 * @param logFileName The name of the log file
+	 * @return The name of the robot.
+	 */
+	private String extractRobotName(String logFileName) {
+		String robotName = null;
+		
+		String[] pathTokens = logFileName.split("/");
+		for (int i=0; i < pathTokens.length; i++) {
+			String currToken = pathTokens[i];
+			if (currToken.endsWith(".log")) {
+				String[] fileNameTokens = currToken.split("-");
+				if (fileNameTokens.length > 3 && fileNameTokens[0].matches("M\\d+") && 
+						fileNameTokens[1].matches("Exp\\d+")) 
+				{
+					robotName = fileNameTokens[2];
+				}
+			}
+		}
+		
+		if (robotName == null) {
+			System.err.println("ERROR: Unable to determine robot name: " + logFileName);
+			new Exception().printStackTrace();
+			System.exit(1);
+		}
+		
+		return robotName;
+	}
+	
+	/**
+	 * Returns a unique color that is not already in the traceColors vector.
+	 * 
+	 * @param traceColors A vector of already-used colors
+	 * @return A new color that is not already used.
+	 */
+	private String getColor(Vector<String> traceColors) {
+		String result = null;
+		int colorIndx = 0;
+		
+		while (result == null && colorIndx < COLORS.length) {
+			// check if COLORS[colorIndx] is used
+			boolean containsColor = false;
+			Enumeration<String> e = traceColors.elements();
+			while (e.hasMoreElements()) {
+				if (e.nextElement().equals(COLORS[colorIndx]))
+					containsColor = true;
+			}
+			
+			if (!containsColor)
+				result = COLORS[colorIndx];
+			else
+				colorIndx++;
+		}
+		
+		if (result == null) {
+			System.err.println("ERROR: Could not find a unique color!");
+			new Exception().printStackTrace();
+			System.exit(1);
+		}
+		return result;
 	}
 	
 	/**
