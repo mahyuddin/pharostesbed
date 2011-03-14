@@ -4,41 +4,61 @@ import net.tinyos.message.*;
 import net.tinyos.packet.*;
 import net.tinyos.util.*;
 
-import java.util.*;
+//import java.util.*;
 import java.io.*;
 
-import pharoslabut.logger.*;
+import pharoslabut.beacon.*;
+//import pharoslabut.logger.*;
 
-public class RadioSignalMeter implements MessageListener {
+/**
+ * This is responsible for broadcasting TelosB beacons.
+ * 
+ * @author Chien-Liang Fok
+ */
+public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 //	private String outputFile;
 	private MoteIF moteIF;
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
+	
+	/**
+	 * This determines the sequence number of each beacon.  Each beacon
+	 * has a unique seuqence number.
+	 */
 	private int seqno = 0;
+	
+	/**
+	 * The ID of the mote that is attached to this device.  This ID is included
+	 * in the beacon to identify the transmitter.
+	 */
 	private int moteID;
 	
-	private int numBcasts;
-	private Timer timer = null;
+//	private int numBcasts;
+//	private Timer timer = null;
 	
-	private String motePort;
+//	private String motePort;
+//	private TelosBeaconReceiver receiver;
 	
-	public RadioSignalMeter() throws RadioSignalMeterException {
+	/**
+	 * The constructor.
+	 * 
+	 * @throws TelosBeaconException When unble to connect to the TelosB node.
+	 */
+	public TelosBeaconBroadcaster() throws TelosBeaconException {
 		try {
 			// Get the local node ID
 			moteID = getMoteID();
 			log("Mote ID = " + moteID);
-		} catch(RadioSignalMeterException e) {
+		} catch(TelosBeaconException e) {
 			log("Unable to get moteID, assuming it is zero");
 			moteID = 0;
 		}
 		
 		try {
 			// Get the serial port on which the TelosB is connected.
-			motePort = getMotePort();
+			String motePort = detectMotePort();
 
 			PhoenixSource phoenixLocal = null;
-
-
-
+			
 			if (motePort == null) {
 				phoenixLocal = BuildSource.makePhoenix(PrintStreamMessenger.err);
 			} else {
@@ -46,27 +66,30 @@ public class RadioSignalMeter implements MessageListener {
 			}
 
 			moteIF = new MoteIF(phoenixLocal);
-			moteIF.registerListener(new RadioSignalResultsMsg(), this);
+//			receiver = 
+			new TelosBeaconReceiver(moteIF);
 		} catch(Exception e) {
 			e.printStackTrace();
-			throw new RadioSignalMeterException("Unable to connect to TelosB Mote!");
+			throw new TelosBeaconException("Unable to connect to TelosB Mote!");
 		}
 	}
 	
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//		receiver.setFileLogger(flogger);
+//	}
 	
 	/**
-	 * Determines the ID of the mote.  The ID is assumed to be equal to
-	 * the last octal in the wireless ad hoc network IP address.  The
-	 * form of this IP is 10.11.12.xx where "xx" is the mote ID.
+	 * Determines the ID of the Mote.  The ID is assumed to be the last octal in
+	 * the wireless ad hoc network IP address.  The form of this IP is 
+	 * 10.11.12.xx where "xx" is the mote ID.
 	 * 
 	 * @return The mote ID.
+	 * @throws TelosBeaconException When the ID could not be determined.
 	 */
-	public static int getMoteID() throws RadioSignalMeterException {
+	public static int getMoteID() throws TelosBeaconException {
 		int addr = 0;
-		String ipAddr = pharoslabut.beacon.BeaconBroadcaster.getPharosIP();
+		String ipAddr = pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP();
 		if (ipAddr != null) {
 			//System.out.println("ipAddr = " + ipAddr);
 			String[] addrTokens = ipAddr.split("\\.");
@@ -76,7 +99,7 @@ public class RadioSignalMeter implements MessageListener {
 				String eMsg = "Unable to determine mote ID (addrTokens.length = " 
 					+ addrTokens.length + ").";
 				System.err.println(eMsg);
-				throw new RadioSignalMeterException(eMsg);
+				throw new TelosBeaconException(eMsg);
 			}
 //			for (int i=0; i < addrStr.length; i++) {
 //        		System.out.println(i + ": " + addrStr[i]);
@@ -84,18 +107,19 @@ public class RadioSignalMeter implements MessageListener {
 		} else {
 			String eMsg = "Unable to determine mote ID (ipAddr is null).";
 			System.err.println(eMsg);
-			throw new RadioSignalMeterException(eMsg);
+			throw new TelosBeaconException(eMsg);
 		}
 		return addr;
 	}
 	
 	/**
-	 * Determines which port the TelosB is attached to.  It does this by analyzing
+	 * Determines which port connects to the TelosB mote.  It does this by analyzing
 	 * output of program "motelist" and finding an entry for the TelosB mote.
 	 * 
 	 * @return The port on which the TelosB mote is attached.
+	 * @throws TelosBeaconException When no TelosB mote is found.
 	 */
-	public static String getMotePort() throws RadioSignalMeterException {
+	public static String detectMotePort() throws TelosBeaconException {
 		String result = null;
 		String moteLine = null;
         try {
@@ -117,7 +141,7 @@ public class RadioSignalMeter implements MessageListener {
         } catch(Exception e) {
         	String eMsg = "Unable to run motelist: " + e.toString();
             System.err.println(eMsg);
-            throw new RadioSignalMeterException(eMsg);
+            throw new TelosBeaconException(eMsg);
         }
         
         if (moteLine != null) {
@@ -131,7 +155,7 @@ public class RadioSignalMeter implements MessageListener {
         		String eMsg = "Unable to determine mote port (tokens.length = " 
 					+ tokens.length + ").";
         		System.err.println(eMsg);
-        		throw new RadioSignalMeterException(eMsg);
+        		throw new TelosBeaconException(eMsg);
         	}
         }
         
@@ -141,59 +165,43 @@ public class RadioSignalMeter implements MessageListener {
 	/**
 	 * Starts the broadcasting of beacons at a specified rate.
 	 * 
-	 * @param period The broadcast period in milliseconds.
-	 * @param numBcasts The number of broadcasts to emit.
+	 * @param minPeriod The minimum number of milliseconds between broadcasts.
+	 * @param maxPeriod The maximum number of milliseconds between broadcasts.
 	 */
-	public void startBroadcast(long period, int numBcasts) {
-		stopBroadcast();
-		this.numBcasts = numBcasts;
-		
-		if (numBcasts > 0) {
-			Timer timer = new Timer();
-			timer.scheduleAtFixedRate(new SendBeaconTimerTask(), 0 /* delay */, period);
-		}
-	}
+//	public void startBroadcast(long minPeriod, long maxPeriod) {
+//		stopBroadcast();	
+//		timer = new Timer();
+//		timer.scheduleAtFixedRate(new SendBeaconTimerTask(), 0 /* delay */, period);
+//	}
 	
 	/**
 	 * Stops the broadcasting of beacons.
 	 */
-	public void stopBroadcast() {
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
-	}
+//	public void stopBroadcast() {
+//		if (timer != null) {
+//			timer.cancel();
+//			timer = null;
+//		}
+//	}
 	
-	private void sendBroadcast() {
+	/**
+	 * This is called by the super class whenever a TelosB beacon should be
+	 * broadcasted.
+	 */
+	@Override
+	protected void sendBeacon() {
 		SendBeaconMsg sbm = new SendBeaconMsg();
-		log("SEND_BCAST\t" + moteID + "\t" + seqno);
+		log("SEND_TELSOB_BCAST\t" + moteID + "\t" + seqno);
 		sbm.set_seqno(seqno++);
 		try {
 			moteIF.send(moteID, sbm);
 		} catch(IOException e) {
 			log("Error sending message: " + e.getMessage());
 		}
-		if (--numBcasts == 0) {
-			timer.cancel();
-			timer = null;
-		}
-	}
-	
-	public void messageReceived(int to, Message message) {
-		if (message instanceof RadioSignalResultsMsg) {
-			RadioSignalResultsMsg resultMsg = (RadioSignalResultsMsg)message;
-			log("RADIO_CC2420_RECEIVE" 
-				+ "\t" + resultMsg.get_idReceiver()
-				+ "\t" + resultMsg.get_idSender()
-				+ "\t" + resultMsg.get_seqno()
-				+ "\t" + resultMsg.get_rssi()
-				+ "\t" + resultMsg.get_lqi()
-				+ "\t" + resultMsg.get_timestamp());
-		}
-		else {
-			log("UNKNOWN_MSG"
-				+ "\t" + message.toString());
-		}
+//		if (--numBcasts == 0) {
+//			timer.cancel();
+//			timer = null;
+//		}
 	}
 	
 //	private void saveResult(String result) {
@@ -210,8 +218,8 @@ public class RadioSignalMeter implements MessageListener {
 //		}
 //	}
 	
-	private void log(String msg) {
-		String result = "RadioSignalMeter: " + msg;
+	protected void log(String msg) {
+		String result = "TelosBeaconBroadcaster: " + msg;
 		if (flogger != null) 
 			flogger.log(result);
 		
@@ -219,24 +227,24 @@ public class RadioSignalMeter implements MessageListener {
 			System.out.println(result);
 	}
 	
-	private class SendBeaconTimerTask extends TimerTask {
-		public SendBeaconTimerTask() {
-		}
-		
-		@Override
-		public void run() {
-			sendBroadcast();
-		}
-	}
+//	private class SendBeaconTimerTask extends TimerTask {
+//		public SendBeaconTimerTask() {
+//		}
+//		
+//		@Override
+//		public void run() {
+//			sendBroadcast();
+//		}
+//	}
 	
-	public static final void main(String[] args) {
-		try {
-			System.out.println("Mote port = " + RadioSignalMeter.getMotePort());
-			System.out.println("Mote ID = " + RadioSignalMeter.getMoteID());
-		} catch (RadioSignalMeterException e) {
-			e.printStackTrace();
-		}
-	}
+//	public static final void main(String[] args) {
+//		try {
+//			System.out.println("Mote port = " + TelosRadioSignalMeter.getMotePort());
+//			System.out.println("Mote ID = " + TelosRadioSignalMeter.getMoteID());
+//		} catch (RadioSignalMeterException e) {
+//			e.printStackTrace();
+//		}
+//	}
 	
 //	private static void usage() {
 //		System.err.println("usage: RadioSignalMeter [-comm <motePort>] [-file <dest>]\n");
