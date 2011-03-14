@@ -33,7 +33,7 @@ public class StartBcastTelosB extends Instruction {
 		return minPeriod;
 	}
 	
-	public long geMaxPeriod() {
+	public long getMaxPeriod() {
 		return maxPeriod;
 	}
 	
