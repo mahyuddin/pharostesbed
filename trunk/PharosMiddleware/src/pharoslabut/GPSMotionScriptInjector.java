@@ -7,8 +7,10 @@ import java.net.InetAddress;
 import pharoslabut.io.*;
 //import pharoslabut.tasks.*;
 //import pharoslabut.beacon.*;
-import pharoslabut.navigate.*;
+//import pharoslabut.navigate.*;
 //import pharoslabut.tasks.Priority;
+import pharoslabut.navigate.motionscript.MotionScript;
+import pharoslabut.navigate.motionscript.MotionScriptReader;
 
 /**
  * Connects to the PharosServer.  This is used by the application to perform application-specific tasks.
@@ -40,10 +42,10 @@ public class GPSMotionScriptInjector {
 			sender = new TCPMessageSender();
 
 			log("Reading the motion script...");
-			GPSMotionScript script = GPSTraceReader.readTraceFile(scriptFileName);
+			MotionScript script = MotionScriptReader.readTraceFile(scriptFileName);
 			
 			log("Sending the motion script to server " + ipAddr + ":" + port + "...");
-			GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
+			MotionScriptMsg gpsMsg = new MotionScriptMsg(script);
 			sender.sendMessage(ipAddr, port, gpsMsg);
 
 			
@@ -70,7 +72,7 @@ public class GPSMotionScriptInjector {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.PharosServer <options>\n");
+		print("Usage: pharoslabut.GPSMotionScriptInjector <options>\n");
 		print("Where <options> include:");
 		print("\t-server <ip address>: The Pharos Server's IP address (default 10.11.12.20)");
 		print("\t-port <port number>: The Pharos Server's port (default 230.1.2.3)");
