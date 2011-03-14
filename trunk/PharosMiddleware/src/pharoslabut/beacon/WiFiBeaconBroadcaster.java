@@ -4,19 +4,20 @@ import java.net.*;
 import java.util.Enumeration;
 import java.io.*;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
 
 /**
- * The BeaconBroadcaster Periodically broadcasts beacons.  It is used in conjunction
- * with a BeaconReceiver.  Note that when a BeaconBroadcaster is created, it does not immediately
- * begin broadcasting beacons.  To start the beaconing, the start() method must be called.
+ * Periodically broadcasts WiFi beacons.  It is used in conjunction
+ * with a WiFiBeaconReceiver, which receives the beacons.  
+ * Note that when a WiFiBeaconBroadcaster is created, it does not immediately
+ * begin broadcasting beacons.  To start the beaconing, the start(...) method must be called.
  *
  * @author Chien-Liang Fok
- * @see BeaconReceiver
- * @see Beacon
+ * @see WiFiBeaconReceiver
+ * @see WiFiBeacon
  */
 public class WiFiBeaconBroadcaster extends BeaconBroadcaster { 
-    private Beacon beacon = null;
+    private WiFiBeacon beacon = null;
     private InetAddress mCastAddr;
     private int mCastPort;
     private MulticastSocket mSocket = null;    
@@ -30,7 +31,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
      * @param mCastPort the multicast port to use.
      * @param beacon the initial beacon to broadcast.
      */
-    public WiFiBeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, Beacon beacon) {
+    public WiFiBeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, WiFiBeacon beacon) {
     	
         this.mCastAddr = mCastAddr;
         this.mCastPort = mCastPort;
@@ -51,7 +52,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
      * 
      * @param beacon The beacon to broadcast.
      */
-    public void setBeacon(Beacon beacon) {
+    public void setBeacon(WiFiBeacon beacon) {
     	this.beacon = beacon;
     }
     
@@ -60,17 +61,8 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
      *
      * @return the beacon being broadcasted.
      */
-    public Beacon getBeacon() {
+    public WiFiBeacon getBeacon() {
     	return beacon;
-    }
-    
-
-    
-    /**
-     * Stops the transmission of WiFi beacons.
-     */
-    public void stop() {
-    	running = false;
     }
     
 //    /**
@@ -86,7 +78,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     /**
      * This is called by the super-class each time a beacon should be sent.
      */
-    void sendBeacon() {
+    protected void sendBeacon() {
     	if (mSocket != null && beacon != null){
 			byte[] beaconBytes;
 
@@ -148,45 +140,45 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 		return null;
     }
     
-    void log(String msg) {
-    	String result = "BeaconBroadcaster: " + msg;
+    protected void log(String msg) {
+    	String result = "WiFiBeaconBroadcaster: " + msg;
     	System.out.println(result);
     	if (flogger != null) {
     		flogger.log(result);
     	}
     }
     
-    public static final void main(String[] args) {
-    	String interfaceIP = getPharosIP();
-    	if (interfaceIP == null) {
-    		System.err.println("ERROR: Unable to get Pharos Network IP address");
-    		System.exit(1);
-    	}
-    	String mcastAddressString = "230.1.2.3";
-    	int mCastPort = 6000;
-    	
-		InetAddress mCastGroupAddress = null;
-		try {
-			mCastGroupAddress = InetAddress.getByName(mcastAddressString);
-		} catch (UnknownHostException e) {
-			System.err.println("Problems getting multicast address!");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		
-		int port = 7776;
-		Beacon beacon = null;
-		try {
-			beacon = new Beacon(InetAddress.getByName(interfaceIP), port);
-		} catch (UnknownHostException e) {
-			System.err.println("Problems creating beacon!");
-			e.printStackTrace();
-			System.exit(1);
-		}
-		
-		long minPeriod = 1000;
-		long maxPeriod = 2000;
-		WiFiBeaconBroadcaster bb = new WiFiBeaconBroadcaster(mCastGroupAddress, interfaceIP, mCastPort, beacon);
-		bb.start(minPeriod, maxPeriod);
-    }
+//    public static final void main(String[] args) {
+//    	String interfaceIP = getPharosIP();
+//    	if (interfaceIP == null) {
+//    		System.err.println("ERROR: Unable to get Pharos Network IP address");
+//    		System.exit(1);
+//    	}
+//    	String mcastAddressString = "230.1.2.3";
+//    	int mCastPort = 6000;
+//    	
+//		InetAddress mCastGroupAddress = null;
+//		try {
+//			mCastGroupAddress = InetAddress.getByName(mcastAddressString);
+//		} catch (UnknownHostException e) {
+//			System.err.println("Problems getting multicast address!");
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+//		
+//		int port = 7776;
+//		WiFiBeacon beacon = null;
+//		try {
+//			beacon = new WiFiBeacon(InetAddress.getByName(interfaceIP), port);
+//		} catch (UnknownHostException e) {
+//			System.err.println("Problems creating beacon!");
+//			e.printStackTrace();
+//			System.exit(1);
+//		}
+//		
+//		long minPeriod = 1000;
+//		long maxPeriod = 2000;
+//		WiFiBeaconBroadcaster bb = new WiFiBeaconBroadcaster(mCastGroupAddress, interfaceIP, mCastPort, beacon);
+//		bb.start(minPeriod, maxPeriod);
+//    }
 }

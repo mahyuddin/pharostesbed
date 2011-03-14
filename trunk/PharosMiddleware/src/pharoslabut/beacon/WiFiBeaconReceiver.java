@@ -6,16 +6,12 @@ import java.net.*;
 import pharoslabut.logger.*;
 
 /**
- * The BeaconReciever manages the reception of beacons.
- * When a beacon is received, a each of the BeaconListeners are
- * notified by being passed a BeaconEvent containing the beacon.
- *
- * <p>In order to create a BeaconServer, you need to first create a BeaconReceiver.
- * The BeaconServer uses the multicast address and port used by the BeaconReceiver.
+ * This receives WiFi beacons. When a WiFi beacon is received, each of the WiFiBeaconListeners are
+ * notified being passed a WiFiBeaconEvent containing the beacon.
  *
  * @author Chien-Liang Fok
  */
-public class BeaconReceiver implements Runnable {
+public class WiFiBeaconReceiver implements Runnable {
     /**
      * The multicast port.
      */
@@ -34,7 +30,7 @@ public class BeaconReceiver implements Runnable {
     /**
      * Holds the beacon listeners registered on this receiver.
      */
-    private Vector<BeaconListener> bListeners;
+    private Vector<WiFiBeaconListener> bListeners;
     
     /**
      * The thread that receives beacons.
@@ -65,11 +61,11 @@ public class BeaconReceiver implements Runnable {
      * for beacons. For example, it usually is "wlan0" on machines using the Atheros wireless
      * chipset.
      */
-    public BeaconReceiver(String mcastGroupAddress, int mcastport, String networkInterfaceName) {
+    public WiFiBeaconReceiver(String mcastGroupAddress, int mcastport, String networkInterfaceName) {
         this.mcastGroupAddress = mcastGroupAddress;
         this.mcastport = mcastport;
         this.networkInterfaceName = networkInterfaceName;
-        bListeners = new Vector<BeaconListener>();
+        bListeners = new Vector<WiFiBeaconListener>();
     }
     
     public void setFileLogger(FileLogger flogger) {
@@ -82,7 +78,7 @@ public class BeaconReceiver implements Runnable {
      *
      * @param beaconListener the BeaconListener to be added.
      */
-    public void addBeaconListener(BeaconListener beaconListener) {
+    public void addBeaconListener(WiFiBeaconListener beaconListener) {
         bListeners.addElement(beaconListener);
     }
     
@@ -109,7 +105,7 @@ public class BeaconReceiver implements Runnable {
      *
      * @param beaconListener the BeaconListener to be added.
      */
-    public void removeBeaconListener(BeaconListener beaconListener) {
+    public void removeBeaconListener(WiFiBeaconListener beaconListener) {
         bListeners.removeElement(beaconListener);
     }
     
@@ -161,10 +157,10 @@ public class BeaconReceiver implements Runnable {
     /**
      * Notifies each of the listeners of the new beacon.
      */
-    private void distributeBeacon(Beacon beacon) {
-        BeaconEvent be = new BeaconEvent(beacon);
+    private void distributeBeacon(WiFiBeacon beacon) {
+        WiFiBeaconEvent be = new WiFiBeaconEvent(beacon);
         for (int i = 0; i < bListeners.size(); i++) {
-            BeaconListener bl = bListeners.elementAt(i);
+            WiFiBeaconListener bl = bListeners.elementAt(i);
             bl.beaconReceived(be);
         }
         log("Received beacon: " + beacon);
@@ -191,8 +187,8 @@ public class BeaconReceiver implements Runnable {
                 Object value = ois.readObject();
                 
                 // check the object type and perform required actions
-                if (value instanceof Beacon)
-                    distributeBeacon((Beacon) value);
+                if (value instanceof WiFiBeacon)
+                    distributeBeacon((WiFiBeacon) value);
             }
         } catch(IOException ioe) {
 //            if (mSocket != null && !mSocket.isClosed())
@@ -257,7 +253,7 @@ public class BeaconReceiver implements Runnable {
     	int mCastPort = 6000;
     	String pharosNetworkInterfaceName = getPharosNetworkInterface();
     	if (pharosNetworkInterfaceName != null) {
-    		BeaconReceiver br = new BeaconReceiver(mcastAddressString, mCastPort, pharosNetworkInterfaceName);
+    		WiFiBeaconReceiver br = new WiFiBeaconReceiver(mcastAddressString, mCastPort, pharosNetworkInterfaceName);
     		br.start();
     	} else {
     		System.err.println("Unable to find pharos network interface.");
