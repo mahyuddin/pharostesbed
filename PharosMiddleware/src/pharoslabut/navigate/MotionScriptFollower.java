@@ -1,13 +1,16 @@
 package pharoslabut.navigate;
 
+import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.motionscript.*;
+import pharoslabut.radioMeter.cc2420.*;
 
 /**
- * Follows a motion script.  This is a simple implementation that
- * only uses a single speed throughout the entire process.
+ * Follows a motion script.  A motion script consists of a series of instructions
+ * that control the movement and communication activities of the robot.
  * 
  * @author Chien-Liang Fok
+ * @see pharoslabut.navigate.motionscript.MotionScript
  */
 public class MotionScriptFollower implements Runnable {
 	private NavigateCompassGPS navigator;
@@ -17,15 +20,29 @@ public class MotionScriptFollower implements Runnable {
 	private MotionScriptFollowerDoneListener doneListener;
 	
 	/**
+	 * This is responsible for sending WiFi beacons.
+	 */
+	private WiFiBeaconBroadcaster wifiBroadcaster;
+	
+	/**
+	 * This is responsible for sending and receiving TelosB beacons.
+	 */
+	private TelosBeaconBroadcaster telosRadioSignalMeter;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param navigator The object that moves the robot towards a GPS waypoint.
-	 * @param script The motion script to follow.
+	 * @param beaconBroadcaster The WiFi beacon broadcaster.
+	 * @param telosRadioSignalMeter The Telos beacon broadcaster.
 	 * @param flogger The file logger for saving debug/experiment output.
 	 */
-	public MotionScriptFollower(NavigateCompassGPS navigator, MotionScript script, FileLogger flogger) {
+	public MotionScriptFollower(NavigateCompassGPS navigator, WiFiBeaconBroadcaster wifiBroadcaster, 
+			TelosBeaconBroadcaster telosRadioSignalMeter, FileLogger flogger) 
+	{
 		this.navigator = navigator;
-		this.script = script;
+		this.wifiBroadcaster = wifiBroadcaster;
+		this.telosRadioSignalMeter = telosRadioSignalMeter;
 		this.flogger = flogger;
 	}
 	
@@ -34,17 +51,24 @@ public class MotionScriptFollower implements Runnable {
 	 * This method should only be called when the WayPointFoller is stopped.  If it
 	 * is called when the WayPointFollower is running, a false value will be returned.
 	 * 
+	 * @param script The motion script to follow.
 	 * @param doneListener The listener that should be notified when the WayPointFoller is done.
 	 * @return true if the call was successful, false otherwise.
 	 */
-	public boolean start(MotionScriptFollowerDoneListener doneListener) {
+	public boolean start(MotionScript script, MotionScriptFollowerDoneListener doneListener) {
+		boolean result = true;
+		
 		if (!running) {
 			running = true;
+			
+			this.script = script;
 			this.doneListener = doneListener;
+			
 			new Thread(this).start();
-			return true;
 		} else
-			return false;
+			result = false;
+		
+		return result;
 	}
 	
 	public boolean isRunning() {
@@ -106,23 +130,28 @@ public class MotionScriptFollower implements Runnable {
 		return result;
 	}
 	
-	private boolean handleStartBcastTelosB(StartBcastTelosB msg) {
-		// TODO
-		return true;
+	private boolean handleStartBcastTelosB(StartBcastTelosB instr) {
+		// Start the TelosB cc2420 radio signal meter
+		flogger.log("Starting TelosB beacon broadcaster, minPeriod = " 
+				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
+		return telosRadioSignalMeter.start(instr.getMinPeriod(), instr.getMaxPeriod());
 	}
 	
-	private boolean handleStartBcastWiFi(StartBcastWiFi msg) {
-		// TODO
-		return true;
+	private boolean handleStartBcastWiFi(StartBcastWiFi instr) {
+		flogger.log("Starting WiFi beacon broadcaster, minPeriod = " 
+				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
+		return wifiBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod());
 	}
 	
 	private boolean handleStopBcastTelosB(StopBcastTelosB msg) {
-		// TODO
+		flogger.log("Stopping TelosB beacon broadcaster.");
+		telosRadioSignalMeter.stop();
 		return true;
 	}
 	
 	private boolean handleStopBcastWiFi(StopBcastWifi msg) {
-		// TODO
+		flogger.log("Stopping WiFi beacon broadcaster.");
+		wifiBroadcaster.stop();
 		return true;
 	}
 	
