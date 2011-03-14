@@ -6,7 +6,7 @@ import java.util.*;
 import java.nio.ByteBuffer;
 import pharoslabut.*;
 import pharoslabut.logger.*;
-import pharoslabut.radioMeter.cc2420.RadioSignalMeterException;
+import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 
 /**
  * This class listens for and transmits UDP datagram packets.
@@ -238,8 +238,8 @@ public class UDPRxTx implements Runnable {
 		
 		public DataGenerator() {
 			try {
-				myID = pharoslabut.radioMeter.cc2420.RadioSignalMeter.getMoteID();
-			} catch (RadioSignalMeterException e) {
+				myID = pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster.getMoteID();
+			} catch (TelosBeaconException e) {
 				e.printStackTrace();
 			}
 			new Thread(this).start();
@@ -288,8 +288,8 @@ public class UDPRxTx implements Runnable {
 			this.expName = expName;
 			
 			try {
-				myID = pharoslabut.radioMeter.cc2420.RadioSignalMeter.getMoteID();
-			} catch (RadioSignalMeterException e) {
+				myID = pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster.getMoteID();
+			} catch (TelosBeaconException e) {
 				e.printStackTrace();
 			}
 			new Thread(this).start();
