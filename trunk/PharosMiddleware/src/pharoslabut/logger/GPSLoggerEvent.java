@@ -117,13 +117,12 @@ public class GPSLoggerEvent implements DeviceLogger, playerclient.GPSListener {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.GPSLogger <options>\n");
+		System.err.println("Usage: pharoslabut.GPSLoggerEvent <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-index <index>: the index of the GPS device (default 0)");
 		System.err.println("\t-file <file name>: The name of the file into which the compass data is logged (default log.txt)");
-		System.err.println("\t-period <period>: The period of sampling in milliseconds (default 1000)");
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
 		System.err.println("\t-d: enable debug output");
 	}
@@ -133,7 +132,10 @@ public class GPSLoggerEvent implements DeviceLogger, playerclient.GPSListener {
 		int serverPort = 6665;
 		int index = 0;
 		String fileName = "log.txt";
-		int period = 1500; // period between sampling in milliseconds
+		
+		// This is not used in an event-based logger, 
+		// but remains to adhere to the DeviceLogger interface.
+		int period = 0; 
 		int time = 0;
 		
 		for (int i=0; i < args.length; i++) {
@@ -148,9 +150,6 @@ public class GPSLoggerEvent implements DeviceLogger, playerclient.GPSListener {
 			} 
 			else if (args[i].equals("-file")) {
 				fileName = args[++i];
-			}
-			else if (args[i].equals("-period")) {
-				period = Integer.valueOf(args[++i]);
 			}
 			else if (args[i].equals("-d") || args[i].equals("-debug")) {
 				System.setProperty ("PharosMiddleware.debug", "true");
