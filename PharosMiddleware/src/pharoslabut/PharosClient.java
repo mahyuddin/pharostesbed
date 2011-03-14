@@ -7,8 +7,10 @@ package pharoslabut;
 import pharoslabut.io.*;
 import pharoslabut.experiment.*;
 import pharoslabut.beacon.*;
-import pharoslabut.navigate.*;
+//import pharoslabut.navigate.*;
 //import pharoslabut.tasks.Priority;
+import pharoslabut.navigate.motionscript.MotionScript;
+import pharoslabut.navigate.motionscript.MotionScriptReader;
 
 /**
  * Connects to the PharosServer.  This is used by the application to perform application-specific tasks.
@@ -16,10 +18,10 @@ import pharoslabut.navigate.*;
  * @author Chien-Liang Fok
  * @see PharosServer
  */
-public class PharosClient implements BeaconListener {
+public class PharosClient implements WiFiBeaconListener {
 	public static final boolean debug = (System.getProperty ("PharosMiddleware.debug") != null) ? true : false;
 	
-	private BeaconReceiver beaconReceiver;
+	private WiFiBeaconReceiver beaconReceiver;
 	
     /**
 	 * The multicast group address.  By default this is 230.1.2.3.
@@ -40,7 +42,7 @@ public class PharosClient implements BeaconListener {
      * @param mCastAddress The multicast address over which to broadcast 802.11 beacons
      * @param mCastPort The multicast port on which to broadcast 802.11 beacons
      * @see pharoslabut.experiment.ExpConfig
-     * @see pharoslabut.navigate.GPSTraceReader
+     * @see pharoslabut.navigate.motionscript.MotionScriptReader
      */
 	public PharosClient(String expConfigFileName, String mCastAddress, int mCastPort) {
 		this.mCastAddress = mCastAddress;
@@ -64,8 +66,8 @@ public class PharosClient implements BeaconListener {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				log("Sending Motion script to robot " + currRobot.getName());
 				
-				GPSMotionScript script = GPSTraceReader.readTraceFile(currRobot.getMotionScript());
-				GPSMotionScriptMsg gpsMsg = new GPSMotionScriptMsg(script);
+				MotionScript script = MotionScriptReader.readTraceFile(currRobot.getMotionScript());
+				MotionScriptMsg gpsMsg = new MotionScriptMsg(script);
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), gpsMsg);
 			}
 			
@@ -151,9 +153,9 @@ public class PharosClient implements BeaconListener {
 //	}
 	
 	private boolean initBeaconRcvr() {
-		String pharosNI = BeaconReceiver.getPharosNetworkInterface();
+		String pharosNI = WiFiBeaconReceiver.getPharosNetworkInterface();
 		if (pharosNI != null) {
-			beaconReceiver = new BeaconReceiver(mCastAddress, mCastPort, pharosNI);
+			beaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
 			// Start  receiving beacons
 			beaconReceiver.start();
 			return true;
@@ -165,7 +167,7 @@ public class PharosClient implements BeaconListener {
 	
 	
 	@Override
-	public void beaconReceived(BeaconEvent be) {
+	public void beaconReceived(WiFiBeaconEvent be) {
 		log("Received beacon: " + be);
 	}
 	
