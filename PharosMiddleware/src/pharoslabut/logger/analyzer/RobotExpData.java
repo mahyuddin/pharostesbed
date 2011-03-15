@@ -130,8 +130,19 @@ public class RobotExpData {
 	 * @return the robot's name, or null if unknown.
 	 */
 	public String getRobotName() {
-		String[] tokens = fileName.split("-");
-		return tokens[3];
+		String robotFileName = fileName;
+		
+		// If the file name contains directories, remove the directories
+		// from the name first.
+		if (robotFileName.indexOf("/") != -1)
+			robotFileName = robotFileName.substring(fileName.indexOf("/")+1);
+		String[] tokens = robotFileName.split("-");
+		
+//		log("Getting robot name: robotFileName = " + robotFileName);
+//		for (int i=0; i < tokens.length; i++) {
+//			log(i + ": " + tokens[i]);
+//		}
+		return tokens[2];
 	}
 	
 	/**
