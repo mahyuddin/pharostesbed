@@ -67,6 +67,7 @@ public class RobotIPAssignments {
 		}
 		
 		System.err.println("ERROR: RobotIPAssignments.getRobotIP: Unable to find IP for robot " + name);
+		new Exception().printStackTrace();
 		return -1;
 	}
 	
