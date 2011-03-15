@@ -18,7 +18,7 @@ import pharoslabut.navigate.motionscript.MotionScriptReader;
  * @author Chien-Liang Fok
  * @see PharosServer
  */
-public class GPSMotionScriptInjector {
+public class MotionScriptInjector {
 	public static final boolean debug = (System.getProperty ("PharosMiddleware.debug") != null) ? true : false;
     
     /**
@@ -32,7 +32,7 @@ public class GPSMotionScriptInjector {
      * @param mCastAddress
      * @param mCastPort
      */
-	public GPSMotionScriptInjector(String address, int port, String mCastAddress, int mCastPort,
+	public MotionScriptInjector(String address, int port, String mCastAddress, int mCastPort,
 			String expName, String robotName, String scriptFileName) {
 		
 		try {
@@ -68,14 +68,15 @@ public class GPSMotionScriptInjector {
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("GPSMotionScriptInjector: " + msg);
+			System.out.println(msg);
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.GPSMotionScriptInjector <options>\n");
+		System.setProperty ("PharosMiddleware.debug", "true");
+		print("Usage: pharoslabut.MotionScriptInjector <options>\n");
 		print("Where <options> include:");
 		print("\t-server <ip address>: The Pharos Server's IP address (default 10.11.12.20)");
-		print("\t-port <port number>: The Pharos Server's port (default 230.1.2.3)");
+		print("\t-port <port number>: The Pharos Server's port (default 7776)");
 		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
 		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
 		print("\t-script <script file name>: The name of the motion script file (default MotionScript.txt)");
@@ -140,7 +141,7 @@ public class GPSMotionScriptInjector {
 		print("Robot Name: " + robotName);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new GPSMotionScriptInjector(serverAddress, port, mCastAddress, mCastPort, 
+		new MotionScriptInjector(serverAddress, port, mCastAddress, mCastPort, 
 				expName, robotName, scriptFileName);
 	}
 }
