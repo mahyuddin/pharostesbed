@@ -23,12 +23,13 @@ public class ExpData {
 	
 		// Parse out the name of the experiment.  The name of the experiment should follow
 		// the following format: "M##-Exp##".
-		String[] tokens = expDir.split("/");
+		String absExpDir = new File(expDir).getAbsolutePath();
+		String[] tokens = absExpDir.split("/");
 		for (int i=0; i < tokens.length; i++) {
 			//log("Analyzing token " + tokens[i]);
 			if (tokens[i].matches("M\\d+-Exp\\d+")) {
 				expName = tokens[i];
-				//log("Found experiment name \"" + expName + "\", expDir = " + expDir);
+				log("Found experiment name \"" + expName + "\", expDir = " + expDir);
 			}
 		}
 		
