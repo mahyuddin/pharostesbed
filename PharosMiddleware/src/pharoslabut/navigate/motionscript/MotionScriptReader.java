@@ -23,6 +23,11 @@ public class MotionScriptReader {
 				int lineno = 1;
 				while (( line = input.readLine()) != null) {
 					if (!line.equals("")  && !line.startsWith("#")) {
+						
+						// Ignore comments...
+						if (line.contains("//"))
+							line = line.substring(line.indexOf("//")+1);
+						
 						//StringTokenizer st = new StringTokenizer(line);
 						try {
 							
@@ -33,8 +38,8 @@ public class MotionScriptReader {
 							
 							if (line.contains("MOVE")) {
 								String[] elem = line.split("[\\s]+");
-								double longitude = Double.valueOf(elem[1]);
-								double latitude = Double.valueOf(elem[2]);
+								double latitude = Double.valueOf(elem[1]);
+								double longitude = Double.valueOf(elem[2]);
 								double speed = Double.valueOf(elem[3]);
 								Location dest = new Location(latitude, longitude);
 								result.addInstruction(new Move(dest, speed));
