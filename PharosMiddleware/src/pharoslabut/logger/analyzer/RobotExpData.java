@@ -135,7 +135,7 @@ public class RobotExpData {
 		// If the file name contains directories, remove the directories
 		// from the name first.
 		if (robotFileName.indexOf("/") != -1)
-			robotFileName = robotFileName.substring(fileName.indexOf("/")+1);
+			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
 		String[] tokens = robotFileName.split("-");
 		
 //		log("Getting robot name: robotFileName = " + robotFileName);
