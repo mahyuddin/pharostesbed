@@ -178,7 +178,8 @@ public class TelosBSSvDHistogramGenerator {
 	}
 	
 	private void print(String msg, FileLogger flogger) {
-		System.out.println(msg);
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(msg);
 		if (flogger != null)
 			flogger.log(msg);
 	}
