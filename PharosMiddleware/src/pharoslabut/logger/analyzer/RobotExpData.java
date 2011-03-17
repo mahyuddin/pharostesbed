@@ -677,15 +677,25 @@ public class RobotExpData {
 			System.out.println("RobotExpData: " + msg);
 	}
 	
+	/**
+	 * Calculates the time since the robot start time.
+	 * 
+	 * @param time the absolute time stamp
+	 * @return The relative time that has passed since the robot start time.
+	 */
+	private long getRelativeTime(long time) {
+		return (time - getRobotStartTime())/1000;
+	}
+	
 	public String toString() {
 		String result = 
-			"FileName: " + fileName
-			+ "\nExpStartTime: " + expStartTime
+			"File Name: " + getFileName()
+			+ "\nRobot Start Time: " + getRobotStartTime()
 			+ "\nNumber of path edges: " + pathEdges.size();
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge currEdge = pathEdges.get(i);
-			result += "\n\tPath edge " + i + ": startTime = " + currEdge.getStartTime()
-				+ ", stopTime = " + currEdge.getEndTime();
+			result += "\n\tPath edge " + i + ": startTime = " + currEdge.getStartTime() + " (" + getRelativeTime(currEdge.getStartTime()) + "s)"
+				+ ", stopTime = " + currEdge.getEndTime() + " (" + getRelativeTime(currEdge.getEndTime()) + "s)";
 		}
 		return result;
 	}
