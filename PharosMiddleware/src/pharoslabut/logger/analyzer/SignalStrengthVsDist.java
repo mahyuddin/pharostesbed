@@ -2,6 +2,7 @@ package pharoslabut.logger.analyzer;
 
 import java.util.*;
 import pharoslabut.logger.*;
+import pharoslabut.logger.analyzer.ssvd.*;
 import pharoslabut.navigate.*;
 
 /**
@@ -247,6 +248,15 @@ public class SignalStrengthVsDist {
 				print(results.get(i).toString(), outputLogger);
 			}
 			
+			// Generate the average data
+			TelosBSSvDAvgGenerator avgGen = new TelosBSSvDAvgGenerator(flogger);
+			String avgFileName = outputFile.substring(0, outputFile.indexOf(".")) + "-Avg" + outputFile.substring(outputFile.indexOf("."));
+			avgGen.generateAverage(outputFile, avgFileName);
+			
+			// Generate the histogram data
+			TelosBSSvDHistogramGenerator histGen = new TelosBSSvDHistogramGenerator(flogger);
+			String histFileName = outputFile.substring(0, outputFile.indexOf(".")) + "-hist";
+			histGen.generateHistogram(outputFile, histFileName);
 		}
 	}
 }
