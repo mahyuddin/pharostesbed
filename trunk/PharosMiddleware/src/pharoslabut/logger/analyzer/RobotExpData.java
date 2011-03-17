@@ -276,13 +276,13 @@ public class RobotExpData {
 		
 //		pharoslabut.logger.FileLogger flogger = new pharoslabut.logger.FileLogger("CalibrateTime", false);
 		
-		double diffSum = 0; // the sum of all the diffs 
+		//double diffSum = 0; // the sum of all the diffs
+		TimeCalibrator calibrator = new TimeCalibrator();
 		
 		// Calculate the difference between the log file and GPS timestamps
 		for (int i=0; i < locs.size(); i++) {
 			
-			// The following is the difference, measured in milliseconds, 
-			// between the current time and midnight, January 1, 1970 UTC.
+			// The following is the number of milliseconds that have passed since January 1, 1970 UTC.
 			long localTimestamp = locs.get(i).getTimestamp();
 			
 			// This is the GPS timestamp.  The code that generates it is available here:
@@ -293,44 +293,46 @@ public class RobotExpData {
 			int gpsSec = locs.get(i).getLoc().getTime_sec();
 //			int gpsUSec = locs.get(i).getLoc().getTime_usec();
 			
-			// Calculate the difference between the two time stamps
+			// Calculate the difference between the two time stamps this is in second units
 			double diff = (localTimestamp / 1000.0) - gpsSec;
 			
-			diffSum += diff;
+			//diffSum += diff;
+			calibrator.addCalibrationPoint(localTimestamp, diff * 1000);
 			
 //			String str = localTimestamp + "\t" + gpsSec +"\t" + diff;
 //			System.out.println(str);
 //			flogger.log(str);
 		}
 		
-		// Calculate the average offset and use it to calibrate all of the local timestamps.
-		double timeOffset = diffSum / locs.size() * 1000;
+		// Calculate the average offset in milliseconds and use it to calibrate all of the local timestamps.
+		//double timeOffset = diffSum / locs.size() * 1000;
 		
-//		String str = "CalibratedTimeOffset: " + calibratedTimeOffset;
+//		String str = "timeOffset: " + timeOffset;
 //		System.out.println(str);
 //		flogger.log(str);
 		
 		// Calibrate all of the timestamps...
-		expStartTime = RobotExpData.getCalibratedTime(expStartTime, timeOffset);
+		//expStartTime = RobotExpData.getCalibratedTime(expStartTime, timeOffset);
+		expStartTime = calibrator.getCalibratedTime(expStartTime);
 		
 		for (int i=0; i < locations.size(); i++) {
 			GPSLocationState currLoc = locations.get(i);
-			currLoc.calibrateTime(timeOffset);
+			currLoc.calibrateTime(calibrator);
 		}
 		
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge currEdge = pathEdges.get(i);
-			currEdge.calibrateTime(timeOffset);
+			currEdge.calibrateTime(calibrator);
 		}
 		
 		for (int i=0; i < telosBRxHist.size(); i++) {
 			TelosBRxRecord rxRec = telosBRxHist.get(i);
-			rxRec.calibrateTime(timeOffset);
+			rxRec.calibrateTime(calibrator);
 		}
 		
 		for (int i=0; i < telosBTxHist.size(); i++) {
 			TelosBTxRecord txRec = telosBTxHist.get(i);
-			txRec.calibrateTime(timeOffset);
+			txRec.calibrateTime(calibrator);
 		}
 	}
 	
@@ -711,47 +713,52 @@ public class RobotExpData {
 			long logTimestamp = currLoc.getTimestamp();
 			long gpsTimestamp = (currLoc.getLoc().getTime_sec() * 1000L);
 			long timeDiff =  logTimestamp - gpsTimestamp;
-			if (Math.abs(timeDiff) > 2000) { 
-				print((++numErrors) + " ERROR: Bad time calibration in " + red.getFileName() + " (logTimestamp = " + logTimestamp + ", gpsTimestamp = " + gpsTimestamp + ", timeDiff = " + timeDiff + "): " + currLoc);
+			if (Math.abs(timeDiff) > 1000) { 
+				print((++numErrors) + "/" + red.getGPSHistory().size() + " ERROR: Bad time calibration in " + red.getFileName() 
+						+ " (logTimestamp = " + logTimestamp + ", gpsTimestamp = " + gpsTimestamp 
+						+ ", timeDiff = " + timeDiff + "): " + currLoc);
 			}
 		}
 		if (numErrors == 0) {
 			print("GPS timestamp calibration OK!");
 		}
 		
-		// Check whether the getLocation method is OK
-		print("Evaluating RobotExpData.getLocation(long timestamp)...");
-		print("\tExperiment start time: " + red.getRobotStartTime());
-		String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
-		FileLogger flogger = new FileLogger(testGetLocFileName, false);
 		
-		//int pathEdgeToCheck = 15;
-		
-		flogger.log("type,latitude,longitude,name,color");
-		long currTime = red.getRobotStartTime();
-		//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
-		boolean firstLoc = true;
-		while (currTime < red.getRobotStopTime()) {
-		//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
-			Location currLoc = red.getLocation(currTime);
-			String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
-			if (firstLoc) {
-				line += ",getLocation,blue";
-				firstLoc = false;
+		boolean testGetLocation = false;
+		if (testGetLocation) {
+			// Check whether the getLocation method is OK
+			print("Evaluating RobotExpData.getLocation(long timestamp)...");
+			print("\tExperiment start time: " + red.getRobotStartTime());
+			String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
+			FileLogger flogger = new FileLogger(testGetLocFileName, false);
+
+			//int pathEdgeToCheck = 15;
+
+			flogger.log("type,latitude,longitude,name,color");
+			long currTime = red.getRobotStartTime();
+			//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
+			boolean firstLoc = true;
+			while (currTime < red.getRobotStopTime()) {
+				//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
+				Location currLoc = red.getLocation(currTime);
+				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
+				if (firstLoc) {
+					line += ",getLocation,blue";
+					firstLoc = false;
+				}
+				flogger.log(line);
+				currTime += 1000;
 			}
-			flogger.log(line);
-			currTime += 1000;
+
+			flogger.log("type,latitude,longitude");
+			locs = red.getGPSHistory().elements();
+			//locs = red.getPathEdge(pathEdgeToCheck).getLocationsEnum();
+			while (locs.hasMoreElements()) {
+				GPSLocationState currLoc = locs.nextElement();
+				flogger.log("W," + currLoc.getLocation().latitude() + "," + currLoc.getLocation().longitude());
+			}
+
+			print("\tEvaluation script saved to " + testGetLocFileName + ", upload it to GPSVisualizer to visualize...");
 		}
-		
-		flogger.log("type,latitude,longitude");
-		locs = red.getGPSHistory().elements();
-		//locs = red.getPathEdge(pathEdgeToCheck).getLocationsEnum();
-		while (locs.hasMoreElements()) {
-			GPSLocationState currLoc = locs.nextElement();
-			flogger.log("W," + currLoc.getLocation().latitude() + "," + currLoc.getLocation().longitude());
-		}
-		
-		
-		print("\tEvaluation script saved to " + testGetLocFileName + ", upload it to GPSVisualizer to visualize...");
 	}
 }

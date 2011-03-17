@@ -50,12 +50,11 @@ public class PathEdge {
 	/**
 	 * Calibrates the time based on the GPS timestamps.
 	 * 
-	 * @param timeOffset The offset between the system time and GPS time,
-	 * accurate to within a second.
+	 * @param calibrator The time calibrator.
 	 */
-	public void calibrateTime(double timeOffset) {
-		startTime = RobotExpData.getCalibratedTime(startTime, timeOffset);
-		endTime = RobotExpData.getCalibratedTime(endTime, timeOffset);
+	public void calibrateTime(TimeCalibrator calibrator) {
+		startTime = calibrator.getCalibratedTime(startTime);
+		endTime = calibrator.getCalibratedTime(endTime);
 	}
 	
 	/**
