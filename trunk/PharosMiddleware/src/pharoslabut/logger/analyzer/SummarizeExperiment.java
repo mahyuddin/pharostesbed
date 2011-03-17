@@ -45,7 +45,7 @@ public class SummarizeExperiment {
 	}
 	
 	private static void log(String msg, FileLogger flogger, boolean isDebugStmt) {
-		String result = "SignalStrengthVsDist: " + msg;
+		String result = "SummarizeExperiment: " + msg;
 		if (!isDebugStmt || System.getProperty ("PharosMiddleware.debug") != null) 
 			System.out.println(result);
 		if (flogger != null)
