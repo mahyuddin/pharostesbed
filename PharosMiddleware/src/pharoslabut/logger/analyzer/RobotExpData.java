@@ -719,10 +719,12 @@ public class RobotExpData {
 						+ ", timeDiff = " + timeDiff + "): " + currLoc);
 			}
 		}
+		
 		if (numErrors == 0) {
 			print("GPS timestamp calibration OK!");
 		}
 		
+		print("Robot start time: " + red.getRobotStartTime());
 		
 		boolean testGetLocation = false;
 		if (testGetLocation) {
