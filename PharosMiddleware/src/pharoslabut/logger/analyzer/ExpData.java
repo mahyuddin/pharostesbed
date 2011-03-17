@@ -183,7 +183,7 @@ public class ExpData {
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append("Exp name: " + getExpName() + "\n");
-		sb.append("Exp start: " + getExpStartTime() + ", Exp stop: " + getExpStopTime() + "\n");
+		sb.append("Exp start: " + getExpStartTime() + ", Exp stop: " + getExpStopTime() + " (Total time: " + (getExpStopTime() - getExpStartTime())/1000 + "s)\n");
 		sb.append("Number of robots: " + numRobots() + "\n");
 		
 		for (int i=0; i < numRobots(); i++) {
