@@ -8,7 +8,12 @@ import pharoslabut.navigate.*;
  * This analyzes the log files from and experiment and extracts the signal
  * strength and distance data.
  * 
- * It produces a log file with the following format
+ * It produces an output file with the following format:
+ *  [Timestamp] [SenderID] [ReceiverID] [Seqno] [distance] [LQI] [RSSI]
+ * 
+ * It also produces a debug file that recorded and errors or warnings generated
+ * while processing the data.  The name of this file is the output file name with
+ * ".dbg" appended to the end.
  * 
  * @author Chien-Liang Fok
  */
@@ -35,9 +40,10 @@ public class SignalStrengthVsDist {
 	 * in an experiment.
 	 * 
 	 * @param txNodeID the ID of the node performing the transmissions.
-	 * @return The signal strengths of the receiptions.
+	 * @param errLogger the error logger.
+	 * @return The signal strengths of the receptions.
 	 */
-	private Vector<TelosBSignalStrengthResult> analyzeTelosBSignal(int txNodeID) {
+	private Vector<TelosBSignalStrengthResult> analyzeTelosBSignal(int txNodeID, FileLogger errLogger) {
 		Vector<TelosBSignalStrengthResult> results = new Vector<TelosBSignalStrengthResult>();
 		
 		RobotExpData currTxRobot = expData.getRobotByID(txNodeID);
@@ -55,7 +61,7 @@ public class SignalStrengthVsDist {
 			Location txLoc = currTxRobot.getLocation(txTimestamp);
 			if (txLoc == null) {
 				logErr("ERROR: Unable to locate transmitter at time " + txTimestamp + ", fileName: " 
-						+ currTxRobot.getFileName() + ", robotExpData:\n" + currTxRobot);
+						+ currTxRobot.getFileName() + ", robotExpData:\n" + currTxRobot, errLogger);
 				System.exit(1);
 			}
 			
@@ -72,7 +78,8 @@ public class SignalStrengthVsDist {
 				// Do a sanity check to make sure reception is correct.
 				// The senderID and sequence numbers must match.
 				if (currRxRec.getSenderID() != currTxRec.getSenderID() || currRxRec.getSeqNo() != currTxRec.getSeqNo()) {
-					logErr("ERROR: sender ID or sequence number mismatch:\n\tcurrTxRec = [" + currTxRec + "]\n\tcurrRxRec = [" + currRxRec + "]");
+					logErr("ERROR: sender ID or sequence number mismatch:\n\tcurrTxRec = [" + currTxRec 
+							+ "]\n\tcurrRxRec = [" + currRxRec + "]", errLogger);
 					System.exit(1);
 				}
 				
@@ -80,17 +87,19 @@ public class SignalStrengthVsDist {
 				Location rxLoc = currRxRobot.getLocation(rxTimestamp);
 				log("\tReception [" + currRxRec + "], robot at " + rxLoc);
 				
-				// Verify that the timestamps are correctly calibrated...
+				// Verify that the time stamps are correctly calibrated...
 				if (Math.abs(txTimestamp - rxTimestamp) > TELOSB_RXTX_MAX_TIME_DIFF) {
 					logErr("WARNING: Tx and Rx timestamps differ (" + txTimestamp + " vs. " 
-							+ rxTimestamp + ", diff = " + Math.abs(txTimestamp - rxTimestamp) / 1000L + " seconds), rxRecord = [" + currRxRec + "], txRecord = [" + currTxRec + "]");
+							+ rxTimestamp + ", diff = " + Math.abs(txTimestamp - rxTimestamp) / 1000L 
+							+ " seconds), rxRecord = [" + currRxRec + "], txRecord = [" + currTxRec + "]", errLogger);
 				}
 				
 				// Calculate the distance between the sender and receiver...
 				double distance = txLoc.distanceTo(rxLoc);
 				
 				if (distance > 10000) {
-					logErr("Distance is huge: txLoc=" + txLoc + ", rxLoc=" + rxLoc + ", dist=" + distance + ", rxTimestamp=" + rxTimestamp + ", rxRobot=" + currRxRobot);
+					logErr("Distance is huge: txLoc=" + txLoc + ", rxLoc=" + rxLoc + ", dist=" + distance 
+							+ ", rxTimestamp=" + rxTimestamp + ", rxRobot=" + currRxRobot, errLogger);
 					System.exit(1);
 				}
 				
@@ -105,9 +114,9 @@ public class SignalStrengthVsDist {
 	/**
 	 * Analyzes the TelosB signal vs. distance for every node in an experiment.
 	 * 
-	 * @param expData The experiment data.
+	 * @param errLogger The logger for saving warning and error messages.
 	 */
-	private Vector<TelosBSignalStrengthResult> analyzeTelosBSignal() {
+	private Vector<TelosBSignalStrengthResult> analyzeTelosBSignal(FileLogger errLogger) {
 		
 		// Stores the results of the signal strength measurements.
 		Vector<TelosBSignalStrengthResult> results = new Vector<TelosBSignalStrengthResult>();
@@ -117,18 +126,20 @@ public class SignalStrengthVsDist {
 		while (robotEnum.hasMoreElements()) {
 			RobotExpData currTxRobot = robotEnum.nextElement();
 			if (currTxRobot.numEdges() > 0) // If the robot actually traveled in this experiment...
-				results.addAll(analyzeTelosBSignal(currTxRobot.getRobotID()));
+				results.addAll(analyzeTelosBSignal(currTxRobot.getRobotID(), errLogger));
 		}
 		
 		return results;
 	}
 	
-	private void logErr(String msg) {
+	private void logErr(String msg, FileLogger errLogger) {
 		String result = "SignalStrengthVsDist: " + msg;
 		//if (System.getProperty ("PharosMiddleware.debug") != null) 
 		System.err.println(result);
 		if (flogger != null)
 			flogger.log(result);
+		if (errLogger != null)
+			errLogger.log(result);
 	}
 	
 	private void log(String msg) {
@@ -211,13 +222,17 @@ public class SignalStrengthVsDist {
 		Vector<TelosBSignalStrengthResult> results = null;
 		
 		if (analyzeTelos) {
+			
+			// Create a log for error and warning messages.
+			FileLogger errLogger = new FileLogger(outputFile + ".dbg", false);
+			
 			// Perform the actual analysis...
 			if (nodeID != -1) {
 				log("Analyzing TelosB node " + nodeID + "'s signal strength vs. distance in experiment " + expDir + "...", flogger);
-				results = analyzer.analyzeTelosBSignal(nodeID);
+				results = analyzer.analyzeTelosBSignal(nodeID, errLogger);
 			} else {
 				log("Analyzing all TelosB signal vs. distance in experiment " + expDir + "...", flogger);
-				results = analyzer.analyzeTelosBSignal();
+				results = analyzer.analyzeTelosBSignal(errLogger);
 			}
 			
 			// Save the results
