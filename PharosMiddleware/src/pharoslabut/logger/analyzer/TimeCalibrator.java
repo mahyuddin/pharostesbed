@@ -10,7 +10,7 @@ import java.util.*;
  *
  */
 public class TimeCalibrator {
-	Vector<Long> localTimestamp = new Vector<Long>();
+	Vector<Long> calibrationPoints = new Vector<Long>();
 	Vector<Double> offsets = new Vector<Double>();
 	
 	/**
@@ -22,11 +22,12 @@ public class TimeCalibrator {
 	/**
 	 * Adds a calibration point.
 	 * 
-	 * @param timestamp The timestamp as recorded by the Pharos Middleware
+	 * @param timestamp The timestamp as recorded by the Pharos Middleware.  This is in ms units.
 	 * @param offset The necessary offset of the timestamp to make it match the GPS timestamp.
+	 * This should be in ms units.
 	 */
 	public void addCalibrationPoint(long timestamp, double offset) {
-		localTimestamp.add(timestamp);
+		calibrationPoints.add(timestamp);
 		offsets.add(offset);
 	}
 	
@@ -41,13 +42,15 @@ public class TimeCalibrator {
 	 */
 	private int findClosestTimestamp(long timestamp, int leftIndx, int rightIndx) {
 		
+		//System.out.println("findClosestTimestamp: " + timestamp + ", " + leftIndx + ", " + rightIndx);
+		
 		// base cases
 		if (leftIndx == rightIndx)
 			return leftIndx;
 		
 		if (Math.abs(leftIndx - rightIndx) == 1) {
-			long leftDelta = Math.abs(localTimestamp.get(leftIndx) - timestamp);
-			long rightDelta = Math.abs(localTimestamp.get(rightIndx) - timestamp);
+			long leftDelta = Math.abs(calibrationPoints.get(leftIndx) - timestamp);
+			long rightDelta = Math.abs(calibrationPoints.get(rightIndx) - timestamp);
 			
 			if (leftDelta < rightDelta)
 				return leftIndx;
@@ -56,8 +59,8 @@ public class TimeCalibrator {
 		}
 		
 		// Recursive search
-		int midPoint = (rightIndx - leftIndx) / 2;
-		if (localTimestamp.get(midPoint) > timestamp)
+		int midPoint = (rightIndx + leftIndx) / 2;
+		if (calibrationPoints.get(midPoint) > timestamp)
 			return findClosestTimestamp(timestamp, leftIndx, midPoint);
 		else
 			return findClosestTimestamp(timestamp, midPoint, rightIndx);
@@ -71,7 +74,7 @@ public class TimeCalibrator {
 	 */
 	public long getCalibratedTime(long timestamp) {
 		// find the calibration point that is closest to the timestamp
-		int closestIndx = findClosestTimestamp(timestamp, 0, localTimestamp.size() - 1);
+		int closestIndx = findClosestTimestamp(timestamp, 0, calibrationPoints.size() - 1);
 		double offset = offsets.get(closestIndx);
 		return Math.round(timestamp - offset);
 	}

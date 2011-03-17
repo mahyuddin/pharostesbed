@@ -99,11 +99,10 @@ public class TelosBRxRecord {
 	/**
 	 * Recalibrates the time based on the GPS timestamps.
 	 * 
-	 * @param timeOffset The offset between the system time and GPS time,
-	 * accurate to within a second.
+	 * @param calibrator The time calibrator.
 	 */
-	public void calibrateTime(double timeOffset) {
-		timestamp = RobotExpData.getCalibratedTime(timestamp, timeOffset);
+	public void calibrateTime(TimeCalibrator calibrator) {
+		timestamp = calibrator.getCalibratedTime(timestamp);
 	}
 	
 	public long getTimeStamp() {
