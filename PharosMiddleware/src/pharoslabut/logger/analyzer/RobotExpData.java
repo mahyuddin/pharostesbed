@@ -566,12 +566,12 @@ public class RobotExpData {
 	 */
 	public Location getLocation(long timestamp) {
 		if (timestamp < getRobotStartTime()) {
-			log("WARNING: getLocation(timestamp): timestamp prior to beginning of experiment. (" + timestamp + " < " + getRobotStartTime() + ")");
+			log("WARNING: getLocation(timestamp): timestamp prior to robot start time. (" + timestamp + " < " + getRobotStartTime() + ")");
 			return getBeginLocation();
 		}
 		
 		if (timestamp > getRobotStopTime()) {
-			log("WARNING: getLocation(timestamp): timestamp after end of experiment. (" + getRobotStopTime() + " < " + timestamp + ")");
+			log("WARNING: getLocation(timestamp): timestamp after robot end time. (" + getRobotStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
