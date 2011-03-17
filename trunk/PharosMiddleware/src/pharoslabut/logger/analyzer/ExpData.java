@@ -180,6 +180,21 @@ public class ExpData {
 			System.out.println("ExpData: " + msg);
 	}
 	
+	public String toString() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("Exp name: " + getExpName() + "\n");
+		sb.append("Exp start: " + getExpStartTime() + ", Exp stop: " + getExpStopTime() + "\n");
+		sb.append("Number of robots: " + numRobots() + "\n");
+		
+		for (int i=0; i < numRobots(); i++) {
+			RobotExpData currRobot = getRobot(i);
+			sb.append("Robot " + (i+1) + " started " + (currRobot.getRobotStartTime() - getExpStartTime()) + "ms after experiment start time\n");
+			sb.append("\t" + currRobot.toString().replaceAll("\n", "\n\t") + "\n");
+		}
+		
+		return sb.toString();
+	}
+	
 	private static void print(String msg) {
 		System.out.println(msg);
 	}
