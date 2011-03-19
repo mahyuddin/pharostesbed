@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import pharoslabut.RobotIPAssignments;
 import pharoslabut.util.Stats;
 import pharoslabut.logger.analyzer.*;
 import pharoslabut.logger.FileLogger;
@@ -18,13 +19,23 @@ import pharoslabut.navigate.*;
  */
 public class CBLOutputToGPSVisualizer {
 	FileLogger flogger = null;
-	FileLogger outputFlogger;
+	FileLogger outputFlogger, outputStatsFlogger;
 	private Hashtable<Integer, RobotLocInfo> dataTable = new Hashtable<Integer, RobotLocInfo>();
 	
-	public CBLOutputToGPSVisualizer(String inputFile, String outputFile, FileLogger flogger) {
+	public CBLOutputToGPSVisualizer(String inputFile, FileLogger flogger) {
 		this.flogger = flogger;
-		outputFlogger = new FileLogger(outputFile, false);
 		
+		String outputFile, outputStatsFile;
+		if (inputFile.endsWith(".txt")) {
+			String fileName = inputFile.substring(0, inputFile.length() - 4);
+			outputFile = fileName + ".csv";
+			outputStatsFile = fileName + ".stats";
+		} else {
+			outputFile = inputFile + ".csv";
+			outputStatsFile = inputFile + ".stats";
+		}
+		outputFlogger = new FileLogger(outputFile, false);
+		outputStatsFlogger = new FileLogger(outputStatsFile, false);
 		doAnalysis(inputFile);
 	}
 	
@@ -53,12 +64,12 @@ public class CBLOutputToGPSVisualizer {
 	 */
 	private class RobotLocInfo {
 		
-		int robotNumber;
+		int robotID;
 		
 		Vector<RobotLocEntry> locs = new Vector<RobotLocEntry>();
 		
 		public RobotLocInfo(int robotNumber) {
-			this.robotNumber = robotNumber;
+			this.robotID = robotNumber;
 		}
 		
 		public void addEntry(RobotLocEntry entry) {
@@ -74,13 +85,13 @@ public class CBLOutputToGPSVisualizer {
 	 */
 	private int extractRobotNumber(String token) {
 		String[] tokens = token.split("[\\s]+");
-		for (int i=0; i < tokens.length; i++) {
-			if (tokens[i].startsWith("#")) {
-				return Integer.valueOf(tokens[i].substring(1));
-			}
-		}
-		logErr("Unable to find robot number in token " + token);
-		return -1; 
+//		for (int i=0; i < tokens.length; i++) {
+//			if (tokens[i].startsWith("#")) {
+				return Integer.valueOf(tokens[1]);
+//			}
+//		}
+//		logErr("Unable to find robot number in token " + token);
+//		return -1; 
 	}
 	
 	private int extractTime(String token) {
@@ -107,6 +118,7 @@ public class CBLOutputToGPSVisualizer {
 	 * @param inputFile The input file containing the output of the connectivity-based localizer.
 	 */
 	private void doAnalysis(String inputFile) {
+		log("Analyzing " + inputFile + "...");
 		
 		// Open the file containing the output of the connectivity-based-localization algorithm.
 		BufferedReader input = null;
@@ -129,19 +141,19 @@ public class CBLOutputToGPSVisualizer {
 //						for (int i=0; i < elem.length; i++) {
 //							log(i + ": " + elem[i]);
 //						}
-						int robotNumber = extractRobotNumber(elem[0]);
+						int robotID = extractRobotNumber(elem[0]);
 						int timeStep = extractTime(elem[1]);
 						Location locTrue = extractLocation(elem[2]);
 						Location locEst = extractLocation(elem[3]);
 						
 						RobotLocEntry rle = new RobotLocEntry(timeStep, locTrue, locEst);
 						
-						if (!dataTable.containsKey(robotNumber)) {
-							RobotLocInfo rli = new RobotLocInfo(robotNumber);
+						if (!dataTable.containsKey(robotID)) {
+							RobotLocInfo rli = new RobotLocInfo(robotID);
 							rli.addEntry(rle);
-							dataTable.put(robotNumber, rli);
+							dataTable.put(robotID, rli);
 						} else {
-							RobotLocInfo rli = dataTable.get(robotNumber);
+							RobotLocInfo rli = dataTable.get(robotID);
 							rli.addEntry(rle);
 						}
 					}
@@ -160,9 +172,9 @@ public class CBLOutputToGPSVisualizer {
 		int colorIndx = 0;
 		
 		// For each robot...
-		Enumeration<Integer> robotNumbers = dataTable.keys();
-		while (robotNumbers.hasMoreElements()) {
-			RobotLocInfo currRobot = dataTable.get(robotNumbers.nextElement());
+		Enumeration<Integer> robotIDs = dataTable.keys();
+		while (robotIDs.hasMoreElements()) {
+			RobotLocInfo currRobot = dataTable.get(robotIDs.nextElement());
 			
 			Vector<Double> errors = new Vector<Double>();
 			
@@ -175,7 +187,7 @@ public class CBLOutputToGPSVisualizer {
 				Location currLoc = rle.locTrue;
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
 				if (j == 0)
-					line += ", Robot " + currRobot.robotNumber + " Actual Loc, " + GPSVisualize.COLORS[colorIndx++];
+					line += "," + RobotIPAssignments.getRobotName(currRobot.robotID) + " Actual, " + GPSVisualize.COLORS[colorIndx++];
 				outputFlogger.log(line);
 			}
 			
@@ -186,7 +198,7 @@ public class CBLOutputToGPSVisualizer {
 				Location currLoc = rle.locEst;
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
 				if (j == 0)
-					line += ", Robot " + currRobot.robotNumber + " Est. Loc, " + GPSVisualize.COLORS[colorIndx++];
+					line += ", " + RobotIPAssignments.getRobotName(currRobot.robotID) + " Est., " + GPSVisualize.COLORS[colorIndx++];
 				outputFlogger.log(line);
 				
 				// Keep a running total of the error in the robot's location estimation
@@ -194,7 +206,7 @@ public class CBLOutputToGPSVisualizer {
 			}
 			
 			// Display the minimum, maximum, and average error for this robot
-			log("Robot " + currRobot.robotNumber + " errors: min = " + Stats.getMin(errors) 
+			outputStatsFlogger.log("Robot " + currRobot.robotID + " errors (m): min = " + Stats.getMin(errors) 
 					+ ", max = " + Stats.getMax(errors) 
 					+ ", average = " + Stats.getAvg(errors));
 		}
@@ -235,14 +247,12 @@ public class CBLOutputToGPSVisualizer {
 		print("Usage: pharoslabut.logger.analyzer.cbl.CBLOutputToGPSVisualizer <options>\n");
 		print("Where <options> include:");
 		print("\t-input <input file>: This file should contain the output of the CBL algorithm (required)");
-		print("\t-output <output file>: The file in which to save the results (required)");
 		print("\t-log <log file name>: The file in which to log debug statements (default null)");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String inputFile = null;
-		String outputFile = null;
 		FileLogger flogger = null; // for saving debug output
 		
 		// Process the command line arguments...
@@ -253,8 +263,6 @@ public class CBLOutputToGPSVisualizer {
 					flogger = new FileLogger(args[++i], false);
 				else if (args[i].equals("-input"))
 					inputFile = args[++i];
-				else if (args[i].equals("-output"))
-					outputFile = args[++i];
 				else if (args[i].equals("-debug") || args[i].equals("-d"))
 					System.setProperty ("PharosMiddleware.debug", "true");
 				else {
@@ -268,11 +276,11 @@ public class CBLOutputToGPSVisualizer {
 			System.exit(1);
 		}
 		
-		if (inputFile == null || outputFile == null) {
+		if (inputFile == null) {
 			usage();
 			System.exit(1);
 		}
 		
-		new CBLOutputToGPSVisualizer(inputFile, outputFile, flogger);
+		new CBLOutputToGPSVisualizer(inputFile, flogger);
 	}
 }
