@@ -31,7 +31,8 @@
 #include "Tach.h"
 #include "MotorControl.h"
 #include "TaskHandler.h"
-#include "Compass.h"
+//#include "Compass.h"
+#include "INS.h"
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
@@ -52,9 +53,9 @@ bool _heartBeatTimerArmed = FALSE;
  */
 void Command_init() {
 	// Configure the safe mode interupt (ECT Channel 1, interupt 9)
-	TIOS |= TIOS_CH1_INT9_BIT;  // Set Enhanced Capture Timer Channel 9 to be output compare.  This is interrupt 9.
+	//TIOS |= TIOS_CH1_INT9_BIT;  // Set Enhanced Capture Timer Channel 9 to be output compare.  This is interrupt 9.
 	
-	Command_startSendingData();
+	//Command_startSendingData();
 }
 
 /**
@@ -135,7 +136,7 @@ void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed
  * Sends a compass packet to the x86 computer.
  * This is called by Compass.c after it gets the compass reading.
  */
-void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
+/*void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
 	uint16_t i;
@@ -152,20 +153,25 @@ void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
 }
+*/
 /**
  * Sends an accelerometer packet to the x86 computer.
  * This is called by Compass.c after it gets the compass reading.
  */
-void Command_sendAccelerometerPacket(uint8_t tickNumber, uint16_t x, uint16_t y, uint16_t gyro) {
+#if USE_YAXIS
+void Command_sendAccelerometerPacket(int16_t x, int16_t y, int16_t gyro) {
+#else
+void Command_sendAccelerometerPacket(int16_t x, int16_t gyro) {
+#endif
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
 	uint16_t i;
 	
 	outToSerial[indx++] = PROTEUS_BEGIN;
 	outToSerial[indx++] = PROTEUS_ACCELEROMETER_PACKET;
-	outToSerial[indx++] = tickNumber;
-	
+    #if USE_XAXIS
 	indx = saveTwoBytes(outToSerial, indx, x);
+    #endif
 	indx = saveTwoBytes(outToSerial, indx, y);
 	indx = saveTwoBytes(outToSerial, indx, gyro);
 	
@@ -200,8 +206,8 @@ void Command_sendMessagePacket(char* message) {
 void Command_sendData() {
 	if (_heartbeatReceived) {
 		//LED_GREEN2 ^= 1;
-		Command_sendOdometryPacket();
-		Compass_getHeading();
+		//Command_sendOdometryPacket();
+		//Compass_getHeading();
 	} else {
 		//LED_GREEN2 = LED_OFF;
 		//LED_BLUE2 = LED_OFF;

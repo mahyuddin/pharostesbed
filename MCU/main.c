@@ -18,7 +18,7 @@
 #include "Servo_PWM.h"
 #include "TaskHandler.h"
 #include "Tach.h"
-#include "Compass.h"
+//#include "Compass.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
