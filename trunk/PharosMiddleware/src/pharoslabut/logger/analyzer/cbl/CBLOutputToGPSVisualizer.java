@@ -5,11 +5,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import pharoslabut.experiment.RobotExpSettings;
+import pharoslabut.util.Stats;
+import pharoslabut.logger.analyzer.*;
 import pharoslabut.logger.FileLogger;
-import pharoslabut.logger.analyzer.GPSLocationState;
-import pharoslabut.logger.analyzer.GPSVisualize;
-import pharoslabut.logger.analyzer.RobotExpData;
 import pharoslabut.navigate.*;
 
 /**
@@ -30,6 +28,9 @@ public class CBLOutputToGPSVisualizer {
 		doAnalysis(inputFile);
 	}
 	
+	/**
+	 * Holds the actual and estimated locations of a robot at a single time step.
+	 */
 	private class RobotLocEntry {
 		int timestep;
 		Location locTrue;
@@ -40,10 +41,20 @@ public class CBLOutputToGPSVisualizer {
 			this.locTrue = locTrue;
 			this.locEst = locEst;
 		}
+		
+		public double getError() {
+			return locTrue.distanceTo(locEst);
+		}
 	}
 	
+	/**
+	 * Holds the actual and derived locations of a robot.  The derived locations are calculated
+	 * using a connectivity-based-localization algorithm.
+	 */
 	private class RobotLocInfo {
+		
 		int robotNumber;
+		
 		Vector<RobotLocEntry> locs = new Vector<RobotLocEntry>();
 		
 		public RobotLocInfo(int robotNumber) {
@@ -96,6 +107,8 @@ public class CBLOutputToGPSVisualizer {
 	 * @param inputFile The input file containing the output of the connectivity-based localizer.
 	 */
 	private void doAnalysis(String inputFile) {
+		
+		// Open the file containing the output of the connectivity-based-localization algorithm.
 		BufferedReader input = null;
 		try {
 			input =  new BufferedReader(new FileReader(inputFile));
@@ -105,12 +118,13 @@ public class CBLOutputToGPSVisualizer {
 			System.exit(1);
 		}
 		
+		// Read in the file and organize the data within the dataTable...
 		try {
 			String line = null;
 			int lineno = 1;
 			while (( line = input.readLine()) != null) {
 				if (!line.equals("")) {
-					if (line.startsWith("Robot")) {
+					if (line.startsWith("Robot") && !line.contains("Robots")) {
 						String[] elem = line.split("[\\|]");
 //						for (int i=0; i < elem.length; i++) {
 //							log(i + ": " + elem[i]);
@@ -145,11 +159,14 @@ public class CBLOutputToGPSVisualizer {
 		
 		int colorIndx = 0;
 		
+		// For each robot...
 		Enumeration<Integer> robotNumbers = dataTable.keys();
 		while (robotNumbers.hasMoreElements()) {
 			RobotLocInfo currRobot = dataTable.get(robotNumbers.nextElement());
 			
-			log("Processing robot " + currRobot.robotNumber);
+			Vector<Double> errors = new Vector<Double>();
+			
+			//log("Processing robot " + currRobot.robotNumber);
 			
 			// Make a trace of the robot's actual location
 			outputFlogger.log("type,latitude,longitude,name,color"); 
@@ -171,7 +188,15 @@ public class CBLOutputToGPSVisualizer {
 				if (j == 0)
 					line += ", Robot " + currRobot.robotNumber + " Est. Loc, " + GPSVisualize.COLORS[colorIndx++];
 				outputFlogger.log(line);
+				
+				// Keep a running total of the error in the robot's location estimation
+				errors.add(rle.getError());
 			}
+			
+			// Display the minimum, maximum, and average error for this robot
+			log("Robot " + currRobot.robotNumber + " errors: min = " + Stats.getMin(errors) 
+					+ ", max = " + Stats.getMax(errors) 
+					+ ", average = " + Stats.getAvg(errors));
 		}
 	}
 	
