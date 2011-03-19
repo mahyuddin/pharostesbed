@@ -3,7 +3,7 @@ package pharoslabut.logger.analyzer.cbl;
 import pharoslabut.logger.FileLogger;
 
 /**
- * Performed connectivity-based localization based only on GPS data.
+ * Performs connectivity-based localization based only on GPS data.
  * 
  * @author Chien-Liang Fok
  */
