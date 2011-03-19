@@ -101,6 +101,7 @@ public class RobotIPAssignments {
 		}
 		
 		System.err.println("ERROR: Unable to find name of robot with ID " + id);
+		new Exception().printStackTrace();
 		return null;
 	}
 	
