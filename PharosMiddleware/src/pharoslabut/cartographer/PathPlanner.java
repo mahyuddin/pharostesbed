@@ -1,8 +1,11 @@
 package pharoslabut.cartographer;
 
 import java.io.BufferedWriter;
+import java.lang.*;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import pharoslabut.MotionArbiter;
 import pharoslabut.logger.FileLogger;
@@ -25,9 +28,35 @@ import playerclient.IRListener;
 public class PathPlanner implements Position2DListener, IRListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
-	private static Position2DInterface motors; 
+	private static Position2DInterface motors;
+	private List<Square> path;
+	
 	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
+	
+	public List<Square> pathFind(){
+		List<OrderedPair> goalPoints = new ArrayList<OrderedPair>();
+		int side = 11;
+		int radius = side/2;
+		OrderedPair start;
+		OrderedPair end;
+		start = new OrderedPair(radius,radius);	// middle of the sector
 		
+		// right now, just four possible places
+		end = new OrderedPair(start.getX()+radius,start.getY());
+		goalPoints.add(end);
+		end = new OrderedPair(start.getX()-radius,start.getY());
+		goalPoints.add(end);
+		end = new OrderedPair(start.getX(),start.getY()+radius);
+		goalPoints.add(end);
+		end = new OrderedPair(start.getX(),start.getY()-radius);
+		goalPoints.add(end);
+		
+		// Reminder to change name to Astar and delete this java file
+		MapSector sector = new MapSector(side,side,start,goalPoints);
+		sector.findPath();	// this exits as soon as it finds a path	
+		return sector.bestList;
+	}
+	
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -70,8 +99,26 @@ public class PathPlanner implements Position2DListener, IRListener {
 		double speedStep = .2;
 		
 		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
-		
-		
+		int time,turntime,x1,x2,y1,y2;
+		double angle,dist;
+		/////////// ASTAR ///////////////
+		path = pathFind(); // ordered list of coordinates to follow
+		for(int i = path.size()-1; i==0; i--){
+			x1 = path.get(i+1).getX();
+			x2 = path.get(i).getX();
+			y1 = path.get(i+1).getY();
+			y2 = path.get(i).getY();
+			
+			angle = Math.atan((y2-y1)/(x2-x1));
+			turntime = 1000;	// change this.. 
+			motors.setSpeed(0, Math.PI/16);
+			pause(turntime);
+			
+			dist = Math.sqrt(Math.pow((x2-x1),2) + Math.pow((y2-y1),2)); // use the distance formula (pythagorean theorem)
+			time = (int)dist*10;
+			motors.setSpeed(.1, 0);
+			pause(time);
+		}
 		
 		//RotateDegrees(Math.PI/16, motionArbiter);
 		//currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
