@@ -30,6 +30,7 @@ extern "C" {
 
 #include <limits.h>
 #include <stdint.h>
+#include <math.h>
 
 #define PROTEUS_BEGIN 0x24 //'$' to start transmissions
 #define PROTEUS_END 0x0A // LF terminated transmissions
@@ -82,7 +83,7 @@ enum{
 #define PROTEUS_TACH_PACKET_SIZE 4
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
-#define PROTEUS_INS_PACKET_SIZE 8
+#define PROTEUS_INS_PACKET_SIZE 4
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
 
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
@@ -201,19 +202,10 @@ typedef struct {
 	uint8_t newINSData;
 	
     /* INS Status stuff go! */
-    double statusINSSpeedX;
-    float statusINSAccelerationX;
-    
-    double statusINSSpeedY;
-    float statusINSAccelerationY;
-    
-	unsigned short statusINSTick;
-    
-    float statusINSGyroSpeed;
-    float statusINSOrientation;
-    
+    float statusINSDisplaceRad;
     float statusINSDisplaceX;
     float statusINSDisplaceY;
+    float statusINSVel;
 	
 	/**
 	 * The following variables are used to buffer incoming serial data.

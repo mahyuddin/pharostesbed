@@ -71,19 +71,9 @@ proteus_comm_t* proteus_create(const char* serial_port) {
     
     // Initialize INS stuff
     r-> newINSData = 0;
-    r-> statusINSSpeedX= 0;
-    r-> statusINSAccelerationX= 0;
-    
-    r-> statusINSSpeedY= 0;
-    r-> statusINSAccelerationY= 0;
-    
-	r-> statusINSTick= 0;
-    
-    r-> statusINSGyroSpeed= 0;
-    r-> statusINSOrientation= 0;
-    
     r-> statusINSDisplaceX= 0;
     r-> statusINSDisplaceY= 0;
+    r-> statusINSDisplaceRad= 0;
 	return r;
 }
 
@@ -928,25 +918,13 @@ result_t proteusReceiveSerialData(proteus_comm_t* r) {
 #define DEG2RADIAN 3.14159265/180
 // Added by Francis Rei Lao Israel for processing accelerometer packets.
 result_t processAccelerometerPacket(proteus_comm_t* r) {
-	uint16_t tickNumberNew;
-    uint16_t tickNumberOld;
-	uint8_t data;
-	int16_t acceleration;
-	int16_t Xacc;
-	int16_t Yacc;
-	int16_t GyroSpd;
-    float XFloat;
-	float XFloat_Old;
-	float XSpeed_Old;
-	float XSpeed_New;
-	float XDisplace;
-	
-	float YFloat;
-	float YFloat_Old;
-	float YSpeed_Old;
-	float YSpeed_New;
-	float YDisplace;
-	float GyroFloat;
+    uint8_t data;
+    // Forward Displacement 
+    signed short FDisp;
+    float        FDispF;
+    // Rotational Displacement
+    signed short RDisp;
+    float        RDispF;
 	#if DEBUG
 	//printf("INS DEBUG: Processing accelerometer packet.");
 	#endif
@@ -956,83 +934,31 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, NULL); // pop message type
 		
 		// Figure out tick number (so we can figure out speed later)
-		popRxSerialBuff(r, &data);
-		tickNumberNew = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		tickNumberNew += (data & 0x00FF);
 		
-		// Pop Xacc
+		// Pop Forward displacement
 		popRxSerialBuff(r, &data);
-		Xacc = ((data << 8) & 0xFF00);
+		FDisp = ((data << 8) & 0xFF00);
 		popRxSerialBuff(r, &data);
-		Xacc += (data & 0x00FF);
-		// Pop Yacc
-		popRxSerialBuff(r, &data);
-		Yacc = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		Yacc += (data & 0x00FF);
+		FDisp += (data & 0x00FF);
 		
-		// Pop GyroRate
+		// Pop Gyro
 		popRxSerialBuff(r, &data);
-		GyroSpd = ((data << 8) & 0xFF00);
+		RDisp = ((data << 8) & 0xFF00);
 		popRxSerialBuff(r, &data);
-		GyroSpd += (data & 0x00FF);
+		RDisp += (data & 0x00FF);
         
         popRxSerialBuff(r, NULL); // pop PROTEUS_END
-	} else return FAIL;
-    // convert fixed point to floating point
-	XFloat = ((float) Xacc )/ 1000;
-	YFloat = ((float) Yacc )/ 1000;
-	// Update running tally of speed
-		// Old values
-	XFloat_Old = r->statusINSAccelerationX;
-	YFloat_Old = r->statusINSAccelerationY;
-	XSpeed_Old = r->statusINSSpeedX;
-	YSpeed_Old = r->statusINSSpeedY;
-	tickNumberOld = r->statusINSTick;
-		// New values
-	XSpeed_New = XSpeed_Old +
-                            (float)( tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
-                            ( (XFloat + XFloat_Old)  /  2 );
-	YSpeed_New = YSpeed_Old +
-                            (float)( tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) * // time between this and the previous sample
-                            ( (YFloat + YFloat_Old)  /  2 );
-	XDisplace = (float)(tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
-                            ((XSpeed_Old + XSpeed_New) / 2 );
-	YDisplace = (float)(tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
-                            ((YSpeed_Old + YSpeed_New) / 2 );
-	// Update displacement, Acceleration, etc to match new calculations
-	r -> statusINSAccelerationX = XFloat;
-	r -> statusINSAccelerationY = YFloat;
-	
-	r -> statusINSTick = tickNumberNew;
-
-	r -> statusINSSpeedX = XSpeed_New;
-	r -> statusINSSpeedY = YSpeed_New;
-	
-	r-> statusINSDisplaceX += XDisplace * cos(r->statusINSOrientation * DEG2RADIAN);
-	r-> statusINSDisplaceY += XDisplace * sin(r->statusINSOrientation * DEG2RADIAN);
-	
-	r-> statusINSDisplaceX += YDisplace * sin(r->statusINSOrientation * DEG2RADIAN);
-    r-> statusINSDisplaceY += YDisplace * cos(r->statusINSOrientation * DEG2RADIAN);
-	
-	// Gyroscope stuff!
-	GyroFloat = ((float) GyroSpd)/ 100;
-	
-	r -> statusINSOrientation = r -> statusINSOrientation + 
-                                    ( (unsigned char) tickNumberNew - tickNumberOld) / (INS_SAMPLE_FREQ) *
-                                    ( (r -> statusINSGyroSpeed + GyroFloat) / 2);
-	r -> statusINSGyroSpeed = GyroFloat;
-	
-	r -> newINSData = true;
-	#if DEBUG
-	if (1){//tickNumberNew % 50 == 0) {
-		printf("Tick: %d\n",tickNumberNew);
-		printf("YAccel: %f\n",YFloat);
-		printf("YSpeed: %f\n",YSpeed_New);
-		printf("GyroRate: %d\n",GyroSpd);
+	} else{
+		return FAIL;
 	}
-	#endif
-	
+    FDispF = (float)FDisp * .001;  // Go from .001 M  to 1 m
+    RDispF = ((float)RDisp * .01) * DEG2RADIAN; // From 100ths of a degree to radians
+    r -> statusINSDisplaceX += sin(RDispF) * FDispF;
+    r -> statusINSDisplaceY += cos(RDispF) * FDispF;
+    r -> statusINSVel = FDispF / .01;
+    
+    
+    r->newINSData = 1;
+    
 	return SUCCESS;
 }

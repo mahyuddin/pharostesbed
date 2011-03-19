@@ -100,7 +100,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size);
  * Sends a compass packet to the x86.
  */
 void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading);
-void Command_sendAccelerometerPacket(uint8_t tickNumber, uint16_t x, uint16_t y, uint16_t gyro);
+void Command_sendAccelerometerPacket(uint16_t tickNumber, int16_t x, int16_t y, int16_t gyro);
 
 void Command_startSendingData(void);
 void Command_stopSendingData(void);

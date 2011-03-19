@@ -434,8 +434,8 @@ void Proteus::updatePos2DINS() {
 	
 	posdata.pos.px = this->proteus_dev->statusINSDisplaceX;
 	posdata.pos.py = this->proteus_dev->statusINSDisplaceY;
-	posdata.pos.pa = this->proteus_dev->statusINSOrientation;
-	posdata.vel.px = this->proteus_dev->statusINSSpeedX;
+	posdata.pos.pa = this->proteus_dev->statusINSDisplaceRad;
+	posdata.vel.px = this->proteus_dev->statusINSVel;
 	posdata.stall = this->proteus_dev->motor_stall;
 	
 	//printf("Publishing the following position2D data: px=%f, py=%f, pa=%f, vel=%f, stall=%i\n",
@@ -609,7 +609,7 @@ void Proteus::Main() {
 		//printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
-				#if DEBUG 
+				#if DEBUG
 				//printf("proteus_driver: main: checking for new data to publish...\n");
 				#endif
 				/*

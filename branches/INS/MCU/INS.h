@@ -5,17 +5,19 @@
 
 #define INS_SAMPLE_FREQ 500
 
+#define USE_XAXIS 0
+
 // Making a table from 10-bit ADC to M/S^2
 // Accel is in signed, fixed point, where 1 = 0.001 M/S^2
 typedef struct ADC_Accel {
     short ADC;
-    int   X;
+    long   X;
 } ADC_Accel;
 
 typedef struct FIFO_Item {
     char label;
     int  value;
-    int  tick;
+    unsigned short tick;   
 } FIFO_Item;    
 
 
