@@ -54,6 +54,8 @@ public class RobotExpData {
 	 */
 	private Vector<TelosBTxRecord> telosBTxHist = new Vector<TelosBTxRecord>();
 	
+	private FileLogger flogger = null;
+	
 	/**
 	 * The constructor.
 	 * 
@@ -68,6 +70,169 @@ public class RobotExpData {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	}
+	
+	public void setFileLogger(FileLogger flogger) {
+		this.flogger = flogger;
+	}
+	
+	/**
+	 * Returns all of the beacons received from the specified robot during
+	 * the window of time surrounding the specified time stamp.  That is, the period
+	 * of time considered is [timestamp - windowSize/2, timestamp + windowSize/2].
+	 * 
+	 * @param robotID The ID of the robot that transmitted the beacons of interest.
+	 * @param timestamp The end time of consideration.
+	 * @param windowSize The period of time before the time stamp to consider.
+	 * @return The beacons that were received during the specified time window, 
+	 * sorted by the time they were received.
+	 */
+	private Vector<TelosBRxRecord> getBeaconsFrom(int robotID, long timestamp, long windowSize) {
+		Vector<TelosBRxRecord> result = new Vector<TelosBRxRecord>();
+		
+		long startTime = timestamp - windowSize/2;
+		if (startTime < getRobotStartTime())
+			startTime = getRobotStartTime();
+		
+		long stopTime = timestamp + windowSize/2;
+		if (stopTime > getRobotStopTime())
+			stopTime = getRobotStopTime();
+		
+		Enumeration<TelosBRxRecord> e = telosBRxHist.elements();
+		while (e.hasMoreElements()) {
+			TelosBRxRecord currRecord = e.nextElement();
+			
+			// Only add the RSSI to the vector if the beacon was sent over
+			// the relevant time windows and it was sent from the specified robot
+			if (currRecord.getTimeStamp() >= startTime && currRecord.getTimeStamp() <= stopTime 
+					&& currRecord.getSenderID() == robotID) 
+			{
+				result.add(currRecord);
+			}
+		}
+		Collections.sort(result);
+		return result;
+	}
+	/**
+	 * Returns the average RSSI of beacons received from the specified
+	 * robot at the specified timestamp and over the specified preceding window size.
+	 * 
+	 * @param robotID The ID of the robot whose beacons we want to examine.
+	 * @param timestamp The time at which the neighbor list should be determined.
+	 * @param windowSize The number of prior milliseconds over which to determine
+	 * RSSI.  That is, a node is a neighbor if its beacon was received during
+	 * the interval [timestamp - windowSize, timestamp].
+	 * @return the average RSSI of the beacons received, or -1 if no beacons
+	 * were received during that period of time, meaning the two robots were
+	 * likely disconnected.
+	 */
+//	public double getAvgRSSIto(int robotID, long timestamp, long windowSize) {
+//		Vector<TelosBRxRecord> result = getBeaconsFrom(robotID, timestamp, windowSize);
+//		
+//		if (result.size() == 0)
+//			return -1;
+//		else {
+//			// Return the average RSSI of the beacons received from the specified robot
+//			// during the time window.
+//			double total = 0;
+//			for (int i=0; i < result.size(); i++) {
+//				total += result.get(i).getRSSI();
+//			}
+//			return total / result.size();
+//		}
+//	}
+	
+	/**
+	 * Returns the estimated RSSI of beacons received from the specified
+	 * robot at the specified time stamp.  This is done by finding the
+	 * closest RSSI reading to the desired time stamp within a certain
+	 * window of time surrounding the desired time.  <!-- performing a linear
+	 * interpolation of RSSI readings that are received within the specified
+	 * time window before and after the desired time.-->
+	 * 
+	 * @param robotID The ID of the robot whose beacons we want to examine.
+	 * @param timestamp The time at which the neighbor list should be determined.
+	 * @param windowSize The window of interest surrounding the timestamp in 
+	 * milliseconds over which to determine RSSI.  That is, a node is a neighbor 
+	 * if its beacon was received during the interval 
+	 * [timestamp - windowSize/2, timestamp + windowSize/2].
+	 * @return the average RSSI of the beacons received, or -1 if no beacons
+	 * were received during that period of time, meaning the two robots were
+	 * likely disconnected.
+	 */
+	public double getTelosBRSSIto(int robotID, long timestamp, long windowSize) {
+		Vector<TelosBRxRecord> result = getBeaconsFrom(robotID, timestamp, windowSize);
+		
+		if (result.size() == 0) {
+			// No beacons were received during this time interval
+			return -1;
+		} else if (result.size() == 1) {
+			// If there was only one beacon received in the window, use its RSSI value directly
+			TelosBRxRecord r = result.get(0);
+			return r.getRSSI();
+		} else {
+			// If we actually received a beacon at the specified timestamp, use its RSSI value directly...
+			for (int i = 0; i < result.size()-1; i++) {
+				if (result.get(i).getTimeStamp() == timestamp)
+					return result.get(i).getRSSI();
+			}
+			
+			// Find the <time, RSSI> closest to the desired timestamp and use it.
+			// This is guaranteed to be within half a window size of the desired time.
+			int closestIndx = 0;
+			long closestDelta = Math.abs(result.get(0).getTimeStamp() - timestamp);
+			for (int i = 1; i < result.size(); i++) {
+				long currDelta = Math.abs(result.get(i).getTimeStamp() - timestamp);
+				if (currDelta < closestDelta) {
+					closestIndx = i;
+					closestDelta = currDelta;
+				}
+			}
+			
+			return result.get(closestIndx).getRSSI();
+//			
+//			// Find the <time, RSSI> pairs immediately before and after the specified
+//			// timestamp.  Use linear interpolation to estimate RSSI at timestamp.
+//			int beforeIndx = 0;
+//			for (int i = 0; i < result.size()-1; i++) {
+//				if (result.get(i).getTimeStamp() < timestamp)
+//					beforeIndx = i;
+//			}
+//			
+//			int afterIndx = result.size()-1;
+//			for (int i = afterIndx; i > 0; i--) {
+//				if (result.get(i).getTimeStamp() > timestamp)
+//					afterIndx = i;
+//			}
+//			
+//			TelosBRxRecord beforeRecord = result.get(beforeIndx);
+//			TelosBRxRecord afterRecord = result.get(afterIndx);
+//			
+//			// If both anchor points are to the left or to the right of desired time stamp,
+//			// just return the closest one...
+//			if (beforeRecord.getTimeStamp() < timestamp && afterRecord.getTimeStamp() < timestamp) {
+//				return afterRecord.getRSSI();
+//			} else if (beforeRecord.getTimeStamp() > timestamp && afterRecord.getTimeStamp() > timestamp) {
+//				return beforeRecord.getRSSI();
+//			}
+//			
+//			// perform linear interpolation to guess RSSI value at the specified time step
+//			Line l = new Line(new Location(beforeRecord.getRSSI(), beforeRecord.getTimeStamp()),
+//					new Location(afterRecord.getRSSI(), afterRecord.getTimeStamp()));
+//			double rssi = l.getLatitude(timestamp);
+//
+//			log("Desired time: " + timestamp);
+//			for (int i=0; i < result.size(); i++) {
+//				TelosBRxRecord currRecord = result.get(i);
+//				log(i + "\t" + (currRecord.getTimeStamp() - timestamp) + "\t" + currRecord.getRSSI());
+//			}
+//			log("beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+//			log("Before record: " + beforeRecord);
+//			log("After record: " + afterRecord);
+//			log("Estimated RSSI at " + timestamp + " = " + rssi);
+//			
+//			return rssi;
 		}
 	}
 	
@@ -353,6 +518,24 @@ public class RobotExpData {
 	 */
 	public Vector<TelosBRxRecord> getTelosBRxHist() {
 		return telosBRxHist;
+	}
+	
+	/**
+	 * Returns the TelosB wireless packet reception history from
+	 * a specific sender.
+	 * 
+	 * @param sndrID The ID of the sender.
+	 * @return the TelosB wireless packet reception history.
+	 */
+	public Vector<TelosBRxRecord> getTelosBRxHist(int sndrID) {
+		Vector<TelosBRxRecord> result = new Vector<TelosBRxRecord>();
+		Enumeration<TelosBRxRecord> e = telosBRxHist.elements();
+		while (e.hasMoreElements()) {
+			TelosBRxRecord ce = e.nextElement();
+			if (ce.getSenderID() == sndrID)
+				result.add(ce);
+		}
+		return result;
 	}
 	
 	/**
@@ -673,8 +856,11 @@ public class RobotExpData {
 	}
 	
 	private void log(String msg) {
+		String result = "RobotExpData: " + msg; 
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("RobotExpData: " + msg);
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	/**
