@@ -28,9 +28,9 @@ public class GetRSSIvsTime {
 				+ " \t Dist", flogger);
 		
 		for (long timestamp = expData.getExpStartTime(); timestamp < expData.getExpStopTime(); timestamp += timeStepSize) {
-			double rssi1 = robot1Data.getRSSIto(robot2, timestamp, timeStepSize);
+			double rssi1 = robot1Data.getTelosBRSSIto(robot2, timestamp, timeStepSize);
 			
-			double rssi2 = robot2Data.getRSSIto(robot1, timestamp, timeStepSize);
+			double rssi2 = robot2Data.getTelosBRSSIto(robot1, timestamp, timeStepSize);
 			
 			Location robot1loc = robot1Data.getLocation(timestamp);
 			Location robot2loc = robot2Data.getLocation(timestamp);
