@@ -8,7 +8,7 @@ import pharoslabut.RobotIPAssignments;
  * 
  * @author  Chien-Liang Fok
  */
-public class TelosBRxRecord {
+public class TelosBRxRecord implements Comparable<TelosBRxRecord>{
 	long timestamp;
 	int sndrID;
 	int rcvrID;
@@ -138,6 +138,16 @@ public class TelosBRxRecord {
 			+ sndrID + " (" + RobotIPAssignments.getRobotName(sndrID) + ")\t" 
 			+ rcvrID + " (" + RobotIPAssignments.getRobotName(rcvrID) + ")\t" 
 			+ seqno + "\t" + rssi + "\t" + lqi + "\t" + moteTimestamp;
+	}
+
+	@Override
+	public int compareTo(TelosBRxRecord arg0) {
+		if (getTimeStamp() == arg0.getTimeStamp())
+			return 0;
+		else if (getTimeStamp() > arg0.getTimeStamp())
+			return 1;
+		else
+			return -1;
 	}
 	
 }
