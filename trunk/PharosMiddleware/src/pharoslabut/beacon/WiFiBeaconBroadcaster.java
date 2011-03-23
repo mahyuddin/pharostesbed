@@ -107,7 +107,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     }
 
 	/**
-	 * Find the IP address of the local device within the Pharos wireless
+	 * Find the IP address of the local network interface connected to the Pharos wireless
 	 * ad hoc network.  It assumes that the IP address takes the form of 10.11.12.*.
 	 * 
 	 * @return The IP address of the local machine in the Pharos wireless ad hoc network. If no
