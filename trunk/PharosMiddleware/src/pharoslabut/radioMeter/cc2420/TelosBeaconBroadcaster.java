@@ -16,6 +16,9 @@ import pharoslabut.beacon.*;
  * @author Chien-Liang Fok
  */
 public class TelosBeaconBroadcaster extends BeaconBroadcaster {
+	public static short TX_PWR_MAX = 31;
+	public static short TX_PWR_MIN = 1;
+	
 //	private String outputFile;
 	private MoteIF moteIF;
 //	private FileLogger flogger = null;
@@ -191,17 +194,17 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 	@Override
 	protected void sendBeacon() {
 		SendBeaconMsg sbm = new SendBeaconMsg();
-		log("SEND_TELSOB_BCAST\t" + moteID + "\t" + seqno);
-		sbm.set_seqno(seqno++);
+		log("SEND_TELSOB_BCAST\t" + moteID + "\t" + seqno + "\t" + (short)txPower);
+		
 		try {
+			sbm.set_sndrID(moteID);
+			sbm.set_seqno(seqno++);
+			sbm.set_txPwr((short)txPower);
 			moteIF.send(moteID, sbm);
 		} catch(IOException e) {
 			log("Error sending message: " + e.getMessage());
+			e.printStackTrace();
 		}
-//		if (--numBcasts == 0) {
-//			timer.cancel();
-//			timer = null;
-//		}
 	}
 	
 //	private void saveResult(String result) {
