@@ -5,6 +5,7 @@ package pharoslabut.navigate;
  * robot is done navigating the waypoints within a motion script.
  * 
  * @author Chien-Liang Fok
+ * @see pharoslabut.io.StopExpMsg
  */
 public interface MotionScriptFollowerDoneListener {
 	
@@ -15,6 +16,7 @@ public interface MotionScriptFollowerDoneListener {
 	 * @param finalIntructionIndx The final instruction within the motion script
 	 * that was executed.  If successful, this should be equal to the number of 
 	 * instructions in the motion script.
+	 * @param continueRunning Whether to continue to run until a StopExpMsg is received.
 	 */
-	public void motionScriptDone(boolean success, int finalIntructionIndx);
+	public void motionScriptDone(boolean success, int finalIntructionIndx, boolean continueRunning);
 }
