@@ -20,7 +20,7 @@ public class StartBcastWiFi extends StartBcastTelosB {
 	 * @param maxPeriod The maximum beacon period in milliseconds.
 	 * @param txPowerLevel The transmit power.
 	 */
-	public StartBcastWiFi(long minPeriod, long maxPeriod, int txPowerLevel) {
+	public StartBcastWiFi(long minPeriod, long maxPeriod, short txPowerLevel) {
 		super(minPeriod, maxPeriod, txPowerLevel);
 	}
 	
