@@ -53,14 +53,14 @@ public class MotionScriptReader {
 								String[] elem = line.split("[\\s]+");
 								long minPauseTime = Long.valueOf(elem[1]);
 								long maxPauseTime = Long.valueOf(elem[2]);
-								int txPower = Integer.valueOf(elem[3]);
+								short txPower = Short.valueOf(elem[3]);
 								result.addInstruction(new StartBcastTelosB(minPauseTime, maxPauseTime, txPower));
 							}
 							else if (line.contains("START_BCAST_WIFI")) {
 								String[] elem = line.split("[\\s]+");
 								long minPauseTime = Long.valueOf(elem[1]);
 								long maxPauseTime = Long.valueOf(elem[2]);
-								int txPower = Integer.valueOf(elem[3]);
+								short txPower = Short.valueOf(elem[3]);
 								result.addInstruction(new StartBcastWiFi(minPauseTime, maxPauseTime, txPower));
 							}
 							else if (line.contains("STOP_BCAST_TELOSB")) {
@@ -69,10 +69,15 @@ public class MotionScriptReader {
 							else if (line.contains("STOP_BCAST_WIFI")) {
 								result.addInstruction(new StopBcastWifi());
 							}
-							else {
+							else if (line.contains("WAIT_EXP_STOP")) {
+								result.addInstruction(new WaitStopExp());
+							} 
+							else if (line.contains("SCOOT")) {
+								String[] elem = line.split("[\\s]+");
+								int amount = Integer.valueOf(elem[1]);
+								result.addInstruction(new Scoot(amount));
+							} else
 								throw new UnknownInstructionException(line);
-							}
-							
 						} catch(Exception e) {
 							e.printStackTrace();
 							System.err.println("Error on line " + lineno + " of motion script " + fileName);
