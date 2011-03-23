@@ -43,17 +43,18 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		// right now, just four possible places
 		end = new OrderedPair(start.getX()+radius,start.getY());
-		goalPoints.add(end);
+		//	goalPoints.add(end);
 		end = new OrderedPair(start.getX()-radius,start.getY());
 		goalPoints.add(end);
 		end = new OrderedPair(start.getX(),start.getY()+radius);
 		goalPoints.add(end);
 		end = new OrderedPair(start.getX(),start.getY()-radius);
 		goalPoints.add(end);
-		
+		System.out.println("entered sector");
 		// Reminder to change name to Astar and delete this java file
 		MapSector sector = new MapSector(side,side,start,goalPoints);
-		sector.findPath();	// this exits as soon as it finds a path	
+		sector.findPath();	// this exits as soon as it finds a path
+		System.out.println(sector.bestList.size());
 		return sector.bestList;
 	}
 	
@@ -103,19 +104,27 @@ public class PathPlanner implements Position2DListener, IRListener {
 		double angle,dist;
 		/////////// ASTAR ///////////////
 		path = pathFind(); // ordered list of coordinates to follow
-		for(int i = path.size()-1; i==0; i--){
+		System.out.println("got a path " + path.size());
+		for(int i = path.size()-2; i>=0; i--){
+			System.out.println("got inside");
 			x1 = path.get(i+1).getX();
 			x2 = path.get(i).getX();
 			y1 = path.get(i+1).getY();
 			y2 = path.get(i).getY();
 			
-			angle = Math.atan((y2-y1)/(x2-x1));
-			turntime = 1000;	// change this.. 
+			if(x2==x1)
+				angle = 90; 
+			else
+				angle = Double.valueOf(Math.atan((y2-y1)/(x2-x1)));
+			
+			turntime = (int)((double)angle/360 * 16 * 1000) + 1;	// change this..
+			System.out.println("angle = " + turntime);
 			motors.setSpeed(0, Math.PI/16);
 			pause(turntime);
 			
 			dist = Math.sqrt(Math.pow((x2-x1),2) + Math.pow((y2-y1),2)); // use the distance formula (pythagorean theorem)
-			time = (int)dist*10;
+			time = (int)dist*1000;
+			System.out.println("time = " + dist);
 			motors.setSpeed(.1, 0);
 			pause(time);
 		}
@@ -132,17 +141,17 @@ public class PathPlanner implements Position2DListener, IRListener {
 		motors.setSpeed(0, 0);
 		pause(5000);
 		
-		motors.setSpeed(0.1, 0);
-		pause(5000);
+		//motors.setSpeed(0.1, 0);
+		//pause(5000);
 		
-		motors.setSpeed(0, 0.1);
-		pause(10000);
+		//motors.setSpeed(0, 0.1);
+		//pause(10000);
 		
-		motors.setSpeed(.1, 0);
-		pause(5000);
+		//motors.setSpeed(.1, 0);
+		//pause(5000);
 		
-		motors.setSpeed(0, 0);
-		pause(5000);
+		//motors.setSpeed(0, 0);
+		//pause(5000);
 		
 		
 //		while(true){

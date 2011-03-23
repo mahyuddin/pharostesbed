@@ -94,7 +94,7 @@ public class Square {
 		int right = y + 1;
 
 		if (bottom < mapSector.getRows()) {
-			if (isAdjacent()) {
+			if (isAdjacent() && (x!=3 || y!=5)) {
 				mapSector.getSquare(bottom, y).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(bottom, y));
 			}
@@ -151,10 +151,10 @@ public class Square {
 	
 	public boolean isAdjacent() {
 
-		if (Math.random() > .5) {
+		//if (Math.random() > .5) {
 			return true;
-		}
-		return false;
+		//}
+		//return false;
 	}
 
 }
