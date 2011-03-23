@@ -48,9 +48,13 @@ public class Move extends Instruction {
 	@Override
 	public boolean isCompatibleWith(Instruction instr) {
 		
-		// The only instruction not compatible with MOVE is PAUSE.
+		// The only instructions not compatible with MOVE are PAUSE, MOVE, and SCOOT.
 		switch(instr.getType()) {
 		case PAUSE: 
+			return false;
+		case SCOOT:
+			return false;
+		case MOVE:
 			return false;
 		default:
 			return true;
