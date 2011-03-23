@@ -101,35 +101,50 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
 		int time,turntime,x1,x2,y1,y2;
-		int bearing = 0;//initially facing right
+		double bearing = 0;//initially facing right
 		double angle,dist;
 		/////////// ASTAR ///////////////
 		path = pathFind(); // ordered list of coordinates to follow
 		System.out.println("got a path " + path.size());
 		for(int i = path.size()-2; i>=0; i--){
-			System.out.println("got inside");
-			x1 = path.get(i+1).getX();
-			x2 = path.get(i).getX();
-			y1 = path.get(i+1).getY();
-			y2 = path.get(i).getY();
+			//System.out.println("got inside");
+			y1 = path.get(i+1).getX();
+			y2 = path.get(i).getX();
+			x1 = path.get(i+1).getY();
+			x2 = path.get(i).getY();		
 			
+			// convert from cartesian to polar coordinates
 			
-			
-			if(x2==x1)
-				angle = 90; 
-			else
-				angle = Double.valueOf(Math.atan((y2-y1)/(x2-x1)));
-			
-			System.out.println("1(" + x1 + "," + y1 + ")===>2(" + x2 + "," + y2 + ")");
-			
-			turntime = (int)((double)angle/360 * 16 * 1000) + 1;	// change this..
-			System.out.println("angle = " + turntime);
-			motors.setSpeed(0, Math.PI/16);
+			/*double offset = 0;
+			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+			double theta = Math.atan((y2-y1)/(x2-x1)) + offset;
+			System.out.println("polar(" +r+","+theta+")");*/
+			int left = 1;
+			int right = -1;
+			double theta = Math.atan2(y2-y1, x2-x1);
+			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+			double turnAngle = bearing-theta; 
+			int turnDirection = right;
+			if (bearing - theta < 0){
+				turnDirection = left;
+			}
+			if( Math.abs(bearing - theta) > Math.PI ){
+				turnAngle = 2*Math.PI - Math.abs(bearing - theta);
+				turnDirection = turnDirection*(-1);
+			}
+			bearing = theta;
+
+			//System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+			//System.out.println("polar(" +r+","+theta+")");
+			//System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
+			turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+			//System.out.println("angle = " + turntime);
+			motors.setSpeed(0, Math.PI/16*turnDirection);
 			pause(turntime);
 			
-			dist = Math.sqrt(Math.pow((x2-x1),2) + Math.pow((y2-y1),2)); // use the distance formula (pythagorean theorem)
-			time = (int)dist*1000;
-			System.out.println("time = " + dist);
+			//dist = Math.sqrt(Math.pow((x2-x1),2) + Math.pow((y2-y1),2)); // use the distance formula (pythagorean theorem)
+			time = (int)r*1000;
+			//System.out.println("time = " + r);
 			motors.setSpeed(.1, 0);
 			pause(time);
 		}
