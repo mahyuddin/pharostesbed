@@ -2,6 +2,9 @@ package pharoslabut.logger.analyzer.cbl;
 
 import java.util.*;
 
+//import org.netlib.util.intW;
+
+import pharoslabut.logger.analyzer.cbl.rssidist.*;
 import pharoslabut.logger.analyzer.ExpData;
 import pharoslabut.logger.analyzer.RobotExpData;
 import pharoslabut.navigate.Location;
@@ -18,6 +21,10 @@ public class GroundTruth {
 	private long timeStepSize;
 	private int numTimeSteps;
 	private Hashtable<Integer, RobotTrueLocData> robotLocs = new Hashtable<Integer, RobotTrueLocData>();
+	
+	private double[][][] pairwiseDist;
+	
+	private RSSItoDist rssiToDist = new RSSIToDistM15Exp9All();
 	
 	/**
 	 * Extracts the true locations of the robots and formats them in a manner that can
@@ -41,7 +48,7 @@ public class GroundTruth {
 		while (robotEnum.hasMoreElements()) {
 			RobotExpData currRobot = robotEnum.nextElement();
 			
-			// Add it to the result...
+			// Add it to the robotLocs hashtable...
 			RobotTrueLocData currRobotData = new RobotTrueLocData(currRobot.getRobotID());
 			robotLocs.put(currRobot.getRobotID(), currRobotData);
 			
@@ -55,6 +62,32 @@ public class GroundTruth {
 				robotLocs.get(currRobot.getRobotID()).addLocation(currLoc);
 			}
 		}
+		
+		// load the RSSI-do-distance table
+		pairwiseDist = new double[getNumRobots()][getNumRobots()][getNumTimeSteps()];
+		for (int t = 0; t <  getNumTimeSteps(); t++) {
+            for (int i = 0; i < getNumRobots() - 1; i++) {
+                for (int j = i + 1; j < getNumRobots(); j++) {
+                	
+                	int robot1ID = getRobotIDs()[i];
+                	int robot2ID = getRobotIDs()[j];
+                	
+                	RobotExpData robot1Data = expData.getRobotByID(robot1ID);
+                	
+                	long currTime = expData.getExpStartTime() + (t+1) * timeStepSize;
+                	
+                	/*
+                	 * NOTE: This gets the rssi between robot i and robot j at time t.
+                	 * If the rssi value is unknown (because the two robots were disconnected),
+                	 * -1 is returned.
+                	 */
+                	//double rssi = robot1Data.getAvgRSSIto(robot2ID, currTime, timeStepSize);
+                	double rssi = robot1Data.getTelosBRSSIto(robot2ID, currTime, timeStepSize);
+                	
+                    pairwiseDist[i][j][t] = rssiToDist.getDist(rssi);
+                }
+            }
+        }
 	}
 	
 	public String getExpDir() {
@@ -89,6 +122,19 @@ public class GroundTruth {
 			result[indx++] = robotIDs.nextElement();
 		}
 		return result;
+	}
+	
+	/**
+	 * Returns the distance between robots i and j at time t based
+	 * on a global RSSI function.
+	 * 
+	 * @param i index of first robot, valid values are [0, getNumRobots-1]
+	 * @param j index of second robot, valid values are [i+1, getNumRobots()]
+	 * @param t the time interval, valid values are [0, getNumTimeSteps()]
+	 * @return distance between robots i and j at time t.
+	 */
+	public double getRSSIDistGlobal(int i, int j, int t) {
+		return pairwiseDist[i][j][t];
 	}
 	
 	/**
