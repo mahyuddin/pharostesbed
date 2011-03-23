@@ -25,7 +25,7 @@ public class ExpConfigReader {
 			String line = null;
 			int lineno = 1;
 			while (( line = input.readLine()) != null) {
-				if (!line.equals("")) {
+				if (!line.equals("") && !line.startsWith("//")) {
 					if (line.contains("START_INTERVAL")) {
 						String[] elem = line.split("[\\s]+");
 						try {
