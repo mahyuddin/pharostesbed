@@ -8,5 +8,6 @@ public enum InstructionType {
 	STOP_BCAST_TELOSB,
 	STOP_BCAST_WIFI,
 	PARALLEL,
-	WAIT_EXP_STOP
+	WAIT_EXP_STOP,
+	SCOOT
 }
