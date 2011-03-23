@@ -273,7 +273,9 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 				log("Following GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
-				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, beaconBroadcaster, telosRadioSignalMeter, flogger);
+				Scooter scooter = new Scooter(motionArbiter, flogger);
+				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
+						beaconBroadcaster, telosRadioSignalMeter, flogger);
 				wpFollower.start(gpsMotionScript, this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
@@ -286,11 +288,9 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 	}
 	
 	@Override
-	public void motionScriptDone(boolean success, int finalWayPoint) {
-		// For now, assume that once the robot is done following a motion script,
-		// the experiment is over.
-		stopExp();
-		
+	public void motionScriptDone(boolean success, int finalInstrIndx, boolean continueRunning) {
+		if (!continueRunning)
+			stopExp();
 	}
 	
 	private void stopExp() {
