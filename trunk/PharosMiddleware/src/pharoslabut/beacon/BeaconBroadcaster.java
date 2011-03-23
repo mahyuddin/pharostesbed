@@ -21,6 +21,11 @@ public abstract class BeaconBroadcaster implements Runnable {
      */
     protected long maxPeriod = 10000;
     
+    /**
+     * The tx power level.  Default is 31.
+     */
+    protected short txPower = 31;
+    
     protected boolean running = false;
     
     protected FileLogger flogger;
@@ -41,15 +46,17 @@ public abstract class BeaconBroadcaster implements Runnable {
      * 
      * @param minPeriod The minimum beacon period.
      * @param maxPeriod The maximum beacon period.
+     * @param txPower The transmit power level.
      * @return true if successful.
      */
-    public boolean start(long minPeriod, long maxPeriod) {
+    public boolean start(long minPeriod, long maxPeriod, short txPower) {
     	
     	if (!running) {
     		running = true;
     		
     		this.minPeriod = minPeriod;
     	    this.maxPeriod = maxPeriod;
+    	    this.txPower = txPower;
     	        
     		new Thread(this).start();
     		
@@ -84,7 +91,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     protected abstract void log(String msg);
     
     /**
-     * Sends a beacon.
+     * Sends a beacon.  This is implemented by subclasses.
      */
     protected abstract void sendBeacon();
     
