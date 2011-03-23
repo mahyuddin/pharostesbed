@@ -22,6 +22,10 @@ implementation {
   RadioSignalMeterM.ReceiveSendBeacon -> SendBeaconMsgRcvr;
   
   RadioSignalMeterM.ResultsSenderI -> ResultsSenderM;
+
+  // Allow program to set the tx power level...
+  components CC2420PacketC;
+  RadioSignalMeterM.CC2420Packet -> CC2420PacketC;
   
   components new TimerMilliC() as Timer1;
   ResultsSenderM.Boot -> MainC;

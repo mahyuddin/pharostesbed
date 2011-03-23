@@ -22,7 +22,9 @@ enum {
  * This is to enable greater control over when the beacons are emitted.
  */
 typedef nx_struct SendBeaconMsg {
-	nx_uint32_t seqno;
+	nx_uint8_t txPwr; // The radio transmission power
+	nx_uint16_t sndrID; // The ID of the sender (last octal of robot's IP address)
+	nx_uint32_t seqno; // The sequence number
 } SendBeaconMsg;
 
 typedef nx_struct BeaconMsg {

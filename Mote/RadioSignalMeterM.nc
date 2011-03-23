@@ -22,6 +22,7 @@ module RadioSignalMeterM {
     interface SplitControl as AMControl;
     interface ResultsSenderI;
     interface Receive as ReceiveSendBeacon;
+    interface CC2420Packet;
   }
 }
 implementation {
@@ -46,6 +47,7 @@ implementation {
   
   /**
    * Broadcast a beacon message each time we receive a SendBeaconMsg.
+   * This message is sent by the x86 each time a beacon should be sent.
    * If success, blink the green LED.
    */
   //event void Timer0.fired() {
@@ -56,7 +58,8 @@ implementation {
       if (beacon == NULL) {
         return msg;
       }
-      beacon->idSender = TOS_NODE_ID;
+      call CC2420Packet.setPower(&pkt, sndBeaconMsg->txPwr); // set the transmit power
+      beacon->idSender = sndBeaconMsg->sndrID;
       beacon->seqno = sndBeaconMsg->seqno;
       if (call AMSend.send(AM_BROADCAST_ADDR, &pkt, sizeof(BeaconMsg)) == SUCCESS) {
         busy = TRUE;
