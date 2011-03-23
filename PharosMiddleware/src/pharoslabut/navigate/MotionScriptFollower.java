@@ -14,10 +14,19 @@ import pharoslabut.radioMeter.cc2420.*;
  */
 public class MotionScriptFollower implements Runnable {
 	private NavigateCompassGPS navigator;
+	private Scooter scooter;
+	
 	private MotionScript script;
 	private boolean running = false;
 	private FileLogger flogger;
 	private MotionScriptFollowerDoneListener doneListener;
+	
+	/**
+	 * Whether the server should continue to run after this motion script
+	 * is finished.  This becomes true if the last instruction in the
+	 * motion script is WAIT_EXP_STOP.
+	 */
+	private boolean continueRunning = false;
 	
 	/**
 	 * This is responsible for sending WiFi beacons.
@@ -33,14 +42,17 @@ public class MotionScriptFollower implements Runnable {
 	 * The constructor.
 	 * 
 	 * @param navigator The object that moves the robot towards a GPS waypoint.
+	 * @param scooter The object that scoots the robot forwards or backwards a small amount.
 	 * @param beaconBroadcaster The WiFi beacon broadcaster.
 	 * @param telosRadioSignalMeter The Telos beacon broadcaster.
 	 * @param flogger The file logger for saving debug/experiment output.
 	 */
-	public MotionScriptFollower(NavigateCompassGPS navigator, WiFiBeaconBroadcaster wifiBroadcaster, 
+	public MotionScriptFollower(NavigateCompassGPS navigator, Scooter scooter,
+			WiFiBeaconBroadcaster wifiBroadcaster, 
 			TelosBeaconBroadcaster telosRadioSignalMeter, FileLogger flogger) 
 	{
 		this.navigator = navigator;
+		this.scooter = scooter;
 		this.wifiBroadcaster = wifiBroadcaster;
 		this.telosRadioSignalMeter = telosRadioSignalMeter;
 		this.flogger = flogger;
@@ -81,7 +93,8 @@ public class MotionScriptFollower implements Runnable {
 	}
 	
 	/**
-	 * Executes a move instruction.
+	 * Executes a move instruction.  This moves the robot to a specific
+	 * GPS location.
 	 * 
 	 * @param moveInstr The move instruction to execute.
 	 * @return true if successful.
@@ -111,7 +124,7 @@ public class MotionScriptFollower implements Runnable {
 	/**
 	 * Executes a pause instruction.
 	 * 
-	 * @param moveInstr The move instruction to execute.
+	 * @param pauseInstr The pause instruction to execute.
 	 * @return true if successful.
 	 */
 	private boolean handlePause(Pause pauseInstr) {
@@ -134,13 +147,13 @@ public class MotionScriptFollower implements Runnable {
 		// Start the TelosB cc2420 radio signal meter
 		flogger.log("Starting TelosB beacon broadcaster, minPeriod = " 
 				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
-		return telosRadioSignalMeter.start(instr.getMinPeriod(), instr.getMaxPeriod());
+		return telosRadioSignalMeter.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 	}
 	
 	private boolean handleStartBcastWiFi(StartBcastWiFi instr) {
 		flogger.log("Starting WiFi beacon broadcaster, minPeriod = " 
 				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
-		return wifiBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod());
+		return wifiBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 	}
 	
 	private boolean handleStopBcastTelosB(StopBcastTelosB msg) {
@@ -155,6 +168,12 @@ public class MotionScriptFollower implements Runnable {
 		return true;
 	}
 	
+	private boolean handleScoot(Scoot msg) {
+		flogger.log("Scooting the robot " + msg.getAmount());
+		scooter.scoot(msg.getAmount());
+		return true;
+	}
+	
 	public void run() {
 		int instrIndex = 0;
 		
@@ -163,28 +182,29 @@ public class MotionScriptFollower implements Runnable {
 			
 			switch(instr.getType()) {
 			case MOVE:
-				if (!handleMove((Move)instr))
-					running = false;
+				running = handleMove((Move)instr);
 				break;
 			case PAUSE:
-				if (!handlePause((Pause)instr))
-					running = false;
+				running = handlePause((Pause)instr);
 				break;
 			case START_BCAST_TELOSB:
-				if (!handleStartBcastTelosB((StartBcastTelosB)instr))
-					running = false;
+				running = handleStartBcastTelosB((StartBcastTelosB)instr);
 				break;
 			case START_BCAST_WIFI:
-				if (!handleStartBcastWiFi((StartBcastWiFi)instr))
-					running = false;
+				running = handleStartBcastWiFi((StartBcastWiFi)instr);
 				break;
 			case STOP_BCAST_TELOSB:
-				if (!handleStopBcastTelosB((StopBcastTelosB)instr))
-					running = false;
+				running = handleStopBcastTelosB((StopBcastTelosB)instr);
 				break;
 			case STOP_BCAST_WIFI:
-				if (!handleStopBcastWiFi((StopBcastWifi)instr))
-					running = false;
+				running = handleStopBcastWiFi((StopBcastWifi)instr);
+				break;
+			case SCOOT:
+				running = handleScoot((Scoot)instr);
+				break;
+			case WAIT_EXP_STOP:
+				continueRunning = true; // Tell PharosServer to continue to run until a StopExpMsg is received.
+				running = false; // Tell this MotionScriptFollower to stop running (this is the end fo the script)
 				break;
 			default:
 				log("ERROR Unknown instruction: " + instr);
@@ -208,7 +228,7 @@ public class MotionScriptFollower implements Runnable {
 		
 		// Notify done listeners that this motion script has finished executing.
 		if (doneListener != null)
-			doneListener.motionScriptDone(success, instrIndex);
+			doneListener.motionScriptDone(success, instrIndex, continueRunning);
 		
 		stop();
 	}
