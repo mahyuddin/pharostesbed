@@ -101,6 +101,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
 		int time,turntime,x1,x2,y1,y2;
+		int bearing = 0;//initially facing right
 		double angle,dist;
 		/////////// ASTAR ///////////////
 		path = pathFind(); // ordered list of coordinates to follow
@@ -112,10 +113,14 @@ public class PathPlanner implements Position2DListener, IRListener {
 			y1 = path.get(i+1).getY();
 			y2 = path.get(i).getY();
 			
+			
+			
 			if(x2==x1)
 				angle = 90; 
 			else
 				angle = Double.valueOf(Math.atan((y2-y1)/(x2-x1)));
+			
+			System.out.println("1(" + x1 + "," + y1 + ")===>2(" + x2 + "," + y2 + ")");
 			
 			turntime = (int)((double)angle/360 * 16 * 1000) + 1;	// change this..
 			System.out.println("angle = " + turntime);
