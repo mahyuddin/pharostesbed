@@ -203,10 +203,12 @@ public class CBLOutputToGPSVisualizer {
 				
 				// Keep a running total of the error in the robot's location estimation
 				errors.add(rle.getError());
+				
+				outputStatsFlogger.log("Robot " + currRobot.robotID + ", time step " + j + ", error (m) " + rle.locTrue.distanceTo(rle.locEst));
 			}
 			
 			// Display the minimum, maximum, and average error for this robot
-			outputStatsFlogger.log("Robot " + currRobot.robotID + " errors (m): min = " + Stats.getMin(errors) 
+			outputStatsFlogger.log("Summary of Robot " + currRobot.robotID + "'s errors (m): min = " + Stats.getMin(errors) 
 					+ ", max = " + Stats.getMax(errors) 
 					+ ", average = " + Stats.getAvg(errors));
 		}
