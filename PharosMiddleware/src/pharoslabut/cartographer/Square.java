@@ -1,4 +1,5 @@
 package pharoslabut.cartographer;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -18,7 +19,8 @@ public class Square {
 	private Set<Square> adjacencies = new HashSet<Square>();
 
 	private Square parent;
-
+	private Square diagonalSquare;
+	
 	public Square(int x, int y, MapSector mapSector) {
 
 		this.x = x;
@@ -86,26 +88,80 @@ public class Square {
 		this.parent = parent;
 	}
 
+	public void isDiagonalTo(Square diagonalSquare){
+		this.diagonalSquare = diagonalSquare;
+	}
+	
+	public boolean ifDiagonalTo(Square thisSquare){
+		if (this.diagonalSquare == thisSquare)
+			return true;
+		return false;
+	}
+	
 	public void calculateAdjacencies() {
-
+		boolean bottomAdded = false;
+		boolean rightAdded = false;
 		int top = x - 1;
 		int bottom = x + 1;
 		int left = y - 1;
 		int right = y + 1;
 
 		if (bottom < mapSector.getRows()) {
-			if (isAdjacent()){ //&& (x!=3 || y!=5)) {
+			if (isAdjacent()) {
+				//mapSector.getSquare(bottom, y).isDiagonal = false;
 				mapSector.getSquare(bottom, y).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(bottom, y));
+				bottomAdded = true;
 			}
 		}
 
 		if (right < mapSector.getColumns()) {
 			if (isAdjacent()) {
+				//mapSector.getSquare(x, right).isDiagonal = false;
 				mapSector.getSquare(x, right).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(x, right));
+				rightAdded = true;
 			}
 		}
+		
+		if( right < mapSector.getColumns() && top > 0 ) {
+			boolean topRightFromTop = (mapSector.getSquare(top, y)).adjacencies.contains(mapSector.getSquare(top, right));
+			boolean topRightFromRight = (mapSector.getSquare(x, right)).adjacencies.contains(mapSector.getSquare(top, right));
+			boolean topAvail = (mapSector.getSquare(top, y)).adjacencies.contains(mapSector.getSquare(x, y));
+			boolean rightAvail = (mapSector.getSquare(x, right)).adjacencies.contains(mapSector.getSquare(x, y));;
+			if( topRightFromTop && topRightFromRight && topAvail && topAvail && rightAvail ){
+				mapSector.getSquare(top, right).isDiagonalTo(this);
+				mapSector.getSquare(top, right).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(top, right));
+			}
+		}
+		
+		if( left > 0 && top > 0 ) {
+			boolean topLeftFromTop = (mapSector.getSquare(top, y)).adjacencies.contains(mapSector.getSquare(top, left));
+			boolean topLeftFromLeft = (mapSector.getSquare(x, left)).adjacencies.contains(mapSector.getSquare(top, left));
+			boolean topAvail = (mapSector.getSquare(top, y)).adjacencies.contains(mapSector.getSquare(x, y));
+			boolean leftAvail = (mapSector.getSquare(x, left)).adjacencies.contains(mapSector.getSquare(x, y));;
+			if( topLeftFromTop && topLeftFromLeft && topAvail && topAvail && leftAvail ){
+				mapSector.getSquare(top, left).isDiagonalTo(this);
+				mapSector.getSquare(top, left).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(top, left));
+			}
+		}
+		/*if (left > 0 && bottom < mapSector.getRows()){
+			if( (mapSector.getSquare(x, left)).adjacencies.contains(mapSector.getSquare(bottom, left)) ){
+				mapSector.getSquare(bottom, left).isDiagonal = true;
+				mapSector.getSquare(bottom, left).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(bottom, left));
+			}
+		}
+		
+		// for the diagonal
+		if(bottomAdded && rightAdded){
+			mapSector.getSquare(bottom, right).isDiagonal = true;
+			mapSector.getSquare(bottom, right).addAdjacency(this);
+			this.addAdjacency(mapSector.getSquare(bottom, right));
+		}*/
+		
 	}
 
 	public void addAdjacency(Square square) {
@@ -142,8 +198,12 @@ public class Square {
 			return 0.0;
 		}
 
-		if (parentCost == 0.0) {
+		/*if (parentCost == 0.0) {	// parentCost is a running Sum of costs from previous traversal
+			// here we have to check for the diagonal
 			parentCost = 1.0 + .5 * (parent.getParentCost() - 1.0);
+		}*/
+		if(parentCost == 0.0) {
+			parentCost = (this.ifDiagonalTo(this.getParent())==true ? 1.4 : 1.0) + + .5 * (parent.getParentCost() - 1.0); 
 		}
 
 		return parentCost;
@@ -151,7 +211,7 @@ public class Square {
 	
 	public boolean isAdjacent() {
 
-		if (Math.random() > .5) {
+		if (Math.random() > .3) {
 			return true;
 		}
 		return false;
