@@ -89,7 +89,7 @@ public class Square {
 	}
 
 	public void isDiagonalTo(Square diagonalSquare){
-		this.diagonalSquare = diagonalSquare;
+		diagonalSquare = this.diagonalSquare;
 	}
 	
 	public boolean ifDiagonalTo(Square thisSquare){
@@ -108,7 +108,6 @@ public class Square {
 
 		if (bottom < mapSector.getRows()) {
 			if (isAdjacent()) {
-				//mapSector.getSquare(bottom, y).isDiagonal = false;
 				mapSector.getSquare(bottom, y).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(bottom, y));
 				bottomAdded = true;
@@ -117,7 +116,6 @@ public class Square {
 
 		if (right < mapSector.getColumns()) {
 			if (isAdjacent()) {
-				//mapSector.getSquare(x, right).isDiagonal = false;
 				mapSector.getSquare(x, right).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(x, right));
 				rightAdded = true;
@@ -147,21 +145,6 @@ public class Square {
 				this.addAdjacency(mapSector.getSquare(top, left));
 			}
 		}
-		/*if (left > 0 && bottom < mapSector.getRows()){
-			if( (mapSector.getSquare(x, left)).adjacencies.contains(mapSector.getSquare(bottom, left)) ){
-				mapSector.getSquare(bottom, left).isDiagonal = true;
-				mapSector.getSquare(bottom, left).addAdjacency(this);
-				this.addAdjacency(mapSector.getSquare(bottom, left));
-			}
-		}
-		
-		// for the diagonal
-		if(bottomAdded && rightAdded){
-			mapSector.getSquare(bottom, right).isDiagonal = true;
-			mapSector.getSquare(bottom, right).addAdjacency(this);
-			this.addAdjacency(mapSector.getSquare(bottom, right));
-		}*/
-		
 	}
 
 	public void addAdjacency(Square square) {
@@ -198,13 +181,9 @@ public class Square {
 			return 0.0;
 		}
 
-		/*if (parentCost == 0.0) {	// parentCost is a running Sum of costs from previous traversal
-			// here we have to check for the diagonal
-			parentCost = 1.0 + .5 * (parent.getParentCost() - 1.0);
-		}*/
-		if(parentCost == 0.0) {
+		//if(parentCost == 0.0) {
 			parentCost = (this.ifDiagonalTo(this.getParent())==true ? 1.4 : 1.0) + + .5 * (parent.getParentCost() - 1.0); 
-		}
+		//}
 
 		return parentCost;
 	}
