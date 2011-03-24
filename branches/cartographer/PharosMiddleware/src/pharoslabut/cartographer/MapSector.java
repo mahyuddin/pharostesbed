@@ -137,7 +137,7 @@ public class MapSector {
 
 	private void drawContents() {
 
-		for (int i = 0; i < rows; i++) {
+		for (int i = rows-1; i >= 0; i--) {
 			for (int j = 0; j < columns; j++) {
 				Square square = elements[i][j];
 				drawTop(square);
@@ -209,13 +209,15 @@ public class MapSector {
 		int x = square.getX();
 		int y = square.getY();
 
-		if (x == 0) {
+		//if (x == 0) {
+		if (x == rows-1){
 			System.out.print(CLOSED_TOP);
 			return;
 		}
 
 		for (Square neighbor : square.getAdjacencies()) {
-			if (neighbor.getX() == x - 1 && neighbor.getY() == y) {
+		//	if (neighbor.getX() == x - 1 && neighbor.getY() == y) {
+			if (neighbor.getX() == x + 1 && neighbor.getY() == y) {
 				System.out.print(OPEN_TOP);
 				return;
 			}
