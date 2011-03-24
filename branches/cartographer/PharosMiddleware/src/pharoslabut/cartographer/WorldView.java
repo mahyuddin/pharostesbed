@@ -409,28 +409,34 @@ public class WorldView {
 	 */
 	private static void decreaseLineConfidence(ArrayList<OrderedPair> locationsToDecrease, Integer x1, Integer x2, Integer y1, Integer y2){
 		Integer xi,yi;
-		if ( x2 > x1 && y2 > y1 ){
-			for(xi = x1 + 1; xi < x2; xi++){
-				yi = y1 + (int) Math.round((xi - x1) * Math.tan(Math.atan((y2-y1)/(x2-x1))));
+		Integer deltax = x2-x1;
+		Integer deltay = y2-y1;
+		Integer minx = Math.min(x1,x2);
+		Integer maxx = Math.max(x1,x2);
+		Integer miny = Math.min(y1,y2);
+		Integer maxy = Math.max(y1,y2);
+		Double slope;
+		
+		if (Math.abs(deltax) >= Math.abs(deltay)){ //if |slope| < 1, increment with x
+			slope = (double) deltay/deltax;
+			for(xi = minx + 1; xi < maxx; xi++){
+				if(slope >= 0) //if slope positive, start with miny
+					yi = miny + (int) Math.round((xi - minx) * slope);
+				else //if slope negative, start with maxy
+					yi = maxy + (int) Math.round((xi - minx) * slope);
 				locationsToDecrease.add(new OrderedPair(xi,yi));
+				//System.out.print("(" + xi + "," + yi + ")");
 			}
 		}
-		else if ( x2 < x1 && y2 > y1){
-			for(xi = x1; xi > x2; xi--){
-				yi = y1 + (int) Math.round((x1 - xi) * Math.tan(Math.atan((y2-y1)/(x1-x2))));
+		else{									//if |slope| > 1, increment with y
+			slope = (double) deltax/deltay;
+			for(yi = miny + 1; yi < maxy; yi++){
+				if(slope >= 0) //if slope positive, start with minx	
+					xi = minx + (int) Math.round((yi - miny) * slope);
+				else //if slope negative, start with maxx
+					xi = maxx + (int) Math.round((yi - miny) * slope);
 				locationsToDecrease.add(new OrderedPair(xi,yi));
-			}
-		}
-		else if ( x2 > x1 && y2 < y1){
-			for(xi = x1; xi < x2; xi++){
-				yi = y1 - (int) Math.round((x1 - xi) * Math.tan(Math.atan((y1-y2)/(x2-x1))));
-				locationsToDecrease.add(new OrderedPair(xi,yi));
-			}
-		}
-		else if ( x2 < x1 && y2 < y1){
-			for(xi = x1; xi > x2; xi--){
-				yi = y1 - (int) Math.round((xi - x1) * Math.tan(Math.atan((y1-y2)/(x1-x2))));
-				locationsToDecrease.add(new OrderedPair(xi,yi));
+				//System.out.print("(" + xi + "," + yi + ")");		
 			}
 		}
 	}
