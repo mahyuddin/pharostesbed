@@ -30,8 +30,8 @@ public class PathPlanner implements Position2DListener, IRListener {
 	private FileLogger flogger = null;
 	private static Position2DInterface motors;
 	private List<Square> path;
-	
-	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
+	int left = 1;
+	int right = -1;
 	
 	public List<Square> pathFind(){
 		List<OrderedPair> goalPoints = new ArrayList<OrderedPair>();
@@ -51,7 +51,6 @@ public class PathPlanner implements Position2DListener, IRListener {
 		end = new OrderedPair(start.getX(),start.getY()-radius);
 		goalPoints.add(end);
 		System.out.println("entered sector");
-		// Reminder to change name to Astar and delete this java file
 		MapSector sector = new MapSector(side,side,start,goalPoints);
 		sector.findPath();	// this exits as soon as it finds a path
 		System.out.println(sector.bestList.size());
@@ -100,6 +99,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		double speedStep = .2;
 		
 		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
+		
 		int time,turntime,x1,x2,y1,y2;
 		double bearing = 0;//initially facing right
 		double angle,dist;
@@ -107,47 +107,41 @@ public class PathPlanner implements Position2DListener, IRListener {
 		path = pathFind(); // ordered list of coordinates to follow
 		System.out.println("got a path " + path.size());
 		for(int i = path.size()-2; i>=0; i--){
-			//System.out.println("got inside");
 			y1 = path.get(i+1).getX();
 			y2 = path.get(i).getX();
 			x1 = path.get(i+1).getY();
 			x2 = path.get(i).getY();		
 			
 			// convert from cartesian to polar coordinates
-			
-			/*double offset = 0;
-			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
-			double theta = Math.atan((y2-y1)/(x2-x1)) + offset;
-			System.out.println("polar(" +r+","+theta+")");*/
-			int left = 1;
-			int right = -1;
 			double theta = Math.atan2(y2-y1, x2-x1);
 			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
 			double turnAngle = bearing-theta; 
-			int turnDirection = right;
+			int turnDirection = right;	// initially set turn direction to right
 			if (bearing - theta < 0){
 				turnDirection = left;
 			}
-			if( Math.abs(bearing - theta) > Math.PI ){
+			if( Math.abs(bearing - theta) > Math.PI ){	// special case
 				turnAngle = 2*Math.PI - Math.abs(bearing - theta);
-				turnDirection = turnDirection*(-1);
+				turnDirection = turnDirection*(-1);	// find smaller direction
 			}
-			bearing = theta;
+			bearing = theta;	// new bearing is theta
 
+			turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+			// DEBUGGING STATEMENTS
 			//System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
 			//System.out.println("polar(" +r+","+theta+")");
 			//System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
-			turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
-			//System.out.println("angle = " + turntime);
-			motors.setSpeed(0, Math.PI/16*turnDirection);
+			//System.out.println("turntime = " + turntime);
+			motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
 			pause(turntime);
-			
-			//dist = Math.sqrt(Math.pow((x2-x1),2) + Math.pow((y2-y1),2)); // use the distance formula (pythagorean theorem)
 			time = (int)r*1000;
-			//System.out.println("time = " + r);
 			motors.setSpeed(.1, 0);
 			pause(time);
 		}
+		
+		// STOP THE ROOMBA 
+		motors.setSpeed(0, 0);
+		pause(5000);
 		
 		//RotateDegrees(Math.PI/16, motionArbiter);
 		//currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
@@ -157,10 +151,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		//currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
 		//log("Submitting: " + currTask);
 		//motionArbiter.submitTask(currTask);
-		
-		motors.setSpeed(0, 0);
-		pause(5000);
-		
+
 		//motors.setSpeed(0.1, 0);
 		//pause(5000);
 		
@@ -172,8 +163,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		//motors.setSpeed(0, 0);
 		//pause(5000);
-		
-		
+			
 //		while(true){
 //			//while no obstacle detected, move forward
 //			while((ir.getData()).getRanges()[1]>1000){
@@ -191,7 +181,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 //			//turn 90 degrees
 //			RotateDegrees((Math.PI)/16,motionArbiter);
 //		}
-		log("Test complete!");
+//		log("Test complete!");
 		
 		try {
 			WorldView.printWorldView();
