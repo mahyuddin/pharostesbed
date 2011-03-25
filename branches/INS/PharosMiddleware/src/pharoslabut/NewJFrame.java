@@ -20,12 +20,14 @@ import pharoslabut.RobotMover;
  * @author Tad M
  */
 public class NewJFrame extends javax.swing.JFrame {
-
+	protected  int flag = 10;
     /** Creates new form NewJFrame */
-    private static RobotMover XueHua;
+    private static RobotMover XueHua, XueHuaPos;
+    protected  float XueHuaXf = 0, XueHuaYf = 0 ;
     public NewJFrame() {
         initComponents();
-          XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
+        XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
+        XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
     }
 
     /** This method is called from within the constructor to
@@ -127,7 +129,7 @@ public class NewJFrame extends javax.swing.JFrame {
         jButton10.setText("Update");
         jButton10.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton10ActionPerformed(evt);
+             jButton10ActionPerformed(evt);
             }
         });
 
@@ -274,7 +276,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
-
+    		
 
     }//GEN-LAST:event_jTextField1ActionPerformed
 
@@ -288,25 +290,28 @@ public class NewJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-         //RobotMover.turnLeft();
-         //RobotMover.Moveforward();
-        jTextField4.setText("30");
+    			XueHua.turnLeft();
+    			XueHua.moveForward();
+    			jTextField4.setText("30");
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
           
                      XueHua.turnRight();
-                     XueHua.moveForward();// Add code here        // TODO add your handling code here:
+                     XueHua.moveForward();
+                     System.out.println("Button 8 pushed");// Add code here        // TODO add your handling code here:
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
 
-                     XueHua.stop();// Add code here        // TODO add your handling code here:
+                     XueHua.stop();// Add code here 
+                     // TODO add your handling code here:
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
-                     XueHua.moveForward();        // TODO add your handling code here:
+    			for(int i=0; i<10; i++){
+                     XueHua.moveForward(); 
+    			}// TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
     
@@ -316,17 +321,26 @@ public class NewJFrame extends javax.swing.JFrame {
                      XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
-    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
-              PlayerPosition2dData XueHuaPosition = new PlayerPosition2dData();
+   private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+             /*( PlayerPosition2dData XueHuaPosition = new PlayerPosition2dData();
+              if(XueHuaPosition == null){
+            	 System.out.println("error in creating position data"); 
+              }
               String XueHuaX = Float.toString(XueHuaPosition.getPos().getPx()); // I suck at typecasting =(
-              String XueHuaY = Float.toString(XueHuaPosition.getPos().getPy());
+              String XueHuaY = Float.toString(XueHuaPosition.getPos().getPy()); */
+              XueHuaXf = XueHuaXf+5;
+              XueHuaYf = XueHuaYf+5;
+              
+              String XueHuaX = Float.toString(XueHuaXf);
+              String XueHuaY = Float.toString(XueHuaYf);
+              
               jTextField1.setText(XueHuaX); 
               jTextField2.setText(XueHuaY);
 
 
+
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
-
 
     /**
     * @param args the command line arguments
@@ -336,9 +350,10 @@ public class NewJFrame extends javax.swing.JFrame {
       
         java.awt.EventQueue.invokeLater(new Runnable() {
             
-            @Override
+            
             public void run() {
                 new NewJFrame().setVisible(true);
+                
             }
         });
     }
