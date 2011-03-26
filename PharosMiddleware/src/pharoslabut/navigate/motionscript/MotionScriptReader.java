@@ -22,11 +22,11 @@ public class MotionScriptReader {
 				String line = null;
 				int lineno = 1;
 				while (( line = input.readLine()) != null) {
-					if (!line.equals("")  && !line.startsWith("#")) {
+					if (!line.equals("")  && !line.startsWith("#")  && !line.startsWith("//")) {
 						
 						// Ignore comments...
 						if (line.contains("//"))
-							line = line.substring(line.indexOf("//")+1);
+							line = line.substring(0, line.indexOf("//"));
 						
 						//StringTokenizer st = new StringTokenizer(line);
 						try {
@@ -71,12 +71,17 @@ public class MotionScriptReader {
 							}
 							else if (line.contains("WAIT_EXP_STOP")) {
 								result.addInstruction(new WaitStopExp());
-							} 
-							else if (line.contains("SCOOT")) {
+							}
+							else if (line.contains("START_SCOOT")) {
+								//String[] elem = line.split("[\\s]+");
+								//int amount = Integer.valueOf(elem[1]);
+								result.addInstruction(new Scoot());
+							} else if (line.contains("RCV_TELOSB_BEACONS")) {
 								String[] elem = line.split("[\\s]+");
 								int amount = Integer.valueOf(elem[1]);
-								result.addInstruction(new Scoot(amount));
-							} else
+								result.addInstruction(new RcvTelosbBeacons(amount));	
+							}
+							else
 								throw new UnknownInstructionException(line);
 						} catch(Exception e) {
 							e.printStackTrace();
@@ -100,7 +105,7 @@ public class MotionScriptReader {
 	public static void main(String[] args) {
 		//GPSMotionScript script = GPSTraceReader.readTraceFile("M11/M11-MotionScripts/m11-gps-lollipop-0.6-4spause.txt");
 		//GPSMotionScript script = GPSTraceReader.readTraceFile("bin/LBJ-MotionScript-1.txt");
-		MotionScript script = MotionScriptReader.readTraceFile("MM7/LBJ-Lot-BackAndForth-1.5.txt");
-		System.out.println("Read in the following GPSMotionScript:\n" + script);
+		MotionScript script = MotionScriptReader.readTraceFile("MotionScripts/BeaconReceiver.script");
+		System.out.println("Read in the following MotionScript:\n" + script);
 	}
 }
