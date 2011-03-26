@@ -9,6 +9,9 @@ import pharoslabut.logger.FileLogger;
  * Retrieves the RSSI values received by one robot from another robot.
  * The RSSI values are stored as inverse values (multiplied by -1).
  * 
+ * Fixed time steps are used, thus requiring interpolation of RSSI
+ * and distances at the time steps.
+ * 
  * @author Chien-Liang Fok
  */
 public class GetRSSIvsTime {
@@ -58,11 +61,11 @@ public class GetRSSIvsTime {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.logger.analyzer.GetRSSIVsTime <options>\n");
+		print("Usage: pharoslabut.logger.analyzer.GetRSSIvsTime <options>\n");
 		print("Where <options> include:");
 		print("\t-expDir <experiment data directory>: The directory containing experiment data (required)");
 		print("\t-robot1 <robot1 ID>: The ID of robot 1 (required)");
-		print("\t-robot2 <robot1 ID>: The ID of robot 2 (required)");
+		print("\t-robot2 <robot2 ID>: The ID of robot 2 (required)");
 		print("\t-timeStepSize <time step size>: The time step in milliseconds (default: 5000)");
 		print("\t-debug: enable debug mode");
 	}
