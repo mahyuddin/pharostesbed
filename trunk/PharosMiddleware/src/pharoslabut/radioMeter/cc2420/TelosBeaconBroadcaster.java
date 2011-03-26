@@ -9,6 +9,7 @@ import java.io.*;
 
 import pharoslabut.beacon.*;
 //import pharoslabut.logger.*;
+import pharoslabut.logger.FileLogger;
 
 /**
  * This is responsible for broadcasting TelosB beacons.
@@ -39,7 +40,7 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 //	private Timer timer = null;
 	
 //	private String motePort;
-//	private TelosBeaconReceiver receiver;
+	private TelosBeaconReceiver receiver;
 	
 	/**
 	 * The constructor.
@@ -69,12 +70,15 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 			}
 
 			moteIF = new MoteIF(phoenixLocal);
-//			receiver = 
-			new TelosBeaconReceiver(moteIF);
+			receiver = new TelosBeaconReceiver(moteIF);
 		} catch(Exception e) {
 			e.printStackTrace();
 			throw new TelosBeaconException("Unable to connect to TelosB Mote!");
 		}
+	}
+	
+	public TelosBeaconReceiver getReceiver() {
+		return receiver;
 	}
 	
 //	public void setFileLogger(FileLogger flogger) {
@@ -220,6 +224,11 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 //			}
 //		}
 //	}
+	@Override
+	public void setFileLogger(FileLogger flogger)  {
+		this.flogger = flogger;
+		receiver.setFileLogger(flogger);
+	}
 	
 	protected void log(String msg) {
 		String result = "TelosBeaconBroadcaster: " + msg;
