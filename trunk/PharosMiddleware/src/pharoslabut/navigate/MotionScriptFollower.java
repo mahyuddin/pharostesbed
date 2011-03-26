@@ -34,10 +34,13 @@ public class MotionScriptFollower implements Runnable {
 	private WiFiBeaconBroadcaster wifiBroadcaster;
 	
 	/**
-	 * This is responsible for sending and receiving TelosB beacons.
+	 * This is responsible for sending TelosB beacons.
 	 */
-	private TelosBeaconBroadcaster telosRadioSignalMeter;
+	private TelosBeaconBroadcaster telosBeaconBroadcaster;
 	
+	/**
+	 * This is responsible for receiving TelosB beacons.
+	 */
 	private TelosBeaconReceiver telosBeaconReceiver;
 	
 	/**
@@ -45,20 +48,26 @@ public class MotionScriptFollower implements Runnable {
 	 * 
 	 * @param navigator The object that moves the robot towards a GPS waypoint.
 	 * @param scooter The object that scoots the robot forwards or backwards a small amount.
+	 * @param wifiBroadcaster The object that broadcasts WiFi beacons.
 	 * @param beaconBroadcaster The WiFi beacon broadcaster.
-	 * @param telosRadioSignalMeter The Telos beacon broadcaster.
+	 * @param telosBeaconBroadcaster The Telos beacon broadcaster.
 	 * @param flogger The file logger for saving debug/experiment output.
 	 */
 	public MotionScriptFollower(NavigateCompassGPS navigator, Scooter scooter,
 			WiFiBeaconBroadcaster wifiBroadcaster, 
-			TelosBeaconBroadcaster telosRadioSignalMeter,
+			TelosBeaconBroadcaster telosBeaconBroadcaster,
 			FileLogger flogger) 
 	{
 		this.navigator = navigator;
 		this.scooter = scooter;
 		this.wifiBroadcaster = wifiBroadcaster;
-		this.telosRadioSignalMeter = telosRadioSignalMeter;
-		this.telosBeaconReceiver = telosRadioSignalMeter.getReceiver();;
+		
+		// Only save the TelosB components if the TelosB is not disabled...
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+			this.telosBeaconBroadcaster = telosBeaconBroadcaster;
+			this.telosBeaconReceiver = telosBeaconBroadcaster.getReceiver();
+		}
+		
 		this.flogger = flogger;
 	}
 	
@@ -147,11 +156,22 @@ public class MotionScriptFollower implements Runnable {
 		return result;
 	}
 	
+	/**
+	 * This instruction starts the broadcasting of TelosB beacons.
+	 * 
+	 * @param instr The instruction.
+	 * @return true if successful, false otherwise.
+	 */
 	private boolean handleStartBcastTelosB(StartBcastTelosB instr) {
-		// Start the TelosB cc2420 radio signal meter
-		flogger.log("Starting TelosB beacon broadcaster, minPeriod = " 
-				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
-		return telosRadioSignalMeter.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+			// Start the TelosB cc2420 radio signal meter
+			flogger.log("Starting TelosB beacon broadcaster, minPeriod = " 
+					+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
+			return telosBeaconBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
+		} else {
+			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			return false; // the TelosB was disabled!
+		}
 	}
 	
 	private boolean handleStartBcastWiFi(StartBcastWiFi instr) {
@@ -160,10 +180,21 @@ public class MotionScriptFollower implements Runnable {
 		return wifiBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 	}
 	
-	private boolean handleStopBcastTelosB(StopBcastTelosB msg) {
-		flogger.log("Stopping TelosB beacon broadcaster.");
-		telosRadioSignalMeter.stop();
-		return true;
+	/**
+	 * This instruction stops the broadcasting of TelosB beacons.
+	 * 
+	 * @param instr The instruction.
+	 * @return true if successful, false otherwise.
+	 */
+	private boolean handleStopBcastTelosB(StopBcastTelosB instr) {
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+			flogger.log("Stopping TelosB beacon broadcaster.");
+			telosBeaconBroadcaster.stop();
+			return true;
+		} else {
+			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			return false; // the TelosB was disabled!
+		}
 	}
 	
 	private boolean handleStopBcastWiFi(StopBcastWifi msg) {
@@ -178,9 +209,20 @@ public class MotionScriptFollower implements Runnable {
 		return true;
 	}
 	
+	/**
+	 * This instruction blocks until a certain number of TelosB beacons are received.
+	 * 
+	 * @param instr The instruction.
+	 * @return true if successful, false otherwise.
+	 */
 	private boolean handleRcvTelosbBeacons(RcvTelosbBeacons instr) {
-		telosBeaconReceiver.rcvBeacons(instr.getNumBeacons());
-		return true;
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+			telosBeaconReceiver.rcvBeacons(instr.getNumBeacons());
+			return true;
+		} else {
+			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			return false; // the TelosB was disabled!
+		}
 	}
 	
 	public void run() {
