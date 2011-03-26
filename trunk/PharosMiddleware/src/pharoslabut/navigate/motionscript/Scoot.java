@@ -17,6 +17,10 @@ public class Scoot extends Instruction {
 	 */
 	int amount;
 	
+	public Scoot() {
+		
+	}
+	
 	public Scoot(int amount) {
 		this.amount = amount;
 	}

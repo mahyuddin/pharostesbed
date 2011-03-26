@@ -24,5 +24,9 @@ public class WaitStopExp extends Instruction {
 		// This is not compatible with any other instruction.
 		return false;
 	}
+	
+	public String toString() {
+		return "WAIT_STOP_EXP";
+	}
 
 }
