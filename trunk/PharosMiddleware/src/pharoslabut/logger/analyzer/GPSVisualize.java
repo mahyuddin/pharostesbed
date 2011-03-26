@@ -237,7 +237,7 @@ public class GPSVisualize {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.logger.analyzer.RobotLogToGPSVisualizer <options>\n");
+		print("Usage: pharoslabut.logger.analyzer.GPSVisualize <options>\n");
 		print("Where <options> include:");
 		print("\t-spec <spec file name>: The specification file. (required)");
 		print("\t\tSyntax of specification file:");
@@ -245,7 +245,7 @@ public class GPSVisualize {
 		print("\t\t\tLOG_FILE <name of log file> <caption> <color>");
 		print("\t\t\t...");
 		print("\t\tEach LOG_FILE listed in the specification file will have its own trace in the resulting GPSVisualizer script.");
-		print("\t-log <log file name>: The name of the log file (default null)");
+		print("\t-log <log file name>: The name of the log file that was recorded by the robot as it carried out an experiment (default null)");
 		print("\t-caption <caption name>: The caption for the trace (default null)");
 		print("\t-color <color>: The color used to plot the trace (default red)");
 		print("\t-output <output file name>: The name of the output file (default GPSVisualize)");
@@ -283,6 +283,7 @@ public class GPSVisualize {
 				}
 				else {
 					System.setProperty ("PharosMiddleware.debug", "true");
+					print("Unknown option: " + args[i]);
 					usage();
 					System.exit(1);
 				}
@@ -294,6 +295,8 @@ public class GPSVisualize {
 		}
 		
 		if (specFileName == null && logFileName == null) {
+			System.setProperty ("PharosMiddleware.debug", "true");
+			print("Must set either specify specification file or log file.");
 			usage();
 			System.exit(1);
 		}
@@ -310,6 +313,7 @@ public class GPSVisualize {
 		} else {
 			// Generate a GPS visualization for a single robot.
 			if (caption == null) {
+				System.setProperty ("PharosMiddleware.debug", "true");
 				print("ERROR: Unknown caption.");
 				usage();
 				System.exit(1);
