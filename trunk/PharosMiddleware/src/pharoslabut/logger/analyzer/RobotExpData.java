@@ -339,7 +339,9 @@ public class RobotExpData {
 				String[] tokens = line.split("[: ]");
 				this.expStartTime = Long.valueOf(tokens[8]);
 			}
-			else if (line.contains("WayPointFollower: Going to")) {
+			else if (line.contains("WayPointFollower: Going to") 
+					|| line.contains("MotionScriptFollower: Going to")) 
+			{
 				StringTokenizer tokens = new StringTokenizer(line, ":()[], m/s");
 				long timeStamp = Long.valueOf(tokens.nextToken());
 				tokens.nextToken(); // WayPointFollower
@@ -390,7 +392,8 @@ public class RobotExpData {
 					log("Rejecting invalid location: " + currLoc);
 				}
 			}
-			else if (line.contains("RadioSignalMeter: SEND_BCAST")) {
+			else if (line.contains("RadioSignalMeter: SEND_BCAST") 
+					|| line.contains("TelosBeaconBroadcaster: SEND_TELSOB_BCAST")) {
 				// The format of this line is:
 				// [local time stamp] RadioSignalMeter: SEND_BCAST [node id] [seqno]
 				String[] tokens = line.split("(\\s|\\[|\\])");
@@ -401,7 +404,8 @@ public class RobotExpData {
 				telosBTxHist.add(txRec);
 				
 			}
-			else if (line.contains("RadioSignalMeter: RADIO_CC2420_RECEIVE")) {
+			else if (line.contains("RadioSignalMeter: RADIO_CC2420_RECEIVE")
+					|| line.contains("TelosBeaconReceiver: RADIO_CC2420_RECEIVE")) {
 				// The format of this line is:
 				// [local time stamp] RadioSignalMeter: RADIO_CC2420_RECEIVE [receiver id] [sender id] [seqno] [RSSI] [LQI] [mote timestamp]
 				String[] tokens = line.split("(\\s|\\[|\\])");
