@@ -101,10 +101,11 @@ public abstract class BeaconBroadcaster implements Runnable {
     public void run() {
     	while (running) {
     		sendBeacon();
-    		
     		try {
     			synchronized(this) {
-    				wait(randPeriod());
+    				long delayPeriod = randPeriod();
+    				log("Time till next beacon = " + delayPeriod);
+    				wait(delayPeriod);
     			}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
