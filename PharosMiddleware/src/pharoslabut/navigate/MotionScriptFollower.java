@@ -38,6 +38,8 @@ public class MotionScriptFollower implements Runnable {
 	 */
 	private TelosBeaconBroadcaster telosRadioSignalMeter;
 	
+	private TelosBeaconReceiver telosBeaconReceiver;
+	
 	/**
 	 * The constructor.
 	 * 
@@ -49,12 +51,14 @@ public class MotionScriptFollower implements Runnable {
 	 */
 	public MotionScriptFollower(NavigateCompassGPS navigator, Scooter scooter,
 			WiFiBeaconBroadcaster wifiBroadcaster, 
-			TelosBeaconBroadcaster telosRadioSignalMeter, FileLogger flogger) 
+			TelosBeaconBroadcaster telosRadioSignalMeter,
+			FileLogger flogger) 
 	{
 		this.navigator = navigator;
 		this.scooter = scooter;
 		this.wifiBroadcaster = wifiBroadcaster;
 		this.telosRadioSignalMeter = telosRadioSignalMeter;
+		this.telosBeaconReceiver = telosRadioSignalMeter.getReceiver();;
 		this.flogger = flogger;
 	}
 	
@@ -174,6 +178,11 @@ public class MotionScriptFollower implements Runnable {
 		return true;
 	}
 	
+	private boolean handleRcvTelosbBeacons(RcvTelosbBeacons instr) {
+		telosBeaconReceiver.rcvBeacons(instr.getNumBeacons());
+		return true;
+	}
+	
 	public void run() {
 		int instrIndex = 0;
 		
@@ -199,6 +208,9 @@ public class MotionScriptFollower implements Runnable {
 			case STOP_BCAST_WIFI:
 				running = handleStopBcastWiFi((StopBcastWifi)instr);
 				break;
+			case RCV_TELOSB_BEACONS:
+				running = handleRcvTelosbBeacons((RcvTelosbBeacons)instr);
+				break;
 			case SCOOT:
 				running = handleScoot((Scoot)instr);
 				break;
@@ -211,7 +223,7 @@ public class MotionScriptFollower implements Runnable {
 				running = false;
 			}
 			
-			if (!running) 
+			if (!continueRunning && !running) 
 				log("ERROR while executing instruction " + instrIndex + " of the motion script.");
 			else 
 				instrIndex++;
