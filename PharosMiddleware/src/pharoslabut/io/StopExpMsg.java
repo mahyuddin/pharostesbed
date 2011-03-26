@@ -18,4 +18,8 @@ public class StopExpMsg implements Message {
 	public MsgType getType() {
 		return MsgType.STOPEXP;
 	}
+	
+	public String toString() {
+		return "STOP_EXP_MSG";
+	}
 }
