@@ -55,7 +55,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 	
 	private FileLogger flogger = null;
 	
-	private pharoslabut.wifi.UDPRxTx udpTest;
+	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
 //	private String expName;
 	
@@ -77,14 +77,14 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
-		if (!createPlayerClient()) {
-			log("ERROR: Failed to connect to player server!");
-			System.exit(1); // fatal error
-		}
-		
 		if (!initServer()) {
 			log("ERROR: Failed to initialize the server!");
 			System.exit(1);
+		}
+		
+		if (!createPlayerClient()) {
+			log("ERROR: Failed to connect to player server!");
+			//System.exit(1); // fatal error
 		}
 		
 		if (!initWiFiBeacons()) {
@@ -174,7 +174,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 			beaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
 			beaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
 
-			// Start broadcasting and receiving beacons
+			// Start receiving beacons
 			beaconReceiver.start();
 			//beaconBroadcaster.start();
 			return true;
@@ -254,8 +254,6 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		//flogger.log("PharosServer: Starting UDPRxTx:");
 		//udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
 		
-		
-
 		flogger.log("PharosServer: Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
@@ -308,8 +306,8 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
 		telosRadioSignalMeter.stop();
 		
-		flogger.log("PharosServer: Stopping the UDP tester.");
-		udpTest.stop();
+		//flogger.log("PharosServer: Stopping the UDP tester.");
+		//udpTest.stop();
 		
 		flogger = null;
 	}
