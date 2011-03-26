@@ -92,7 +92,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 			System.exit(1);
 		}
 		
-		if (!initTelosBeacons()) {
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null && !initTelosBeacons()) {
 			log("ERROR: Failed to initialize Telos beaconer!");
 		}
 	}
@@ -246,7 +246,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		compassDataBuffer.setFileLogger(flogger);
 		beaconBroadcaster.setFileLogger(flogger);
 		beaconReceiver.setFileLogger(flogger);
-		telosRadioSignalMeter.setFileLogger(flogger);
+		if (telosRadioSignalMeter != null) telosRadioSignalMeter.setFileLogger(flogger);
 		
 		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
 
@@ -298,13 +298,18 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		beaconReceiver.setFileLogger(null);
 		gpsDataBuffer.setFileLogger(null);
 		compassDataBuffer.setFileLogger(null);
-		telosRadioSignalMeter.setFileLogger(null);
+		
+		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
+		if (telosRadioSignalMeter != null) {
+			telosRadioSignalMeter.setFileLogger(null);
+			telosRadioSignalMeter.stop();
+		}
 		
 		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
 		beaconBroadcaster.stop();
 		
-		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
-		telosRadioSignalMeter.stop();
+		
+		
 		
 		//flogger.log("PharosServer: Stopping the UDP tester.");
 		//udpTest.stop();
@@ -346,6 +351,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		print("\t-pharosPort <port number>: The Pharos Server's port number (default 7776)");
 		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
 		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
+		print("\t-noTelosB: Disable support for TelosB (by default support TelosB)");
 //		print("\t-bmin <period in ms>: minimum beacon period (default 500)");
 //		print("\t-bmax <period in ms>: maximum beacon period (default 2000)");
 		print("\t-debug: enable debug mode");
@@ -380,6 +386,9 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 //				else if (args[i].equals("-bmax")) {
 //					beaconMax = Integer.valueOf(args[++i]);
 //				}
+				else if (args[i].equals("-noTelosB")) {
+					System.setProperty ("PharosMiddleware.disableTelosB", "true");
+				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
