@@ -15,7 +15,7 @@ import playerclient.structures.gps.PlayerGpsData;
  */
 public class RobotExpData {
 	/**
-	 * The name of the experiment log file.
+	 * The name of the robot's experiment log file.
 	 */
 	private String fileName;
 	
@@ -59,7 +59,7 @@ public class RobotExpData {
 	/**
 	 * The constructor.
 	 * 
-	 * @param fileName The name of the experiment log file.
+	 * @param fileName The name of the robot's experiment log file.
 	 */
 	public RobotExpData(String fileName) {
 		this.fileName = fileName;
