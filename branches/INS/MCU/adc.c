@@ -96,9 +96,12 @@ void ADC1_Init(){
   ATD1CTL3 = 0x08;
   ATD1CTL4 = 0x05;
 }
-unsigned short ADC1_In(unsigned short chan){
-//LED_RED1 ^=1; 
-  ATD1CTL5 = (unsigned char)chan | 0x80;  // start sequence
-  while((ATD1STAT1&0x01)==0){};    // wait for CCF0 
+
+
+
+unsigned short ADC1_In(unsigned short chan[], int size){ 
+  ATD1CTL5 = (unsigned char)chan | 0x80;  // start sequence, sample multiple channels
+  while((ATD1STAT1&0x01)==0){};    // wait for CCF0-4
+  
   return ATD1DR0; 
 }
