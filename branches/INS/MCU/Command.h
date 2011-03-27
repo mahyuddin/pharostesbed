@@ -107,5 +107,6 @@ void Command_stopSendingData(void);
 void Command_sendStatus(void);
 void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
+void Command_sendIRPacket(void);
 
 #endif /* _PROTEUS_COMMAND_H */
