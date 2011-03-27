@@ -338,4 +338,41 @@ interrupt 9 void sendDataInterrupt(void) {
 }
 
 
+/** Code provided by Cartographer group
+ * Function: Command_sendIRPacket()
+ * Inputs: None
+ * Outputs: None
+ * Desc: Sends an IR packet to the x86 computer.
+ * DATA PACKETS COME LIKE THIS:
+ * BEGIN Packet
+ * PROTEUS_IR_PACKET
+ * FL Data (2Bytes)
+ * FC Data (2Bytes)
+ * FR Data (2Bytes)
+ * RL Data (2Bytes)
+ * RC Data (2Bytes)
+ * RR Data (2Bytes)
+ * END Packet
+ */
+void Command_sendIRPacket(void) {
+  uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+  uint16_t i;
+  
+  outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
+	indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
+	indx = saveTwoBytes(outToSerial, indx, IR_getFC()); // Package Front Center data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getFR()); // Package Front Right data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRL()); // Package Rear Left data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRC()); // Package Rear Center data 
+	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data  		
+	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+
+	//i should equal PROTEUS_IR_PACKET_SIZE 
+  // Send all of the IR Data through the Serial Port
+	for(i=0; i<indx; i++){
+  	SerialDriver_sendByte(outToSerial[i]);
+	}
+}
 
