@@ -164,7 +164,7 @@ bool I2CDriver_readCompass() {
 			LED_BLUE2 ^= 1; // to indicate i2c reset condidion
 			LED_RED1 ^= 1;
 			
-			Command_sendMessagePacket("ERROR: I2CDriver: compass read failed!");
+			//Command_sendMessagePacket("ERROR: I2CDriver: compass read failed!");
 			
 			// abort the previous operation.
 			IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);

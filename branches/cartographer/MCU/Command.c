@@ -22,6 +22,12 @@
  *    assembled by the SerialDriver.
  *  - Added interrupt 9 (ECT ch 1) for periodically delivering sensor data to x86.
  */
+ 
+ /*	Changes Xiaomeng Wu made on 3/27/11
+  *		- I2CDriver: Commented out Command_sendMessagePacket("ERROR: I2CDriver: compass read failed!"); LINE 167
+  *		- Compass: if (_int9Count % 5 == 0) { // 20ms * 5 = 100ms (10Hz) COMMAND DATA INTERRUPT NOW RUNS AT 10HZ
+  *		- Compass: void Command_sendData(void): CHANGED SO THAT IR gets sent at 10HZ, but Compass gets sent at 5Hz
+  */
 
 #include <mc9s12dp512.h>     /* derivative information */
 #include "Types.h"
@@ -134,6 +140,7 @@ void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed
 /**
  * Sends a compass packet to the x86 computer.
  * This is called by Compass.c after it gets the compass reading.
+ * 6B
  */
 void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 	uint8_t outToSerial[MAX_PACKET_LEN];
@@ -212,18 +219,21 @@ void Command_sendIRPacket(void) {
  * Function: Command_sendData(void)
  * Inputs: None
  * Outputs: None
- * Desc: This is called by interrupt 9 at 5Hz (200ms period).
+ * Desc: This is called by interrupt 9 at 10Hz (100ms period). -- changed from 5Hz, 3/27/11
  */
 void Command_sendData(void) {
+	static uint16_t _sendDataCount = 0;
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
 		//Command_sendOdometryPacket();
-		//Compass_getHeading();
-		Command_sendIRPacket();
+		Command_sendIRPacket();		// send IR at 10Hz
+		if(_sendDataCount % 2)
+			Compass_getHeading();	// send Compass at 5Hz
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
 	}
+	_sendDataCount++;
 }
 
 void Command_sendStatus() {
@@ -325,7 +335,8 @@ interrupt 9 void sendDataInterrupt(void) {
 	TFLG1 = TFLG1_CH1_INT9_BIT; // acknowledge ECT, Channel 1
 
 	_int9Count++;
-	if (_int9Count % 10 == 0) { // 20ms * 10 = 200ms (5Hz)
+	//if (_int9Count % 10 == 0) { // 20ms * 10 = 200ms (5Hz)
+	if (_int9Count % 5 == 0) { // 20ms * 5 = 100ms (10Hz)
 		TaskHandler_postTask(&Command_sendData);
 	}
 	
