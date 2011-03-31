@@ -36,25 +36,32 @@ public class PathPlanner implements Position2DListener, IRListener {
 	int right = -1;
 	
 	private List<Square> pathFind(){
-		List<OrderedPair> goalPoints = new ArrayList<OrderedPair>();
 		int side = 9;
 		int radius = side/2;
+		int direction = -1;
 		OrderedPair start;
-		OrderedPair end;
-		start = new OrderedPair(radius,radius);	// middle of the sector
+		//start = new OrderedPair(radius,radius);	// middle of the sector
+		start = new OrderedPair(0,0);	// start at the bottom left corner
 		
-		// right now, just four possible places
-		end = new OrderedPair(start.getX()+radius,start.getY());
-		goalPoints.add(end);
-		end = new OrderedPair(start.getX()-radius,start.getY());
-		goalPoints.add(end);
-		end = new OrderedPair(start.getX(),start.getY()+radius);
-		goalPoints.add(end);
-		end = new OrderedPair(start.getX(),start.getY()-radius);
-		goalPoints.add(end);
 		System.out.println("entered sector");
-		MapSector sector = new MapSector(side,side,start,goalPoints);
-		sector.findPath();	// this exits as soon as it finds a path
+		switch(direction){
+		case 0:
+			start.y+=32;
+			break;
+		case 1:
+			start.y-=32;
+			break;
+		case 2:
+			start.x-=32;
+			break;
+		case 3:
+			start.x+=32;
+			break;
+		default:
+			break;
+		}
+		MapSector sector = new MapSector(side,side,start, radius);
+		direction = sector.findPath();	// this exits as soon as it finds a path
 		System.out.println(sector.bestList.size());
 		return sector.bestList;
 	}
