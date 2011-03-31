@@ -73,6 +73,11 @@ public class RobotExpData {
 		}
 	}
 	
+	/**
+	 * Sets the file logger for saving debug messages into a file.
+	 * 
+	 * @param flogger The file logger to use to save debug messages.
+	 */
 	public void setFileLogger(FileLogger flogger) {
 		this.flogger = flogger;
 	}
@@ -791,25 +796,10 @@ public class RobotExpData {
 			GPSLocationState bLoc = locations.get(beforeIndx);
 			GPSLocationState aLoc = locations.get(afterIndx);
 			
-			// Now we need to interpolate.  Create two lines both with time as the x axis.
-			// One line has the longitude as the Y-axis while the other has the latitude.
-			Location latBeforeLoc = new Location(bLoc.getLocation().latitude(), bLoc.getTimestamp());
-			Location latAfterLoc = new Location(aLoc.getLocation().latitude(), aLoc.getTimestamp());
-			Line latLine = new Line(latBeforeLoc, latAfterLoc);
-			double interpLat = latLine.getLatitude(timestamp);
-			
-			Location lonBeforeLoc = new Location(bLoc.getTimestamp(), bLoc.getLocation().longitude());
-			Location lonAfterLoc = new Location(aLoc.getTimestamp(), aLoc.getLocation().longitude());
-			Line lonLine = new Line(lonBeforeLoc, lonAfterLoc);
-			double interpLon = lonLine.getLongitude(timestamp);
-			
-			Location result = new Location(interpLat, interpLon);
-			
-			log("getLocation(timestamp):");
-			log("\tBefore Location @" + bLoc.getTimestamp() + ": " + bLoc.getLocation());
-			log("\tAfter Location @" + aLoc.getTimestamp() + ": " + aLoc.getLocation());
-			log("\tInterpolated Location @" + timestamp + ": " + result);
-			return result;
+			return getInterpolatedLoc(
+					bLoc.getLocation().latitude(), bLoc.getLocation().longitude(), bLoc.getTimestamp(),
+					aLoc.getLocation().latitude(), aLoc.getLocation().longitude(), aLoc.getTimestamp(),
+					timestamp, flogger);
 		}
 		
 //		PathEdge edge = getPathEdge(timestamp);
@@ -827,6 +817,47 @@ public class RobotExpData {
 //				return null;
 //			}
 //		}
+	}
+	
+	/**
+	 * Interpolates the location of a robot at a certain time based on two locations that
+	 * occur before and after the desired time.  The first three parameters specify
+	 * the location of the robot prior to the desired time.  The second three parameters
+	 * specify a known location of the robot after the desired time.  The last parameter
+	 * specifies the time at which we want to estimate the robot's location.
+	 * 
+	 * @param lat1 The latitude of the robot before the desired time.
+	 * @param lon1 The longitude of the robot before the desired time.
+	 * @param time1 The timestamp of the location of the robot before the desired time.
+	 * @param lat2  The latitude of the robot after the desired time.
+	 * @param lon2 The longitude of the robot after the desired time.
+	 * @param time2 The timestamp of the location of the robot after the desired time.
+	 * @param timestamp The time at which to interpolate the robot's location.
+	 * @param flogger The file logger for recording debug statements.
+	 * @return The location of the robot at the specified timestamp.
+	 */
+	public static Location getInterpolatedLoc(double lat1, double lon1, long time1,
+		double lat2, double lon2, long time2, long timestamp, FileLogger flogger) 
+	{
+		// Now we need to interpolate.  Create two lines both with time as the x axis.
+		// One line has the longitude as the Y-axis while the other has the latitude.
+		Location latBeforeLoc = new Location(lat1, time1);
+		Location latAfterLoc = new Location(lat2, time2);
+		Line latLine = new Line(latBeforeLoc, latAfterLoc);
+		double interpLat = latLine.getLatitude(timestamp);
+		
+		Location lonBeforeLoc = new Location(time1, lon1);
+		Location lonAfterLoc = new Location(time2, lon2);
+		Line lonLine = new Line(lonBeforeLoc, lonAfterLoc);
+		double interpLon = lonLine.getLongitude(timestamp);
+		
+		Location result = new Location(interpLat, interpLon);
+		
+		log("RobotExpData.getInterpolatedLoc:", flogger);
+		log("\tBefore Location @" + time1 + ": (" + lat1 + ", " + lon1 + ")", flogger);
+		log("\tAfter Location @" + time2 + ": (" +  lat2 + ", " + lon2 + ")", flogger);
+		log("\tInterpolated Location @" + timestamp + ": " + result, flogger);
+		return result;
 	}
 	
 	/**
@@ -857,6 +888,14 @@ public class RobotExpData {
 	private void logErr(String msg) {
 		//if (System.getProperty ("PharosMiddleware.debug") != null)
 		System.err.println("RobotExpData: " + msg);
+	}
+	
+	private static void log(String msg, FileLogger flogger) {
+		String result = "RobotExpData: " + msg; 
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
