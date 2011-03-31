@@ -4,6 +4,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+/* Map Sector Class
+ * This class implements a certain region of the WorldView Map
+ * This reads the WorldView Map and converts a specific region of that map
+ * into a Map Sector.
+ */
 public class MapSector {
 	
 	public boolean found;
@@ -13,6 +18,7 @@ public class MapSector {
 	private OrderedPair goalCoord;	// every map also has a goal (the goal should be anywhere on the perimeter)
 	List<OrderedPair> listGoals = new ArrayList<OrderedPair>();
 	private Square[][] elements;
+	private Square start;
 	private Square goal;
 	
 	// for testing, and obstacle simulation
@@ -67,14 +73,11 @@ public class MapSector {
 	/* This code will convert the WorldView section into a 2D array (not arraylist) that 
 	 * is black and white, and easy for the Astar algorithm to read, with each sector of 
 	 * area = side^2. the var side is defined above in this class
-	 * 
-	 * This may not be needed, we can increase the complexity of the astar algorithm and 
-	 * not necesarily have to recreate a new map just for this purpose. Warning: this may
-	 * put stress on the CPU. 
+	 * This already knows the size of the entire map
 	 */
-	private void sectorConvert(){
+	private void sectorConvert(OrderedPair centerPoint){
 		// convert world view sector into map sector
-		
+		// 
 	}
 
 	private void init() {
@@ -96,6 +99,7 @@ public class MapSector {
 	private void setStartAndGoal() {
 		
 		elements[startCoord.x][startCoord.y].setStart(true);
+		start = elements[startCoord.x][startCoord.y];
 		goal = elements[goalCoord.x][goalCoord.y];
 		goal.setEnd(true);
 	}
@@ -182,6 +186,10 @@ public class MapSector {
 					System.out.print(OPEN_LEFT_GOAL);
 					return;
 				}
+				if (square.isStart()) {
+					System.out.print(OPEN_LEFT_START);
+					return;
+				}
 				if (bestList.contains(square)) {
 					System.out.print(OPEN_LEFT_PATH);
 					return;
@@ -193,6 +201,11 @@ public class MapSector {
 
 		if (square.isEnd()) {
 			System.out.print(CLOSED_LEFT_GOAL);
+			return;
+		}
+		
+		if (square.isStart()) {
+			System.out.print(CLOSED_LEFT_START);
 			return;
 		}
 
@@ -238,6 +251,7 @@ public class MapSector {
 
 		System.out.println("Calculating best path...");
 		Set<Square> adjacencies = elements[startCoord.x][startCoord.y].getAdjacencies();
+		//closed.add(start);
 		for (Square adjacency : adjacencies) {
 			adjacency.setParent(elements[startCoord.x][startCoord.y]);
 			if (adjacency.isStart() == false) {
@@ -297,7 +311,9 @@ public class MapSector {
 		if (square.getParent().isStart() == false) {
 			populateBestList(square.getParent());
 		}
-
+		else{
+			bestList.add(square.getParent());
+		}
 		return;
 	}
 
@@ -310,7 +326,6 @@ public class MapSector {
 				best = square;
 			}
 		}
-
 		return best;
 	}
 
