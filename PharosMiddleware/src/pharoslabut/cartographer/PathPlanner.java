@@ -26,6 +26,8 @@ import playerclient.IRInterface;
 import playerclient.IRListener;
 
 public class PathPlanner implements Position2DListener, IRListener {
+	double WIDTH_OF_ROOMBA = 0.38;
+	double SPEED_STEP = .2;
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	private static Position2DInterface motors;
@@ -33,9 +35,9 @@ public class PathPlanner implements Position2DListener, IRListener {
 	int left = 1;
 	int right = -1;
 	
-	public List<Square> pathFind(){
+	private List<Square> pathFind(){
 		List<OrderedPair> goalPoints = new ArrayList<OrderedPair>();
-		int side = 11;
+		int side = 9;
 		int radius = side/2;
 		OrderedPair start;
 		OrderedPair end;
@@ -43,7 +45,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		// right now, just four possible places
 		end = new OrderedPair(start.getX()+radius,start.getY());
-		//	goalPoints.add(end);
+		goalPoints.add(end);
 		end = new OrderedPair(start.getX()-radius,start.getY());
 		goalPoints.add(end);
 		end = new OrderedPair(start.getX(),start.getY()+radius);
@@ -91,18 +93,14 @@ public class PathPlanner implements Position2DListener, IRListener {
 			System.out.println("unable to connect to IR interface");
 			System.exit(1);
 		}
-		
 		ir.addIRListener(this);
-		pause(2000);
+		//////// END OF IR INTERFACING ////////
 		
-		MotionTask currTask;
-		double speedStep = .2;
-		
-		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
-		
+		// MOTION STRATEGY
+		pause(2000);	// 2 second initialization delay
+				
 		int time,turntime,x1,x2,y1,y2;
 		double bearing = 0;//initially facing right
-		double angle,dist;
 		/////////// ASTAR ///////////////
 		path = pathFind(); // ordered list of coordinates to follow
 		System.out.println("got a path " + path.size());
@@ -110,7 +108,9 @@ public class PathPlanner implements Position2DListener, IRListener {
 			y1 = path.get(i+1).getX();
 			y2 = path.get(i).getX();
 			x1 = path.get(i+1).getY();
-			x2 = path.get(i).getY();		
+			x2 = path.get(i).getY();
+			
+			System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
 			
 			// convert from cartesian to polar coordinates
 			double theta = Math.atan2(y2-y1, x2-x1);
@@ -134,8 +134,9 @@ public class PathPlanner implements Position2DListener, IRListener {
 			//System.out.println("turntime = " + turntime);
 			motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
 			pause(turntime);
-			time = (int)r*1000;
-			motors.setSpeed(.1, 0);
+			//time = (int)r*1000;
+			time = (int)(((r*WIDTH_OF_ROOMBA)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
+			motors.setSpeed(SPEED_STEP, 0);
 			pause(time);
 		}
 		
@@ -197,9 +198,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
 		}	
 		
-		System.exit(0);
-		///////////// END OF IR INTERFACING ///////////////
-		
+		System.exit(0);		
 	}
 	
 	
@@ -232,16 +231,17 @@ public class PathPlanner implements Position2DListener, IRListener {
 //		if (!(pp.equals(null))) {
 			LocationTracker.updateLocation(pp);
 //		}
-		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
+		//System.out.println("compass data = " + pp.getPa());
+		//log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
+		//		+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
 		float[] dist = data.getRanges();
 		WorldView.recordObstacles(dist);
-		//log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
-			//	dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
-				//dist[5]);
+		//System.out.println(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
+		//		dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
+		//		dist[5]);
 	}
 	
 	private void pause(int duration) {

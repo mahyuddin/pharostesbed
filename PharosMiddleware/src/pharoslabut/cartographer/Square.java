@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class Square {
-
+	
 	private int x;
 	private int y;
 	private boolean start;
@@ -14,10 +14,15 @@ public class Square {
 	private double parentCost; // cost of getting from parent square to this node
 	private double passThroughCost;// cost of getting from the start to the goal
 	// through this square
-
+	
 	private MapSector mapSector;
 	private Set<Square> adjacencies = new HashSet<Square>();
-
+	private boolean quadrantTop = true;	// top quadrant; true means traversable
+	private boolean quadrantLft = true; // left quadrant
+	private boolean quadrantBot = true;	// bottom quadrant
+	private boolean quadrantRgt = true; // right quadrant
+	private int numBlocked = 0;
+	
 	private Square parent;
 	private Square diagonalSquare;
 	
@@ -26,6 +31,23 @@ public class Square {
 		this.x = x;
 		this.y = y;
 		this.mapSector = mapSector;
+		// testing
+		if (Math.random() > .9) {
+			quadrantTop = false;
+			numBlocked++;
+		}
+		if (Math.random() > .9) {
+			quadrantLft = false;
+			numBlocked++;
+		}
+		if (Math.random() > .9) {
+			quadrantBot = false;
+			numBlocked++;
+		}
+		if (Math.random() > .9) {
+			quadrantRgt = false;
+			numBlocked++;
+		}
 	}
 
 	public int getX() {
@@ -99,18 +121,15 @@ public class Square {
 	}
 	
 	public void calculateAdjacencies() {
-		boolean bottomAdded = false;
-		boolean rightAdded = false;
 		int top = x - 1;
 		int bottom = x + 1;
 		int left = y - 1;
 		int right = y + 1;
 
-		if (bottom < mapSector.getRows()) {
+		/*if (bottom < mapSector.getRows()) {
 			if (isAdjacent()) {
 				mapSector.getSquare(bottom, y).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(bottom, y));
-				bottomAdded = true;
 			}
 		}
 
@@ -118,7 +137,6 @@ public class Square {
 			if (isAdjacent()) {
 				mapSector.getSquare(x, right).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(x, right));
-				rightAdded = true;
 			}
 		}
 		
@@ -140,6 +158,42 @@ public class Square {
 			boolean topAvail = (mapSector.getSquare(top, y)).adjacencies.contains(mapSector.getSquare(x, y));
 			boolean leftAvail = (mapSector.getSquare(x, left)).adjacencies.contains(mapSector.getSquare(x, y));;
 			if( topLeftFromTop && topLeftFromLeft && topAvail && topAvail && leftAvail ){
+				mapSector.getSquare(top, left).isDiagonalTo(this);
+				mapSector.getSquare(top, left).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(top, left));
+			}
+		}*/
+		
+		if (bottom < mapSector.getRows()) {
+			if (mapSector.getSquare(bottom, y).isTraversable() && this.isTraversable()) {
+				mapSector.getSquare(bottom, y).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(bottom, y));
+			}
+		}
+
+		if (right < mapSector.getColumns()) {
+			if (mapSector.getSquare(x, right).isTraversable() && this.isTraversable()) {
+				mapSector.getSquare(x, right).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(x, right));
+			}
+		}
+		
+		if( right < mapSector.getColumns() && top > 0 ) {	// traverse diagonally to top right
+			boolean topRightOK = mapSector.getSquare(top, right).isTraversable();
+			boolean topAvail = (mapSector.getSquare(top, y)).getQBot() && (mapSector.getSquare(top, y)).getQRgt();
+			boolean rightAvail = (mapSector.getSquare(top, y)).getQLft() && (mapSector.getSquare(top, y)).getQTop();
+			if( isTraversable() && topRightOK && topAvail && rightAvail ){
+				mapSector.getSquare(top, right).isDiagonalTo(this);
+				mapSector.getSquare(top, right).addAdjacency(this);
+				this.addAdjacency(mapSector.getSquare(top, right));
+			}
+		}
+		
+		if( left > 0 && top > 0 ) {	// traverse diagonally to top left
+			boolean topLeftOK = mapSector.getSquare(top, left).isTraversable();
+			boolean topAvail = (mapSector.getSquare(top, y)).getQBot() && (mapSector.getSquare(top, y)).getQLft();
+			boolean leftAvail = (mapSector.getSquare(top, y)).getQTop() && (mapSector.getSquare(top, y)).getQRgt();;
+			if( isTraversable() && topLeftOK && topAvail && leftAvail ){
 				mapSector.getSquare(top, left).isDiagonalTo(this);
 				mapSector.getSquare(top, left).addAdjacency(this);
 				this.addAdjacency(mapSector.getSquare(top, left));
@@ -194,6 +248,39 @@ public class Square {
 			return true;
 		}
 		return false;
+	}
+	
+	/* getters */
+	public boolean isFullyAdjacent(Square neighbor){
+		return neighbor.getQTop() && neighbor.getQBot() && neighbor.getQRgt() && neighbor.getQLft();
+	}
+	public boolean isTraversable(){	// is traversable if all 4 quadrants are true (traversable)
+		return getQTop() && getQBot() && getQRgt() && getQLft();
+	}
+	public boolean getQTop(){
+		return quadrantTop;
+	}
+	public boolean getQBot(){
+		return quadrantBot;
+	}
+	public boolean getQRgt(){
+		return quadrantRgt;
+	}
+	public boolean getQLft(){
+		return quadrantLft;
+	}
+	/* setters */
+	public void setQTop(boolean truth){
+		quadrantTop = truth;
+	}
+	public void setQBot(boolean truth){
+		quadrantBot = truth;
+	}
+	public void setQRgt(boolean truth){
+		quadrantRgt = truth;
+	}
+	public void setQLft(boolean truth){
+		quadrantLft = truth;
 	}
 
 }
