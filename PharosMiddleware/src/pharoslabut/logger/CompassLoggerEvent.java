@@ -2,6 +2,7 @@ package pharoslabut.logger;
 
 //import java.net.*;
 import org.jfree.ui.RefineryUtilities;
+import java.util.*;
 
 import pharoslabut.CompassLoggerGUI;
 import playerclient.*;
@@ -25,7 +26,8 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	private int period;
 	private boolean logging = false;
 	private long startTime;
-	
+	private double heading;
+	private Vector <CompassLoggerEventListener> listeners = new Vector  <CompassLoggerEventListener>();
 	/**
 	 * A constructor that creates a new PlayerClient to connect to the compass.
 	 * 
@@ -139,14 +141,27 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		return period;
 	}
 	
+	public double getHeading() {
+		return heading;
+	}
+	
+	public void addListener (CompassLoggerEventListener listen){
+		listeners.add(listen);
+		
+	}
+	
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		long endTime = System.currentTimeMillis();
 		double deltaTimeMS = (endTime - startTime);
 		double deltaTimeS = deltaTimeMS/1000;
-		double heading = data.getPos().getPa();
+		heading = data.getPos().getPa();
 		String result = endTime + "\t" + deltaTimeMS + "\t" + deltaTimeS + "\t" + heading;
 		log(result);
+		Enumeration <CompassLoggerEventListener> e = listeners.elements();
+		while (e.hasMoreElements()){
+			e.nextElement().newHeading(heading);
+		}
 		if (gui != null)
 			gui.addData(deltaTimeS, heading);
 	}
@@ -161,7 +176,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	
 	private void log(String msg) {
 		String result = "CompassLogger: " + msg;
-		System.out.println(result);
+		//System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
 	}
@@ -211,7 +226,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 				showGUI = true;
 			}
 			else if (args[i].equals("-time")) {
-				time = Integer.valueOf(args[++i]);
+				time = Integer.valueOf(args[++i]); 
 			}
 			else {
 				usage();
