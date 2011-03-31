@@ -10,6 +10,10 @@ import java.util.Set;
  * into a Map Sector.
  */
 public class MapSector {
+	public int NORTH = 0;
+	public int SOUTH = 1;
+	public int WEST = 2;
+	public int EAST = 3;
 	
 	public boolean found;
 	private int rows;
@@ -40,25 +44,36 @@ public class MapSector {
 	/**
 	 * Constructor
 	 */
-	public MapSector(int rows, int columns, OrderedPair startCoord, List goalPoints) {
+	public MapSector(int rows, int columns, OrderedPair mapSecCorner, int radius) {
 
 		this.rows = rows;
 		this.columns = columns;
 		elements = new Square[rows][columns];
-		this.startCoord = startCoord;
-		this.listGoals = goalPoints;
-		//sectorConvert(); // convert from Worldview to Mapsector format
+		//this.startCoord = startCoord;
+		this.startCoord = new OrderedPair(rows/2, rows/2);
+		// right now, just four possible places
+		OrderedPair end;
+		end = new OrderedPair(start.getX()+radius,start.getY());
+		listGoals.add(end);
+		end = new OrderedPair(start.getX()-radius,start.getY());
+		listGoals.add(end);
+		end = new OrderedPair(start.getX(),start.getY()+radius);
+		listGoals.add(end);
+		end = new OrderedPair(start.getX(),start.getY()-radius);
+		listGoals.add(end);
+		//sectorConvert(mapSecCorner); // convert from Worldview to Mapsector format
 	}
 	
-	public void findPath(){
+	public int findPath(){
 		
 		int i = 0;
+		int direction = -1;
 		init();
 		while(found==false && i != listGoals.size()){
 			goalCoord = listGoals.get(i);
 			setStartAndGoal();
 			draw();
-			findBestPath();
+			direction = findBestPath();
 			if(found==false){
 				System.out.println("--Move on to next possible goal point");
 				goal.setEnd(false);
@@ -68,6 +83,20 @@ public class MapSector {
 				i++;
 			}
 		}
+		return direction;
+	}
+	
+	private class quadData{
+		int numBlockedTop;
+		int numBlockedBot;
+		int numBlockedRgt;
+		int numBlockedLft;
+		void quadData(){
+			this.numBlockedTop = 0;
+			this.numBlockedBot = 0;
+			this.numBlockedLft = 0;
+			this.numBlockedRgt = 0;
+		}
 	}
 	
 	/* This code will convert the WorldView section into a 2D array (not arraylist) that 
@@ -75,9 +104,41 @@ public class MapSector {
 	 * area = side^2. the var side is defined above in this class
 	 * This already knows the size of the entire map
 	 */
-	private void sectorConvert(OrderedPair centerPoint){
+	private void sectorConvert(OrderedPair corner){
 		// convert world view sector into map sector
 		// 
+		for(int xMS = 0; xMS<rows; xMS++){	// for every element in the mapsector
+			for(int yMS = 0; yMS<columns; yMS++){	
+			quadData square = new quadData();
+				for(int x = 0; x<8; x++){	// for every worldview element in the mapsector element
+					for(int y = 0; y<8; y++){
+						if( x!=y && x+y!=7 && WorldView.readConfidence(x+corner.x, y+corner.y) > .5){
+							// if not at a loc coord that is on the X that splits the Mapsector element into quads
+							// and if the Worldview is pretty confident that there's an obstruction at that 5cmx5cm square
+							if(y>x && y<7-x)
+								square.numBlockedLft++;
+							if(y>x && y>7-x)
+								square.numBlockedTop++;
+							if(y<x && y<7-x)
+								square.numBlockedBot++;
+							if(y<x && y>7-x)
+								square.numBlockedRgt++;
+						}
+					}
+				}
+				// decide whether each of the 4 quad is traversable
+				if(square.numBlockedLft > 12/3)	// if more than 1/3 of the 12 blocks inside each quad is blocked
+					elements[xMS][yMS].setQLft(false);
+				if(square.numBlockedRgt > 12/3)
+					elements[xMS][yMS].setQRgt(false);
+				if(square.numBlockedTop > 12/3)
+					elements[xMS][yMS].setQTop(false);
+				if(square.numBlockedBot > 12/3)
+					elements[xMS][yMS].setQBot(false);
+			
+			}
+
+		}
 	}
 
 	private void init() {
@@ -246,8 +307,9 @@ public class MapSector {
 		}
 		System.out.println("+");
 	}
-
-	public void findBestPath() {
+	
+	// returns the cardinal direction it chose to go to
+	public int findBestPath() {
 
 		System.out.println("Calculating best path...");
 		Set<Square> adjacencies = elements[startCoord.x][startCoord.y].getAdjacencies();
@@ -266,9 +328,12 @@ public class MapSector {
 			if (best.isEnd()) {
 				found = true;
 				System.out.println("Found Goal");
-				populateBestList(goal);
+				populateBestList(goal);	
 				draw();
-				return;
+				if(best.getY()>start.getY()) return NORTH;
+				if(best.getY()<start.getY()) return SOUTH;
+				if(best.getX()>start.getX()) return EAST;
+				if(best.getX()<start.getX()) return WEST;
 			} else {
 				Set<Square> neighbors = best.getAdjacencies();
 				for (Square neighbor : neighbors) {
@@ -303,6 +368,7 @@ public class MapSector {
 		}
 		found = false;
 		System.out.println("No Path to goal");
+		return -1;
 	}
 
 	private void populateBestList(Square square) {
