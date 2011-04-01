@@ -200,4 +200,7 @@ public class PlayerBlobfinderBlob implements PlayerConstants {
         this.range = newRange;
     }
 
+    public String toString() {
+    	return "(PlayerBlobfinderBlob: id=" + id + ", color=" + color + ", area=" + area + ", left=" + left + ", right=" + right + ", top=" + top + ", bottom=" + bottom +  ", range=" + range + ", x=" + x + ", y=" + y + ")";
+    }
 }
