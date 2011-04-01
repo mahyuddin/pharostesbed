@@ -20,6 +20,7 @@ public class CMUcam
 	playerclient.Position2DInterface p2di = null;
 	
 	double angle = 0.0;
+	int width = 0;
 	double velocity = 0.15;
 	
 	
@@ -65,28 +66,29 @@ public class CMUcam
 			blob = bfi.getData();
 			blobList = blob.getBlobs();
 			int numBlobs = blob.getBlobs_count();
-			System.out.println("there are " + numBlobs + " blobs");
+			//System.out.println("there are " + numBlobs + " blobs");
 			
 			if(numBlobs > 0) 
 			{	
 				
 				if(blobList[0] != null) {
 					primaryBlob = blobList[0];
-					System.out.println("Black Blob has area: " + primaryBlob.getArea() + " and color of " + primaryBlob.getColor());
+					//System.out.println("Black Blob has area: " + primaryBlob.getArea() + " and color of " + primaryBlob.getColor());
 				}
-				else System.out.println("Blob[0] null");
+				//else System.out.println("Blob[0] null");
 				
 				if(numBlobs > 1) //right now only designed for detection of blue for secondary
 				{
 					if(blobList[1] != null) {
 						secondaryBlob = blobList[1];
-						System.out.println("Blue Blob has area: " + secondaryBlob.getArea() + " an ID of : " + secondaryBlob.getId() + " and color of " + secondaryBlob.getColor());
+						//System.out.println("Blue Blob has area: " + secondaryBlob.getArea() + " an ID of : " + secondaryBlob.getId() + " and color of " + secondaryBlob.getColor());
 					}
-					else System.out.println("Blob[1] null");
+					//else System.out.println("Blob[1] null");
 				}
 				
 				// main line follow process 
 				if(primaryBlob != null){
+					int sign = 0;
 					int primaryArea = primaryBlob.getArea();
 					// in  next if statement, need to add logic for which side of
 					// intersection robot is looking at
@@ -106,19 +108,30 @@ public class CMUcam
 						}
 						else if(secondaryBlob.getArea() < 100) blobDetect = false;
 					}
-					System.out.println("there are " + secondBlob_cnt + " second blobs");
+					//System.out.println("there are " + secondBlob_cnt + " second blobs");
 					
 					// find turn angle below
 					// use blob.getWidth/2 to get a left half and right half of viewing area
 					// divide by constant 4
 					// with image area mapped to +/- 20 degree turn radius
 					//		4 gives an appropriate angle to turn at with most speeds without over-compensation
+					//System.out.println("x is at " + primaryBlob.getX() + " left and right: " + primaryBlob.getLeft() + " " + primaryBlob.getRight() + " difference of " + (primaryBlob.getRight()-primaryBlob.getLeft()));
+					
 					angle = (int)((blob.getWidth()/2) - primaryBlob.getX());
+					width = primaryBlob.getRight() - primaryBlob.getLeft();
+					
 					System.out.println("raw angle is " + angle);
 					
-					angle /= 3; // 4 maybe not enough?
+					sign = angle < 0 ? -1 : 1; // if angle is negative, sign is negative
 					
+					angle /= 3; // 4 maybe not enough?
+					width /= 10; 
+					
+					System.out.println("relative width is " + width);
 					System.out.println("relative angle is " + angle);
+					
+					angle += (sign*width);
+					System.out.println("new angle is " + angle);
 					
 					// logic to correct line given last known line position
 					if(angle < -5.0) {
@@ -129,7 +142,7 @@ public class CMUcam
 					}
 					else right = false; left = false;
 					
-					System.out.println("actual angle is " + (dtor(angle)));
+					//System.out.println("actual angle is " + (dtor(angle)));
 					System.out.println();
 				}
 			} // end numBlobs > 0
@@ -138,13 +151,13 @@ public class CMUcam
 				if(left == true) angle = -6.0;
 				else if (right == true) angle = 6.0;
 
-				if(left == true) System.out.println("correcting left");
-				else if(right==true) System.out.println("correcting right");
+				//if(left == true) System.out.println("correcting left");
+				//else if(right==true) System.out.println("correcting right");
 			}
 			
 			// set robot speed and angle
-			p2di.setSpeed(velocity, dtor(angle));
-			//pause(10);
+			p2di.setSpeed(0, dtor(angle));
+			pause(100);
 		} // end while(true)
 	}
 
