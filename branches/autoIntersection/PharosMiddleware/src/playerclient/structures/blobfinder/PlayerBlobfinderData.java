@@ -101,5 +101,14 @@ public class PlayerBlobfinderData implements PlayerConstants {
     public synchronized void setBlobs (PlayerBlobfinderBlob[] newBlobs) {
         this.blobs = newBlobs;
     }
+    
+    public String toString() {
+    	StringBuffer result = new StringBuffer("(PlayerBlobfinderData, width=" + width + ", height=" + height + ", blobs_count=" + blobs_count + " ");
+    	for (int i=0; i < blobs.length; i++) {
+    		result.append("\n\t" + blobs[i]);
+    	}
+    	result.append(")");
+    	return result.toString();
+    }
 
 }
