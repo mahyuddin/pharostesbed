@@ -91,12 +91,12 @@ public class ReflectiveDivergenceAnalyzer {
 		logFileNames.add("M11/M11-Results/M11-Exp5/M11-Exp5-Wynkoop_20101206075054.log");
 		captionName.add("M11-Exp5-Wynkoop");
 		
-		Vector<ExpData> allExpData = new Vector<ExpData>();
+		Vector<RobotExpData> allExpData = new Vector<RobotExpData>();
 		
 		
 		for (int i=0; i < logFileNames.size(); i++) {
 			log("Processing " + logFileNames.get(i));
-			ExpData ed = LogFileReader.readLogFile(logFileNames.get(i));
+			RobotExpData ed = new RobotExpData(logFileNames.get(i));
 			allExpData.add(ed);
 		}
 		
@@ -116,7 +116,6 @@ public class ReflectiveDivergenceAnalyzer {
 			
 		}
 		
-		
 		FileLogger flogger = new FileLogger("ReflectiveDivergenceAnalyzer-" + robotName + ".txt", false /* print time stamp */);
 		
 		// For each edge in the motion script...
@@ -131,11 +130,24 @@ public class ReflectiveDivergenceAnalyzer {
 				StringBuffer sb = new StringBuffer();
 				sb.append(pctComplete);
 				
+				// For each experiment except the last one...
 				for (int goldenIndx = 0; goldenIndx < allExpData.size()-1; goldenIndx++) {
-					PathEdge goldenEdge = allExpData.get(goldenIndx).getEdge(edgeIndx);
-					Location goldLoc = goldenEdge.getLocationPct(pctComplete);	
+					RobotExpData goldenExpData = allExpData.get(goldenIndx); 
+					PathEdge goldenEdge = goldenExpData.getPathEdge(edgeIndx);
+					
+					// Calculate the time when pctComplete of the golden edge was traversed
+					long targetTime = goldenEdge.getTimePctComplete(pctComplete);
+					Location goldLoc = goldenExpData.getLocation(targetTime);
+					
+					// Compare the experiment with all other experiments after it in the allExpData vector...
 					for (int i = goldenIndx + 1; i < allExpData.size(); i++) {
-						Location actualLoc = allExpData.get(i).getEdge(edgeIndx).getLocationPct(pctComplete);
+						RobotExpData currExpData = allExpData.get(i);
+						PathEdge currEdge = currExpData.getPathEdge(edgeIndx);
+						
+						// Calculate the time when pctComplete of the current edge was traversed
+						long currTime = currEdge.getTimePctComplete(pctComplete);
+						Location actualLoc = currExpData.getLocation(currTime);
+						
 						double dist = goldLoc.distanceTo(actualLoc);
 						sb.append("\t" + dist);
 					}

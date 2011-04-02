@@ -1,12 +1,8 @@
 package pharoslabut;
 
-
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.BlobfinderInterface;
+import playerclient.*;
 import playerclient.structures.blobfinder.*;
-import playerclient.structures.PlayerConstants;
-import javaclient2.Position2DInterface;
+import playerclient.structures.*;
 
 public class CMUcam
 {

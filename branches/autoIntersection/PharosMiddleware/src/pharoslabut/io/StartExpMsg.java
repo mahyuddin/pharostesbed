@@ -46,4 +46,8 @@ public class StartExpMsg implements Message {
 	public MsgType getType() {
 		return MsgType.STARTEXP;
 	}
+	
+	public String toString() {
+		return "START_EXP_MSG exp_name=" + expName + ", expType=" + expType + ", robotName=" + robotName + ", delay=" + delay;
+	}
 }

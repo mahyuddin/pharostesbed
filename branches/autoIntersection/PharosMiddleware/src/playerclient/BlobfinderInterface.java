@@ -97,7 +97,6 @@ public class BlobfinderInterface extends PlayerDevice {
         				ppb.setTop    (xdr.xdrDecodeInt   ());
         				ppb.setBottom (xdr.xdrDecodeInt   ());
         				ppb.setRange  (xdr.xdrDecodeFloat ());
-        				
         				pbbs[i] = ppb;
         			}
         			xdr.endDecoding   ();

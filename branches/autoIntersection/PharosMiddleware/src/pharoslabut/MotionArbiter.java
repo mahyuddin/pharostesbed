@@ -76,6 +76,12 @@ public class MotionArbiter implements Runnable {
 		
 	}
 	
+	/**
+	 * Creates a MotionArbiter with the specified motion type.
+	 * 
+	 * @param motionType The motion type of the robot being controlled.
+	 * @param motors The player proxy for accessing the movement motors.
+	 */
 	public MotionArbiter(MotionType motionType, Position2DInterface motors) {
 		this.motionType = motionType;
 		this.motors = motors;
@@ -107,11 +113,11 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null) {
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
-				notify();
-			} // else discard task (higher priority task is already running			
+				notifyAll();
+			} // else discard task since higher priority task is running			
 		} else {
 			currTask = mt;
-			notify();
+			notifyAll();
 		}
 	}
 	
@@ -124,7 +130,7 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null && currTask.equals(mt)) {
 			currTask = null;
 			//accelControl.reset();
-			notify();
+			notifyAll();
 		} // else the task was never accepted, ignore the revocation request
 	}
 	

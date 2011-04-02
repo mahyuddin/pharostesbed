@@ -5,7 +5,8 @@ import java.net.*;
 import pharoslabut.beacon.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.*;
-import pharoslabut.radioMeter.cc2420.RadioSignalMeterException;
+import pharoslabut.navigate.motionscript.MotionScript;
+import pharoslabut.radioMeter.cc2420.*;
 import pharoslabut.io.*;
 
 import playerclient.*;
@@ -17,14 +18,12 @@ import playerclient.structures.opaque.PlayerOpaqueData;
  * The PharosClient is used by the application to perform application-specific tasks.
  * 
  * @see PharosClient
- * 
  * @author Chien-Liang Fok
  */
-public class PharosServer implements MessageReceiver, BeaconListener, OpaqueListener, WayPointFollowerDoneListener {
+public class PharosServer implements MessageReceiver, WiFiBeaconListener, OpaqueListener, MotionScriptFollowerDoneListener {
 	
 	private String playerServerIP;
 	private int playerServerPort;
-	private int beaconMin, beaconMax;
 	private int pharosServerPort;
 	
     /**
@@ -44,29 +43,32 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	
 //	private TCPMessageReceiver msgRcvr;
 	
-	private BeaconBroadcaster beaconBroadcaster;
-	private BeaconReceiver beaconReceiver;
+	// Components for sending and receiving WiFi beacons
+	private WiFiBeaconBroadcaster beaconBroadcaster;
+	private WiFiBeaconReceiver beaconReceiver;
 	
-	private pharoslabut.radioMeter.cc2420.RadioSignalMeter rsm;
+	// Components for sending and receiving TelosB beacons
+	private TelosBeaconBroadcaster telosRadioSignalMeter;
 	
-	private GPSMotionScript gpsMotionScript;
+	private MotionScript gpsMotionScript;
 	private RelativeMotionScript relMotionScript;
 	
 	private FileLogger flogger = null;
+	
+	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
 //	private String expName;
 	
 	/**
 	 * The constructor.  Immediately starts the server running.
 	 * 
-	 * @param playerServerIP
-	 * @param playerServerPort
-	 * @param pharosServerPort
-	 * @param beaconMin The minimum beaconing interval in ms
-	 * @param beaconMax The maximum beaconing interval in ms
+	 * @param playerServerIP The IP address of the player server with which to connect
+	 * @param playerServerPort The port that the player server is listening on.
+	 * @param pharosServerPort The port on which this Pharos Server should listen on.
 	 */
-	public PharosServer(String playerServerIP, int playerServerPort, int pharosServerPort, String mCastAddress, 
-			int mCastPort, int beaconMin, int beaconMax) {
+	public PharosServer(String playerServerIP, int playerServerPort, int pharosServerPort, 
+			String mCastAddress, int mCastPort) 
+	{
 		
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
@@ -74,17 +76,15 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
-		this.beaconMin = beaconMin;
-		this.beaconMax = beaconMax;
-		
-		if (!createPlayerClient()) {
-			log("ERROR: Failed to connect to player server!");
-			System.exit(1); // fatal error
-		}
 		
 		if (!initServer()) {
 			log("ERROR: Failed to initialize the server!");
 			System.exit(1);
+		}
+		
+		if (!createPlayerClient()) {
+			log("ERROR: Failed to connect to player server!");
+			//System.exit(1); // fatal error
 		}
 		
 		if (!initWiFiBeacons()) {
@@ -92,11 +92,17 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 			System.exit(1);
 		}
 		
-		if (!initTelosBeacons()) {
+		if (System.getProperty ("PharosMiddleware.disableTelosB") == null && !initTelosBeacons()) {
 			log("ERROR: Failed to initialize Telos beaconer!");
 		}
 	}
 	
+	/**
+	 * Creates the player client and obtains the necessary interfaces from it.
+	 * Creates the CompassDataBuffer, GPSDataBuffer, and MotionArbiter objects.
+	 * 
+	 * @return true if successful.
+	 */
 	private boolean createPlayerClient() {
 		try {
 			client = new PlayerClient(playerServerIP, playerServerPort);
@@ -155,8 +161,8 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 			return false;
 		}
 		
-		String pharosIP = BeaconBroadcaster.getPharosIP();
-		String pharosNI = BeaconReceiver.getPharosNetworkInterface();
+		String pharosIP = WiFiBeaconBroadcaster.getPharosIP();
+		String pharosNI = WiFiBeaconReceiver.getPharosNetworkInterface();
 		
 		if (pharosIP == null || pharosNI == null) {
 			log("Unable to get pharos IP or pharos network interface...");
@@ -164,12 +170,11 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		}
 		
 		try {
-			Beacon beacon = new Beacon(InetAddress.getByName(BeaconBroadcaster.getPharosIP()), pharosServerPort);
-			beaconReceiver = new BeaconReceiver(mCastAddress, mCastPort, pharosNI);
-			beaconBroadcaster = new BeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, 
-					beacon, beaconMin, beaconMax);
+			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(WiFiBeaconBroadcaster.getPharosIP()), pharosServerPort);
+			beaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
+			beaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
 
-			// Start broadcasting and receiving beacons
+			// Start receiving beacons
 			beaconReceiver.start();
 			//beaconBroadcaster.start();
 			return true;
@@ -181,8 +186,8 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	
 	private boolean initTelosBeacons() {
 		try {
-			rsm = new pharoslabut.radioMeter.cc2420.RadioSignalMeter();
-		} catch (RadioSignalMeterException e) {
+			telosRadioSignalMeter = new pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster();
+		} catch (TelosBeaconException e) {
 			e.printStackTrace();
 			return false;
 		}
@@ -195,7 +200,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		switch(msg.getType()) {
 		case LOAD_GPS_MOTION_SCRIPT:
 			log("Loading GPS-based motion script...");
-			GPSMotionScriptMsg gpsMSMsg = (GPSMotionScriptMsg)msg;
+			MotionScriptMsg gpsMSMsg = (MotionScriptMsg)msg;
 			gpsMotionScript = gpsMSMsg.getScript();
 			break;
 		case LOAD_RELATIVE_MOTION_SCRIPT:
@@ -237,22 +242,18 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		flogger = new FileLogger(fileName);
 		motionArbiter.setFileLogger(flogger);
-		beaconBroadcaster.setFileLogger(flogger);
-		beaconReceiver.setFileLogger(flogger);
 		gpsDataBuffer.setFileLogger(flogger);
 		compassDataBuffer.setFileLogger(flogger);
-		rsm.setFileLogger(flogger);
+		beaconBroadcaster.setFileLogger(flogger);
+		beaconReceiver.setFileLogger(flogger);
+		if (telosRadioSignalMeter != null) telosRadioSignalMeter.setFileLogger(flogger);
 		
 		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
 
-		// Start the beacons
-		flogger.log("PharosServer: Starting the WiFi beacon broadcaster.");
-		beaconBroadcaster.start();
+		// This is temporary code for mission 14...
+		//flogger.log("PharosServer: Starting UDPRxTx:");
+		//udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
 		
-		// Start the TelosB cc2420 radio signal meter
-		flogger.log("PharosServer: Starting the TelosB beacon broadcaster.");
-		rsm.startBroadcast(1000 /* period */, 1000 /* num broadcasts */);
-
 		flogger.log("PharosServer: Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
@@ -270,8 +271,10 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 				log("Following GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
-				WayPointFollower wpFollower = new WayPointFollower(navigatorGPS, gpsMotionScript, flogger);
-				wpFollower.start(this);
+				Scooter scooter = new Scooter(motionArbiter, flogger);
+				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
+						beaconBroadcaster, telosRadioSignalMeter, flogger);
+				wpFollower.start(gpsMotionScript, this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
 				log("Following a relative motion script...");
@@ -283,11 +286,9 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	}
 	
 	@Override
-	public void wayPointFollowerDone(boolean success, int finalWayPoint) {
-		// For now, assume that once the robot is done following a motion script,
-		// the experiment is over.
-		stopExp();
-		
+	public void motionScriptDone(boolean success, int finalInstrIndx, boolean continueRunning) {
+		if (!continueRunning)
+			stopExp();
 	}
 	
 	private void stopExp() {
@@ -297,13 +298,21 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		beaconReceiver.setFileLogger(null);
 		gpsDataBuffer.setFileLogger(null);
 		compassDataBuffer.setFileLogger(null);
-		rsm.setFileLogger(null);
+		
+		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
+		if (telosRadioSignalMeter != null) {
+			telosRadioSignalMeter.setFileLogger(null);
+			telosRadioSignalMeter.stop();
+		}
 		
 		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
 		beaconBroadcaster.stop();
 		
-		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
-		rsm.stopBroadcast();
+		
+		
+		
+		//flogger.log("PharosServer: Stopping the UDP tester.");
+		//udpTest.stop();
 		
 		flogger = null;
 	}
@@ -317,7 +326,7 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	}
 	
 	@Override
-	public void beaconReceived(BeaconEvent be) {
+	public void beaconReceived(WiFiBeaconEvent be) {
 		log("Received beacon: " + be);
 	}
 	
@@ -330,10 +339,11 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("PharosServer: " + msg);
+			System.out.println(msg);
 	}
 	
 	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.PharosServer <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
@@ -341,14 +351,15 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		print("\t-pharosPort <port number>: The Pharos Server's port number (default 7776)");
 		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
 		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
-		print("\t-bmin <period in ms>: minimum beacon period (default 500)");
-		print("\t-bmax <period in ms>: maximum beacon period (default 2000)");
+		print("\t-noTelosB: Disable support for TelosB (by default support TelosB)");
+//		print("\t-bmin <period in ms>: minimum beacon period (default 500)");
+//		print("\t-bmax <period in ms>: maximum beacon period (default 2000)");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
-		int beaconMin = 500;
-		int beaconMax = 2000;
+//		int beaconMin = 500;
+//		int beaconMax = 2000;
 		String playerIP = "localhost";
 		int playerPort = 6665;
 		int pharosPort = 7776;
@@ -369,11 +380,14 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 				else if (args[i].equals("-mCastPort")) {
 					mCastPort = Integer.valueOf(args[++i]);
 				}
-				else if (args[i].equals("-bmin")) {
-					beaconMin = Integer.valueOf(args[++i]);
-				} 
-				else if (args[i].equals("-bmax")) {
-					beaconMax = Integer.valueOf(args[++i]);
+//				else if (args[i].equals("-bmin")) {
+//					beaconMin = Integer.valueOf(args[++i]);
+//				} 
+//				else if (args[i].equals("-bmax")) {
+//					beaconMax = Integer.valueOf(args[++i]);
+//				}
+				else if (args[i].equals("-noTelosB")) {
+					System.setProperty ("PharosMiddleware.disableTelosB", "true");
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -382,7 +396,6 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 					pharosPort = Integer.valueOf(args[++i]);
 				}
 				else {
-					System.setProperty ("PharosMiddleware.debug", "true");
 					usage();
 					System.exit(1);
 				}
@@ -398,10 +411,8 @@ public class PharosServer implements MessageReceiver, BeaconListener, OpaqueList
 		print("Pharos Server Port: " + pharosPort);
 		print("Multicast Address: " + mCastAddress);
 		print("Multicast Port: " + mCastPort);
-		print("Min beacon period: " + beaconMin + "ms");
-		print("Max beacon period: " + beaconMax + "ms");
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new PharosServer(playerIP, playerPort, pharosPort, mCastAddress, mCastPort, beaconMin, beaconMax);
+		new PharosServer(playerIP, playerPort, pharosPort, mCastAddress, mCastPort);
 	}
 }

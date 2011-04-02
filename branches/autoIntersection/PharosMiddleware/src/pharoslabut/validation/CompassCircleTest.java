@@ -52,7 +52,7 @@ public class CompassCircleTest {
 		motionArbiter.submitTask(circleTask);
 		
 		//CompassLogger compassLogger = new CompassLogger(compass, showGUI);
-		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, serverPort, 1 /* device index */, showGUI);
+		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, serverPort, 1 /* device index */, showGUI, getStatusMsgs);
 		if (compassLogger.start(COMPASS_LOG_PERIOD, fileName)) {
 			synchronized(this) {
 				try {

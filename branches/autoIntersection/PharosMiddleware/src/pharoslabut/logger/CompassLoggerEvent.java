@@ -18,7 +18,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
  */
 public class CompassLoggerEvent implements DeviceLogger, Position2DListener, OpaqueListener {
 	
-	private String serverIP = null;
+	//private String serverIP = null;
 	private Position2DInterface compass = null;
 	private CompassLoggerGUI gui;
 	private FileLogger flogger;
@@ -33,10 +33,11 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the compass device
 	 * @param showGUI Whether to display the compass logger's GUI
+	 * @param getStatusMsgs Whether to subscribe to the opaque interface to receive status messages
 	 */
-	public CompassLoggerEvent(String serverIP, int serverPort, int deviceIndex, boolean showGUI) {
+	public CompassLoggerEvent(String serverIP, int serverPort, int deviceIndex, boolean showGUI, boolean getStatusMsgs) {
 		PlayerClient client = null;
-		this.serverIP = serverIP;
+		//this.serverIP = serverIP;
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
@@ -49,7 +50,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		
 		while (compass == null) {
 			try {
-				log("Subscribing to compass service...");
+				//log("Subscribing to compass service...");
 				compass = client.requestInterfacePosition2D(deviceIndex, PlayerConstants.PLAYER_OPEN_MODE);
 				if (compass != null)
 					log("Subscribed to compass service...");
@@ -68,12 +69,15 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 			}
 		}
 		
-		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (oi != null) {
-			log("Subscribed to opaque interface.  Will log MCU messages.");
-			oi.addOpaqueListener(this);
-		} else {
-			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
+		if (getStatusMsgs) {
+			log("Subscribing to opaque interface...");
+			OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+			if (oi != null) {
+				log("Subscribed to opaque interface.  Will log MCU messages.");
+				oi.addOpaqueListener(this);
+			} else {
+				log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
+			}
 		}
 		
 		if (showGUI)
@@ -160,7 +164,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	}
 	
 	private void log(String msg) {
-		String result = "CompassLogger: " + msg;
+		String result = "CompassLoggerEvent: " + msg;
 		System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
@@ -177,6 +181,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
 		System.err.println("\t-gui: Display the GUI");
 		System.err.println("\t-d: enable debug output");
+		System.err.println("\t-getStatusMsgs: whether to subscribe to the interface that provides MCU status messages (default false)");
 	}
 	
 	public static void main(String[] args) {
@@ -187,6 +192,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		int period = 100; // period between sampling in milliseconds
 		boolean showGUI = false;
 		int time = 0;
+		boolean getStatusMsgs = false;
 		
 		for (int i=0; i < args.length; i++) {
 			if (args[i].equals("-server")) {
@@ -213,6 +219,9 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 			else if (args[i].equals("-time")) {
 				time = Integer.valueOf(args[++i]);
 			}
+			else if (args[i].equals("-getStatusMsgs")) {
+				getStatusMsgs = true;
+			}
 			else {
 				usage();
 				System.exit(1);
@@ -227,8 +236,9 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
 		System.out.println("Show GUI: " + showGUI);
 		System.out.println("Log time: " + time + "s");
+		System.out.println("GetStatusMsgs: " + getStatusMsgs);
 		
-		CompassLoggerEvent cl = new CompassLoggerEvent(serverIP, serverPort, index, showGUI);
+		CompassLoggerEvent cl = new CompassLoggerEvent(serverIP, serverPort, index, showGUI, getStatusMsgs);
 		cl.start(period, fileName);
 		
 		if (time > 0) {
