@@ -1,10 +1,11 @@
 package pharoslabut.cartographer;
 
 import playerclient.structures.PlayerPose;
+import pharoslabut.logger.CompassLoggerEvent;
+import pharoslabut.logger.CompassLoggerEventListener;
 
-
-public class LocationTracker {
-	
+public class LocationTracker implements CompassLoggerEventListener{
+	private static CompassLoggerEvent compassLogger;
 	// change initial values to reflect the robot's starting orientation
 	private static final double initialX = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
 	private static final double initialY = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
@@ -17,6 +18,16 @@ public class LocationTracker {
 	
 	
 	public LocationTracker() {
+		
+		
+		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 1, false);
+																	// 1 is device index, true means showGUI
+		compassLogger.addListener(this);
+		
+		// this just logs the data to a file
+		compassLogger.start(1, "compasslog.txt"); // first param is ignored
+			
+		
 		// robot begins in lower-left corner with a bearing of 0, facing east
 		currentX = initialX; currentY = initialY; 
 		
@@ -24,7 +35,9 @@ public class LocationTracker {
 		// a PLAYER_POSITION2D_REQ_RESET_ODOM request.  Null response.
 		// note: the PlayerClient pkgs refer to the turn angle as "yaw"
 		
-//		PathPlanner.writeOdometry(initialX, initialY, 0);		
+//		PathPlanner.writeOdometry(initialX, initialY, 0);	
+		
+		
 		
 	}
 	
@@ -104,6 +117,13 @@ public class LocationTracker {
 	private static double calibrateAngle(double angle) {
 		// take odometer value and convert to accurate angle measurement
 		return angle;
+	}
+
+
+	@Override
+	public void newHeading(double heading) {
+		//this is where the compass data is received
+		System.out.println(heading);
 	}
 }
 
