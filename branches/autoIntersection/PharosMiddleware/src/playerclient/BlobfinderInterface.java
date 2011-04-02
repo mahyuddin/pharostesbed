@@ -47,6 +47,7 @@ public class BlobfinderInterface extends PlayerDevice {
     private static final boolean isDebugging = PlayerClient.isDebugging;
         
     private PlayerBlobfinderData pbdata;
+    private long pbDataTimestamp;
     private boolean              readyPbdata = false;
     private Vector<BlobfinderListener> listeners = new Vector<BlobfinderListener>();
     
@@ -76,12 +77,12 @@ public class BlobfinderInterface extends PlayerDevice {
     
     /**
      * Notifies all of the listeners about new blob data.
-     * This method assumes that the global variable pbdata was just set.
+     * This method assumes that the global variables pbdata and pbDataTimestamp were just set.
      */
     private void notifyListeners() {
     	Enumeration<BlobfinderListener> e = listeners.elements();
     	while (e.hasMoreElements()) {
-    		e.nextElement().newPlayerBlobfinderData(pbdata);
+    		e.nextElement().newPlayerBlobfinderData(pbdata, pbDataTimestamp);
     	}
     }
     
@@ -98,6 +99,7 @@ public class BlobfinderInterface extends PlayerDevice {
         			is.readFully (buffer, 0, 16);
         			
         			pbdata = new PlayerBlobfinderData ();
+        			pbDataTimestamp = System.currentTimeMillis();
         			
         			// Begin decoding the XDR buffer
         			XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
