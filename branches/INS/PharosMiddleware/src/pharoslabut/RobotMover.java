@@ -22,7 +22,7 @@
 
       	private FileLogger flogger = null;
       	
-      	protected Position2DInterface motors = null;
+      	public Position2DInterface motors = null;
       	
       	public RobotMover(String serverIP, int serverPort,	String fileName, boolean showGUI) {
 

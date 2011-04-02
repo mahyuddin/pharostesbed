@@ -1,9 +1,11 @@
 package pharoslabut;
 
 
-import javaclient2.structures.position2d.PlayerPosition2dData;
+import playerclient.NoNewDataException;
+import playerclient.structures.position2d.PlayerPosition2dData;
 
 import pharoslabut.RobotMover;
+import playerclient.structures.PlayerPoint2d;
 
 /*
  * To change this template, choose Tools | Templates
@@ -23,11 +25,13 @@ public class NewJFrame extends javax.swing.JFrame {
 	protected  int flag = 10;
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
-    protected  float XueHuaXf = 0, XueHuaYf = 0 ;
+    protected  double XueHuaXf = 0, XueHuaYf = 0 ;
+    protected static PlayerPoint2d XueHuaXY;
     public NewJFrame() {
         initComponents();
         XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
         XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
+        
     }
 
     /** This method is called from within the constructor to
@@ -129,7 +133,12 @@ public class NewJFrame extends javax.swing.JFrame {
         jButton10.setText("Update");
         jButton10.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-             jButton10ActionPerformed(evt);
+             try {
+				jButton10ActionPerformed(evt);
+			} catch (NoNewDataException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
             }
         });
 
@@ -286,7 +295,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
-        
+        //turn 45 degrees CCW move
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -321,18 +330,18 @@ public class NewJFrame extends javax.swing.JFrame {
                      XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
-   private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton10ActionPerformed
+   private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException {//GEN-FIRST:event_jButton10ActionPerformed
              /*( PlayerPosition2dData XueHuaPosition = new PlayerPosition2dData();
               if(XueHuaPosition == null){
             	 System.out.println("error in creating position data"); 
               }
               String XueHuaX = Float.toString(XueHuaPosition.getPos().getPx()); // I suck at typecasting =(
               String XueHuaY = Float.toString(XueHuaPosition.getPos().getPy()); */
-              XueHuaXf = XueHuaXf+5;
-              XueHuaYf = XueHuaYf+5;
+              XueHuaXf = XueHuaPos.motors.getX();
+              XueHuaYf = XueHuaPos.motors.getY();
               
-              String XueHuaX = Float.toString(XueHuaXf);
-              String XueHuaY = Float.toString(XueHuaYf);
+              String XueHuaX = Double.toString(XueHuaXf);
+              String XueHuaY = Double.toString(XueHuaYf);
               
               jTextField1.setText(XueHuaX); 
               jTextField2.setText(XueHuaY);
@@ -341,7 +350,20 @@ public class NewJFrame extends javax.swing.JFrame {
 
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
+   private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+       // TODO add your handling code here:
+       // Turn NW
+       XueHua.moveForward();
+   }                                        
 
+   private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+       // TODO add your handling code here:
+	   //turn 225 degrees CCW and move straight
+   }                                        
+
+   private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+       // TODO add your handling code here:
+   }               // turn 315 degrees CCW and move 
     /**
     * @param args the command line arguments
     */
@@ -355,6 +377,7 @@ public class NewJFrame extends javax.swing.JFrame {
                 new NewJFrame().setVisible(true);
                 
             }
+  // Add Automatic Control Components here
         });
     }
 
