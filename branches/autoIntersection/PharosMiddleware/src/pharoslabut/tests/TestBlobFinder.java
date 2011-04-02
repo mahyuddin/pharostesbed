@@ -4,14 +4,18 @@ import playerclient.*;
 import playerclient.structures.blobfinder.*;
 import playerclient.structures.*;
 
-public class TestBlobFinder {
+/**
+ * A small test of the blob finder. Connects to the blobfinder device, registers itself as a listener,
+ * then prints all of the blob data received.
+ * 
+ * @author Chien-Liang Fok
+ */
+public class TestBlobFinder implements BlobfinderListener {
 	private PlayerClient client = null;	
 	
 	private BlobfinderInterface bfi = null;
-//	PlayerBlobfinderData blob = null;
-//	PlayerBlobfinderBlob primaryBlob = null;
-//	PlayerBlobfinderBlob secondaryBlob = null;
-//	PlayerBlobfinderBlob[] blobList = null;
+	private PlayerBlobfinderData blobData = null;
+	private long blobDataTimestamp;
 		
 	public TestBlobFinder(String serverIP, int serverPort) {
 		// connect to player server
@@ -24,14 +28,36 @@ public class TestBlobFinder {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
 		
+		bfi.addListener(this);
+		
 		while(true) {
-			PlayerBlobfinderData blob = bfi.getData();
-			
-			if (blob != null)
-				log(blob.toString());
-			
-			pause(100);
+			synchronized(this) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+					
+			if (blobData != null) {
+				double age = (System.currentTimeMillis() - blobDataTimestamp) / 1000.0;
+				log("New blob data (age = " + age + "s): " + blobData.toString());
+			}
 		} // end while(true)
+	}
+	
+	/**
+	 * This is called whenever new blob data is available.
+	 * 
+	 * @param blobData The new blob data available.
+	 * @param timestamp The timestamp of the data.  This can be compared to System.currentTimeMillis() to determine the age of the blob data.
+	 */
+	public void newPlayerBlobfinderData(PlayerBlobfinderData blobData, long timestamp) {
+		synchronized(this) {
+			this.blobData = blobData;
+			this.blobDataTimestamp = timestamp;
+			notifyAll();
+		}
 	}
 	
 	private void log(String msg) {
