@@ -965,12 +965,12 @@ public class PlayerClient extends Thread implements PlayerConstants {
 			xdr.endDecoding();
 			xdr.close();
 			
-			log("handlePlayerResponses():\n"
+			/*log("handlePlayerResponses():\n"
 					+ "\tMessage type: PLAYER_MSGTYPE_RESP_ACK\n"
 					+ "\tMessage subtype: PLAYER_PLAYER_REQ_DEV\n"
 					+ "\tDevice Address: " + devAddr + "\n"
 					+ "\tAccess: " + access + "\n"
-					+ "\tdriverNameCount: " + driverNameCount);
+					+ "\tdriverNameCount: " + driverNameCount);*/
 			
 			// The maximum length of the driver name is 64 bytes, as defined by
 			// PLAYER_MAX_DRIVER_STRING_LEN in libplayercore/player.h and in
