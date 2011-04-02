@@ -22,7 +22,7 @@
 package playerclient;
 
 import java.io.IOException;
-
+import java.util.*;
 import playerclient.structures.PlayerMsgHdr;
 import playerclient.structures.blobfinder.PlayerBlobfinderBlob;
 import playerclient.structures.blobfinder.PlayerBlobfinderColorConfig;
@@ -48,12 +48,42 @@ public class BlobfinderInterface extends PlayerDevice {
         
     private PlayerBlobfinderData pbdata;
     private boolean              readyPbdata = false;
+    private Vector<BlobfinderListener> listeners = new Vector<BlobfinderListener>();
     
     /**
      * Constructor for BlobfinderInterface.
      * @param pc a reference to the PlayerClient object
      */
     public BlobfinderInterface (PlayerClient pc) { super(pc); }
+    
+    /**
+     * Add a listener to this interface.
+     * 
+     * @param listener The listener to add.
+     */
+    public void addListener(BlobfinderListener listener) {
+    	this.listeners.add(listener);
+    }
+    
+    /**
+     * Removes a listener from this interface.
+     * 
+     * @param listener to remove.
+     */
+    public void removeListener(BlobfinderListener listener) {
+    	this.listeners.remove(listener);
+    }
+    
+    /**
+     * Notifies all of the listeners about new blob data.
+     * This method assumes that the global variable pbdata was just set.
+     */
+    private void notifyListeners() {
+    	Enumeration<BlobfinderListener> e = listeners.elements();
+    	while (e.hasMoreElements()) {
+    		e.nextElement().newPlayerBlobfinderData(pbdata);
+    	}
+    }
     
     /**
      * Read the list of detected blobs.
@@ -105,6 +135,7 @@ public class BlobfinderInterface extends PlayerDevice {
         			pbdata.setBlobs_count (blobsCount);
         			pbdata.setBlobs       (pbbs);
         			
+        			notifyListeners();
         			readyPbdata = true;
         			break;
         		}
