@@ -144,7 +144,15 @@ typedef struct {
 	
 	/* Integrated odometric position [m m rad] */
 	double ox, oy, oa;
-
+	
+	/**
+	 * The following store the robot's odometry data.
+	 */
+	uint8_t newOdometryData;
+	unsigned char motor_stall;
+	float distance;
+	float steering_angle;
+	
 	/*
 	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
 	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
@@ -169,11 +177,6 @@ typedef struct {
 	
 	uint8_t newMessage;
 	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
-	
-	uint8_t newOdometryData;
-	unsigned char motor_stall;
-	float distance;
-	float steering_angle;
 	
 	/*
 	float srf_fl;			//front left SRF08 ultrasonic rangefinder distance, read
