@@ -78,13 +78,13 @@ public class ProgramEntryGUI implements ActionListener {
 		new Thread(new Runnable() {
 			public void run() {
 				
-				// Start the player server...
-				if (!cmdExec.startPlayer()) {
-					String errMsg = "Unable to start player server!";
-					JOptionPane.showMessageDialog(frame, errMsg);
-					log(errMsg);
-					return;
-				}
+//				// Start the player server...
+//				if (!cmdExec.startPlayer()) {
+//					String errMsg = "Unable to start player server!";
+//					JOptionPane.showMessageDialog(frame, errMsg);
+//					log(errMsg);
+//					return;
+//				}
 				
 				// Execute the program...
 				BufferedReader reader = new BufferedReader(new StringReader(textArea.getText()));
@@ -102,12 +102,12 @@ public class ProgramEntryGUI implements ActionListener {
 					JOptionPane.showMessageDialog(frame, pe.getMessage());
 				}
 				
-				// Stop the player server...
-				if (!cmdExec.stopPlayer()) {
-					String errMsg = "Unable to stop player server!";
-					JOptionPane.showMessageDialog(frame, errMsg);
-					log(errMsg);
-				}
+//				// Stop the player server...
+//				if (!cmdExec.stopPlayer()) {
+//					String errMsg = "Unable to stop player server!";
+//					JOptionPane.showMessageDialog(frame, errMsg);
+//					log(errMsg);
+//				}
 				
 			}
 		}).start();
@@ -127,7 +127,7 @@ public class ProgramEntryGUI implements ActionListener {
 		if (tokens.length == 0)
 			return;
 		else
-			instr = tokens[0];
+			instr = tokens[0].toUpperCase();
 		
 		if(instr.equals("DRIVE") || instr.equals("MOVE")) {
 			if (tokens.length < 2)
