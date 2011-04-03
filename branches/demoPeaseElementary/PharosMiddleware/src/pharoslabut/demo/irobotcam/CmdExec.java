@@ -102,14 +102,14 @@ public class CmdExec {
 	 * blocks and does not return until the operation is complete.
 	 * 
 	 * @param angle The angle to turn in degrees.  The valid range is from
-	 * -180 to 180.  Negative is to turn right (clockwise), positive is to 
+	 * -360 to 360.  Negative is to turn right (clockwise), positive is to 
 	 * turn left (counter-clockwise).
 	 * @return whether the operation was successful.
 	 */
 	public boolean turnRobot(double angle) {
 		
 		// Some sanity checks...
-		if (angle < -180 || angle > 180) {
+		if (angle < -360 || angle > 360) {
 			log("Invalid turn angle (" + angle + ")...");
 			return false;
 		}
