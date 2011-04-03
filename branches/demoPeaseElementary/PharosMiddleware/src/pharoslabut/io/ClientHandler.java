@@ -8,7 +8,12 @@ import java.net.Socket;
 /**
  * Handles incoming messages from a particular client.
  */
-public class ClientHandler implements Runnable {
+public class ClientHandler implements Runnable, java.io.Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2301960018798434055L;
+
 	/**
 	 * The socket to the client.
 	 */
