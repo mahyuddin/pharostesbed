@@ -406,6 +406,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		new LineFollower(serverIP, serverPort, flogger);
+		LineFollower lf = new LineFollower(serverIP, serverPort, flogger);
+		lf.start();
 	}
 }
