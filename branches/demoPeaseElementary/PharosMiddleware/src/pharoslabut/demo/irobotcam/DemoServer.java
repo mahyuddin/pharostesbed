@@ -137,17 +137,17 @@ public class DemoServer implements MessageReceiver {
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
 		log("Moving robot " + dist + " meters...");
-		ri.move(dist);
-		log("Done moving robot, sending ack...");
-		sendAck(true, moveMsg.getClientHandler()); // success
+		boolean result = ri.move(dist);
+		log("Done moving robot, sending ack, result = " + result + "...");
+		sendAck(result, moveMsg.getClientHandler()); // success
 	}
 	
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
 		double angle = turnMsg.getAngle() / 180 * Math.PI;
 		log("Turning robot " + turnMsg.getAngle() + " degrees...");
-		ri.turn(angle);
-		log("Done turning robot, sending ack...");
-		sendAck(true, turnMsg.getClientHandler()); // success
+		boolean result = ri.turn(angle);
+		log("Done turning robot, sending ack, result = " + result + "...");
+		sendAck(result, turnMsg.getClientHandler()); // success
 	}
 	
 	private void sendAck(boolean success, ClientHandler ch) {
