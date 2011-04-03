@@ -114,6 +114,9 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
 		}	
 		
+		
+		ir.removeIRListener(this);
+		motors.removePos2DListener(this);
 		System.exit(0);
 		///////////// END OF IR INTERFACING ///////////////
 		
