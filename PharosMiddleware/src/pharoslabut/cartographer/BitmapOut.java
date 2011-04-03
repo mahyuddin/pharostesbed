@@ -33,24 +33,22 @@ public class BitmapOut {
 	 * @param x width of world
 	 * @param y height of world
 	 * @throws IOException 
+	 * @author Aaron Chen
 	 */	
 	public BitmapOut(int x, int y) throws IOException{
-		image = new BufferedImage(x*5,y*5,TYPE_3BYTE_BGR);
-		for (int i = 0; i < image.getHeight(); i+=5){
-			for (int j = 0; j < image.getWidth(); j+=5) {
-				for(int k = i; k < i+5; k++){
-					for(int l=j; l < j+5; l++ ){
+		image = new BufferedImage(x,y,TYPE_3BYTE_BGR);
+		for (int i = 0; i < x; i++){
+			for (int j = y; j > 0; j--) {
 						int index;
-						if ((int)WorldView.readConfidence(i,j) == 1){
+						if ((int)WorldView.readConfidence(i,y-j) == 1){
 							index = 9;
 						}
 						else{
-							index = (int)(WorldView.readConfidence(i,j)*10);
+							index = (int)(WorldView.readConfidence(i,y-j)*10);
 						}
-						image.setRGB(k, l, grayscale[index]);						
-					}
-				}
-			}
+						//System.out.println(i + "," + j);
+						image.setRGB(i, j-1, grayscale[index]);						
+								}
 		}
 		ImageIO.write(this.image, "BMP", new File("map.bmp"));
 	}
