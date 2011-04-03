@@ -6,7 +6,9 @@ import pharoslabut.logger.*;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
 import playerclient.Position2DInterface;
+import playerclient.Position2DListener;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.position2d.PlayerPosition2dData;
 
 /**
  * This provides the hooks for controlling the iRobot Create.
@@ -14,7 +16,7 @@ import playerclient.structures.PlayerConstants;
  * @author Chien-Liang Fok
  *
  */
-public class RobotInterface {
+public class RobotInterface implements Position2DListener {
 	public static final String PLAYER_SERVER = "/usr/local/bin/player";
 	public static final String PLAYER_CONFIG_FILE = "/usr/local/share/player/config/proteus-roomba.cfg";
 	
@@ -44,6 +46,11 @@ public class RobotInterface {
 	 */
 	private Position2DInterface motors;
 	//private MotionArbiter motionArbiter = null;
+	
+	/**
+	 * Whether the robot moved.
+	 */
+	private boolean robotMoved = false;
 	
 	/**
 	 * The constructor.
@@ -114,15 +121,9 @@ public class RobotInterface {
 		if (motors == null) {
 			log("connect: ERROR: motors is null");
 			return false;
+		} else {
+			motors.addPos2DListener(this);
 		}
-		
-		// Stop the old motion arbiter if it exists...
-		//if (motionArbiter != null)
-		//	motionArbiter.stop();
-		
-		// Create the motion arbiter...
-		//motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
-		//motionArbiter.setFileLogger(flogger);
 		
 		return true;
 	}
@@ -131,11 +132,12 @@ public class RobotInterface {
 	 * Moves the robot forward or backwards.
 	 * 
 	 * @param dist The distance to move in meters.  Positive if forward, negative is backwards.
+	 * @return true if successful.
 	 */
-	public void move(double dist) {
+	public boolean move(double dist) {
 		if (dist == 0) {
 			log("Move: dist is zero, aborting...");
-			return;
+			return true;
 		}
 		
 		if (!isPlayerRunning()) {
@@ -154,6 +156,8 @@ public class RobotInterface {
 		int duration = (int)(Math.abs(dist) / ROBOT_SPEED * 1000); // in milliseconds
 		int heading = 0;
 		
+		robotMoved = false;
+		
 		//MotionTask currTask = new MotionTask(Priority.SECOND, direction * ROBOT_SPEED, heading);
 		//log("Move: Submitting: " + currTask);
 		//motionArbiter.submitTask(currTask);
@@ -169,6 +173,12 @@ public class RobotInterface {
 		log("Move: Stopping move");
 		motors.setSpeed(0, 0);
 		
+		if (!robotMoved) {
+			log("ERROR: robot did not move!");
+			return false;
+		} else
+			return true;
+		
 		//log("Move: Stopping player");
 		//stopPlayer();
 	}
@@ -177,11 +187,12 @@ public class RobotInterface {
 	 * Turns the robot left or right.
 	 * 
 	 * @param angle The angle to turn in radians.  Left is positive, right is negative.
+	 * @return true if successful.
 	 */
-	public void turn(double angle) {
+	public boolean turn(double angle) {
 		if (angle == 0) {
 			log("Turn: angle is zero, returning without moving robot");
-			return;
+			return true;
 		}
 		
 		if (!isPlayerRunning()) {
@@ -203,6 +214,7 @@ public class RobotInterface {
 		
 		int duration = (int)(Math.abs(angle) / ROBOT_TURN_SPEED * 1000); // in milliseconds
 		
+		robotMoved = false;
 		//MotionTask currTask = new MotionTask(Priority.SECOND, speed, direction * ROBOT_TURN_SPEED);
 		//log("Turn: Submitting: " + currTask);
 		//motionArbiter.submitTask(currTask);
@@ -217,6 +229,12 @@ public class RobotInterface {
 		//motionArbiter.submitTask(currTask);
 		log("Move: Stopping turn...");
 		motors.setSpeed(0, 0);
+		
+		if (!robotMoved) {
+			log("ERROR: robot did not turn!");
+			return false;
+		} else
+			return true;
 		
 		//log("Move: Stopping player: " + currTask);
 		//log("Move: Stopping player");
@@ -275,7 +293,7 @@ public class RobotInterface {
 			if (!errResponseText.equals(""))
 				log("isPlayerRunning: Error while running ps aux: " + errResponseText);
 			
-			log("isPlayerRunning: playerRunning = " + playerRunning);
+			//log("isPlayerRunning: playerRunning = " + playerRunning);
 			return playerRunning;
 		} catch(Exception e) {
 			String eMsg = "isPlayerRunning: Unable check if Player server is running : " + e.toString();
@@ -423,6 +441,13 @@ public class RobotInterface {
 			log(eMsg);
 			return false;
 		}
+	}
+	
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		//log("Received PlayerPosition2dData: " + data);
+		robotMoved = true;
+		
 	}
 	
 	private void log(String msg) {
