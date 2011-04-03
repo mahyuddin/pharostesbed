@@ -3,11 +3,8 @@ package pharoslabut.demo.irobotcam;
 import pharoslabut.io.Message;
 
 public class PlayerControlMsg extends Message {
-    
+	private static final long serialVersionUID = -1173422675134836470L;
 	PlayerControlCmd cmd;
-	
-	private static final long serialVersionUID = -2277264706385493797L;
-
 	
 	public PlayerControlMsg(PlayerControlCmd cmd) {
 		this.cmd = cmd;
