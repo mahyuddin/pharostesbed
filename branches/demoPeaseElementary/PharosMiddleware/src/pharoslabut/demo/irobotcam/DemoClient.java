@@ -31,11 +31,9 @@ public class DemoClient {
 	 */
 	public DemoClient(String serverIP, int serverPort, String fileName) {
 
-		// Create the FileLogger...
-		if (fileName != null) {
+		// Create the FileLogger if the file name is defined...
+		if (fileName != null)
 			flogger = new FileLogger(fileName);
-			
-		}
 		
 		try {
 			// Create the connection to the server...
@@ -51,6 +49,7 @@ public class DemoClient {
 			JOptionPane.showMessageDialog(null, msg);
 			log(msg);
 			ioe.printStackTrace();
+			System.exit(1);
 		}
 	}
 	
