@@ -30,6 +30,8 @@ public class TestBlobFinder implements BlobfinderListener {
 		
 		bfi.addListener(this);
 		
+		long prevTimeStamp = -1;
+		
 		while(true) {
 			synchronized(this) {
 				try {
@@ -40,8 +42,8 @@ public class TestBlobFinder implements BlobfinderListener {
 			}
 					
 			if (blobData != null) {
-				double age = (System.currentTimeMillis() - blobDataTimestamp) / 1000.0;
-				log("New blob data (age = " + age + "s): " + blobData.toString());
+				double age = (System.currentTimeMillis() - blobDataTimestamp);
+				log("New blob data (age = " + age + "ms): " + blobData.toString());
 			}
 		} // end while(true)
 	}
