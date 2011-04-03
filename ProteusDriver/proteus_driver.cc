@@ -369,7 +369,8 @@ int Proteus::Shutdown() {
 }
 
 /**
- * Updates and publishes the latest position 2d data.
+ * Updates and publishes the latest position 2d data.  This is the odometry
+ * data provided by the robot.
  */
 void Proteus::updatePos2D() {
 	////////////////////////////
@@ -703,6 +704,16 @@ int Proteus::ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void
 	
 		this->Publish(this->position_addr, resp_queue, PLAYER_MSGTYPE_RESP_ACK, 
 			PLAYER_POSITION2D_REQ_GET_GEOM, (void*)&pos_geom);
+		return 0;
+	}
+	
+	// Reset the odometry data...
+	else if (Message::MatchMessage(hdr,PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_RESET_ODOM, this->position_addr)) {
+		printf("proteus_driver.cc: ProcessMessage: The message requests to reset odometry...\n");
+		proteus_dev->oa = 0;
+		proteus_dev->ox = 0;
+		proteus_dev->oy = 0;
+		proteus_dev->newOdometryData = 0;
 		return 0;
 	}
 	
