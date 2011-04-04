@@ -20,12 +20,12 @@ public class LocationTracker implements CompassLoggerEventListener{
 	public LocationTracker() {
 		
 		
-		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 1, false);
+//		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 1, false);
 																	// 1 is device index, true means showGUI
-		compassLogger.addListener(this);
+//		compassLogger.addListener(this);
 		
 		// this just logs the data to a file
-		compassLogger.start(1, "compasslog.txt"); // first param is ignored
+//		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
 		// robot begins in lower-left corner with a bearing of 0, facing east
