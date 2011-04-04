@@ -1,6 +1,5 @@
 package pharoslabut.cartographer;
 
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.*;
 import java.io.*;
@@ -37,8 +36,6 @@ class LocationElement {
 	
 	public void incTraversed() { this.traversedCount++; }
 	
-	
-	
 }
 
 
@@ -62,6 +59,22 @@ class OrderedPair {
 }
 
 
+class OrderedPairConfidence extends OrderedPair {
+
+	double deltaConfidence;
+
+	public OrderedPairConfidence(Integer xValue, Integer yValue, double dC) {
+		super(xValue, yValue);
+		this.deltaConfidence = dC;
+	}
+	
+	/**************** GETTERS AND SETTERS ******************/
+	public double getDeltaConfidence() { return deltaConfidence; }
+	public void setDeltaConfidence(double deltaConfidence) { this.deltaConfidence = deltaConfidence; }
+	/*************** END GETTERS AND SETTERS ****************/
+}
+
+
 public class WorldView {
 	
 	public static FileWriter fstream; 
@@ -71,8 +84,8 @@ public class WorldView {
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
-	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.20; // minimum short range distance is 20 cm 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 3.00; // max short range distance is 150 cm
+	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.75; // max short range distance is 175 cm
 																// looks like the max long range distance detectable is ~550 cm 
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
@@ -160,6 +173,7 @@ public class WorldView {
 	 * @param yPos current y position of the Roomba (the center point of the robot)
 	 */
 	public static synchronized void recordLocation(double xPos, double yPos) {
+		
 		double [] pos = {xPos, yPos};
 		Integer [] coordinates = locToCoord(pos); // coordinates[0] is xCoord, coordinates[1] is yCoord 
 		// "coordinates" corresponds to the middle of the Roomba, 
@@ -175,6 +189,8 @@ public class WorldView {
 		Integer [] upperLeftCoord = locToCoord(upperLeftPos);
 		Integer [] lowerRightCoord = locToCoord(lowerRightPos);
 		
+		
+		
 		// add all coordinates from upperLeftCoord to lowerRightCoord to the locationsToClear list
 		for (int x = upperLeftCoord[0]; x <= lowerRightCoord[0]; x++) { // iterate through all xCoords, from left to right 
 			for (int y = lowerRightCoord[1]; y <= upperLeftCoord[1]; y++) { // iterate through all yCoords, from top to bottom
@@ -182,9 +198,7 @@ public class WorldView {
 				// since we have passed through this location, we are full confident an object doesn't exist there
 				//   so the confidence value should be set to zero to indicate no obstacle is present
 				WorldView.writeConfidence(x, y, 0); 
-//				synchronized (world) {
-//					((world.get(x)).get(y)).incTraversed();
-//				}
+				WorldView.increaseTraversed(x, y);
 				
 			}
 		}
@@ -201,19 +215,18 @@ public class WorldView {
 	 */
 	public static synchronized void recordObstacles(float [] distIR) {
 		// extract IR data from dist[], dist data is in mm, convert back to m
-		float frontLeftRange 	= distIR[0] / 1000;
-		float frontCenterRange 	= distIR[1] / 1000;
-		float frontRightRange 	= distIR[2] / 1000;
-		float rearLeftRange 	= distIR[3] / 1000;
-		float rearCenterRange 	= distIR[4] / 1000;
-		float rearRightRange 	= distIR[5] / 1000;
+		float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
+		float frontCenterRange 	= WorldView.calibrateIR(distIR[1] / 1000);
+		float frontRightRange 	= WorldView.calibrateIR(distIR[2] / 1000);
+		float rearLeftRange 	= WorldView.calibrateIR(distIR[3] / 1000);
+		float rearCenterRange 	= WorldView.calibrateIR(distIR[4] / 1000);
+		float rearRightRange 	= WorldView.calibrateIR(distIR[5] / 1000);
 		
 		double [] curLoc = LocationTracker.getCurrentLocation();
 		double xPos 	= curLoc[0]; 
 		double yPos 	= curLoc[1];
 		double curAngle	= curLoc[2];
 		
-		Point2D.Double curPoint = new Point2D.Double(xPos, yPos);
 		Point2D.Double obstaclePoint 			= new Point2D.Double();
 		Point2D.Double frontLeftSensorPoint		= new Point2D.Double();
 		Point2D.Double frontCenterSensorPoint 	= new Point2D.Double();
@@ -224,8 +237,8 @@ public class WorldView {
 			
 		// 2-D ArrayList of spaces to clear 
 		// (these need to be calculated and added to the list before the "synchronized (world)" block below)
-		ArrayList<OrderedPair> locationsToDecrease = new ArrayList<OrderedPair>();
-		ArrayList<OrderedPair> locationsToIncrease = new ArrayList<OrderedPair>();
+		ArrayList<OrderedPairConfidence> locationsToDecrease = new ArrayList<OrderedPairConfidence>();
+		ArrayList<OrderedPairConfidence> locationsToIncrease = new ArrayList<OrderedPairConfidence>();
 		
 		locationsToDecrease.clear();
 		locationsToIncrease.clear();
@@ -236,10 +249,7 @@ public class WorldView {
 		double [] obstaclePos = {0,0}; // 
 		double [] sensorPos = {0,0};
 		
-		
-		// WE NEED TO TRY USING THE Line2D class with the Point2D class for keeping track of coordinates... much MUCH better
-		// but both of those are abstract classes... we would need the "double type" implementation of each class
-		
+	
 		
 		// calculate where the object should be recorded
 		
@@ -259,7 +269,9 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("FL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontLeftRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
@@ -275,13 +287,15 @@ public class WorldView {
 
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontLeftSensorPoint.getX();
-			sensorPos[1] = frontLeftSensorPoint.getY();
+			sensorPos[0] = frontCenterSensorPoint.getX();
+			sensorPos[1] = frontCenterSensorPoint.getY();
 						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("FC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontCenterRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
@@ -297,17 +311,19 @@ public class WorldView {
 			
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontLeftSensorPoint.getX();
-			sensorPos[1] = frontLeftSensorPoint.getY();
+			sensorPos[0] = frontRightSensorPoint.getX();
+			sensorPos[1] = frontRightSensorPoint.getY();
 						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("FR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontRightRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
-	}
+		}
 		
 		if ((rearLeftRange >= MIN_USEFUL_IR_DISTANCE) && (rearLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
 			rearLeftSensorPoint.setLocation(	curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0])),
@@ -318,17 +334,19 @@ public class WorldView {
 			
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontLeftSensorPoint.getX();
-			sensorPos[1] = frontLeftSensorPoint.getY();
+			sensorPos[0] = rearLeftSensorPoint.getX();
+			sensorPos[1] = rearLeftSensorPoint.getY();
 						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("RL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearLeftRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
-	}
+		}
 		
 		if ((rearCenterRange >= MIN_USEFUL_IR_DISTANCE) && (rearCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
 			// for the rear center IR, the curAngle + PI is equal to the sensor's angle from the center
@@ -340,17 +358,19 @@ public class WorldView {
 
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontLeftSensorPoint.getX();
-			sensorPos[1] = frontLeftSensorPoint.getY();
+			sensorPos[0] = rearCenterSensorPoint.getX();
+			sensorPos[1] = rearCenterSensorPoint.getY();
 						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("RC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearCenterRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
-	}
+		}
 		
 		if ((rearRightRange >= MIN_USEFUL_IR_DISTANCE) && (rearRightRange <= MAX_USEFUL_IR_DISTANCE)) {
 			rearRightSensorPoint.setLocation(	curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0])),
@@ -361,53 +381,59 @@ public class WorldView {
 			
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontLeftSensorPoint.getX();
-			sensorPos[1] = frontLeftSensorPoint.getY();
+			sensorPos[0] = rearRightSensorPoint.getX();
+			sensorPos[1] = rearRightSensorPoint.getY();
 						
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			locationsToIncrease.add(new OrderedPair(obstacleCoord[0], obstacleCoord[1]));	
+			System.out.println("RR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+			
+			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearRightRange)));	
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
-	}
+		}
 					
-			
-			
-		
+	
 		// iterate through the "locationsToIncrease" list
 			// increase confidence value at (xCoord,yCoord)
-		ListIterator<OrderedPair> iter = locationsToIncrease.listIterator();
+		ListIterator<OrderedPairConfidence> iter = locationsToIncrease.listIterator();
 		while (iter.hasNext()) {
-			// how much should we increase the confidence? +2, +3, etc?
-			OrderedPair cur = iter.next();
+			// increase the confidence based on distance to obstacle (closer means more confident)
+			OrderedPairConfidence cur = iter.next();
 			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY());
-			if (previousConfidence != -1) {
-				WorldView.writeConfidence( cur.getX(), cur.getY(), previousConfidence + 0.02); // might want to change this addition 
+			if (previousConfidence != -1) { // if no error reading confidence
+				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence + cur.getDeltaConfidence());  
 			}
 		}
 		
 		
 		// iterate through the "locationsToDecrease" list
 			// decrease confidence values at (xCoord,yCoord)
-			
-			
-			
-		
-		
+		iter = locationsToDecrease.listIterator();
+		while (iter.hasNext()) {
+			OrderedPairConfidence cur = iter.next();
+			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY());
+			if (previousConfidence != -1) {
+				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence - cur.getDeltaConfidence());  
+			}
+		}	
+				
 	}
+	
+	
 	/**
 	 * adds OrderedPairs on the line from sensor coordinate to obstacle coordinate to the list
 	 * that decreases the confidence of these locations 
-	 * 
-	 * @param locationsToDecrease Arraylist of OrderedPair
+	 * @author Aaron Chen
+	 * @param locationsToDecrease Arraylist of OrderedPairConfidence
 	 * @param x1 Sensor X Coordinate
 	 * @param x2 Obstacle X Coordinate
 	 * @param y1 Sensor Y Coordinate
 	 * @param y2 Obstacle Y Coordinate
 	 */
-	private static void decreaseLineConfidence(ArrayList<OrderedPair> locationsToDecrease, Integer x1, Integer x2, Integer y1, Integer y2){
+	private static void decreaseLineConfidence(ArrayList<OrderedPairConfidence> locationsToDecrease, Integer x1, Integer x2, Integer y1, Integer y2) {
 		Integer xi,yi;
 		Integer deltax = x2-x1;
 		Integer deltay = y2-y1;
@@ -424,7 +450,8 @@ public class WorldView {
 					yi = miny + (int) Math.round((xi - minx) * slope);
 				else //if slope negative, start with maxy
 					yi = maxy + (int) Math.round((xi - minx) * slope);
-				locationsToDecrease.add(new OrderedPair(xi,yi));
+				locationsToDecrease.add(new OrderedPairConfidence ( xi, yi,
+						WorldView.rangeBasedConfidenceDecrease(Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) )))); 
 				//System.out.print("(" + xi + "," + yi + ")");
 			}
 		}
@@ -435,7 +462,8 @@ public class WorldView {
 					xi = minx + (int) Math.round((yi - miny) * slope);
 				else //if slope negative, start with maxx
 					xi = maxx + (int) Math.round((yi - miny) * slope);
-				locationsToDecrease.add(new OrderedPair(xi,yi));
+				locationsToDecrease.add(new OrderedPairConfidence ( xi, yi,
+						WorldView.rangeBasedConfidenceDecrease(Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) )))); 
 				//System.out.print("(" + xi + "," + yi + ")");		
 			}
 		}
@@ -446,13 +474,35 @@ public class WorldView {
 //	synchronized (world) {
 		// set (x,y)'s confidence = c
 //		System.out.println(x + ", " + y + ", " + c);
-		if ((c >= 0 && c <= 1) && ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size()))) {
-			((world.get(x)).get(y)).setConfidence(c);
+		
+		// ensure that c is between 0 and 1
+		if (c < 0) { 
+			c = 0; // min value
+		} else if (c > 1) {
+			c = 1; // max value
+		} else {
+			if ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size())) { 
+				((world.get(x)).get(y)).setConfidence(c);
+			}
 		}
 //	}
 	}
 	
 	
+	public static synchronized void increaseTraversed(Integer x, Integer y) {
+//		synchronized (world) {
+			if ((x >= 0 && x < world.size()) && (y >= 0 && y < (world.get(x)).size())) {
+				((world.get(x)).get(y)).incTraversed();
+			}
+//		}
+	}
+	
+	/**
+	 * 
+	 * @param x X Coordinate
+	 * @param y Y Coordinate
+	 * @return double confidenceValue at (x,y). Returns -1 if out of bounds. 
+	 */
 	public static synchronized double readConfidence(Integer x, Integer y) {
 //	synchronized (world) {
 		// return confidence at (x,y);
@@ -462,6 +512,62 @@ public class WorldView {
 //	}
 	}
 	
+	
+	/**
+	 * 
+	 * @param range the distance from the sensor to the obstacle coordinate
+	 * @return deltaConfidence value, which is the amount that the 
+	 * confidence value will be adjusted, dependent on range. 
+	 * Will return 0 if outside the acceptable range
+	 */
+	public static double rangeBasedConfidenceIncrease (float range) {
+		if ((range >= 0.22) && (range < 0.4)) {
+			return 0.07;
+		} else if ((range >= 0.4) && (range < 0.6)) {
+			return 0.06;
+		} else if ((range >= 0.6) && (range < 0.8)) {
+			return 0.05;
+		} else if ((range >= 0.8) && (range < 1.05)) {
+			return 0; // throw out this unstable window where the IR switching board is deciding b/w long and short range IR
+		} else if ((range >= 1.05) && (range < 1.2)) {
+			return 0.03;
+		} else if ((range >= 1.2) && (range < 1.45)) {
+			return 0.02;
+		} else if ((range >= 1.45) && (range < 1.75)) {
+			return 0.01;
+		} else
+			return 0;
+			
+	}
+	
+	
+	/**
+	 * 
+	 * @param range the distance from the sensor to the coordinate (while iterating through locations to decrease).
+	 * "range" value is in units of coordinates
+	 * @return deltaConfidence value, which is the amount that the 
+	 * confidence value will be adjusted, dependent on range. 
+	 * Will return 0 if outside the acceptable range
+	 */
+	public static double rangeBasedConfidenceDecrease (double range) {
+		if ((range >= 0) && (range < 5)) {
+			return 0.30;
+		} else if ((range >= 5) && (range < 10)) {
+			return 0.20;
+		} else if ((range >= 10) && (range < 15)) {
+			return 0.15;
+		} else if ((range >= 15) && (range < 20)) {
+			return 0.08;
+		} else if ((range >= 20) && (range < 25)) {
+			return 0.04;
+		} else if ((range >= 25) && (range < 30)) {
+			return 0.02;
+		} else if ((range >= 30) && (range < 35)) {
+			return 0.01;
+		} else
+			return 0;
+		
+	}
 	
 	/**
 	 * converts actual x and y positions to x and y coordinates for indexing the WorldView 2-D matrix
@@ -482,7 +588,7 @@ public class WorldView {
 	
 	
 	
-	private static double calibrateIR(double data) {
+	private static float calibrateIR(float data) {
 		return data;
 	}
 

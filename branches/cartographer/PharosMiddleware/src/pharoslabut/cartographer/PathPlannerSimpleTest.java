@@ -23,7 +23,7 @@ import playerclient.IRInterface;
 import playerclient.IRListener;
 
 public class PathPlannerSimpleTest implements Position2DListener, IRListener {
-	public static String serverIP = "128.83.52.224";
+	public static String serverIP = "10.11.12.10";
 	public static String fileName = "log.txt";
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
@@ -90,10 +90,6 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		motors.setSpeed(0, 0);
 		pause(5000);
 
-		
-		motors.setSpeed(0, Math.PI/16);
-		pause(8000);
-		
 		motors.setSpeed(0, 0);
 		pause(5000);
 
@@ -103,7 +99,6 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		try {
 			WorldView.printWorldView();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		
@@ -114,6 +109,11 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
 		}	
 		
+		try {
+            BitmapOut bitmap = new BitmapOut(WorldView.WORLD_SIZE,WorldView.WORLD_SIZE);
+        } catch (IOException e2) {
+            e2.printStackTrace();
+        }
 		
 		ir.removeIRListener(this);
 		motors.removePos2DListener(this);
@@ -139,6 +139,8 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		PlayerPose pp = data.getPos();
 		//motors.setOdometry(pp);
 //		if (!(pp.equals(null))) {
+		
+			//TODO insert 5-wide median filter here
 			LocationTracker.updateLocation(pp);
 //		}
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
@@ -147,6 +149,7 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 	
 	public void newPlayerIRData(PlayerIrData data) {
 		float[] dist = data.getRanges();
+		//TODO insert 5-wide median filter here
 		WorldView.recordObstacles(dist);
 		//log(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
 			//	dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
@@ -219,7 +222,6 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 //		try {
 //			WorldView.printWorldView();
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
 //			e.printStackTrace();
 //		}
 		
