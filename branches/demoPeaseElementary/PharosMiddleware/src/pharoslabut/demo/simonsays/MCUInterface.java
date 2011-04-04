@@ -1,4 +1,4 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
 import gnu.io.*;
 import java.io.*;

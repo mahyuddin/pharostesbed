@@ -1,6 +1,7 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
 import java.awt.Image;
+import java.io.IOException;
 
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
@@ -123,13 +124,20 @@ public class DemoServer implements MessageReceiver {
 		if (image != null) {
 			// Package snapshot into a CameraSnapshotMsg
 			csm = new CameraSnapshotMsg(true /* successful */);
-			csm.setImage(image, IMAGE_WIDTH, IMAGE_HEIGHT);
+			try {
+				csm.setImage(image, IMAGE_WIDTH, IMAGE_HEIGHT);
+				log("Image size: " + csm.getImageSize() + " bytes");
+			} catch (IOException e) {
+				log("Failed to save image in CameraSnapshotMsg: " + e.getMessage());
+				csm.setSuccess(false);
+				e.printStackTrace();
+			}
 		} else {
 			csm = new CameraSnapshotMsg(false /* not successful */);
 		}
 		
 		// Send resulting CameraSnapshotMsg to client...
-		log("Sending camera snapshot result to client...");
+		log("Sending camera snapshot result to client (success=" + csm.getSuccess() + ")...");
 		ClientHandler ch = takeSnapshotMsg.getClientHandler();
 		ch.sendMsg(csm);
 	}

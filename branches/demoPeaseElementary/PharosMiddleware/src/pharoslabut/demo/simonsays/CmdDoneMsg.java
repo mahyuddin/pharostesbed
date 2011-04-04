@@ -1,4 +1,4 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
 import pharoslabut.io.Message;
 
@@ -18,6 +18,10 @@ public class CmdDoneMsg extends Message {
 	 * @param success Whether the operation was successful.
 	 */
 	public CmdDoneMsg(boolean success) {
+		this.success = success;
+	}
+	
+	public void setSuccess(boolean success) {
 		this.success = success;
 	}
 	

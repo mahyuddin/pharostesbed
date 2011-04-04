@@ -1,7 +1,8 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.*;
 import java.io.*;
 
 import javax.swing.*;
@@ -191,13 +192,13 @@ public class ProgramEntryGUI implements ActionListener {
 				d.setLocationRelativeTo(null); // center dialog
 				d.setVisible(true);
 				
-				Image img = cmdExec.takeSnapshot();
+				BufferedImage img = cmdExec.takeSnapshot();
 				d.setVisible(false);
 				if (img == null) 
 					throw new ParseException("Unable to take snapshot (line " + lineno + "...");
 				else {
 					// Display the image...
-					SnapshotFrame sf = new SnapshotFrame(img);
+					SnapshotFrame sf = new SnapshotFrame(img, flogger);
 					sf.waitTillClosed();
 				}
 			} catch(Exception e) {

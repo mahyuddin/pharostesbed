@@ -1,4 +1,4 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
 /**
  * CameraFrame.java
@@ -8,8 +8,14 @@ package pharoslabut.demo.irobotcam;
 
 import java.awt.*;
 import java.awt.event.*;
-//import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImage;
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
+
+import java.io.*;
+
+import pharoslabut.logger.*;
 
 /**
  * Displays a snapshot from the camera.
@@ -25,13 +31,21 @@ public class SnapshotFrame extends JFrame {
 	 */
 	private Object lock = new Object();
 	
+	private BufferedImage img;
+	
+	private ImageSaver imageSaver = new ImageSaver();
+	
+	private FileLogger flogger;
+	
 	/**
 	 * Create a new CameraFrame object.
 	 * 
-	 * @param camera
+	 * @param img The image to display.
+	 * @param flogger The file logger for recording debug statements.
 	 */
-	public SnapshotFrame(Image img) {
-
+	public SnapshotFrame(BufferedImage img, FileLogger flogger) {
+		this.img = img;
+		this.flogger = flogger;
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);	//disposes frame upon exiting
 		
 		/*
@@ -47,6 +61,15 @@ public class SnapshotFrame extends JFrame {
 		pack();
 		setVisible(true);
 		
+		// Create a menu bar
+		JMenuItem saveImageMI = new JMenuItem("Save");
+		saveImageMI.addActionListener(imageSaver);
+		JMenu robotMenu = new JMenu("File");
+		robotMenu.add(saveImageMI);
+		JMenuBar menuBar = new JMenuBar();
+		menuBar.add(robotMenu);
+		setJMenuBar(menuBar);
+		
 		// Add a window close listener
 		addWindowListener(new WindowAdapter() {
 			public void windowClosed(WindowEvent we) {
@@ -56,6 +79,40 @@ public class SnapshotFrame extends JFrame {
 			}
 		});
 	} // end public CameraFrame ( Camera camera )
+	
+	private class ImageSaver implements ActionListener {
+		JFileChooser fc;
+
+		public ImageSaver() {
+			fc = new JFileChooser();
+			fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent ae) {
+			int returnVal = fc.showSaveDialog(SnapshotFrame.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                File file = fc.getSelectedFile();
+                
+                if (!file.exists()) {
+                	try {
+						file.createNewFile();
+						ImageIO.write(img, "jpg", file);
+					} catch (IOException e) {
+						JOptionPane.showMessageDialog(SnapshotFrame.this, "Error while saving file: " + e.getMessage());
+						e.printStackTrace();
+					}
+                } else {
+                	JOptionPane.showMessageDialog(SnapshotFrame.this, "File already exists, will not overwrite!");
+                }
+                
+            } else {
+                log("User cancelled save image operation.");
+            }
+		}
+		
+	}
 	
 	public void waitTillClosed() {
 		// Pause the execution thread until the window closes.
@@ -80,12 +137,16 @@ public class SnapshotFrame extends JFrame {
 	    @Override
 	    public void paintComponent(Graphics g) {
 	        g.drawImage(image, 0, 0, null); // see javadoc for more info on the parameters
-
 	    }
-
 	}
 
-	
+	private void log(String msg) {
+		String result = "SnapshotFrame: " + msg;
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
+	}
 	
 	/**
 	 * Paint the camera stream to the JInternalFrame.

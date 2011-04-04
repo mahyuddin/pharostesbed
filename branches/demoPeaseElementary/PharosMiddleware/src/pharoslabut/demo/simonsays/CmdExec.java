@@ -1,8 +1,9 @@
-package pharoslabut.demo.irobotcam;
+package pharoslabut.demo.simonsays;
 
-import java.awt.Image;
-
-import pharoslabut.io.TCPMessageSender;
+import java.awt.*;
+import java.awt.image.*;
+import java.io.*;
+import pharoslabut.io.*;
 import pharoslabut.logger.*;
 
 /**
@@ -174,7 +175,7 @@ public class CmdExec {
 	 * 
 	 * @return The image taken, or null if error.
 	 */
-	public Image takeSnapshot() {
+	public BufferedImage takeSnapshot() {
 		log("Sending take camera snapshot command to DemoServer...");
 		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
 		if (tcpSender.sendMessage(takeSnapshotMsg)) {
@@ -183,9 +184,16 @@ public class CmdExec {
 			CameraSnapshotMsg ackMsg = (CameraSnapshotMsg)tcpSender.receiveMessage();
 		
 			log("Received camera snapshot results, success = " + ackMsg.getSuccess());
-			if (ackMsg.getSuccess())
-				return ackMsg.getImage();
-			else 
+			if (ackMsg.getSuccess()) {
+				BufferedImage bi = null;
+				try {
+					bi = ackMsg.getImage();
+				} catch(IOException e) {
+					e.printStackTrace();
+					log("Unable to get image from CameraSnapshotMsg, error = " + e.getMessage());
+				}
+				return bi;
+			} else 
 				return null;
 		} else
 			return null;
