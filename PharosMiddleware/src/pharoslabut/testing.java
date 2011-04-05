@@ -41,7 +41,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			System.exit(1);
 		}
 		
-		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 7777, 1 /* device index */, showGUI);
+		// if we use one driver change to 6665
+		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
 		compassLogger.addListener(this);
 
 		motors.addPos2DListener(this);
