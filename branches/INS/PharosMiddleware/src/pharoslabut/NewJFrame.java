@@ -2,10 +2,22 @@ package pharoslabut;
 
 
 import playerclient.NoNewDataException;
+import playerclient.Position2DListener;
 import playerclient.structures.position2d.PlayerPosition2dData;
-
+import java.awt.*;
+import javax.imageio.ImageReader;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import pharoslabut.RobotMover;
 import playerclient.structures.PlayerPoint2d;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.io.*;
+
+import javax.imageio.ImageIO;
 
 /*
  * To change this template, choose Tools | Templates
@@ -21,16 +33,17 @@ import playerclient.structures.PlayerPoint2d;
  *
  * @author Tad M
  */
-public class NewJFrame extends javax.swing.JFrame {
-	protected  int flag = 10;
+public class NewJFrame extends javax.swing.JFrame implements Position2DListener  {
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
     protected  double XueHuaXf = 0, XueHuaYf = 0 ;
-    protected static PlayerPoint2d XueHuaXY;
+    protected static INS_IO XueHuaXY;
+    BufferedImage image ;
     public NewJFrame() {
         initComponents();
         XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
-        XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
+      XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
+     
         
     }
 
@@ -122,7 +135,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jLabel3.setText("Relative Orientation");
 
-        jLabel4.setText("Distance Traveled");
+        jLabel4.setText("Mode");
 
         jLabel5.setText("Time Elapsed");
 
@@ -130,7 +143,7 @@ public class NewJFrame extends javax.swing.JFrame {
 
         jLabel6.setText("Status");
 
-        jButton10.setText("Update");
+        jButton10.setText("Pathfind");
         jButton10.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
              try {
@@ -149,7 +162,7 @@ public class NewJFrame extends javax.swing.JFrame {
             }
         });
 
-        jButton5.setText("Stop");
+        jButton5.setText("Manual Stop");
         jButton5.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton5ActionPerformed(evt);
@@ -173,14 +186,26 @@ public class NewJFrame extends javax.swing.JFrame {
         });
 
         jButton9.setText("SE");
+        jButton11.setText("jButton11");
+        jButton11.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton11ActionPerformed(evt);
+            }
 
+			private void jButton11ActionPerformed(ActionEvent evt) {
+				// TODO Auto-generated method stub
+				
+			}
+        });
+        
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(101, 101, 101)
+                .addContainerGap()
+                .addComponent(jButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 308, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(115, 115, 115)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -260,9 +285,9 @@ public class NewJFrame extends javax.swing.JFrame {
                         .addGap(31, 31, 31)
                         .addComponent(jButton10))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(19, 19, 19)
-                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addGap(36, 36, 36)
+                        .addContainerGap()
+                        .addComponent(jButton11, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jButton1)
                     .addComponent(jButton2)
@@ -277,12 +302,13 @@ public class NewJFrame extends javax.swing.JFrame {
                     .addComponent(jButton7)
                     .addComponent(jButton8)
                     .addComponent(jButton9))
-                .addGap(193, 193, 193))
+                .addGap(219, 219, 219))
         );
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
-
+    }// </editor-fold>
+    
+   
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     		
@@ -331,17 +357,35 @@ public class NewJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton6ActionPerformed
 
    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException {//GEN-FIRST:event_jButton10ActionPerformed
-             /*( PlayerPosition2dData XueHuaPosition = new PlayerPosition2dData();
-              if(XueHuaPosition == null){
-            	 System.out.println("error in creating position data"); 
-              }
-              String XueHuaX = Float.toString(XueHuaPosition.getPos().getPx()); // I suck at typecasting =(
-              String XueHuaY = Float.toString(XueHuaPosition.getPos().getPy()); */
-              XueHuaXf = XueHuaPos.motors.getX();
-              XueHuaYf = XueHuaPos.motors.getY();
+            
+	    JFrame File = new JFrame();
+	    String mapfile = JOptionPane.showInputDialog(File, "Input Map File name");
+
+	    System.out.println(mapfile);
+	    
+	    ImageIcon Display = new ImageIcon(mapfile);
+	    jButton11.setIcon(Display);		
+					// display map
+	    JFrame frame = new JFrame();
+	    Object result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates XY");
+
+	    System.out.println(result);
+	    
+	    JFrame Dest = new JFrame();
+	    Object Desresult = JOptionPane.showInputDialog(Dest, "Destination Coordinates in XY");
+
+	    System.out.println(Desresult);
+	    
+	    // while new command 
+	    //move
+	    // update
+	    // check for new command
+	   
+              XueHuaXY.INS_UpdateX(XueHuaPos);
+              XueHuaXY.INS_UpdateY(XueHuaPos);
               
-              String XueHuaX = Double.toString(XueHuaXf);
-              String XueHuaY = Double.toString(XueHuaYf);
+              String XueHuaX = Double.toString(XueHuaXY.Xpos);
+              String XueHuaY = Double.toString(XueHuaXY.Ypos);
               
               jTextField1.setText(XueHuaX); 
               jTextField2.setText(XueHuaY);
@@ -350,7 +394,12 @@ public class NewJFrame extends javax.swing.JFrame {
 
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
-   private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+   private ImageDisplay ImageDisplay(String mapfile) {
+	// TODO Auto-generated method stub
+	return null;
+}
+
+private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
        // TODO add your handling code here:
        // Turn NW
        XueHua.moveForward();
@@ -368,7 +417,8 @@ public class NewJFrame extends javax.swing.JFrame {
     * @param args the command line arguments
     */
     public static void main(String args[]) {
-
+    	
+		addPos2DListener(XueHuaPos);
       
         java.awt.EventQueue.invokeLater(new Runnable() {
             
@@ -381,7 +431,12 @@ public class NewJFrame extends javax.swing.JFrame {
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private static void addPos2DListener(RobotMover xueHuaPos2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	// Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton10;
     private javax.swing.JButton jButton2;
@@ -405,6 +460,13 @@ public class NewJFrame extends javax.swing.JFrame {
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
     private javax.swing.JTextField jTextField6;
+    private javax.swing.JLabel Map;
+    private javax.swing.JButton jButton11;
     // End of variables declaration//GEN-END:variables
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }

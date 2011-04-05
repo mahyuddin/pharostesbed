@@ -17,7 +17,8 @@ public class PathFind {
 	
 	public PathEnd  result= new PathEnd();
 	
-	private MapGrid map;
+	private MapGrid map1;
+	private Mapping map;
 	private int [] adjGrid = {0,0,0,0,0,0,0,0};
 	
 	private LinkedList<Integer> open = new LinkedList<Integer>();
@@ -30,7 +31,7 @@ public class PathFind {
 	private int  [] h_score;
 	private int  [] f_score;
 		
-	public PathFind (MapGrid n_map)
+	public PathFind (Mapping n_map)
 	{
 		map = n_map;
 		
@@ -38,26 +39,26 @@ public class PathFind {
 		closed.clear();
 		
 		//open 	 = new char [map.map_size];	// 0:Empty 1:Filled 2:Tested
-		heading  = new int  [map.map_size];
-		prev     = new int  [map.map_size];		
-		g_score  = new int  [map.map_size];
-		h_score  = new int  [map.map_size];
-		f_score  = new int  [map.map_size];
+		heading  = new int  [map.Width * map.Height];
+		prev     = new int  [map.Width * map.Height];		
+		g_score  = new int  [map.Width * map.Height];
+		h_score  = new int  [map.Width * map.Height];
+		f_score  = new int  [map.Width * map.Height];
 	}
 	
 	private int CNVRT_Y(int y)
 	{
-		return y/map.grid_size;
+		return y/map.Width;
 	}
 	
 	private int CNVRT_X(int x)
 	{
-		return x%map.grid_size;
+		return x%map.Width;
 	}
 	
 	private int CNVRT_INDEX(int x,int y)
 	{
-		return y*map.grid_size+x;
+		return y*map.Width+x;
 	}
 
 	private int calc_heading(int curH, int nextH)
@@ -78,21 +79,21 @@ public class PathFind {
 	
 	private void FillAdjacency(int x, int y)
 	{
-		if (map.testmap[y+1][x] == SPACE) adjGrid[0] = CNVRT_INDEX(x,y+1);
+		if (!map.map[y+1][x]) adjGrid[0] = CNVRT_INDEX(x,y+1);
 		else adjGrid[0] = EMPTY_ADJ;
-		if (map.testmap[y+1][x-1] == SPACE) adjGrid[7] = CNVRT_INDEX(x-1,y+1);
+		if (!map.map[y+1][x-1]) adjGrid[7] = CNVRT_INDEX(x-1,y+1);
 		else adjGrid[7] = EMPTY_ADJ;
-		if (map.testmap[y+1][x+1] == SPACE) adjGrid[1] = CNVRT_INDEX(x+1,y+1);
+		if (!map.map[y+1][x+1]) adjGrid[1] = CNVRT_INDEX(x+1,y+1);
 		else adjGrid[1] = EMPTY_ADJ;
-		if (map.testmap[y][x-1] == SPACE) adjGrid[6] = CNVRT_INDEX(x-1,y);
+		if (!map.map[y][x-1]) adjGrid[6] = CNVRT_INDEX(x-1,y);
 		else adjGrid[6] = EMPTY_ADJ;
-		if (map.testmap[y][x+1] == SPACE) adjGrid[2] = CNVRT_INDEX(x+1,y);
+		if (map.map[y][x+1]) adjGrid[2] = CNVRT_INDEX(x+1,y);
 		else adjGrid[2] = EMPTY_ADJ;
-		if (map.testmap[y-1][x-1] == SPACE) adjGrid[5] = CNVRT_INDEX(x-1,y-1);
+		if (map.map[y-1][x-1]) adjGrid[5] = CNVRT_INDEX(x-1,y-1);
 		else adjGrid[5] = EMPTY_ADJ;
-		if (map.testmap[y-1][x+1] == SPACE) adjGrid[3] = CNVRT_INDEX(x+1,y-1);
+		if (map.map[y-1][x+1]) adjGrid[3] = CNVRT_INDEX(x+1,y-1);
 		else adjGrid[3] = EMPTY_ADJ;
-		if (map.testmap[y-1][x] == SPACE) adjGrid[4] = CNVRT_INDEX(x,y-1);
+		if (map.map[y-1][x]) adjGrid[4] = CNVRT_INDEX(x,y-1);
 		else adjGrid[4] = EMPTY_ADJ;
 	}	
 	
@@ -111,7 +112,7 @@ public class PathFind {
 		return j;
 	}
 	
-	public int A_path(int src_x, int src_y, int dest_x, int dest_y)
+	public int A_path(int src_x, int src_y, int dest_x, int dest_y, int src_orient)
 	{
 		int guess_g, min;
 		int src = 0, dest = 0;
@@ -131,7 +132,7 @@ public class PathFind {
 		g_score[src] = 0;												//guess to src is 0
 		h_score[src] = heuristic_func(src_x, src_y, dest_x, dest_y);	//guess to end
 		f_score[src] = h_score[src];									//guess to end
-		heading[src] = 0;
+		heading[src] = src_orient;
 		System.out.println("done!");
 		//Init End	
 		
