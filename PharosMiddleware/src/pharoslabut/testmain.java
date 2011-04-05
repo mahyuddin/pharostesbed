@@ -27,7 +27,7 @@ public class testmain {
 		MapGrid map  = new MapGrid(testmap, 16, 16*16);
 		PathFind pf  = new PathFind(map);
 		map.PrintGrid();
-		pf.A_path(1, 1, 14, 14);
+		pf.A_path(1, 1, 14, 14,0);
 		pf.result.printMov();
 	}
 
