@@ -78,7 +78,36 @@ public class SnapshotFrame extends JFrame {
 				}
 			}
 		});
+		
+		// save image for historical record
+		saveImage();
 	} // end public CameraFrame ( Camera camera )
+	
+	/**
+	 * Save the image to a file.  This is done automatically when the SnapshotFrame appears.
+	 * It is done to create a historical record of the images taken by the users.
+	 */
+	private void saveImage() {
+		
+		String fileName = "SimonSaysImage";
+		int indx = 0;
+		String actualFileName = fileName;
+		// If file exists, find an extension number to avoid deleting files
+		File f = new File(actualFileName + ".jpg");
+		while (f.exists()) {
+			actualFileName = fileName + "-" + (indx++) + ".jpg";
+			f = new File(actualFileName);
+		}
+		
+		log("Saving image to: " + f.getName());
+		try {
+			f.createNewFile();
+			ImageIO.write(img, "jpg", f);
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+		
+	}
 	
 	private class ImageSaver implements ActionListener {
 		JFileChooser fc;
