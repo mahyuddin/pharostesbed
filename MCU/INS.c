@@ -69,12 +69,14 @@ void INS_Init() {
     TC6   = TCNT+75; // First interrupt right away.
 }
 
-#define Acc2DSpd 1000/INS_SAMPLEFREQ
+#define Acc2DSpd 1000/INS_SAMPLE_FREQ
 // TODO: Create real tables that don't suck
-ADC_Accel TableX1[] = {{0,-19620*Accc2DSpd},{1025,19620*Accc2DSpd}};
-ADC_Accel TableX2[] = {{0,-19620*Accc2DSpd},{1025,19620*Accc2DSpd}};
-ADC_Accel TableY1[] = {{0,-19620*Accc2DSpd},{373,-9810*Accc2DSpd},{530,0*Accc2DSpd},{674,9810*Accc2DSpd},{1025,19620*Accc2DSpd}};
-ADC_Accel TableY2[] = {{0,-19.620*Accc2DSpd},{383,-9810*Accc2DSpd},{534,0*Accc2DSpd},{687,9810*Accc2DSpd},{1025,19620*Accc2DSpd}};
+ADC_Accel TableX1[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
+ADC_Accel TableX2[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
+//ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd},{373,-9810*Acc2DSpd},{530,0*Acc2DSpd},{674,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
+ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd}, {384, -9806*Acc2DSpd}, {449,-4903*Acc2DSpd}, {474,-3354*Acc2DSpd}, {486,-2538*Acc2DSpd}, {498,-1703*Acc2DSpd}, {515,-855*Acc2DSpd}, {522,-513*Acc2DSpd}, {536,0*Acc2DSpd}, {546,513*Acc2DSpd}, {550,855*Acc2DSpd}, {550,1703*Acc2DSpd}, {566,2538*Acc2DSpd}, {586,3354*Acc2DSpd}, {608,4903*Acc2DSpd}, {1025,19620*Acc2DSpd}};
+//ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},{383,-9810*Acc2DSpd},{534,0*Acc2DSpd},{687,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
+ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},                        {454,-4903*Acc2DSpd}, {477,-3354*Acc2DSpd}, {491,-2538*Acc2DSpd}, {503,-1703*Acc2DSpd}, {522,-855*Acc2DSpd}, {520,-513*Acc2DSpd}, {529,0*Acc2DSpd}, {548,513*Acc2DSpd}, {553,855*Acc2DSpd}, {568,1703*Acc2DSpd}, {577,2538*Acc2DSpd}, {590,3354*Acc2DSpd}, {615,4903*Acc2DSpd}, {688,9806*Acc2DSpd}};
 // 1 in this = .00001 m/s^2 (before the /INS_SAMPLEFREQ)
 // 1 in this = .00001 m/s change from last cycle.
 
@@ -95,7 +97,7 @@ void INSPeriodicFG(){
 	unsigned short tickNum;
 	if (YaxisFifo_Get(&output) == 1) {
 		LED_RED1 = 1;
-	    tickNum = output.tick;
+	  tickNum = output.tick;
 		Yacc = INS_Translate(output.value, TableY1);
 		save = output.value;
         
@@ -110,7 +112,7 @@ void INSPeriodicFG(){
         YSpeed += Yacc;
         YDisp += (YSpeed + YDispr) /  (100 * INS_SAMPLE_FREQ);
         YDispr = (YSpeed + YDispr) %  (100 * INS_SAMPLE_FREQ);
-        
+                                            
         #if USE_XAXIS
 		if (XaxisFifo_Get(&output) == 1) {
 			Xacc = INS_Translate(output.value, TableX1);
@@ -135,15 +137,18 @@ void INSPeriodicFG(){
             
 		}
         if (tickNum >= INS_SAMPLE_FREQ/10 ){
+            LED_GREEN2 = 1;
             // This should be in .1 cm or .001 m displacements.
             #if USE_XAXIS
             Command_sendAccelerometerPacket(XDisp, YDisp, GyroDisp);
             #else
             Command_sendAccelerometerPacket(YDisp, GyroDisp);
+            //Command_sendAccelerometerPacket(save2, save2);
             #endif
             tick = 0;
             XDisp = 0;
             YDisp = 0;
+            LED_GREEN2 = 0;
         }
 		LED_RED1 = 0;
 	}

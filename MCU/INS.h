@@ -7,11 +7,18 @@
 
 #define USE_XAXIS 0
 
+#define AddFifoDef(NAME,SIZE,TYPE, SUCCESS,FAIL);                    \
+			int NAME ## Fifo_Put (TYPE data);                     \
+			int NAME ## Fifo_Get (TYPE *datapt);                  \
+			int NAME ## Fifo_Peak (TYPE *datapt);				  \
+			int NAME ## Fifo_Remove ();
+			
+
 // Making a table from 10-bit ADC to M/S^2
 // Accel is in signed, fixed point, where 1 = 0.001 M/S^2
 typedef struct ADC_Accel {
     short ADC;
-    long   X;
+    long int X;
 } ADC_Accel;
 
 typedef struct FIFO_Item {
@@ -19,7 +26,9 @@ typedef struct FIFO_Item {
     int  value;
     unsigned short tick;   
 } FIFO_Item;    
-
+AddFifoDef(Xaxis, 40, FIFO_Item, 1, 0);
+AddFifoDef(Yaxis, 40, FIFO_Item, 1, 0);
+AddFifoDef(Gyro, 40, FIFO_Item, 1, 0);
 
 
 
