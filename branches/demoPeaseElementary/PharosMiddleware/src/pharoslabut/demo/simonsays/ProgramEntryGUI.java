@@ -108,6 +108,9 @@ public class ProgramEntryGUI implements ActionListener {
 			JOptionPane.showMessageDialog(frame, "Another program is running, please wait for it to terminate.");
 	}
 	
+	/**
+	 * Parses the program and executes it if there are no parse errors.
+	 */
 	private class ProgramExecutor implements Runnable {
 		
 		boolean running = true;
@@ -174,7 +177,10 @@ public class ProgramEntryGUI implements ActionListener {
 					while (running && e.hasMoreElements()) {
 						Command currCmd = e.nextElement();
 						Message currMsg = currCmd.getMessage();
-
+						
+						// Update the GUI on which line is being executed.
+						textArea.setExecutionLine(currCmd.getLine());
+						
 						// Snapshot instructions are handled differently since
 						// they expect an image to be returned.  All other messages
 						// simply get an success/fail acknowledgment.
