@@ -361,12 +361,15 @@ void Command_sendIRPacket(void) {
   
   outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
 	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
-	indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
-	indx = saveTwoBytes(outToSerial, indx, IR_getFC()); // Package Front Center data  
-	indx = saveTwoBytes(outToSerial, indx, IR_getFR()); // Package Front Right data  
-	indx = saveTwoBytes(outToSerial, indx, IR_getRL()); // Package Rear Left data  
-	indx = saveTwoBytes(outToSerial, indx, IR_getRC()); // Package Rear Center data 
-	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data  		
+	indx = saveTwoBytes(outToSerial, indx, IR_get1()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get2()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get3()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get4()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get5()); //  		
+	indx = saveTwoBytes(outToSerial, indx, IR_get6()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get7()); //   
+	indx = saveTwoBytes(outToSerial, indx, IR_getL()); // Data information to the left of the robot  
+	indx = saveTwoBytes(outToSerial, indx, IR_getR()); // Data information to the right of the robot  		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
 
 	//i should equal PROTEUS_IR_PACKET_SIZE 
