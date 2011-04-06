@@ -154,4 +154,8 @@ public class CameraSnapshotMsg extends CmdDoneMsg {
 	    return cm.hasAlpha();
 	}
 	
+	public String toString() {
+		return "CameraSnapshotMsg: size=" + getImageSize();
+	}
+	
 }

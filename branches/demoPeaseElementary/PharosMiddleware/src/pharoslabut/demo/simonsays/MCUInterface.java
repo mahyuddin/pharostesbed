@@ -4,6 +4,7 @@ import gnu.io.*;
 import java.io.*;
 import java.util.*;
 import pharoslabut.logger.*;
+
 /**
  * This communicates with the MCU.
  * 
@@ -264,16 +265,18 @@ public class MCUInterface implements MCUConstants {
         	}
         }
         
+        /**
+         * Reads bytes coming from MCU.  Saves the data in the byteBuffer and then
+         * initiates the processing of it.
+         */
         public void run () {
         	int numBytesRead = 0;
             byte[] buff = new byte[50];
             try{
                while ((numBytesRead = reader.read(buff, 0, buff.length)) != -1) {
-            	   
             	   for (int i = 0; i < numBytesRead; i++) {
             		   byteBuffer.add(buff[i]);
             	   }
-            	   
             	   processIncommingMsgs();
                }
             }

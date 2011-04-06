@@ -38,4 +38,8 @@ public class RobotMoveMsg extends Message {
 	public MsgType getType() {
 		return MsgType.CUSTOM;
 	}
+	
+	public String toString() {
+		return "RobotMoveMsg, dist=" + dist;
+	}
 }

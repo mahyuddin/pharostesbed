@@ -4,6 +4,7 @@ import java.net.*;
 import java.io.*;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.io.*;
@@ -27,25 +28,33 @@ public class DemoClient {
 	 * 
 	 * @param serverIP The IP address of the demo server.
 	 * @param serverPort The port of the demo server.
-	 * @param fileName The log file name for recording execution state.
+	 * @param connect Whether to connect to the server.  This is used for debugging purposes.
+	 * @param logFileName The log file name for recording execution state.
 	 */
-	public DemoClient(String serverIP, int serverPort, String fileName) {
+	public DemoClient(String serverIP, int serverPort, boolean connect, String logFileName) {
 
 		// Create the FileLogger if the file name is defined...
-		if (fileName != null)
-			flogger = new FileLogger(fileName);
+		if (logFileName != null)
+			flogger = new FileLogger(logFileName);
 		
 		try {
-			// Create the connection to the server...
-			tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort, flogger);
+			if (connect) {
+				// Create the connection to the server...
+				tcpSender = new TCPMessageSender(InetAddress.getByName(serverIP), serverPort, flogger);
+			}
 			
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(tcpSender, flogger);
 			
 			// Create a GUI for allowing users to interact with the system...
-			new ProgramEntryGUI(cmdExec, flogger);
+			// See: http://download.oracle.com/javase/6/docs/api/javax/swing/package-summary.html#threading
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					new ProgramEntryGUI(cmdExec, flogger).show();
+				}
+			});
 		} catch(IOException ioe) {
-			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure its DemoServer is running."; 
+			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure the DemoServer is running."; 
 			JOptionPane.showMessageDialog(null, msg);
 			log(msg);
 			ioe.printStackTrace();
@@ -54,7 +63,7 @@ public class DemoClient {
 	}
 	
 	private void log(String msg) {
-		String result = "MotorStressTest: " + msg;
+		String result = "DemoClient: " + msg;
 		System.out.println(result);
 		if (flogger != null) {
 			flogger.log(result);
@@ -68,11 +77,12 @@ public class DemoClient {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.demo.irobotcam.DemoClient <options>\n");
+		print("Usage: pharoslabut.demo.simonsays.DemoClient <options>\n");
 		print("Where <options> include:");
 		print("\t-server <ip address>: The IP address of the Demo Server (default localhost)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
 		print("\t-log <log file name>: name of file in which to save results (default DemoClient.log)");
+		print("\t-noconnect: do not server (useful for debugging)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -80,6 +90,7 @@ public class DemoClient {
 		String logfileName = "DemoClient.log";
 		String serverIP = "localhost";
 		int serverPort = 8887;
+		boolean connect = true;
 
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -91,6 +102,9 @@ public class DemoClient {
 				}
 				else if (args[i].equals("-port")) {
 					serverPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-noconnect")) {
+					connect = false;
 				}
 				else if (args[i].equals("-log")) {
 					logfileName = args[++i];
@@ -107,10 +121,10 @@ public class DemoClient {
 			System.exit(1);
 		}
 		
-		System.out.println("Server IP: " + serverIP);
-		System.out.println("Server port: " + serverPort);
-		System.out.println("Log File: " + logfileName);
+		print("Server IP: " + serverIP);
+		print("Server port: " + serverPort);
+		print("Log File: " + logfileName);
 		
-		new DemoClient(serverIP, serverPort, logfileName);
+		new DemoClient(serverIP, serverPort, connect, logfileName);
 	}
 }

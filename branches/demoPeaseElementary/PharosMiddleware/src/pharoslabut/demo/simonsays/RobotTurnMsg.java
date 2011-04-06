@@ -39,4 +39,8 @@ public class RobotTurnMsg extends Message {
 	public MsgType getType() {
 		return MsgType.CUSTOM;
 	}
+	
+	public String toString() {
+		return "RobotTurnMsg, angle=" + angle;
+	}
 }

@@ -29,4 +29,8 @@ public class CameraPanMsg extends Message {
 	public MsgType getType() {
 		return MsgType.CUSTOM;
 	}
+	
+	public String toString() {
+		return "CameraPanMsg: panAngle=" + panAngle;
+	}
 }

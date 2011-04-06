@@ -24,4 +24,7 @@ public class CameraTiltMsg extends Message {
 		return MsgType.CUSTOM;
 	}
 
+	public String toString() {
+		return "CameraTiltMsg, tiltAngle=" + tiltAngle;
+	}
 }

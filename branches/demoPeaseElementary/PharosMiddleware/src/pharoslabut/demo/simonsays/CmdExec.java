@@ -34,18 +34,29 @@ public class CmdExec {
 	}
 	
 	/**
-	 * Waits for an acknowledgment from the server.
+	 * Sends a message to the server and waits for an acknowledgment.
+	 * The acknowledgment is a CmdDoneMsg.
 	 * 
-	 * @return the success value within the acknowledgment.
+	 * @return The success value within the acknowledgment.
 	 */
-	private boolean getAck() {
-		log("Waiting for acknowledgment...");
-		CmdDoneMsg ackMsg = (CmdDoneMsg)tcpSender.receiveMessage();
-		if (ackMsg != null) {
-			log("Ack received, success = " + ackMsg.getSuccess());
-			return ackMsg.getSuccess(); // success
+	public boolean sendMsg(Message msg) {
+		if (tcpSender == null) {
+			log("sendMsg: No TCP Sender...");
+			return false;
+		}
+		
+		if (tcpSender.sendMessage(msg)) {
+			log("sendMsg: Waiting for acknowledgment...");
+			CmdDoneMsg ackMsg = (CmdDoneMsg)tcpSender.receiveMessage();
+			if (ackMsg != null) {
+				log("sendMsg: Ack received, success = " + ackMsg.getSuccess());
+				return ackMsg.getSuccess(); // success
+			} else {
+				log("sendMsg: ERROR: Ack not received...");
+				return false;
+			}
 		} else {
-			log("Ack not received...");
+			log("sendMsg: ERROR while sending message.");
 			return false;
 		}
 	}
@@ -58,35 +69,22 @@ public class CmdExec {
 	 * a negative value is backward.
 	 * @return whether the operation was successful.
 	 */
-	public boolean moveRobot(double dist) {
-		
-		log("Sending move command to DemoServer...");
-		RobotMoveMsg moveMsg = new RobotMoveMsg(dist);
-		if (tcpSender.sendMessage(moveMsg))
-			return getAck();
-		else
-			return false;
-	}
+//	public boolean moveRobot(double dist) {
+//		log("moveRobot: Sending move command to DemoServer...");
+//		return sendMsg(new RobotMoveMsg(dist));
+//	}
 	
 	/**
 	 * Stops the player server.
 	 */
 	public boolean stopPlayer() {
-		log("Stopping the player server...");
-		PlayerControlMsg msg = new PlayerControlMsg(PlayerControlCmd.STOP);
-		if (tcpSender.sendMessage(msg))
-			return getAck();
-		else
-			return false;
+		log("stopPlayer: Stopping the player server...");
+		return sendMsg(new PlayerControlMsg(PlayerControlCmd.STOP));
 	}
 	
 	public boolean startPlayer() {
-		log("Starting the player server...");
-		PlayerControlMsg msg = new PlayerControlMsg(PlayerControlCmd.START);
-		if (tcpSender.sendMessage(msg))
-			return getAck();
-		else
-			return false;
+		log("startPlayer: Starting the player server...");
+		return sendMsg(new PlayerControlMsg(PlayerControlCmd.START));
 	}
 	
 	/**
@@ -107,68 +105,56 @@ public class CmdExec {
 	 * turn left (counter-clockwise).
 	 * @return whether the operation was successful.
 	 */
-	public boolean turnRobot(double angle) {
-		
-		// Some sanity checks...
-		if (angle < -360 || angle > 360) {
-			log("Invalid turn angle (" + angle + ")...");
-			return false;
-		}
-		
-		log("Sending turn command (" + angle + ") to DemoServer...");
-		RobotTurnMsg turnMsg = new RobotTurnMsg(angle);
-		if (tcpSender.sendMessage(turnMsg))
-			return getAck();
-		else
-			return false;
-	}
+//	public boolean turnRobot(double angle) {
+//		
+//		// Some sanity checks...
+//		if (angle < -360 || angle > 360) {
+//			log("turnRobot: ERROR: Invalid turn angle (" + angle + ")...");
+//			return false;
+//		}
+//		
+//		log("turnRobot: Sending turn command (" + angle + ") to DemoServer...");
+//		return sendMsg(new RobotTurnMsg(angle));
+//	}
 	
 	/**
 	 * Pans the camera side to side.
 	 * 
 	 * @param angle The pan angle in degrees.  The valid range is from
-	 * -90 to 90.  Zero degrees is straight forward. Negative is towards the
+	 * -45 to 45.  Zero degrees is straight forward. Negative is towards the
 	 * left, positive is towards the right.
 	 * @return whether the operation was successful.
 	 */
-	public boolean panCamera(double angle) {
-		
-		// Some sanity checks...
-		if (angle < -90 || angle > 90) {
-			log("Invalid camera pan angle (" + angle + ")...");
-			return false;
-		}
-		
-		log("Sending pan camera command to DemoServer...");
-		CameraPanMsg panMsg = new CameraPanMsg(angle);
-		if (tcpSender.sendMessage(panMsg))
-			return getAck();
-		else
-			return false;
-	}
+//	public boolean panCamera(double angle) {
+//		
+//		// Some sanity checks...
+//		if (angle < -45 || angle > 45) {
+//			log("panCamera: Invalid camera pan angle (" + angle + ")...");
+//			return false;
+//		}
+//		
+//		log("panCamera: Sending pan camera command to DemoServer...");
+//		return sendMsg(new CameraPanMsg(angle));
+//	}
 	
 	/**
 	 * Tilts the camera up and down.
 	 * 
 	 * @param angle The tilt angle.  The valid range is from
-	 * -90 to 90.  Zero degrees is straight forward. Negative is down, positive is up.  
+	 * -20 to 30.  Zero degrees is straight forward. Negative is down, positive is up.  
 	 * @return whether the operation was successful.
 	 */
-	public boolean tiltCamera(double angle) {
-		
-		// Some sanity checks...
-		if (angle < -90 || angle > 90) {
-			log("Invalid camera tilt angle (" + angle + ")...");
-			return false;
-		}
-		
-		log("Sending tilt camera command to DemoServer...");
-		CameraTiltMsg tiltMsg = new CameraTiltMsg(angle);
-		if (tcpSender.sendMessage(tiltMsg))
-			return getAck();
-		else
-			return false;
-	}
+//	public boolean tiltCamera(double angle) {
+//		
+//		// Some sanity checks...
+//		if (angle < -20 || angle > 30) {
+//			log("tileCamera: ERROR: Invalid camera tilt angle (" + angle + ")...");
+//			return false;
+//		}
+//		
+//		log("tiltCamera: Sending tilt camera command to DemoServer...");
+//		return sendMsg(new CameraTiltMsg(angle));
+//	}
 	
 	/**
 	 * Takes a snapshot using the camera.
@@ -176,21 +162,21 @@ public class CmdExec {
 	 * @return The image taken, or null if error.
 	 */
 	public BufferedImage takeSnapshot() {
-		log("Sending take camera snapshot command to DemoServer...");
+		log("takeSnapshot: Sending take camera snapshot command to DemoServer...");
 		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
 		if (tcpSender.sendMessage(takeSnapshotMsg)) {
 		
-			log("Waiting for camera snapshot result message...");
+			log("takeSnapshot: Waiting for camera snapshot result message...");
 			CameraSnapshotMsg ackMsg = (CameraSnapshotMsg)tcpSender.receiveMessage();
 		
-			log("Received camera snapshot results, success = " + ackMsg.getSuccess());
+			log("takeSnapshot: Received camera snapshot results, success = " + ackMsg.getSuccess());
 			if (ackMsg.getSuccess()) {
 				BufferedImage bi = null;
 				try {
 					bi = ackMsg.getImage();
 				} catch(IOException e) {
 					e.printStackTrace();
-					log("Unable to get image from CameraSnapshotMsg, error = " + e.getMessage());
+					log("takeSnapshot: ERROR: Unable to get image from CameraSnapshotMsg, error = " + e.getMessage());
 				}
 				return bi;
 			} else 
