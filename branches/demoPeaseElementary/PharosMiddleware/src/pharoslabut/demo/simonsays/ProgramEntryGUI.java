@@ -172,6 +172,9 @@ public class ProgramEntryGUI implements ActionListener {
 			// Only execute the program if it was successfully parsed.
 			if (running) {
 				try {
+					
+					Vector<Integer> breakpoints = textArea.getBreakpoints();
+					
 					Enumeration<Command> e = program.elements();
 					boolean running = true;
 					while (running && e.hasMoreElements()) {
@@ -180,6 +183,11 @@ public class ProgramEntryGUI implements ActionListener {
 						
 						// Update the GUI on which line is being executed.
 						textArea.setExecutionLine(currCmd.getLine());
+						
+						// If there is a breakpoint set, pause the program execution
+						if (breakpoints.contains(new Integer(currCmd.getLine()))) {
+							JOptionPane.showMessageDialog(frame, "Breakpoint!");
+						}
 						
 						// Snapshot instructions are handled differently since
 						// they expect an image to be returned.  All other messages
