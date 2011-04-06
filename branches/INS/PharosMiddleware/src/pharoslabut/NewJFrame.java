@@ -37,6 +37,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
     protected  double XueHuaXf = 0, XueHuaYf = 0 ;
+    protected long Half =500, Full = 1000;
     protected static INS_IO XueHuaXY;
     BufferedImage image ;
     public NewJFrame() {
@@ -322,10 +323,24 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         //turn 45 degrees CCW move
+    	XueHua.turnLeft();
+    	try {
+			XueHua.wait(Half);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	XueHua.moveForward();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
     			XueHua.turnLeft();
+    			try {
+					XueHua.wait(Full);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
     			XueHua.moveForward();
     			jTextField4.setText("30");
     }//GEN-LAST:event_jButton4ActionPerformed
@@ -333,6 +348,18 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
           
                      XueHua.turnRight();
+                     try {
+     					XueHua.wait(Full);
+     				} catch (InterruptedException e) {
+     					// TODO Auto-generated catch block
+     					e.printStackTrace();
+     				}
+     				try {
+    					XueHua.wait(Full);
+    				} catch (InterruptedException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
                      XueHua.moveForward();
                      System.out.println("Button 8 pushed");// Add code here        // TODO add your handling code here:
     }//GEN-LAST:event_jButton8ActionPerformed
@@ -353,6 +380,12 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
          
                      XueHua.turnRight();
+                     try {
+     					XueHua.wait(Full);
+     				} catch (InterruptedException e) {
+     					// TODO Auto-generated catch block
+     					e.printStackTrace();
+     				}
                      XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
