@@ -158,10 +158,10 @@ void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed
  * Sends an accelerometer packet to the x86 computer.
  * This is called by Compass.c after it gets the compass reading.
  */
-#if USE_YAXIS
+#if USE_XAXIS
 void Command_sendAccelerometerPacket(int16_t x, int16_t y, int16_t gyro) {
 #else
-void Command_sendAccelerometerPacket(int16_t x, int16_t gyro) {
+void Command_sendAccelerometerPacket(int16_t y, int16_t gyro) {
 #endif
 	uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
