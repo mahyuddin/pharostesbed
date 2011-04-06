@@ -344,7 +344,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    			for(int i=0; i<10; i++){
+    			{
                      XueHua.moveForward(); 
     			}// TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -380,7 +380,6 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    //move
 	    // update
 	    // check for new command
-	   
               XueHuaXY.INS_UpdateX(XueHuaPos);
               XueHuaXY.INS_UpdateY(XueHuaPos);
               
@@ -418,7 +417,7 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
     */
     public static void main(String args[]) {
     	
-		addPos2DListener(XueHuaPos);
+    	;
       
         java.awt.EventQueue.invokeLater(new Runnable() {
             

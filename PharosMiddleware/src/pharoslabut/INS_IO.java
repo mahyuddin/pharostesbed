@@ -48,33 +48,42 @@ public class INS_IO {
 		
 	}
 	
-	public String Orient(double Yaw){
-		if(Yaw<45){
-			return "E";
+	public String Orient(RobotMover Vehicle){
+		double Yaw;
+		try {
+			Yaw = Vehicle.motors.getYaw();
+			if(Yaw<45){
+				return "E";
+			}
+			else if(Yaw<90)
+			{return "NE"; 
+			 }
+			else if(Yaw==90)
+			{return "N";
+			}
+			
+			else if(Yaw<135){
+				return "NW";
+			}
+			else if(Yaw==180){
+				return "W";
+			}
+			else if(Yaw<225){
+				return "SW";
+			}
+			else if(Yaw==270){
+				return "S";
+			}
+			else if(Yaw < 315){
+				return "SE";
+			}
+			else return "You're lost";
+			
+		} catch (NoNewDataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		else if(Yaw<90)
-		{return "NE"; 
-		 }
-		else if(Yaw==90)
-		{return "N";
-		}
-		
-		else if(Yaw<135){
-			return "NW";
-		}
-		else if(Yaw==180){
-			return "W";
-		}
-		else if(Yaw<225){
-			return "SW";
-		}
-		else if(Yaw==270){
-			return "S";
-		}
-		else if(Yaw < 315){
-			return "SE";
-		}
-		else return "You're lost";
+		  return "failure";
 		
 	}
 	
