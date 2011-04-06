@@ -82,6 +82,7 @@ public class WorldView {
 	
 	public static final int WORLD_SIZE = 50;					// initial dimensions of "world" (below)
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
+	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
@@ -140,16 +141,19 @@ public class WorldView {
 	public WorldView() {
 		
 		world = new ArrayList<ArrayList<LocationElement>>();
+		sampleworld = new ArrayList<ArrayList<LocationElement>>();
+		
 //		world = Collections.synchronizedList(new ArrayList<ArrayList<LocationElement>>(WORLD_SIZE));
 	
 		for (int i = 0; i < WORLD_SIZE; i++) { // iterate through each x coordinate
  
 			//add a new list for all the y coordinates at that x coordinate
 			world.add(new ArrayList<LocationElement>()); 
-
+			sampleworld.add(new ArrayList<LocationElement>()); 
 			
 			for (int j = 0; j < WORLD_SIZE; j++) { // iterate through each y coordinate
 				(world.get(i)).add(new LocationElement(i,j)); // add a LocationElement at that coordinate
+				(sampleworld.get(i)).add(new LocationElement(i,j)); 
 			}	
 		}
 		
@@ -163,6 +167,50 @@ public class WorldView {
 		}	
 	}
 	
+	public static synchronized void createSampleWorldView(){
+		int i,j = 0;
+		for(i=0;i<WORLD_SIZE; i++){
+			for(j=0; j<WORLD_SIZE;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(0);
+		}
+		
+		//walls
+		for(i=0;i<WORLD_SIZE; i++){
+			for(j=0;j<WORLD_SIZE;j++)
+				if(i == 0 || i == 49 || j == 0 || j == 49)
+					((sampleworld.get(i)).get(j)).setConfidence(1);
+		}
+		
+		//obstacle one
+		for(i=10;i<20; i++){
+			for(j=0; j<10;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(1);
+		}
+		for(i=11;i<19; i++){
+			for(j=1; j<9;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(0);
+		}
+		
+		//obstacle 2
+		for(i=30;i<40; i++){
+			for(j=30;j<40;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(1);
+		}
+		for(i=31;i<39; i++){
+			for(j=31;j<39;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(0);
+		}
+		
+		//obstacle 3
+		for(i=15;i<25; i++){
+			for(j=35;j<45;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(1);
+		}
+		for(i=16;i<24; i++){
+			for(j=36;j<44;j++)
+				((sampleworld.get(i)).get(j)).setConfidence(0);
+		}
+	}
 	
 	/**
 	 * This is called by LocationTracker whenever updateLocation is called. <br>
@@ -641,7 +689,12 @@ public class WorldView {
 			}
 			
 		}
-		
+		try {
+			BitmapOut bitmap = new BitmapOut(WorldView.WORLD_SIZE,WorldView.WORLD_SIZE);
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 	}
 }
 
