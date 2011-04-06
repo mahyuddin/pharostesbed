@@ -1,4 +1,5 @@
-// Code modified from Francis Israel
+// Original code by Francis Israel
+// Modified by Jasmine Liu
 
 #define AddFifo(NAME,SIZE,TYPE, SUCCESS,FAIL) \
 			unsigned long volatile PutI ## NAME;  \
@@ -38,16 +39,20 @@
 			    return(SUCCESS);                                 \
 			}
 
-    // 9 separate IR but 01, 46, 23, 78 are pairs
+    // 9 separate IR sensors fifo's
 
-    AddFifo(IR01_, 40, unsigned short, 1, 0); // long and short
-    AddFifo(IR46_, 40, unsigned short, 1, 0); // two short range
-    AddFifo(IR23_, 40, unsigned short, 1, 0); // long and short
-    AddFifo(IR5_, 40, unsigned short, 1, 0); // front IR sensor long distance  
-    AddFifo(IR78_, 40, unsigned short, 1, 0); // side IR sensors left and right
+    AddFifo(IR1_, 40, unsigned short, 1, 0); 
+    AddFifo(IR2_, 40, unsigned short, 1, 0); 
+    AddFifo(IR3_, 40, unsigned short, 1, 0);
+	AddFifo(IR4_, 40, unsigned short, 1, 0); 
+    AddFifo(IR5_, 40, unsigned short, 1, 0);
+    AddFifo(IR7_, 40, unsigned short, 1, 0); 
+	AddFifo(IR8_, 40, unsigned short, 1, 0);
+	AddFifo(IR9_, 40, unsigned short, 1, 0);
    
     
    IR_Init() {
+   	  ADC0_Init(); // need to integrate initisalization with INS
       ADC1_Init();
       TIOS  |= 0x20; // TC5 is output compare
       TIE   |= 0x20;
@@ -62,48 +67,75 @@
     // Read ADC inputs, put into appropriate FIFO.
     // unsigned short input = ADC1_In(0);
     char i = 0;
-    /*Used ATD pins 0-4 */
+    /*Used AD0 pin 07 and AD1 pins 08-15 */
     //LED_GREEN1 = 1;
     
-    input = ADC0_In(0); // IR01
-    IR01_Fifo_Put(input);
+	input = ADC1_In(ADC_IR_1); // IR0
+    IR1_Fifo_Put(input);
+
+    input = ADC1_In(ADC_IR_2); // IR1,4
+    IR2_Fifo_Put(input);
     
-    input = ADC0_In(1); // IR46
-    IR46_Fifo_Put(input);
+    input = ADC1_In(ADC_IR_3); // IR2,6
+    IR3_Fifo_Put(input);
     
-    input = ADC0_In(2); // IR23
-    IR23_Fifo_Put(input);
+    input = ADC1_In(ADC_IR_4); // IR3
+    IR4_Fifo_Put(input);
     
-    input = ADC0_In(3); // IR5
+    input = ADC1_In(ADC_IR_5); // IR5
     IR5_Fifo_Put(input);
+
+	input = ADC1_In(ADC_IR_6); // IR5
+    IR6_Fifo_Put(input);
     
-    input = ADC0_In(4); // IR78
-    IR78_Fifo_Put(input);
+	input = ADC1_In(ADC_IR_7); // IR7
+    IR7_Fifo_Put(input);
 	
+	input = ADC1_In(ADC_IR_8); // IR8
+    IR8_Fifo_Put(input);
+	
+	input = ADC0_In(ADC_IR_9); // IR8
+    IR9_Fifo_Put(input);	
   }
   
   // Foreground thread:
   // todo translate values into positions around the vehicle
   // separate out combined sensor readings
-  
-  void IRTranslate(){
+  // readings will return as -1 if fifo is empty
+  short* IRTranslate(){
     const short divider = 128; //division between sensor readings in combined IR
-    short ir01, ir23, ir46 ir5, ir78;
-    unsigned long x1,x2,x3,x4,x6,x7,x8; // no x5 
-    unsigned long y1,y2,y3,y4,y5,y6; // no y7,y8 because of positioning
+    short ir[9] = {0};
+    unsigned long x1,x2,x3,x5,x6,x7,x8,x9; // no x4 
+    unsigned long y1,y2,y3,y4,y5,y6,y7; // no y8-9 because of positioning
     
     
-    if(IR01_Fifo_Get(&ir01) == 1){
-    }
-    if(IR23_Fifo_Get(&ir01) == 1){
-    }
-    if(IR46_Fifo_Get(&ir01) == 1){
-    }
+    if(IR1_Fifo_Get(&ir1) == 1){
+		
+    }else{ ir[1] = -1}
+    if(IR2_Fifo_Get(&ir2) == 1){
+
+    }else{ ir[2] = -1}
+    if(IR3_Fifo_Get(&ir3) == 1){
+
+    }else{ ir[3] = -1}
+    if(IR4_Fifo_Get(&ir4) == 1){
+
+    }else{ ir[4] = -1}
     if(IR5_Fifo_Get(&ir5) == 1){
-    }
-    if(IR78_Fifo_Get(&ir78) == 1){
       
-    }
-    
-       
+    }else{ ir[5] = -1}
+	if(IR6_Fifo_Get(&ir6) == 1){
+      
+    }else{ ir[6] = -1}
+    if(IR7_Fifo_Get(&ir7) == 1){
+      
+    }else{ ir[7] = -1}
+	if(IR8_Fifo_Get(&ir8) == 1){
+      
+    }else{ ir[8] = -1}
+	if(IR9_Fifo_Get(&ir9) == 1){
+      
+    }else{ ir[9] = -1}
+   
+   return ir;    
   }
