@@ -80,7 +80,7 @@ public class WorldView {
 	public static FileWriter fstream; 
     public static BufferedWriter fout; 
 	
-	public static final int WORLD_SIZE = 50;					// initial dimensions of "world" (below)
+	public static final int WORLD_SIZE = 72;					// initial dimensions of "world" (below)
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
 	
@@ -177,7 +177,7 @@ public class WorldView {
 		//walls
 		for(i=0;i<WORLD_SIZE; i++){
 			for(j=0;j<WORLD_SIZE;j++)
-				if(i == 0 || i == 49 || j == 0 || j == 49)
+				if(i == 0 || i == 71 || j == 0 || j == 71)
 					((sampleworld.get(i)).get(j)).setConfidence(1);
 		}
 		
