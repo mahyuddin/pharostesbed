@@ -955,10 +955,18 @@ result_t processAccelerometerPacket(proteus_comm_t* r) {
     RDispF = ((float)RDisp * .01) * DEG2RADIAN; // From 100ths of a degree to radians
     r -> statusINSDisplaceX += sin(RDispF) * FDispF;
     r -> statusINSDisplaceY += cos(RDispF) * FDispF;
+	r -> statusINSDisplaceRad = RDispF;
     r -> statusINSVel = FDispF / .01;
     
     
     r->newINSData = 1;
+	#if DEBUG
+		printf("FDisp: %f\n", FDispF);
+		printf("RDisp: %f\n", RDispF);
+		printf("X: %f\n", r -> statusINSDisplaceX);
+		printf("Y: %f\n", r -> statusINSDisplaceY);
+		
+	#endif
     
 	return SUCCESS;
 }
