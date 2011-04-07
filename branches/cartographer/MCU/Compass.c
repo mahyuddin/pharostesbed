@@ -125,7 +125,7 @@ void Compass_init(){
  */
 void Compass_getHeading() {
 	if (I2CDriver_readCompass() == FALSE) {
-		Command_sendMessagePacket("ERROR: Compass: I2C read init failed!");
+		//Command_sendMessagePacket("ERROR: Compass: I2C read init failed!");
 		//Compass_enablePWM();
 	}
 
