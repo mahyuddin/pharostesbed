@@ -5,6 +5,7 @@ import org.jfree.ui.RefineryUtilities;
 import java.util.*;
 
 import pharoslabut.CompassLoggerGUI;
+import pharoslabut.cartographer.PathPlannerSimpleTest;
 import playerclient.*;
 import playerclient.structures.PlayerConstants;
 import playerclient.structures.opaque.PlayerOpaqueData;
@@ -37,17 +38,17 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	 * @param showGUI Whether to display the compass logger's GUI
 	 */
 	public CompassLoggerEvent(String serverIP, int serverPort, int deviceIndex, boolean showGUI) {
-		PlayerClient client = null;
-		this.serverIP = serverIP;
-		
-		try {
-			log("Connecting to server " + serverIP + ":" + serverPort);
-			client = new PlayerClient(serverIP, serverPort);
-		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
-			System.exit (1);
-		}
+		PlayerClient client = PathPlannerSimpleTest.client;
+//		this.serverIP = serverIP;
+//		
+//		try {
+//			log("Connecting to server " + serverIP + ":" + serverPort);
+//			client = new PlayerClient(serverIP, serverPort);
+//		} catch(PlayerException e) {
+//			log("Error connecting to Player: ");
+//			log("    [ " + e.toString() + " ]");
+//			System.exit (1);
+//		}
 		
 		while (compass == null) {
 			try {
@@ -78,8 +79,8 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
 		}
 		
-		if (showGUI)
-			initGUI();
+//		if (showGUI)
+//			initGUI();
 	}
 	
 	/**
@@ -194,68 +195,68 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		System.err.println("\t-d: enable debug output");
 	}
 	
-	public static void main(String[] args) {
-		String serverIP = "localhost";
-		int serverPort = 6665;
-		int index = 1;
-		String fileName = "log.txt";
-		int period = 100; // period between sampling in milliseconds
-		boolean showGUI = false;
-		int time = 0;
-		
-		for (int i=0; i < args.length; i++) {
-			if (args[i].equals("-server")) {
-				serverIP = args[++i];
-			} 
-			else if (args[i].equals("-port")) {
-				serverPort = Integer.valueOf(args[++i]);
-			} 
-			else if (args[i].equals("-index")) {
-				index = Integer.valueOf(args[++i]);
-			} 
-			else if (args[i].equals("-file")) {
-				fileName = args[++i];
-			}
-			else if (args[i].equals("-period")) {
-				period = Integer.valueOf(args[++i]);
-			}
-			else if (args[i].equals("-debug") || args[i].equals("-d")) {
-				System.setProperty ("PharosMiddleware.debug", "true");
-			}
-			else if (args[i].equals("-gui")) {
-				showGUI = true;
-			}
-			else if (args[i].equals("-time")) {
-				time = Integer.valueOf(args[++i]);
-			}
-			else {
-				usage();
-				System.exit(1);
-			}
-		}
-		
-		System.out.println("Server IP: " + serverIP);
-		System.out.println("Server port: " + serverPort);
-		System.out.println("Compass sensor index: " + index);
-		System.out.println("File name: " + fileName);
-		System.out.println("Sampling period: " + period);
-		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
-		System.out.println("Show GUI: " + showGUI);
-		System.out.println("Log time: " + time + "s");
-		
-		CompassLoggerEvent cl = new CompassLoggerEvent(serverIP, serverPort, index, showGUI);
-		cl.start(period, fileName);
-		
-		if (time > 0) {
-			try {
-				synchronized(cl) {
-					cl.wait(time*1000);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			cl.stop();
-			System.exit(0);
-		}
-	}
+//	public static void main(String[] args) {
+//		String serverIP = "localhost";
+//		int serverPort = 6665;
+//		int index = 1;
+//		String fileName = "log.txt";
+//		int period = 100; // period between sampling in milliseconds
+//		boolean showGUI = false;
+//		int time = 0;
+//		
+//		for (int i=0; i < args.length; i++) {
+//			if (args[i].equals("-server")) {
+//				serverIP = args[++i];
+//			} 
+//			else if (args[i].equals("-port")) {
+//				serverPort = Integer.valueOf(args[++i]);
+//			} 
+//			else if (args[i].equals("-index")) {
+//				index = Integer.valueOf(args[++i]);
+//			} 
+//			else if (args[i].equals("-file")) {
+//				fileName = args[++i];
+//			}
+//			else if (args[i].equals("-period")) {
+//				period = Integer.valueOf(args[++i]);
+//			}
+//			else if (args[i].equals("-debug") || args[i].equals("-d")) {
+//				System.setProperty ("PharosMiddleware.debug", "true");
+//			}
+//			else if (args[i].equals("-gui")) {
+//				showGUI = true;
+//			}
+//			else if (args[i].equals("-time")) {
+//				time = Integer.valueOf(args[++i]);
+//			}
+//			else {
+//				usage();
+//				System.exit(1);
+//			}
+//		}
+//		
+//		System.out.println("Server IP: " + serverIP);
+//		System.out.println("Server port: " + serverPort);
+//		System.out.println("Compass sensor index: " + index);
+//		System.out.println("File name: " + fileName);
+//		System.out.println("Sampling period: " + period);
+//		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
+//		System.out.println("Show GUI: " + showGUI);
+//		System.out.println("Log time: " + time + "s");
+//		
+//		CompassLoggerEvent cl = new CompassLoggerEvent(serverIP, serverPort, index, showGUI);
+//		cl.start(period, fileName);
+//		
+//		if (time > 0) {
+//			try {
+//				synchronized(cl) {
+//					cl.wait(time*1000);
+//				}
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//			cl.stop();
+//			System.exit(0);
+//		}
+//	}
 }
