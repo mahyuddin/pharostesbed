@@ -36,7 +36,15 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
+<<<<<<< .mine
+<<<<<<< .mine
+//#include "IR.h"
+=======
+//#include "Sharp_IR.h"
+=======
 //#include "IR.c"
+>>>>>>> .r431
+>>>>>>> .r296
 
 
 
@@ -339,6 +347,47 @@ interrupt 9 void sendDataInterrupt(void) {
 }
 
 
+<<<<<<< .mine
+<<<<<<< .mine
+/** Code provided by Cartographer group
+ * Function: Command_sendIRPacket()
+ * Inputs: None
+ * Outputs: None
+ * Desc: Sends an IR packet to the x86 computer.
+ * DATA PACKETS COME LIKE THIS:
+ * BEGIN Packet
+ * PROTEUS_IR_PACKET
+ * IR1 Data (2Bytes)
+ * IR2 Data (2Bytes)
+ * IR3 Data (2Bytes)
+ * IR4 Data (2Bytes)
+ * IR5 Data (2Bytes)
+ * IR6 Data (2Bytes)
+ * IR7 Data (2Bytes)
+ * IR8 Data (2Bytes)
+ * IR9 Data (2Bytes)
+ * END Packet
+ */
+/*void Command_sendIRPacket(void) {
+  uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+  uint16_t i;
+  
+  outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
+	indx = saveTwoBytes(outToSerial, indx, IR_get1()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get2()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get3()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get4()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get5()); //  		
+	indx = saveTwoBytes(outToSerial, indx, IR_get6()); //  
+	indx = saveTwoBytes(outToSerial, indx, IR_get7()); //   
+	indx = saveTwoBytes(outToSerial, indx, IR_get8()); // Data information to the left of the robot  
+	indx = saveTwoBytes(outToSerial, indx, IR_get9()); // Data information to the right of the robot  		
+	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+=======
+>>>>>>> .r296
+=======
 /** Code provided by Cartographer group
  * Function: Command_sendIRPacket()
  * Inputs: None
@@ -375,7 +424,21 @@ void Command_sendIRPacket(void) {
 	indx = saveTwoBytes(outToSerial, indx, IR_get8()); // Data information to the left of the robot  
 	indx = saveTwoBytes(outToSerial, indx, IR_get9()); // Data information to the right of the robot  		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+>>>>>>> .r431
 
+<<<<<<< .mine
+<<<<<<< .mine
+	//i should equal PROTEUS_IR_PACKET_SIZE 
+  // Send all of the IR Data through the Serial Port
+	for(i=0; i<indx; i++){
+  	SerialDriver_sendByte(outToSerial[i]);
+	}
+}*/  
+
+
+=======
+>>>>>>> .r296
+=======
 	//i should equal PROTEUS_IR_PACKET_SIZE 
   // Send all of the IR Data through the Serial Port
 	for(i=0; i<indx; i++){
@@ -384,3 +447,4 @@ void Command_sendIRPacket(void) {
 }  
 
 
+>>>>>>> .r431
