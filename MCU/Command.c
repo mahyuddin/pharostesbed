@@ -226,9 +226,10 @@ void Command_sendData(void) {
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
 		//Command_sendOdometryPacket();
-		Command_sendIRPacket();		// send IR at 10Hz
+		//Command_sendIRPacket();		// send IR at 10Hz
+		Compass_getHeading();	// send Compass at 10Hz		
 		if(_sendDataCount % 2)
-			Compass_getHeading();	// send Compass at 5Hz
+	    Command_sendIRPacket();		// send IR at 5Hz
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
@@ -355,7 +356,7 @@ interrupt 9 void sendDataInterrupt(void) {
 		}
 		_heartBeatTimerArmed = TRUE;
 		_int9Count = 0;
-		TaskHandler_postTask(&Command_sendStatus);
+		//TaskHandler_postTask(&Command_sendStatus);
 	}
 	
 	TC1 = TCNT + TCNT_20MS_INTERVAL;
