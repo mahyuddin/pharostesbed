@@ -33,34 +33,6 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 */
 	public static final double MAX_TURN_ANGLE = 30;
 	
-	/**
-	 * The maximum amount of time in milliseconds that the robot may spend in the intersection.
-	 */
-	public static final long MAX_INTERSECTION_TIME = 6000;
-	
-	/**
-	 * The minimum amount of time in milliseconds that the robot may spend in the intersection.
-	 */
-	public static final long MIN_INTERSECTION_TIME = 3000;
-	
-	/**
-	 * The minimum amount of time in milliseconds between exiting the previous intersection
-	 * and entering the next one.
-	 */
-	public static final long MIN_INTER_INTERSECTION_TIME = 2000;
-	
-	/**
-	 * The speed and angle settings while the robot crosses the intersection.
-	 */
-	public static final double INTERSECTION_SPEED = 0.35;
-	public static final double INTERSECTION_ANGLE = 0;
-	
-	/**
-	 * The specifications of the intersection marker, which is a thick line perpendicular to the 
-	 * lane.
-	 */
-	public static final int INTERSECTION_MARKER_AREA = 85;
-	public static final int INTERSECTION_MARKER_WIDTH = 100;
 	
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
@@ -72,9 +44,6 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	private long blobFinderDataTimestamp;
 	
 	private boolean done = false;
-	private boolean inIntersection = false;
-	private long intersectionStartTime;
-	private long intersectionEndTime = 0;
 	
 	private Position2DInterface p2di = null;
 	
@@ -149,47 +118,43 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 */
 	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob) {
 		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight());
-		
-		long interIntersectionTime = System.currentTimeMillis() - intersectionEndTime;
-		
-		// This is for detecting when the robot is entering the intersection.
-		// Since there is a big line marking the entrance to the intersection,
-		// we can detect it if the blobs area is > INTERSECTION_MARKER_AREA and the width of the blob
-		// is greater than INTERSECTION_MARKER_WIDTH.
-		if (interIntersectionTime > MIN_INTER_INTERSECTION_TIME 
-				&& blob.getArea() > INTERSECTION_MARKER_AREA 
-				&& blob.getRight() - blob.getLeft() > INTERSECTION_MARKER_WIDTH) 
-		{
-			log("adjustHeadingAndSpeed: Entering intersection...");
-			inIntersection = true;
-			intersectionStartTime = System.currentTimeMillis();
-			angle = INTERSECTION_ANGLE;
-			speed = INTERSECTION_SPEED;
+
+		int midPoint = blobFinderData.getWidth()/2;
+
+		int turnSign;		
+		if (blob.getX() > midPoint) {
+			log("adjustHeadingAndSpeed: Center of blob is left of midpoint, must turn right!");
+			turnSign = -1;
 		} else {
-			int midPoint = blobFinderData.getWidth()/2;
-			
-			int turnSign;		
-			if (blob.getX() > midPoint) {
-				log("adjustHeadingAndSpeed: Center of blob is left of midpoint, must turn right!");
-				turnSign = -1;
-			} else {
-				log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn left!");
-				turnSign = 1;
-			}
-			
-			// Make the angle adjustment proportional to the degree to which the heading is off.
-			double divergence = Math.abs(blob.getX() - midPoint);
-			double divergencePct = divergence / midPoint;
-			log("adjustHeadingAndSpeed: divergencePct = " + divergencePct);
-			angle = turnSign * MAX_TURN_ANGLE * divergencePct;
-		
-			// Make the speed proportional to the degree to which the heading is off. 
-			speed = MAX_SPEED * (1 - divergencePct);
-			if (speed < MIN_SPEED)
-				speed = MIN_SPEED;
+			log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn left!");
+			turnSign = 1;
 		}
+
+		// Make the angle adjustment proportional to the degree to which the heading is off.
+		// A divergencePct of 1 means the robot is the most off in terms of following the line.
+		// A divergencePct of 0 means that the robot is perfectly centered on the line.
+		double divergence = Math.abs(blob.getX() - midPoint);
+		double divergencePct = divergence / midPoint;
+		log("adjustHeadingAndSpeed: divergencePct = " + divergencePct);
+		
+		
+		angle = turnSign * MAX_TURN_ANGLE * divergencePct;
+
+		// Make the speed proportional to the degree to which the heading is off. 
+		speed = MAX_SPEED * (1 - divergencePct);
+		if (speed < MIN_SPEED)
+			speed = MIN_SPEED;
 	}
 	
+	/**
+	 * The secondary blob is used for indicating three things: 
+	 * 
+	 * APPROACHING_INTERSECTION: secondary blob right of line
+	 * ENTERING_INTERSECTION: secondary blob left of line
+	 * EXITING_INTERSECTION: secondary blob crossing line
+	 * 
+	 * @param blob
+	 */
 	private void handleSecondaryBlob(PlayerBlobfinderBlob blob) {
 		// detect secondary blob
 		// for now, pause for 3 seconds then resume
@@ -198,64 +163,6 @@ public class LineFollower implements BlobfinderListener, Runnable {
 //				blobDetect = true; 
 //			}
 //			else if(blob.getArea() < 100) blobDetect = false;
-	}
-	
-	private void doIntersection() {
-		long timeInIntersection = System.currentTimeMillis() - intersectionStartTime;
-		if (timeInIntersection > MAX_INTERSECTION_TIME) {
-			log("doIntersection: ERROR: Spent too much time in intersection, stopping robot");
-			speed = angle = 0;
-		} 
-		else {
-			// Check to make sure we have valid data...
-			if (blobFinderData != null) {
-				
-				// Check to ensure data is not too old...
-				long blobAge = System.currentTimeMillis() - blobFinderDataTimestamp;
-				if (blobAge < BLOB_MAX_VALID_AGE) {
-					
-					int numBlobs = blobFinderData.getBlobs_count();
-					log("doIntersection: There are " + numBlobs + " blobs...");
-
-					if(numBlobs > 0) {	
-						PlayerBlobfinderBlob[] blobList = blobFinderData.getBlobs();
-
-						if(blobList != null && blobList[0] != null) {
-							PlayerBlobfinderBlob blob = blobList[0];
-							
-							log("doIntersection: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight());
-							
-							if (timeInIntersection < MIN_INTERSECTION_TIME) {
-								log("doIntersection: Haven't spent the minimum amount of time in intersection, continuing to move forward (timeInIntersection=" + timeInIntersection + ")...");
-							}
-							// The end of the intersection may be detected when
-							// the blob area is > INTERSECTION_MARKER_AREA and the width is > INTERSECTION_MARKER_WIDTH
-							else if (//blob.getArea() > INTERSECTION_MARKER_AREA && 
-									blob.getRight() - blob.getLeft() > INTERSECTION_MARKER_WIDTH) 
-							{
-								log("doIntersection: End of intersection detected, continuing to follow line...");
-								inIntersection = false;
-								intersectionEndTime = System.currentTimeMillis();
-							}
-						} else {
-							log("doIntersection: No primary blob, assuming still in intersection, continuing to move forward (timeInIntersection=" + timeInIntersection + ")...");
-						}
-
-						// While in intersection, ignore secondary blob
-//						if(numBlobs > 1 && blobList[1] != null) {
-//							handleSecondaryBlob(blobList[1]);
-//						} else log("No secondary blob!");
-					} else {
-						log("doIntersection: No blobs present, assuming still in intersection, continuing to move forward (timeInIntersection=" + timeInIntersection + ")...");
-					}
-
-				} else {
-					log("doIntersection: Blob too old (" + blobAge + "ms), assuming still in intersection, continuing to move forward (timeInIntersection=" + timeInIntersection + ")...");
-				}
-			} else {
-				log("doIntersection: No blob data, assuming still in intersection, continuing to move forward (timeInIntersection=" + timeInIntersection + ")...");
-			}
-		}
 	}
 	
 	private void doLineFollow() {
@@ -300,10 +207,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	public void run() {
 		
 		while(!done) {
-			if (inIntersection)
-				doIntersection();
-			else
-				doLineFollow();
+			doLineFollow();
 			
 			log("Sending Robot Command, speed=" + speed + ", angle=" + angle);
 			p2di.setSpeed(speed, dtor(angle));
