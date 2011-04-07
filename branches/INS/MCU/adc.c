@@ -99,7 +99,7 @@ void ADC1_Init(){
 
 
 
-unsigned short ADC1_In(unsigned short chan[], int size){ 
+unsigned short ADC1_In(unsigned short chan){ 
   ATD1CTL5 = (unsigned char)chan | 0x80;  // start sequence, sample multiple channels
   while((ATD1STAT1&0x01)==0){};    // wait for CCF0-4
   
