@@ -29,7 +29,7 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 	public static String serverIP = "10.11.12.10";
 	public static String fileName = "log.txt";
 	public static PlayerClient client = null;
-	private FileLogger flogger = null;
+	public static FileLogger flogger = null;
 	public static long numIRreadings = 0;
 	static ArrayList<ArrayDeque<Float>> dq;
 
@@ -58,12 +58,9 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		
 		motors.addPos2DListener(this); 
-		MotionArbiter motionArbiter = null;
-		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
-			motionArbiter.setFileLogger(flogger);
 		}
 
 
@@ -76,11 +73,11 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		ir.addIRListener(this);
 
-		motors.setSpeed(0, 0);
-		pause(5000);
+		motors.setSpeed(0, Math.PI/16);
+		pause(8000);
 
 		motors.setSpeed(0, 0);
-		pause(5000);
+		pause(15000);
 
 
 		log("Test complete!");
