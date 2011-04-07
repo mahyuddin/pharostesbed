@@ -36,7 +36,8 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
-//#include "Sharp_IR.h"
+//#include "IR.c"
+
 
 
 /**
@@ -346,12 +347,15 @@ interrupt 9 void sendDataInterrupt(void) {
  * DATA PACKETS COME LIKE THIS:
  * BEGIN Packet
  * PROTEUS_IR_PACKET
- * FL Data (2Bytes)
- * FC Data (2Bytes)
- * FR Data (2Bytes)
- * RL Data (2Bytes)
- * RC Data (2Bytes)
- * RR Data (2Bytes)
+ * IR1 Data (2Bytes)
+ * IR2 Data (2Bytes)
+ * IR3 Data (2Bytes)
+ * IR4 Data (2Bytes)
+ * IR5 Data (2Bytes)
+ * IR6 Data (2Bytes)
+ * IR7 Data (2Bytes)
+ * IR8 Data (2Bytes)
+ * IR9 Data (2Bytes)
  * END Packet
  */
 void Command_sendIRPacket(void) {
@@ -368,8 +372,8 @@ void Command_sendIRPacket(void) {
 	indx = saveTwoBytes(outToSerial, indx, IR_get5()); //  		
 	indx = saveTwoBytes(outToSerial, indx, IR_get6()); //  
 	indx = saveTwoBytes(outToSerial, indx, IR_get7()); //   
-	indx = saveTwoBytes(outToSerial, indx, IR_getL()); // Data information to the left of the robot  
-	indx = saveTwoBytes(outToSerial, indx, IR_getR()); // Data information to the right of the robot  		
+	indx = saveTwoBytes(outToSerial, indx, IR_get8()); // Data information to the left of the robot  
+	indx = saveTwoBytes(outToSerial, indx, IR_get9()); // Data information to the right of the robot  		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
 
 	//i should equal PROTEUS_IR_PACKET_SIZE 
@@ -377,5 +381,6 @@ void Command_sendIRPacket(void) {
 	for(i=0; i<indx; i++){
   	SerialDriver_sendByte(outToSerial[i]);
 	}
-}
+}  
+
 
