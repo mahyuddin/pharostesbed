@@ -35,10 +35,11 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	 * @param serverIP The IP address of the server
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the compass device
-	 * @param showGUI Whether to display the compass logger's GUI
+ * @param showGUI Whether to display the compass logger's GUI
 	 */
 	public CompassLoggerEvent(String serverIP, int serverPort, int deviceIndex, boolean showGUI) {
 		PlayerClient client = PathPlannerSimpleTest.client;
+		flogger = PathPlannerSimpleTest.flogger; 
 //		this.serverIP = serverIP;
 //		
 //		try {
@@ -71,13 +72,13 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 			}
 		}
 		
-		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (oi != null) {
-			log("Subscribed to opaque interface.  Will log MCU messages.");
-			oi.addOpaqueListener(this);
-		} else {
-			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
-		}
+//		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+//		if (oi != null) {
+//			log("Subscribed to opaque interface.  Will log MCU messages.");
+//			oi.addOpaqueListener(this);
+//		} else {
+//			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
+//		}
 		
 //		if (showGUI)
 //			initGUI();
@@ -177,7 +178,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	
 	private void log(String msg) {
 		String result = "CompassLogger: " + msg;
-		//System.out.println(result);
+		System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
 	}
