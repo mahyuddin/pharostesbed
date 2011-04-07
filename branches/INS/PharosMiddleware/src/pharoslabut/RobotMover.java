@@ -8,19 +8,26 @@
 
       import pharoslabut.logger.*;
 
+import playerclient.NoNewDataException;
       import playerclient.PlayerClient;
+import playerclient.Position2DListener;
 
       import playerclient.PlayerException;
 
       import playerclient.Position2DInterface;
 
-      import playerclient.structures.PlayerConstants;
+import playerclient.structures.PlayerConstants;
+import playerclient.structures.PlayerPose;
+import playerclient.structures.position2d.PlayerPosition2dData;
 
-      public class RobotMover {
+      public class RobotMover implements Position2DListener {
 
       	private PlayerClient client = null;
-
       	private FileLogger flogger = null;
+      	
+		protected double Xpos;
+		protected double Ypos;
+		protected double Yaw;
       	
       	public Position2DInterface motors = null;
       	
@@ -29,6 +36,7 @@
       		try {
 
       			client = new PlayerClient(serverIP, serverPort);
+      			
 
       		} catch(PlayerException e) {
 
@@ -41,7 +49,7 @@
       		}
 
       		 motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-
+      		 motors.addPos2DListener(this);
       		if (motors == null) {
 
       			log("motors is null");
@@ -59,11 +67,12 @@
 
 
       		}
-      		turnLeft();
-      		pause (10000);
-      		turnRight();
-      		pause (1000);
-      		stop();
+      		
+      		//INS data
+      		//TODO: insert reset INS value to zero
+				Xpos = 0;
+				Ypos = 0;
+				Yaw = 0;
 /*
 //      		MotionTask currTask;
 
@@ -103,7 +112,7 @@
       	
       	public void moveForward()
       	{
-      		motors.setSpeed(.01, 0);
+      		motors.setSpeed(.1, 0);
       	}
       	
       	public void stop()
@@ -188,4 +197,102 @@
 
       	} */
 
+		@Override
+		public void newPlayerPosition2dData(PlayerPosition2dData data) {
+			System.out.println("movement");
+			PlayerPose pose = data.getPos();
+			Xpos = pose.getPx();
+			Ypos = pose.getPy();
+			
+			
+			//
+			//position updates and other stuff in here
+			
+			// TODO Auto-generated method stub
+			
+		}
+
+		public double INS_UpdateX(){
+			/*try {
+				Xpos = motors.getX();
+			} catch (NoNewDataException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+			return Xpos;
+			
+		}
+		
+		public double INS_UpdateY(){
+			/*try {
+				Ypos = motors.getY();
+			} catch (NoNewDataException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+			return Ypos;
+			
+		}
+		
+		public String Orient(){
+			double Yaw;
+			try {
+				Yaw = motors.getYaw();
+				if(Yaw<45){
+					return "E";
+				}
+				else if(Yaw<90)
+				{return "NE"; 
+				 }
+				else if(Yaw==90)
+				{return "N";
+				}
+				
+				else if(Yaw<135){
+					return "NW";
+				}
+				else if(Yaw==180){
+					return "W";
+				}
+				else if(Yaw<225){
+					return "SW";
+				}
+				else if(Yaw==270){
+					return "S";
+				}
+				else if(Yaw < 315){
+					return "SE";
+				}
+				else return "You're lost";
+				
+			} catch (NoNewDataException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			  return "failure";
+			
+		}
+		
+		public void ManUpdateINS(double n_X, double n_Y, double n_Yaw)
+		{
+			Xpos = n_X;
+			Ypos = n_Y;
+			Yaw = n_Yaw;
+		}
+		
+		public void FB_Mov(RoboMov mov_cmd)
+		{
+			double Xgoal, Ygoal;
+			//0 Forward, 1 Backward, 2 TurnCW, 3 TurnCCW 4 Stop
+			switch(mov_cmd.MovType)
+			{
+			case 0: break;
+				
+			case 1: break;
+			case 2: break;
+			case 3: break;
+			default: break;
+			}
+		}
+		
       }

@@ -37,15 +37,15 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
     protected  double XueHuaXf = 0, XueHuaYf = 0 ;
-    protected long Half =500, Full = 1000;
-    protected static INS_IO XueHuaXY;
+    protected long Half =2, Full = 4;
+ 
     BufferedImage image ;
     public NewJFrame() {
         initComponents();
-        XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
+      XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
       XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
-     
-        
+  
+         
     }
 
     /** This method is called from within the constructor to
@@ -80,6 +80,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
         jButton7 = new javax.swing.JButton();
         jButton8 = new javax.swing.JButton();
         jButton9 = new javax.swing.JButton();
+        jButton11 = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -341,6 +342,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				XueHua.stop();
     			XueHua.moveForward();
     			jTextField4.setText("30");
     }//GEN-LAST:event_jButton4ActionPerformed
@@ -373,6 +375,16 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
     			{
                      XueHua.moveForward(); 
+                     
+                     XueHuaPos.INS_UpdateX();
+                     XueHuaPos.INS_UpdateY();
+                     
+                     String XueHuaX = Double.toString(XueHuaPos.Xpos);
+                     String XueHuaY = Double.toString(XueHuaPos.Ypos);
+                     
+                     jTextField1.setText(XueHuaX); 
+                     jTextField2.setText(XueHuaY);
+
     			}// TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
@@ -386,6 +398,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
      					// TODO Auto-generated catch block
      					e.printStackTrace();
      				}
+     				XueHua.stop();
                      XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
@@ -400,29 +413,35 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    jButton11.setIcon(Display);		
 					// display map
 	    JFrame frame = new JFrame();
-	    Object result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates XY");
-
+	    Object result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates X, Y, Yaw");
+		//TODO: call RobotMover.ManUpdateINS(x,y,yaw)
 	    System.out.println(result);
 	    
 	    JFrame Dest = new JFrame();
-	    Object Desresult = JOptionPane.showInputDialog(Dest, "Destination Coordinates in XY");
-
+	    Object Desresult = JOptionPane.showInputDialog(Dest, "Destination Coordinates in X, Y");
+	    
 	    System.out.println(Desresult);
+	    //TODO: call PathFind.A_path
+	    
+	    //TODO: Handle movement list
+	    
+	    
 	    
 	    // while new command 
 	    //move
 	    // update
 	    // check for new command
-              XueHuaXY.INS_UpdateX(XueHuaPos);
-              XueHuaXY.INS_UpdateY(XueHuaPos);
+             
+	    	//  XueHuaPos.INS_UpdateX();
+            //  XueHuaPos.INS_UpdateY();
               
-              String XueHuaX = Double.toString(XueHuaXY.Xpos);
-              String XueHuaY = Double.toString(XueHuaXY.Ypos);
+              String XueHuaX = Double.toString(XueHuaPos.Xpos);
+              String XueHuaY = Double.toString(XueHuaPos.Ypos);
               
               jTextField1.setText(XueHuaX); 
               jTextField2.setText(XueHuaY);
 
-
+             
 
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
@@ -439,15 +458,20 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
 
    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {                                         
        // TODO add your handling code here:
+	   XueHua.turnLeft();
+	   XueHua.moveForward();
 	   //turn 225 degrees CCW and move straight
    }                                        
 
    private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {                                         
-       // TODO add your handling code here:
+      XueHua.turnRight();
+      XueHua.moveForward();// TODO add your handling code here:
    }               // turn 315 degrees CCW and move 
     /**
     * @param args the command line arguments
     */
+   
+   // Note that all degree movements are relative to the current heading of the robot, not absolute heading.
     public static void main(String args[]) {
     	
     	;
