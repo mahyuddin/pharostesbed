@@ -42,8 +42,6 @@ void ADC1_Init(void);
 // bit 3 0
 // bit 2-0 CC,CB,CA channel number 0 to 7
 // example  data = ADC_In(0x82); // samples right-justified channel 2
-//#ifndef _ADC_H
-//#define _ADC_H 1
 
 unsigned short ADC0_In(unsigned short chan);
 unsigned short ADC1_In(unsigned short chan);
