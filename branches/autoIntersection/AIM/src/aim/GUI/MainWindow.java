@@ -11,7 +11,11 @@
 
 package aim.GUI;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -37,6 +41,7 @@ public class MainWindow extends javax.swing.JFrame {
         File = new javax.swing.JMenu();
         Exit = new javax.swing.JMenuItem();
         View = new javax.swing.JMenu();
+        Queue = new javax.swing.JMenuItem();
         Help = new javax.swing.JMenu();
         JavaDocs = new javax.swing.JMenuItem();
 
@@ -57,6 +62,17 @@ public class MainWindow extends javax.swing.JFrame {
         jMenuBar1.add(File);
 
         View.setText("View");
+
+        Queue.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        Queue.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aim/GUI/Images/Queue.gif"))); // NOI18N
+        Queue.setText("Queue");
+        Queue.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                QueueActionPerformed(evt);
+            }
+        });
+        View.add(Queue);
+
         jMenuBar1.add(View);
 
         Help.setText("Help");
@@ -79,11 +95,11 @@ public class MainWindow extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 459, Short.MAX_VALUE)
+            .addGap(0, 322, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 215, Short.MAX_VALUE)
+            .addGap(0, 174, Short.MAX_VALUE)
         );
 
         pack();
@@ -94,13 +110,22 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_ExitActionPerformed
 
     private void JavaDocsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JavaDocsActionPerformed
-        String htmlFilePath = "home/ut/AIM/Skeleton_Code/AIM/dist/javadoc/index.html"; // path to your new file
-        File htmlFile = new File(htmlFilePath);
-
-        // open the default web browser for the HTML page
-        Desktop.getDesktop().browse(htmlFile.toURI());
+        String url = "file:///home/ut/AIM/Skeleton_Code/AIM/dist/javadoc/index.html";
+        try {
+            Desktop.getDesktop().browse(java.net.URI.create(url));
+        } catch (IOException ex) {
+            Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }//GEN-LAST:event_JavaDocsActionPerformed
+
+    private void QueueActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_QueueActionPerformed
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new DisplayQueue().createAndShowGUI();
+            }
+        });
+    }//GEN-LAST:event_QueueActionPerformed
 
     /**
     * @param args the command line arguments
@@ -111,6 +136,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JMenu File;
     private javax.swing.JMenu Help;
     private javax.swing.JMenuItem JavaDocs;
+    private javax.swing.JMenuItem Queue;
     private javax.swing.JMenu View;
     private javax.swing.JMenuBar jMenuBar1;
     // End of variables declaration//GEN-END:variables

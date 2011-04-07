@@ -1,6 +1,7 @@
 package aim;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
 /**
@@ -13,6 +14,7 @@ public class RobotsPriorityQueue
     private static Comparator<Robot> comparator = new RobotsComparator();
     private static PriorityQueue<Robot> queue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
 
+
     public static PriorityQueue<Robot> getQueue()
     {
         return queue;
@@ -23,26 +25,86 @@ public class RobotsPriorityQueue
         return DEFAULT_CAPACITY;
     }
 
+
+    public static PriorityQueue<Robot> getQueueCopy()
+    {
+        PriorityQueue<Robot> tempQueue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
+        Iterator iterator = queue.iterator();
+        while(iterator. hasNext())
+        {
+            Robot robot = (Robot) iterator.next();
+            tempQueue.add(robot);
+        }
+        return tempQueue;
+    }
+
+
+    public static void dequeue()
+    {
+        queue.remove();
+    }
+
+    public static void enqueue(Robot r)
+    {
+        queue.add(r);
+    }
+
+
+    public static void update()
+    {
+        int size = queue.size();
+        PriorityQueue<Robot> tempQueue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
+        for( int i=0; i<size; i++ )
+        {
+            tempQueue.add(queue.remove());
+        }
+        queue = tempQueue;
+    }
+
+
+    /**
+     * Used to print the elements inside the RobotsPriorityQueue in order
+     * NOTE: DON't use the default toString() method.. it doesn't print the queue in order
+     * @return String to be printed
+     */
+    public static String print()
+    {
+  //      update();
+        String output = "";
+        Iterator iterator = queue.iterator();
+        while(iterator.hasNext())
+        {
+            Robot robot = (Robot) iterator.next();
+            output += robot.getID();
+            output += " - ";
+        }
+        return output;
+    }
+
     /**
      * test
      */
     public static void test() throws InterruptedException
     {
-        Thread.sleep(1000);
-        queue.add( new Robot(0, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)11, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)10, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)19, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)8, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
-        queue.add( new Robot(0, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
+ //       Thread.sleep(1000);
+        enqueue( new Robot(0, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
+        enqueue( new Robot(1, "laneSpecs", (long)11, (long)1.3, (float)1.4) );
+        enqueue( new Robot(2, "laneSpecs", (long)10, (long)1.3, (float)1.4) );
+        enqueue( new Robot(3, "laneSpecs", (long)19, (long)1.3, (float)1.4) );
+        enqueue( new Robot(4, "laneSpecs", (long)8, (long)1.3, (float)1.4) );
+        enqueue( new Robot(5, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
+        enqueue( new Robot(6, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
+        enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
+        enqueue( new Robot(8, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
 
+
+        /*
         while(queue.size() != 0 )
         {
             System.out.println(queue.remove() );
         }
+         *
+         */
     }
 
 }
@@ -66,4 +128,3 @@ class RobotsComparator implements Comparator<Robot>
         return 0;
     }
 }
-
