@@ -7,7 +7,8 @@ import pharoslabut.logger.*;
  * Communicates with the intersection server to safely navigate the 
  * intersection.
  * 
- * @author Chien-Liang Foks
+ * @author Chien-Liang Fok
+ * @author Seth Gee
  */
 public class RemoteIntersectionManager implements LineFollowerEventListener {
 
@@ -21,7 +22,14 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 	 */
 	private int serverPort;
 	
+	/**
+	 * This component is responsible for ensuring the robot follows the line.
+	 */
 	private LineFollower lf;
+	
+	/**
+	 * For logging debug messages.
+	 */
 	private FileLogger flogger;
 	
 	/**
@@ -42,17 +50,22 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 	public void newLineFollowerEvent(LineFollowerEvent lfe) {
 		switch(lfe.getType()) {
 		case APPROACHING:
-			log("Received approaching event!");
-			//TODO Implement this...
+			log("Robot is approaching intersection!");
+			//TODO Implement this... Ask server for permission to cross intersection.
 			break;
 		case ENTERING:
-			//TODO Implement this...
+			log("Robot is entering intersection!");
+			//TODO Implement this... if approval has not been obtained, pause and wait 
+			// for the approval to arrive (may need to query server again).
 			break;
 		case EXITING:
-			//TODO Implement this...
+			log("Robot is exiting intersection!");
+			//TODO Implement this...Notify server that this robot is leaving the intersection
+			
 			break;
 		case ERROR:
-			//TODO Implement this...
+			log("Received error from line follower!  Aborting demo.");
+			lf.stop(); // There was an error, stop!
 			break;
 		}
 	}

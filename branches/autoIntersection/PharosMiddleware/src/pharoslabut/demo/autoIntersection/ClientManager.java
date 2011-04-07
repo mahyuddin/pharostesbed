@@ -4,8 +4,8 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.LineFollower;
 
 /**
- * The top-level class of the client side of the autonomous intersection
- * demo.
+ * The top-level class of the autonomous intersection
+ * demo client.
  * 
  * @author Chien-Liang Fok
  */
@@ -22,6 +22,7 @@ public class ClientManager {
 		lf = new LineFollower(playerIP, playerPort, flogger);
 		rim = new RemoteIntersectionManager(lf, serverIP, port, flogger);
 		
+		// Start the line follower.  This starts the robot moving following the line.
 		lf.start();
 	}
 	
