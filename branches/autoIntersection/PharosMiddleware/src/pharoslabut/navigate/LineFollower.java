@@ -23,7 +23,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = 0.5;
+	public static final double MAX_SPEED = .75;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
@@ -33,7 +33,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	/**
 	 * The maximum turn angle of the robot in degrees.
 	 */
-	public static final double MAX_TURN_ANGLE = 30;
+	public static final double MAX_TURN_ANGLE = 40;
 	
 	private Vector<LineFollowerEventListener> listeners = new Vector<LineFollowerEventListener>();
 	
@@ -145,6 +145,28 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	}
 	
 	/**
+	 * The maximum turn angle should be throttled based on the 
+	 * divergence.  A large divergence indicates the
+	 * need for a large turn angle and vice-versa.
+	 * 
+	 * @param divergencePct The percent divergence.
+	 * @return The maximum turn angle.
+	 */
+	private double getMaxTurnAngle(double divergencePct) {
+		if (divergencePct < 10)
+			return MAX_TURN_ANGLE * 0.6;
+		if (divergencePct < 20)
+			return MAX_TURN_ANGLE * 0.7;
+		if (divergencePct < 30)
+			return MAX_TURN_ANGLE * 0.75;
+		if (divergencePct < 40)
+			return MAX_TURN_ANGLE * 0.8;
+		if (divergencePct < 50)
+			return MAX_TURN_ANGLE * 0.9;
+		return MAX_TURN_ANGLE;
+	}
+	
+	/**
 	 * Adjusts the heading and speed of the robot based on the position of the blob.
 	 * 
 	 * @param blob The blob to use to calculate the heading of the robot.
@@ -171,7 +193,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		log("adjustHeadingAndSpeed: divergencePct = " + divergencePct);
 		
 		
-		angle = turnSign * MAX_TURN_ANGLE * divergencePct;
+		angle = turnSign * getMaxTurnAngle(divergencePct) * divergencePct;
 
 		// Make the speed proportional to the degree to which the heading is off. 
 		speed = MAX_SPEED * (1 - divergencePct);
