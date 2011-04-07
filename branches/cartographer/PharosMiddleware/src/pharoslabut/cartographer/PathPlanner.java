@@ -68,6 +68,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 	
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
 		try {
+			// TODO
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
 			log("Error connecting to Player: ");
@@ -79,18 +80,13 @@ public class PathPlanner implements Position2DListener, IRListener {
 		motors = client.requestInterfacePosition2D(0, 
 				PlayerConstants.PLAYER_OPEN_MODE);
 		
-		
-//		if (motors == null){
-//			log("unable to connect to Position2D interface");
-//			System.exit(1);
-//		}
 		motors.addPos2DListener(this); 
-		MotionArbiter motionArbiter = null;
-		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
+		//MotionArbiter motionArbiter = null;
+		//motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
-			motionArbiter.setFileLogger(flogger);
+			//motionArbiter.setFileLogger(flogger);
 		}
 		
 		
@@ -98,18 +94,28 @@ public class PathPlanner implements Position2DListener, IRListener {
 		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (ir == null) {
 			System.out.println("unable to connect to IR interface");
-			System.exit(1);
+			// TODO
+			//System.exit(1);
 		}
 		ir.addIRListener(this);
 		//////// END OF IR INTERFACING ////////
 		
 		// MOTION STRATEGY
 		pause(2000);	// 2 second initialization delay
-				
+		
+		//WorldView.createSampleWorldView();
+		
 		int time,turntime,x1,x2,y1,y2;
 		double bearing = 0;//initially facing right
 		/////////// ASTAR ///////////////
+		//motors.setSpeed(0, Math.PI/8);
+		//pause(4000);
+		motors.setSpeed(0, 0);
+		pause(2000);
 		path = pathFind(); // ordered list of coordinates to follow
+		motors.setSpeed(0, 0);
+		pause(5000);
+		
 		System.out.println("got a path " + path.size());
 		for(int i = path.size()-2; i>=0; i--){
 			y1 = path.get(i+1).getX();
@@ -118,7 +124,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 			x2 = path.get(i).getY();
 			
 			System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
-			
+			/*
 			// convert from cartesian to polar coordinates
 			double theta = Math.atan2(y2-y1, x2-x1);
 			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
@@ -139,15 +145,16 @@ public class PathPlanner implements Position2DListener, IRListener {
 			//System.out.println("polar(" +r+","+theta+")");
 			//System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
 			//System.out.println("turntime = " + turntime);
+			// TODO
 			motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
 			pause(turntime);
-			//time = (int)r*1000;
 			time = (int)(((r*WIDTH_OF_ROOMBA)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
 			motors.setSpeed(SPEED_STEP, 0);
-			pause(time);
+			pause(time);*/
 		}
 		
 		// STOP THE ROOMBA 
+		// TODO
 		motors.setSpeed(0, 0);
 		pause(5000);
 		
@@ -286,7 +293,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 	public static void main(String[] args) {
 		String fileName = "log.txt";
 		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
-		String serverIP = "128.83.52.224";
+		String serverIP = "128.83.196.235";
 		int serverPort = 6665;
 
 		try {
@@ -314,15 +321,16 @@ public class PathPlanner implements Position2DListener, IRListener {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
 		
+		// TODO
 		new LocationTracker();
 		new WorldView();
 		
-//		try {
-//			WorldView.printWorldView();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+			WorldView.printWorldView();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 		new PathPlanner(serverIP, serverPort, fileName);
 	}
