@@ -5,6 +5,8 @@ import playerclient.structures.blobfinder.*;
 import playerclient.structures.*;
 import pharoslabut.logger.*;
 
+import java.util.*;
+
 /**
  * Follows a line using a CMUcam2.
  * 
@@ -33,6 +35,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 */
 	public static final double MAX_TURN_ANGLE = 30;
 	
+	private Vector<LineFollowerEventListener> listeners = new Vector<LineFollowerEventListener>();
 	
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
@@ -81,6 +84,36 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		
 		bfi.addListener(this);
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
+	}
+	
+	/**
+	 * Adds a LineFollowerEventListener to this object.
+	 * 
+	 * @param lfel the LineFollowerEventListener to add.
+	 */
+	public void addListener(LineFollowerEventListener lfel) {
+		listeners.add(lfel);
+	}
+	
+	/**
+	 * Removes a LineFollowerEventListener from this object.
+	 * 
+	 * @param lfel the LineFollowerEventListener to remove.
+	 */
+	public void removeListener(LineFollowerEventListener lfel) {
+		listeners.remove(lfel);
+	}
+	
+	/**
+	 * Broadcasts the LineFollowerEvent a to all registered listeners.
+	 * 
+	 * @param lfe The event to broadcast.
+	 */
+	private void notifyListeners(LineFollowerEvent lfe) {
+		Enumeration<LineFollowerEventListener> e = listeners.elements();
+		while(e.hasMoreElements()) {
+			e.nextElement().newLineFollowerEvent(lfe);
+		}
 	}
 	
 	/**
@@ -156,13 +189,12 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * @param blob
 	 */
 	private void handleSecondaryBlob(PlayerBlobfinderBlob blob) {
-		// detect secondary blob
-		// for now, pause for 3 seconds then resume
+		// TODO: Add logic that determines the type of event that was detected.
+		// One the type of event is determined, broadcast it to all registered listeners.
 		
-//			if((blob.getArea()) > 150 && blobDetect == false) {
-//				blobDetect = true; 
-//			}
-//			else if(blob.getArea() < 100) blobDetect = false;
+		// Here's an example of how to broadcast an APPROACHING event. 
+//		LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.APPROACHING);
+//		notifyListeners(lfe);
 	}
 	
 	private void doLineFollow() {
