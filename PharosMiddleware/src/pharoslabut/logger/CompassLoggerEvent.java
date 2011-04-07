@@ -1,7 +1,7 @@
 package pharoslabut.logger;
 
 //import java.net.*;
-import org.jfree.ui.RefineryUtilities;
+//import org.jfree.ui.RefineryUtilities;
 import java.util.*;
 
 import pharoslabut.CompassLoggerGUI;
@@ -102,16 +102,16 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	 */
 	public CompassLoggerEvent(Position2DInterface compass, boolean showGUI) {
 		this.compass = compass;
-		if (showGUI) 
-			initGUI();
+//		if (showGUI) 
+//			initGUI();
 	}
 	
-	private void initGUI() {
-		gui = new CompassLoggerGUI("Proteus Compass Data");
-		gui.pack();
-		RefineryUtilities.centerFrameOnScreen(gui);
-		gui.setVisible(true);
-	}
+//	private void initGUI() {
+//		gui = new CompassLoggerGUI("Proteus Compass Data");
+//		gui.pack();
+//		RefineryUtilities.centerFrameOnScreen(gui);
+//		gui.setVisible(true);
+//	}
 	
 	/**
 	 * Note that the period parameter is ignored.
@@ -178,7 +178,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 	
 	private void log(String msg) {
 		String result = "CompassLogger: " + msg;
-		System.out.println(result);
+		//System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
 	}
