@@ -26,6 +26,10 @@
 #ifndef _Sharp_IR_H
 #define _Sharp_IR_H 1
 
+#include "Command.h"
+#include "adc.h"
+#include <mc9s12dp512.h>
+
 #define ADC_IR_1 0x88 
 #define ADC_IR_2 0x89
 #define ADC_IR_3 0x8A
@@ -34,7 +38,9 @@
 #define ADC_IR_6 0x8D
 #define ADC_IR_7 0x8C
 #define ADC_IR_8 0x8E
-#define ADC_IR_9 0x87 
+#define ADC_IR_9 0x87
+
+#define IR_SAMPLE_FREQ 1000 
 
 //all return units of mm
 unsigned short IR_get1(void);

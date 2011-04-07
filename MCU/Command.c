@@ -28,7 +28,7 @@
 #include "LED.h"
 #include "Command.h"
 #include "Servo_PWM.h"
-#include "Tach.h"
+//#include "Tach.h"
 #include "MotorControl.h"
 #include "TaskHandler.h"
 //#include "Compass.h"
@@ -106,7 +106,7 @@ void Command_sendOdometryPacket() {
 	uint16_t i;
 	outToSerial[indx++] = PROTEUS_BEGIN;
 	outToSerial[indx++] = PROTEUS_ODOMETRY_PACKET;
-	indx = saveTwoBytes(outToSerial, indx, Tach_getDistance()); // distance in units of 1.2833 mm 
+	indx = saveTwoBytes(outToSerial, indx, 8);//Tach_getDistance()); // distance in units of 1.2833 mm 
 	indx = saveTwoBytes(outToSerial, indx, Servo_getSteeringAngle()); // angle in units of .0001 radians 
 	outToSerial[indx++] = MotorControl_getMotorThrottled();
 	outToSerial[indx++] = PROTEUS_END;
@@ -114,7 +114,7 @@ void Command_sendOdometryPacket() {
 	for(i = 0; i < indx; i++){
 		SerialDriver_sendByte(outToSerial[i]);  
 	}
-}
+} 
 
 /**
  * Sends a message containing the previous motor power and current speed.
@@ -223,7 +223,7 @@ void Command_sendStatus() {
 	uint16_t i;
 	outToSerial[indx++] = PROTEUS_BEGIN;
 	outToSerial[indx++] = PROTEUS_STATUS_PACKET;
-	indx = saveTwoBytes(outToSerial, indx, Tach_getVelocity()); // velocity in cm/s
+	indx = saveTwoBytes(outToSerial, indx, 8);//Tach_getVelocity()); // velocity in cm/s
 	indx = saveTwoBytes(outToSerial, indx, MotorControl_getTargetSpeed()); // target velocity in cm/s
 	indx = saveTwoBytes(outToSerial, indx, MotorControl_getMotorPower()); // motor power being sent to the motor controller
 	indx = saveTwoBytes(outToSerial, indx, Servo_getSteeringAngle()); // steering angle in units of .0001 radians 
@@ -359,7 +359,7 @@ interrupt 9 void sendDataInterrupt(void) {
  * IR9 Data (2Bytes)
  * END Packet
  */
-/*void Command_sendIRPacket(void) {
+void Command_sendIRPacket(void) {
   uint8_t outToSerial[MAX_PACKET_LEN];
 	uint16_t indx = 0; // an index into the _outToSerial array
   uint16_t i;
@@ -376,4 +376,8 @@ interrupt 9 void sendDataInterrupt(void) {
 	indx = saveTwoBytes(outToSerial, indx, IR_get8()); // Data information to the left of the robot  
 	indx = saveTwoBytes(outToSerial, indx, IR_get9()); // Data information to the right of the robot  		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
-	}*/
+	
+		for(i = 0; i < indx; i++){
+		SerialDriver_sendByte(outToSerial[i]);  
+	}
+	}
