@@ -1,6 +1,9 @@
 // Original code by Francis Israel
 // Modified by Jasmine Liu
 
+#include "IR.h"
+#include "LED.h"
+
 #define AddFifo(NAME,SIZE,TYPE, SUCCESS,FAIL) \
 			unsigned long volatile PutI ## NAME;  \
 			unsigned long volatile GetI ## NAME;  \
@@ -46,6 +49,7 @@
     AddFifo(IR3_, 40, unsigned short, 1, 0);
 	AddFifo(IR4_, 40, unsigned short, 1, 0); 
     AddFifo(IR5_, 40, unsigned short, 1, 0);
+    AddFifo(IR6_, 40, unsigned short, 1, 0);
     AddFifo(IR7_, 40, unsigned short, 1, 0); 
 	AddFifo(IR8_, 40, unsigned short, 1, 0);
 	AddFifo(IR9_, 40, unsigned short, 1, 0);
@@ -54,19 +58,20 @@
    IR_Init() {
    	  ADC0_Init(); // need to integrate initisalization with INS
       ADC1_Init();
-      TIOS  |= 0x20; // TC5 is output compare
-      TIE   |= 0x20;
-      TC5   = TCNT + 100; // interrupt immediately
+      TIOS  |= 0x01; // TC5 is output compare
+      TIE   |= 0x01;
+      TC1   = TCNT + 100; // interrupt immediately
     }
     
-   interrupt 13 void IRPeriodic(void){
+   interrupt 8 void IRPeriodic(void){
     unsigned short input;
-    TFLG1 = 0x20;         // acknowledge OC5
-    TC5 = TC5 + 3000300 / IR_SAMPLE_FREQ;    // 3 000 300 = 10 000 000 000 / 3 333
+    char i = 0;
+    TFLG1 = 0x01;         // acknowledge OC5
+    TC1 = TC1 + 3000300 / IR_SAMPLE_FREQ;    // 3 000 300 = 10 000 000 000 / 3 333
 
     // Read ADC inputs, put into appropriate FIFO.
     // unsigned short input = ADC1_In(0);
-    char i = 0;
+    
     /*Used AD0 pin 07 and AD1 pins 08-15 */
     //LED_GREEN1 = 1;
     
@@ -109,33 +114,33 @@
     unsigned long y1,y2,y3,y4,y5,y6,y7; // no y8-9 because of positioning
     
     
-    if(IR1_Fifo_Get(&ir1) == 1){
+    if(IR1_Fifo_Get(&ir[1]) == 1){
 		
-    }else{ ir[1] = -1}
-    if(IR2_Fifo_Get(&ir2) == 1){
+    }else{ ir[1] = -1;}
+    if(IR2_Fifo_Get(&ir[2]) == 1){
 
-    }else{ ir[2] = -1}
-    if(IR3_Fifo_Get(&ir3) == 1){
+    }else{ ir[2] = -1;}
+    if(IR3_Fifo_Get(&ir[3]) == 1){
 
-    }else{ ir[3] = -1}
-    if(IR4_Fifo_Get(&ir4) == 1){
+    }else{ ir[3] = -1;}
+    if(IR4_Fifo_Get(&ir[4]) == 1){
 
-    }else{ ir[4] = -1}
-    if(IR5_Fifo_Get(&ir5) == 1){
+    }else{ ir[4] = -1;}
+    if(IR5_Fifo_Get(&ir[5]) == 1){
       
-    }else{ ir[5] = -1}
-	if(IR6_Fifo_Get(&ir6) == 1){
+    }else{ ir[5] = -1;}
+	if(IR6_Fifo_Get(&ir[6]) == 1){
       
-    }else{ ir[6] = -1}
-    if(IR7_Fifo_Get(&ir7) == 1){
+    }else{ ir[6] = -1;}
+    if(IR7_Fifo_Get(&ir[7]) == 1){
       
-    }else{ ir[7] = -1}
-	if(IR8_Fifo_Get(&ir8) == 1){
+    }else{ ir[7] = -1;}
+	if(IR8_Fifo_Get(&ir[8]) == 1){
       
-    }else{ ir[8] = -1}
-	if(IR9_Fifo_Get(&ir9) == 1){
+    }else{ ir[8] = -1;}
+	if(IR9_Fifo_Get(&ir[9]) == 1){
       
-    }else{ ir[9] = -1}
+    }else{ ir[9] = -1;}
    
    return ir;    
   }
