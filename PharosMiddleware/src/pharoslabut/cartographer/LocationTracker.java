@@ -19,13 +19,16 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	public LocationTracker() {
 		
-		
-//		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 1, false);
-																	// 1 is device index, true means showGUI
-//		compassLogger.addListener(this);
+		// below: the serverIP and 7777 port number do not matter
+		// inside the CompassLoggerEvent constructor, it no longer creates a new player client connection, 
+		//   instead, it just uses the one client connection from the Path Planner and connects to the same port, 
+		//   but using device index "2" for the compass's position2d provider
+		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 2, false);
+																	// 2 is device index, true means showGUI
+		compassLogger.addListener(this);
 		
 		// this just logs the data to a file
-//		compassLogger.start(1, "compasslog.txt"); // first param is ignored
+		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
 		// robot begins in lower-left corner with a bearing of 0, facing east
