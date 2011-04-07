@@ -287,15 +287,27 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		}
 	}
 	
+	/**
+	 * Logs a debug message.  This message is only printed when debug mode is enabled.
+	 * 
+	 * @param msg The message to log.
+	 */
 	private void log(String msg) {
 		log(msg, true);
 	}
 	
+	/**
+	 * Logs a message.
+	 * 
+	 * @param msg  The message to log.
+	 * @param isDebugMsg Whether the message is a debug message.
+	 */
 	private void log(String msg, boolean isDebugMsg) {
+		String result = "LineFollower: " + msg;
 		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(msg);
+			System.out.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
 	}
 	
 	private static void print(String msg) {
