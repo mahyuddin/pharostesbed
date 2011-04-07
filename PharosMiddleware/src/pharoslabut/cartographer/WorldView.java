@@ -86,7 +86,7 @@ public class WorldView {
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 0.75; // max short range distance is 175 cm
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.50; // max short range distance is 175 cm
 																// looks like the max long range distance detectable is ~550 cm 
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
@@ -330,7 +330,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("FL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("FL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontLeftRange)));	
 			
@@ -354,7 +354,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("FC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("FC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontCenterRange)));	
 			
@@ -378,7 +378,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("FR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("FR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(frontRightRange)));	
 			
@@ -401,7 +401,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("RL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("RL Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearLeftRange)));	
 			
@@ -425,7 +425,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("RC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("RC Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearCenterRange)));	
 			
@@ -448,7 +448,7 @@ public class WorldView {
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			
-			System.out.println("RR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
+//			System.out.println("RR Coord: (" + sensorCoord[0] + "," + sensorCoord[1] + ")");
 			
 			locationsToIncrease.add(new OrderedPairConfidence(obstacleCoord[0], obstacleCoord[1], WorldView.rangeBasedConfidenceIncrease(rearRightRange)));	
 			
@@ -650,7 +650,7 @@ public class WorldView {
 	
 	
 	private static float calibrateIR(float data) {
-		return data;
+		return (float) (-0.00003*data*data + 1.0509*data - 21.926);
 	}
 
 	

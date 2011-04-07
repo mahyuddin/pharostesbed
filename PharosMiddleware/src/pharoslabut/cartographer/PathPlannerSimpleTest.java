@@ -26,7 +26,7 @@ import playerclient.IRInterface;
 import playerclient.IRListener;
 
 public class PathPlannerSimpleTest implements Position2DListener, IRListener {
-	public static String serverIP = "10.11.12.10";
+	public static String serverIP = "128.83.196.235";
 	public static String fileName = "log.txt";
 	public static PlayerClient client = null;
 	public static FileLogger flogger = null;
@@ -73,12 +73,20 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		ir.addIRListener(this);
 
-		motors.setSpeed(0, Math.PI/16);
-		pause(8000);
-
 		motors.setSpeed(0, 0);
-		pause(15000);
+		pause(1000);
 
+		motors.setSpeed(0.2, 0);
+		pause(5000);
+		
+		motors.setSpeed(0, -Math.PI/16);
+		pause(4000);
+		
+//		motors.setSpeed(0.2, 0);
+//		pause (5000);
+		
+		motors.setSpeed(0, 0);
+		pause(1000);
 
 		log("Test complete!");
 
@@ -124,14 +132,15 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 	//@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose pp = data.getPos();
-		//motors.setOdometry(pp);
-		//		if (!(pp.equals(null))) {
-
+		
 		//TODO insert 5-wide median filter here
+		
 		LocationTracker.updateLocation(pp);
-		//		}
-		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
+		
+//		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
+//				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
+				
+		System.out.println("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa());
 	}
 
 
@@ -168,7 +177,7 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		WorldView.recordObstacles(window);
 
-		System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
+//		System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
 	}
 
 

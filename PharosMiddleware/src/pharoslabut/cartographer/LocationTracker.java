@@ -107,19 +107,19 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	private static double calibrateX(double xValue) {
 		// take odometer value and convert to accurate X distance
-		return xValue;
+		return (double) (-3.7331*xValue*xValue+8.1825*xValue-3.466);
 	}
 	
 	
 	private static double calibrateY(double yValue) {
 		// take odometer value and convert to accurate Y distance
-		return yValue;
+		return (double) (-3.7331*yValue*yValue+8.1825*yValue-3.466);
 	}
 	
 	
 	private static double calibrateAngle(double angle) {
 		// take odometer value and convert to accurate angle measurement
-		return angle;
+		return 2.04*angle; // preliminary calibration
 	}
 
 
