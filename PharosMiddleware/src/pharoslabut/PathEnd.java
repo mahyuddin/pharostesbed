@@ -1,6 +1,8 @@
-package pharoslabut;
 
+package pharoslabut;
 import java.util.*;
+
+import pharoslabut.RoboMov;
 
 //Movements and Path
 public class PathEnd 
@@ -29,9 +31,9 @@ public class PathEnd
 		path_list.clear();
 	}
 	
-	public void AddMovEd(int movType, int amt)
+	public void AddMovEd(int movType, int x, int y, int h)
 	{
-		RoboMov mov = new RoboMov(movType,amt);
+		RoboMov mov = new RoboMov(movType,x,y,h);
 		mov_list.add(mov);
 	}
 
@@ -75,12 +77,23 @@ public class PathEnd
 			mov_cmd = mov_list.get(index);
 			switch(mov_cmd.MovType)
 			{	//0 Forward, 1 Backward, 2 TurnCW, 3 TurnCCW
-				case 0: System.out.println("Move Fwd "+mov_cmd.MovAmt+"m"); break;
-				case 1: System.out.println("Move Bwd "+mov_cmd.MovAmt+"m"); break;
-				case 2: System.out.println("Turn Cw  "+mov_cmd.MovAmt+"d"); break;
-				case 3: System.out.println("Turn CCW "+mov_cmd.MovAmt+"d"); break;
+				case 0: System.out.print("Move Fwd ");break;
+				case 1: System.out.print("Move Bwd ");break;
+				case 2: System.out.print("Turn  Cw "); break;
+				case 3: System.out.print("Turn CCW ");break;
 			}
+			System.out.println("till: X("+mov_cmd.goalWaypoint.X+") Y("+mov_cmd.goalWaypoint.Y+") H("+mov_cmd.goalWaypoint.H+")");
 		}
 	}
 	
+	public void executeMov(RobotMover Robot)
+	{
+		int i;
+		RoboMov mov_cmd;
+		for(i=0; i<MovSize();i++)
+		{
+			mov_cmd = GetMov(i);
+			Robot.FB_Mov(mov_cmd);
+		}
+	}
 }

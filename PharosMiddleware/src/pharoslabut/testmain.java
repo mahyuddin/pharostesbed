@@ -1,33 +1,34 @@
 package pharoslabut;
-
 public class testmain {
 	
 	public static void main(String[] args) {
 		
-		int [][] testmap = 
-		{ 		{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}, //0
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //1
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //2
-				{1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1}, //3
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //4
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //5
-				{1,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1}, //6
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //7
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //8
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //9
-				{1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1}, //A
-				{1,0,0,0,1,0,1,1,0,0,0,0,0,0,0,1}, //B
-				{1,0,0,0,1,1,0,1,0,0,0,0,0,0,0,1}, //C
-				{1,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1}, //D
-				{1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, //E
-				{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}  //F
-			//	 0 1 2 3 4 5 6 7 8 9 A B C D E F
+		boolean [][] testmap = 
+		{   { true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
+			{ true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true } 
 		};
 			
-		MapGrid map  = new MapGrid(testmap, 16, 16*16);
-		PathFind pf  = new PathFind(map);
-		map.PrintGrid();
-		pf.A_path(1, 1, 14, 14,0);
+		Mapping map  = new Mapping();
+		map.map = testmap;
+		map.Width = 16;
+		map.Height = 16;
+		PathFind pf  = new PathFind(map,1);
+		pf.A_path(1, 1, 4, 4, 0);
+		pf.result.printPath();
 		pf.result.printMov();
 	}
 
