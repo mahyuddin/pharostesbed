@@ -86,7 +86,7 @@ public class WorldView {
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.75; // max short range distance is 175 cm
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 0.75; // max short range distance is 175 cm
 																// looks like the max long range distance detectable is ~550 cm 
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
@@ -266,9 +266,9 @@ public class WorldView {
 		float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
 		float frontCenterRange 	= WorldView.calibrateIR(distIR[1] / 1000);
 		float frontRightRange 	= WorldView.calibrateIR(distIR[2] / 1000);
-		float rearLeftRange 	= WorldView.calibrateIR(distIR[3] / 1000);
+		float rearLeftRange 	= WorldView.calibrateIR(distIR[5] / 1000); // [5] is actually the rearLeft
 		float rearCenterRange 	= WorldView.calibrateIR(distIR[4] / 1000);
-		float rearRightRange 	= WorldView.calibrateIR(distIR[5] / 1000);
+		float rearRightRange 	= WorldView.calibrateIR(distIR[3] / 1000); // [3] is actually the rearRight
 		
 		double [] curLoc = LocationTracker.getCurrentLocation();
 		double xPos 	= curLoc[0]; 
@@ -689,6 +689,7 @@ public class WorldView {
 			}
 			
 		}
+		
 		try {
 			BitmapOut bitmap = new BitmapOut(WorldView.WORLD_SIZE,WorldView.WORLD_SIZE);
 		} catch (IOException e2) {

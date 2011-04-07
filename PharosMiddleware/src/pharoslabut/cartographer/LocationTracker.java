@@ -7,8 +7,8 @@ import pharoslabut.logger.CompassLoggerEventListener;
 public class LocationTracker implements CompassLoggerEventListener{
 	private static CompassLoggerEvent compassLogger;
 	// change initial values to reflect the robot's starting orientation
-	private static final double initialX = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
-	private static final double initialY = WorldView.ROOMBA_RADIUS + 2*WorldView.RESOLUTION;
+	private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
+	private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
 	
 	private static double currentX;
 	private static double currentY;
