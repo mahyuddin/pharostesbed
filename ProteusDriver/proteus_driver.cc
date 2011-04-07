@@ -438,8 +438,8 @@ void Proteus::updatePos2DINS() {
 	posdata.vel.px = this->proteus_dev->statusINSVel;
 	posdata.stall = this->proteus_dev->motor_stall;
 	
-	//printf("Publishing the following position2D data: px=%f, py=%f, pa=%f, vel=%f, stall=%i\n",
-	//	posdata.pos.px, posdata.pos.py, posdata.pos.pa, posdata.vel.px, posdata.stall);
+	printf("Publishing the following position2D data: px=%f, py=%f, pa=%f, vel=%f, stall=%i\n",
+		posdata.pos.px, posdata.pos.py, posdata.pos.pa, posdata.vel.px, posdata.stall);
 	
 	// publish the new position2d data
 	this->Publish(this->position_addr,

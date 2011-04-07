@@ -43,6 +43,8 @@
 			    return(SUCCESS);                                 \
 			}
 
+#define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
+
 unsigned short tick = 0;
 signed short XDisp=0;
 signed short YDisp=0;
@@ -62,29 +64,48 @@ AddFifo(Xaxis, 40, FIFO_Item, 1, 0);
 AddFifo(Yaxis, 40, FIFO_Item, 1, 0);
 AddFifo(Gyro, 40, FIFO_Item, 1, 0);
 
-void INS_Init() {
-    ADC0_Init();
-    TIOS |= 0x40;    // activate TC6 as output compare
-    TIE  |= 0x40;    // arm OC6
-    TC6   = TCNT+75; // First interrupt right away.
-}
-
 #define Acc2DSpd 1000/INS_SAMPLE_FREQ
 // TODO: Create real tables that don't suck
 ADC_Accel TableX1[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableX2[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
 //ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd},{373,-9810*Acc2DSpd},{530,0*Acc2DSpd},{674,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd}, {384, -9806*Acc2DSpd}, {449,-4903*Acc2DSpd}, {474,-3354*Acc2DSpd}, {486,-2538*Acc2DSpd}, {498,-1703*Acc2DSpd}, {515,-855*Acc2DSpd}, {522,-513*Acc2DSpd}, {536,0*Acc2DSpd}, {546,513*Acc2DSpd}, {550,855*Acc2DSpd}, {550,1703*Acc2DSpd}, {566,2538*Acc2DSpd}, {586,3354*Acc2DSpd}, {608,4903*Acc2DSpd}, {1025,19620*Acc2DSpd}};
+TableY1_0 = 536;
 //ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},{383,-9810*Acc2DSpd},{534,0*Acc2DSpd},{687,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},                        {454,-4903*Acc2DSpd}, {477,-3354*Acc2DSpd}, {491,-2538*Acc2DSpd}, {503,-1703*Acc2DSpd}, {522,-855*Acc2DSpd}, {520,-513*Acc2DSpd}, {529,0*Acc2DSpd}, {548,513*Acc2DSpd}, {553,855*Acc2DSpd}, {568,1703*Acc2DSpd}, {577,2538*Acc2DSpd}, {590,3354*Acc2DSpd}, {615,4903*Acc2DSpd}, {688,9806*Acc2DSpd}};
+TableY2_0 = 529;
 // 1 in this = .00001 m/s^2 (before the /INS_SAMPLEFREQ)
 // 1 in this = .00001 m/s change from last cycle.
 
 // 1 = .01 deg/sec
 ADC_Accel Gyro_Table[] = {{0,-50000},{200,-100},{300,0},{400,100},{676,50000}}; //This table's pretty bad
+Gyro_Table_0 = 300;
 ADC_Accel *ADC_Table[] = {&TableX1, &TableX2, &TableY1, &TableY2, &Gyro_Table};
 
+void INS_Init() {
+    long int Y1_0, Y2_0, Rot_0;
+    int idx;
+    
+    // Shift the lookup tables to match the current 'zero'
+        // Warning: Assumes that the machine is perfectly still when starting
+    ADC0_Init();
+    Y1_0 = ADC0_In(2);
+    for(idx = 0; idx <  NELEMS(TableY1); i++)
+        TableY1[idx].ADC += Y1_0 - TableY1_0;
+        
+    Y2_0 = ADC0_In(3);
+    for(idx = 0; idx <  NELEMS(TableY2); i++)
+        TableY2[idx].ADC += Y2_0 - TableY2_0;
+    
+    Rot_0 = ADC0_In(4);
+    for(idx = 0; idx <  NELEMS(Gyro_Table); i++)
+        Gyro_Table[idx].ADC += Rot_0 - Gyro_Table_0;
 
+    // Start the interrupt!
+    TIOS |= 0x40;    // activate TC6 as output compare
+    TIE  |= 0x40;    // arm OC6
+    TC6   = TCNT+75; // First interrupt right away.
+}
 // Foreground thread:
 // Does ADC translation, pipes the translated info to the 
 void INSPeriodicFG(){
@@ -134,7 +155,7 @@ void INSPeriodicFG(){
 			GyroRate = INS_Translate(output.value, Gyro_Table);
             GyroDisp  += (GyroRate + GyroDispr)/INS_SAMPLE_FREQ;
             GyroDispr += (GyroRate + GyroDispr)%INS_SAMPLE_FREQ;
-            
+            GyroDispr = GyroDispr % (36000);
 		}
         if (tickNum >= INS_SAMPLE_FREQ/10 ){
             LED_GREEN2 = 1;
@@ -164,7 +185,7 @@ interrupt 14 void INSPeriodicBG(void){
     char i = 0;
     /*Used ATD pins in X */
     LED_GREEN1 = 1;
-    for (i = 0; i < 2; i++){
+    for (i = 0; i <= 1; i++){
         FIFO_Item putMe;
         putMe.label = i;
         putMe.value = ADC0_In(i);
@@ -173,7 +194,7 @@ interrupt 14 void INSPeriodicBG(void){
         XaxisFifo_Put(putMe);
     }
     /*Used ATD pins in Y */
-    for (i = 2;i < 4; i++){
+    for (i = 2;i <= 3; i++){
         FIFO_Item putMe;
         putMe.label = i;
         putMe.value = ADC0_In(i);
