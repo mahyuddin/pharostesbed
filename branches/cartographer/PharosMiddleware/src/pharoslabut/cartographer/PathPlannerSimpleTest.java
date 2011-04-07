@@ -28,7 +28,7 @@ import playerclient.IRListener;
 public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 	public static String serverIP = "10.11.12.10";
 	public static String fileName = "log.txt";
-	private PlayerClient client = null;
+	public static PlayerClient client = null;
 	private FileLogger flogger = null;
 	public static long numIRreadings = 0;
 	static ArrayList<ArrayDeque<Float>> dq;
@@ -45,17 +45,18 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 			System.exit (1);
 		}
 
+		
+		new LocationTracker();
+		new WorldView();
+		
+		WorldView.createSampleWorldView();
+		
+		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
 		motors = client.requestInterfacePosition2D(0, 
 				PlayerConstants.PLAYER_OPEN_MODE);
 
-
-
-
-		//		if (motors == null){
-		//			log("unable to connect to Position2D interface");
-		//			System.exit(1);
-		//		}
+		
 		motors.addPos2DListener(this); 
 		MotionArbiter motionArbiter = null;
 		motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
@@ -75,23 +76,6 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		ir.addIRListener(this);
 
-
-		//		MotionTask currTask;
-		//		double speedStep = .2;
-
-		//PathPlanner.writeOdometry(5.0, 5.0, 0.0);
-
-
-
-		//RotateDegrees(Math.PI/16, motionArbiter);
-		//currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
-		//log("Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-
-		//currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
-		//log("Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-
 		motors.setSpeed(0, 0);
 		pause(5000);
 
@@ -101,6 +85,7 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 
 		log("Test complete!");
 
+		
 		try {
 			WorldView.printWorldView();
 		} catch (IOException e1) {
@@ -257,9 +242,7 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
-
-		new LocationTracker();
-		new WorldView();
+		
 
 		//		try {
 		//			WorldView.printWorldView();
