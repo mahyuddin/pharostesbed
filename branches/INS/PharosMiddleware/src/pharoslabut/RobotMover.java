@@ -280,19 +280,47 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 			Yaw = n_Yaw;
 		}
 		
+		private double calc_dist(double o_x, double n_x, double o_y, double n_y )
+		{
+			double distance;
+			distance = (n_x - o_x)*(n_x - o_x);
+			distance += (n_y - o_y)*(n_y - o_y);
+			return distance;
+		}
+		
+		private double calc_rad(double o_H, double n_H)
+		{
+			return Math.abs((n_H%(2*Math.PI)) - (o_H%(2*Math.PI)));
+		}
+		
 		public void FB_Mov(RoboMov mov_cmd)
 		{
-			double Xgoal, Ygoal;
 			//0 Forward, 1 Backward, 2 TurnCW, 3 TurnCCW 4 Stop
+			double orig_X = Xpos, orig_Y = Ypos, orig_H = Yaw;
+			double movAmt;
+			
 			switch(mov_cmd.MovType)
 			{
-			case 0: break;
-				
-			case 1: break;
-			case 2: break;
-			case 3: break;
-			default: break;
+				case 0:
+					movAmt = calc_dist(orig_X, mov_cmd.goalWaypoint.X, orig_Y, mov_cmd.goalWaypoint.Y);
+					moveForward(); 
+					while (calc_dist(orig_X, Xpos, orig_Y, Ypos) < movAmt){};
+					break;
+				case 1: break;
+				case 2: 
+						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
+						turnRight();
+						while (calc_rad(orig_H, Yaw) < movAmt){};
+						break;
+				case 3: 
+						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
+						turnLeft();
+						while (calc_rad(orig_H, Yaw) < movAmt){};
+						break;
+				default: stop(); break;
 			}
+
 		}
+		
 		
       }

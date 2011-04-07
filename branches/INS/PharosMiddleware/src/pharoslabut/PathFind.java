@@ -97,7 +97,8 @@ public class PathFind {
         else adjGrid[3] = EMPTY_ADJ;
         if (map.map[y-1][x]) adjGrid[4] = CNVRT_INDEX(x,y-1);
         else adjGrid[4] = EMPTY_ADJ;
-    }    
+        //printArray(adjGrid);  
+        }    
     
     private int findMinF(int  [] f_score)
     {
@@ -141,7 +142,7 @@ public class PathFind {
         while( !open.isEmpty() )
         {
             min = findMinF(f_score);    //find node with min F (highest priority) -> O(n)
-            //System.out.println("Open list min node found X" + min);
+            System.out.println("Open list min node found X" + min);
             if (min == dest)                        //if this node is the dest, done
             {
                 System.out.println("Path found\n");
@@ -209,47 +210,34 @@ public class PathFind {
     {
         MarkedPath waypoint, n_waypoint;
         
-        int  turnType, movAmt = 0, i;
+        int  turnType, i;
+        boolean savedMov = false;
         waypoint = result.GetPoint(0);
         for (i = 1; i < result.PathSize(); i++)
         {
             n_waypoint = result.GetPoint(i);
             turnType = calc_heading(waypoint.H, n_waypoint.H);
+            
             switch (turnType) {
-            case 0: if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST; else movAmt+=STNDRD_HYP_COST; break; //Move forward
-            case 1: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;} 
-                    result.AddMovEd(2, 45); 
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST;  break; //Turn CW 45
-            case 2: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(2, 90); 
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST;  break; //Turn CW 90
-            case 3: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(2, 135); 
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST;  break; //Turn CW 135
-            case 4: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(2, 180); 
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST; break; //Turn CW 180
-            case 5: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(3, 135); 
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST; break; //Turn CCW 135
-            case 6: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(3, 90);  
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST; break; //Turn CCW 90
-            case 7: if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
-                    result.AddMovEd(3, 45);  
-                    if (n_waypoint.H % 2 == 0) movAmt+=STNDRD_MOV_COST;
-                    else movAmt+=STNDRD_HYP_COST; break; //Turn CCW 45
-            default : break;
+            case 0: 
+            	savedMov = true;
+            	break; //Move forward
+            		
+            case 1: case 2: case 3: case 4:
+            	if(savedMov) {result.AddMovEd(0, waypoint.X, waypoint.Y, waypoint.H); savedMov = false;}
+            	result.AddMovEd(2, waypoint.X, waypoint.Y, n_waypoint.H);            	
+            	break; //Turn CW
+                    
+            case 5: case 6: case 7:
+            	if(savedMov) {result.AddMovEd(0, waypoint.X, waypoint.Y, waypoint.H); savedMov = false;}
+            	result.AddMovEd(3, waypoint.X, waypoint.Y, n_waypoint.H);            	
+            	break; //Turn CCW                    
+            	
+            default : 
+            	break;
             }
             waypoint = n_waypoint;
         }
-        if (movAmt != 0) {result.AddMovEd(0, movAmt); movAmt = 0;}
+        if (savedMov) {result.AddMovEd(0, waypoint.X, waypoint.Y, waypoint.H); savedMov = false;}
     }
-    
 }

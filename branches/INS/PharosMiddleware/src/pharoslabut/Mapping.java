@@ -11,6 +11,10 @@ import java.io.Writer;
 
 
 
+
+
+
+
 public class Mapping {
 
 	public int Width = -1;
