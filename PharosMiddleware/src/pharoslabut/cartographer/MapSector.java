@@ -51,15 +51,17 @@ public class MapSector {
 		elements = new Square[rows][columns];
 		//this.startCoord = startCoord;
 		this.startCoord = new OrderedPair(rows/2, rows/2);
+		//double []currLoc = LocationTracker.getCurrentLocation();
+		//this.startCoord = new OrderedPair((int)(currLoc[0]/8), (int)(currLoc[1]/8));
 		// right now, just four possible places
 		OrderedPair end;
-		end = new OrderedPair(start.getX()+radius,start.getY());
+		end = new OrderedPair(startCoord.getX()+radius,startCoord.getY());
 		listGoals.add(end);
-		end = new OrderedPair(start.getX()-radius,start.getY());
+		end = new OrderedPair(startCoord.getX()-radius,startCoord.getY());
 		listGoals.add(end);
-		end = new OrderedPair(start.getX(),start.getY()+radius);
+		end = new OrderedPair(startCoord.getX(),startCoord.getY()+radius);
 		listGoals.add(end);
-		end = new OrderedPair(start.getX(),start.getY()-radius);
+		end = new OrderedPair(startCoord.getX(),startCoord.getY()-radius);
 		listGoals.add(end);
 		//sectorConvert(mapSecCorner); // convert from Worldview to Mapsector format
 	}
@@ -106,44 +108,62 @@ public class MapSector {
 	 */
 	private void sectorConvert(OrderedPair corner){
 		// convert world view sector into map sector
-		// 
-		for(int xMS = 0; xMS<rows; xMS++){	// for every element in the mapsector
-			for(int yMS = 0; yMS<columns; yMS++){	
-			quadData square = new quadData();
-				for(int x = 0; x<8; x++){	// for every worldview element in the mapsector element
-					for(int y = 0; y<8; y++){
-						if( x!=y && x+y!=7 && WorldView.readConfidence(x+corner.x, y+corner.y) > .5){
+		int xMS, yMS, x, y = 0;
+		//for(xMS = 0; xMS<rows; xMS++){	// for every element in the mapsector
+			//for(yMS = 0; yMS<columns; yMS++){
+		for(xMS = rows-1; xMS>=0; xMS--){	// for every element in the mapsector
+			for(yMS = columns-1; yMS>=0; yMS--){
+				// inside every element of the mapsector we have 64 elements
+				quadData square = new quadData();
+				for(x = 0; x<8; x++){	// for every worldview element in the mapsector element
+					for(y = 0; y<8; y++){
+						//if( x!=y && x+y!=7 && WorldView.readSampleConfidence(xMS*8 + x + corner.x, yMS*8 + y + corner.y) > .5){
+						if( WorldView.readConfidence(xMS*8 + x + corner.x, yMS*8 + y + corner.y) > .65){
+							//if( x!=y && x+y!=7 && WorldView.readConfidence(x + corner.x, y + corner.y) > .5){
 							// if not at a loc coord that is on the X that splits the Mapsector element into quads
 							// and if the Worldview is pretty confident that there's an obstruction at that 5cmx5cm square
-							if(y>x && y<7-x)
+							if(y>=x && y<=7-x)
 								square.numBlockedLft++;
-							if(y>x && y>7-x)
+							if(y>=x && y>=7-x)
 								square.numBlockedTop++;
-							if(y<x && y<7-x)
+							if(y<=x && y<=7-x)
 								square.numBlockedBot++;
-							if(y<x && y>7-x)
+							if(y<=x && y>=7-x)
 								square.numBlockedRgt++;
 						}
+						//System.out.println("sample confidence for " + (xMS*8+x) + ", " + (8*yMS+y) + ": "+ WorldView.readSampleConfidence(x*xMS + corner.x, y*yMS + corner.y));
 					}
 				}
 				// decide whether each of the 4 quad is traversable
-				if(square.numBlockedLft > 12/3)	// if more than 1/3 of the 12 blocks inside each quad is blocked
+				elements[xMS][yMS] = new Square(xMS, yMS, this);
+				if(square.numBlockedLft > 0){//> 12/3){	// if more than 1/3 of the 12 blocks inside each quad is blocked
 					elements[xMS][yMS].setQLft(false);
-				if(square.numBlockedRgt > 12/3)
+					System.out.println("blocked lft = " + square.numBlockedLft);
+				}
+				if(square.numBlockedRgt > 0){//> 12/3){
 					elements[xMS][yMS].setQRgt(false);
-				if(square.numBlockedTop > 12/3)
+					System.out.println("blocked rght = " + square.numBlockedRgt);
+				}
+				if(square.numBlockedTop > 0){//> 12/3){
 					elements[xMS][yMS].setQTop(false);
-				if(square.numBlockedBot > 12/3)
+					System.out.println("blocked top = " + square.numBlockedTop);
+				}
+				if(square.numBlockedBot > 0){//> 12/3){
 					elements[xMS][yMS].setQBot(false);
-			
+					System.out.println("blocked bot = " + square.numBlockedBot);
+				}
+				
 			}
 
 		}
+		System.out.println("done, " + rows*8 + " by " + columns*8);
 	}
 
 	private void init() {
 		
-		createSquares();
+		//createSquares();
+		OrderedPair testInit = new OrderedPair(0, 0);
+		sectorConvert(testInit);
 		generateAdjacencies();
 	}
 

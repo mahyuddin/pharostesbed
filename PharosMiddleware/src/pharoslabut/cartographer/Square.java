@@ -31,8 +31,9 @@ public class Square {
 		this.x = x;
 		this.y = y;
 		this.mapSector = mapSector;
+		
 		// testing
-		if (Math.random() > .9) {
+		/*if (Math.random() > .9) {
 			quadrantTop = false;
 			numBlocked++;
 		}
@@ -47,7 +48,7 @@ public class Square {
 		if (Math.random() > .9) {
 			quadrantRgt = false;
 			numBlocked++;
-		}
+		}*/
 	}
 
 	public int getX() {
