@@ -186,7 +186,7 @@ public class ProgramEntryGUI implements ActionListener {
 						
 						// If there is a breakpoint set, pause the program execution
 						if (breakpoints.contains(new Integer(currCmd.getLine()))) {
-							JOptionPane.showMessageDialog(frame, "Breakpoint!");
+							JOptionPane.showMessageDialog(frame, "Breakpoint on line " + currCmd.getLine() + "!");
 						}
 						
 						// Snapshot instructions are handled differently since
@@ -207,6 +207,7 @@ public class ProgramEntryGUI implements ActionListener {
 			
 			running = false;
 			log("ProgramExecutor thread exiting...");
+			textArea.setExecutionLine(1);
 		}
 	}
 	
