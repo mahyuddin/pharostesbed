@@ -70,16 +70,16 @@ ADC_Accel TableX1[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableX2[] = {{0,-19620*Acc2DSpd},{1025,19620*Acc2DSpd}};
 //ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd},{373,-9810*Acc2DSpd},{530,0*Acc2DSpd},{674,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableY1[] = {{0,-19620*Acc2DSpd}, {384, -9806*Acc2DSpd}, {449,-4903*Acc2DSpd}, {474,-3354*Acc2DSpd}, {486,-2538*Acc2DSpd}, {498,-1703*Acc2DSpd}, {515,-855*Acc2DSpd}, {522,-513*Acc2DSpd}, {536,0*Acc2DSpd}, {546,513*Acc2DSpd}, {550,855*Acc2DSpd}, {550,1703*Acc2DSpd}, {566,2538*Acc2DSpd}, {586,3354*Acc2DSpd}, {608,4903*Acc2DSpd}, {1025,19620*Acc2DSpd}};
-TableY1_0 = 536;
+long int TableY1_0 = 536;
 //ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},{383,-9810*Acc2DSpd},{534,0*Acc2DSpd},{687,9810*Acc2DSpd},{1025,19620*Acc2DSpd}};
 ADC_Accel TableY2[] = {{0,-19620*Acc2DSpd},                        {454,-4903*Acc2DSpd}, {477,-3354*Acc2DSpd}, {491,-2538*Acc2DSpd}, {503,-1703*Acc2DSpd}, {522,-855*Acc2DSpd}, {520,-513*Acc2DSpd}, {529,0*Acc2DSpd}, {548,513*Acc2DSpd}, {553,855*Acc2DSpd}, {568,1703*Acc2DSpd}, {577,2538*Acc2DSpd}, {590,3354*Acc2DSpd}, {615,4903*Acc2DSpd}, {688,9806*Acc2DSpd}};
-TableY2_0 = 529;
+long int TableY2_0 = 529;
 // 1 in this = .00001 m/s^2 (before the /INS_SAMPLEFREQ)
 // 1 in this = .00001 m/s change from last cycle.
 
 // 1 = .01 deg/sec
 ADC_Accel Gyro_Table[] = {{0,-50000},{200,-100},{300,0},{400,100},{676,50000}}; //This table's pretty bad
-Gyro_Table_0 = 300;
+long int Gyro_Table_0 = 300;
 ADC_Accel *ADC_Table[] = {&TableX1, &TableX2, &TableY1, &TableY2, &Gyro_Table};
 
 void INS_Init() {
@@ -90,15 +90,15 @@ void INS_Init() {
         // Warning: Assumes that the machine is perfectly still when starting
     ADC0_Init();
     Y1_0 = ADC0_In(2);
-    for(idx = 0; idx <  NELEMS(TableY1); i++)
+    for(idx = 0; idx <  NELEMS(TableY1); idx++)
         TableY1[idx].ADC += Y1_0 - TableY1_0;
         
     Y2_0 = ADC0_In(3);
-    for(idx = 0; idx <  NELEMS(TableY2); i++)
+    for(idx = 0; idx <  NELEMS(TableY2); idx++)
         TableY2[idx].ADC += Y2_0 - TableY2_0;
     
     Rot_0 = ADC0_In(4);
-    for(idx = 0; idx <  NELEMS(Gyro_Table); i++)
+    for(idx = 0; idx <  NELEMS(Gyro_Table); idx++)
         Gyro_Table[idx].ADC += Rot_0 - Gyro_Table_0;
 
     // Start the interrupt!
