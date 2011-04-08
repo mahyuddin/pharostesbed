@@ -1,4 +1,5 @@
 package pharoslabut;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -21,6 +22,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	boolean compflag = false;
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
+	List <Double> CompLookUp;
+	int table_size = 0;
 	
 	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command) {
 		try {
@@ -32,21 +35,26 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			log("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
-		System.out.println("wtf");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		//motors.resetOdometry();
-		//System.out.println();
 		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
 		}
 		
+		try {
+			CompLookUp = IO_Helper.readInput("src/pharoslabut/compass.txt");
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		table_size = CompLookUp.size();
 		// if we use one driver change to 6665
+		
 		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
 		compassLogger.addListener(this);
 
 		motors.addPos2DListener(this);
-		
 		compassLogger.start(1, fileName);
 		//motors.resetOdometry();
 		//move(1.75, motors);
@@ -54,7 +62,10 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		//turn_comp(1.57, motors);
 		//for (;;){
 		//pause(100000);}
-		circle(motors);
+	//	circle(motors);
+		turn_comp(45, motors);
+		
+		
 	//	pause(100000);
 	//	pause(100000);
 	//	turn(-2, motors);
@@ -176,7 +187,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	
 	private void circle(Position2DInterface motors){
 		double starting = 0;
-		double speed = .1;
+		double speed = 0.2;
 		
 		while(!compflag){
 			synchronized(this) {
@@ -202,9 +213,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	}
 	
 	private void turn_comp(double angle, Position2DInterface motors){
-		double speed = 0.2;
+		double speed = 0.1;
 		double starting = compreading;
-		if (angle <0) {
+		double ending = 0;
+		int Next;
+		
+		Next = (int) (table_size / (360 / angle));
+		
+		if (angle < 0) {
 			speed = speed * -1;
 			}
 		
@@ -217,11 +233,22 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			}
 		}
 		
+		for (int i = 0; i < table_size; i++)
+		{
+			if (i == table_size)
+				i = 0;
+			if (starting >= CompLookUp.get(i)-0.03 && starting <= CompLookUp.get(i)+0.03) {
+				if (Next < 0 && Math.abs(Next) > i) {
+					Next = table_size + Next;
+				}
+					ending = CompLookUp.get((i+Next) % table_size);
+			}
+		}
 		System.out.println("move:" + angle);
-		
+	//	
 		motors.setSpeed(0,speed);
 
-	    while((starting + angle - 0.279) > compreading) {
+	    while((ending - 0.3) > compreading || compreading < (ending + 0.3)) {
 	    	synchronized(this) {
 		    	try {
 		            wait();
@@ -304,12 +331,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		System.out.println("File: " + fileName);
 		System.out.println("ShowGUI: " + showGUI);
 		List<Double> command = new ArrayList<Double>();
+		/*
 		command.add(-3.0);
 		command.add(14.0);
 		command.add(1.0);
 		command.add(10.0);
 		command.add(0.0);
 		command.add(10.0);
+		*/
 		
 		new testing(serverIP, serverPort, fileName, showGUI, command);
 
