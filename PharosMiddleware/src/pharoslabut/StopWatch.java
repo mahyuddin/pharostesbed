@@ -43,8 +43,8 @@ public class StopWatch {
     
     
     //elaspsed time in seconds
-    public long getElapsedTimeSecs() {
-        long elapsed;
+    public double getElapsedTimeSecs() {
+        double elapsed;
         if (running) {
             elapsed = ((System.currentTimeMillis() - startTime) / 1000);
         }
@@ -54,4 +54,5 @@ public class StopWatch {
         return elapsed;
     }
 
+    
 }

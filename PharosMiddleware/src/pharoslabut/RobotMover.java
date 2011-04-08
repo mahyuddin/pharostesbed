@@ -199,7 +199,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 
 		@Override
 		public void newPlayerPosition2dData(PlayerPosition2dData data) {
-			System.out.println("movement");
+			//System.out.println("movement");
 			PlayerPose pose = data.getPos();
 			Xpos = pose.getPx();
 			Ypos = pose.getPy();

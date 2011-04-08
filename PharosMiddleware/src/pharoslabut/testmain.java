@@ -1,33 +1,23 @@
 package pharoslabut;
+
+
+
+
+
+
+import java.io.File;
+import java.io.IOException;
+
 public class testmain {
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		
-		boolean [][] testmap = 
-		{   { true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, true },
-			{ true , true , true , true , true , true , true , true , true , true , true , true , true , true , true , true } 
-		};
-			
+		File ascii_map = new File("/home/danny/demo.txt");	
 		Mapping map  = new Mapping();
-		map.map = testmap;
-		map.Width = 16;
-		map.Height = 16;
+		map.parse(ascii_map);
+		map.printMap();
 		PathFind pf  = new PathFind(map,1);
-		pf.A_path(1, 1, 4, 4, 0);
+		pf.A_path(1, 1, 8, 8, 0);
 		pf.result.printPath();
 		pf.result.printMov();
 	}
