@@ -1,4 +1,11 @@
 package pharoslabut;
+
+
+
+
+
+
+
 import java.util.LinkedList;
 
 //import java.util.*;
@@ -15,8 +22,6 @@ public class PathFind {
     public final int [] mov_cost  = {10, 14, 10, 14,
                                      10, 14, 10, 14, 0};
     
-    public PathEnd  result= new PathEnd();
-    
     private Mapping map;
     private int [] adjGrid = {0,0,0,0,0,0,0,0};
     
@@ -29,7 +34,10 @@ public class PathFind {
     private int  [] g_score;
     private int  [] h_score;
     private int  [] f_score;
-        
+
+
+    public PathEnd  result= new PathEnd();
+    
     public PathFind (Mapping n_map, double res)
     {
         map = n_map;
@@ -89,13 +97,13 @@ public class PathFind {
         else adjGrid[1] = EMPTY_ADJ;
         if (!map.map[y][x-1]) adjGrid[6] = CNVRT_INDEX(x-1,y);
         else adjGrid[6] = EMPTY_ADJ;
-        if (map.map[y][x+1]) adjGrid[2] = CNVRT_INDEX(x+1,y);
+        if (!map.map[y][x+1]) adjGrid[2] = CNVRT_INDEX(x+1,y);
         else adjGrid[2] = EMPTY_ADJ;
-        if (map.map[y-1][x-1]) adjGrid[5] = CNVRT_INDEX(x-1,y-1);
+        if (!map.map[y-1][x-1]) adjGrid[5] = CNVRT_INDEX(x-1,y-1);
         else adjGrid[5] = EMPTY_ADJ;
-        if (map.map[y-1][x+1]) adjGrid[3] = CNVRT_INDEX(x+1,y-1);
+        if (!map.map[y-1][x+1]) adjGrid[3] = CNVRT_INDEX(x+1,y-1);
         else adjGrid[3] = EMPTY_ADJ;
-        if (map.map[y-1][x]) adjGrid[4] = CNVRT_INDEX(x,y-1);
+        if (!map.map[y-1][x]) adjGrid[4] = CNVRT_INDEX(x,y-1);
         else adjGrid[4] = EMPTY_ADJ;
         //printArray(adjGrid);  
         }    
@@ -114,7 +122,7 @@ public class PathFind {
         }
         return j;
     }
-    
+       
     public int A_path(int src_x, int src_y, int dest_x, int dest_y, int src_orient)
     {
         int guess_g, min;
@@ -126,7 +134,7 @@ public class PathFind {
         
         //Init
         System.out.println("Pathfinding from " + src_x + "," + src_y + " to " + dest_x + "," + dest_y);
-        System.out.println("Initializing...");
+        //System.out.println("Initializing...");
         
         src  = CNVRT_INDEX(src_x,src_y);
         dest = CNVRT_INDEX(dest_x,dest_y);
@@ -136,13 +144,13 @@ public class PathFind {
         h_score[src] = heuristic_func(src_x, src_y, dest_x, dest_y);    //guess to end
         f_score[src] = h_score[src];                                    //guess to end
         heading[src] = src_orient;
-        System.out.println("done!");
+        //System.out.println("done!");
         //Init End    
         
         while( !open.isEmpty() )
         {
             min = findMinF(f_score);    //find node with min F (highest priority) -> O(n)
-            System.out.println("Open list min node found X" + min);
+            //System.out.println("Open list min node found X" + min);
             if (min == dest)                        //if this node is the dest, done
             {
                 System.out.println("Path found\n");
@@ -191,21 +199,33 @@ public class PathFind {
     private void buildPath(int src_x, int src_y, int dest_x, int dest_y)
     {
         int src, dest, currPos;
-        
         src  = CNVRT_INDEX(src_x, src_y);
         dest = CNVRT_INDEX(dest_x,dest_y);
         
         result.AddPointHd(dest_x, dest_y, heading[dest]);
+        map.bufAltChar(dest_x, dest_y, 'D');
         currPos = dest;
         
         while (currPos != src)
         {
             currPos = prev[currPos];
             result.AddPointHd(CNVRT_X(currPos), CNVRT_Y(currPos), heading[currPos]);
+            map.bufAltChar(CNVRT_X(currPos),CNVRT_Y(currPos), headToChar(heading[currPos]));
         }
+        map.bufAltChar(src_x, src_y, 'S');
         buildMov();
     }
 
+    private char headToChar(int head)
+    {
+    	switch(head){
+    	case 0: case 4: return '|';
+    	case 1: case 5: return '/';
+    	case 2: case 6: return '-';
+    	case 3: case 7: return '\\';
+    	default: return ' ';
+    	}
+    }
     private void buildMov()
     {
         MarkedPath waypoint, n_waypoint;
@@ -225,12 +245,12 @@ public class PathFind {
             		
             case 1: case 2: case 3: case 4:
             	if(savedMov) {result.AddMovEd(0, waypoint.X, waypoint.Y, waypoint.H); savedMov = false;}
-            	result.AddMovEd(2, waypoint.X, waypoint.Y, n_waypoint.H);            	
+            	result.AddMovEd(2, waypoint.X, waypoint.Y, n_waypoint.H); savedMov = true;            	
             	break; //Turn CW
                     
             case 5: case 6: case 7:
             	if(savedMov) {result.AddMovEd(0, waypoint.X, waypoint.Y, waypoint.H); savedMov = false;}
-            	result.AddMovEd(3, waypoint.X, waypoint.Y, n_waypoint.H);            	
+            	result.AddMovEd(3, waypoint.X, waypoint.Y, n_waypoint.H); savedMov = true;          	
             	break; //Turn CCW                    
             	
             default : 

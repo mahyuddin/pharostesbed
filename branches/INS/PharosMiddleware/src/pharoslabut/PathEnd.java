@@ -1,8 +1,9 @@
 
 package pharoslabut;
+
+
 import java.util.*;
 
-import pharoslabut.RoboMov;
 
 //Movements and Path
 public class PathEnd 
@@ -10,7 +11,7 @@ public class PathEnd
 	private LinkedList<MarkedPath> path_list = new LinkedList<MarkedPath>();
 	private LinkedList<RoboMov> mov_list = new LinkedList<RoboMov>();
 	
-	public void AddPointHd(int x, int y, int heading)
+ 	public void AddPointHd(int x, int y, int heading)
 	{
 		MarkedPath wayPoint = new MarkedPath(x,y,heading);
 		path_list.addFirst(wayPoint);
@@ -85,7 +86,7 @@ public class PathEnd
 			System.out.println("till: X("+mov_cmd.goalWaypoint.X+") Y("+mov_cmd.goalWaypoint.Y+") H("+mov_cmd.goalWaypoint.H+")");
 		}
 	}
-	
+	/*
 	public void executeMov(RobotMover Robot)
 	{
 		int i;
@@ -95,5 +96,5 @@ public class PathEnd
 			mov_cmd = GetMov(i);
 			Robot.FB_Mov(mov_cmd);
 		}
-	}
+	}*/
 }

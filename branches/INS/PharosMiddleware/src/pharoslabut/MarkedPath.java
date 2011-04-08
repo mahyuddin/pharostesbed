@@ -1,4 +1,5 @@
 package pharoslabut;
+
 public class MarkedPath {
 
 	public int X;

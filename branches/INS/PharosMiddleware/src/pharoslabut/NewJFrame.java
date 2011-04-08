@@ -16,6 +16,7 @@ import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Scanner;
 import java.util.Timer;
 
 import javax.imageio.ImageIO;
@@ -42,6 +43,8 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     public Timer timer = new Timer(); 
     protected String Time;
     BufferedImage image ;
+    public String mapfile;
+    public int src_x, src_y, dest_x, dest_y;
     private final static String newline = "\n";
     static StopWatch s = new StopWatch();
     public NewJFrame() {
@@ -86,6 +89,10 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
         jButton9 = new javax.swing.JButton();
         jButton11 = new javax.swing.JButton();
         jTextField7 = new javax.swing.JTextField();
+        
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextArea1 = new javax.swing.JTextArea();
+
 
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -159,6 +166,9 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 			} catch (NoNewDataException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
             }
         });
@@ -206,6 +216,8 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 			}
         }
         
+       
+ 
         
         
         );
@@ -320,7 +332,8 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jTextField7, javax.swing.GroupLayout.PREFERRED_SIZE, 263, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(92, 92, 92))
-        );
+        )
+        ;
 
         pack();
     }
@@ -388,7 +401,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    			{
+    			{	 
                      XueHua.moveForward(); 
                      
                      XueHuaPos.INS_UpdateX();
@@ -421,7 +434,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
                      XueHua.moveForward();        // TODO add your handling code here:
     }//GEN-LAST:event_jButton6ActionPerformed
 
-   private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException {//GEN-FIRST:event_jButton10ActionPerformed
+   private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException, IOException {//GEN-FIRST:event_jButton10ActionPerformed
             
 	    JFrame File = new JFrame();
 	    String mapfile = JOptionPane.showInputDialog(File, "Input Map File name");
@@ -432,15 +445,36 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    jButton11.setIcon(Display);		
 					// display map
 	    JFrame frame = new JFrame();
-	    Object result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates X, Y, Yaw");
-		//TODO: call RobotMover.ManUpdateINS(x,y,yaw)
+	    String result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates X  Y separate with space");
+		Scanner Scan = new Scanner(result);
+		
+		src_x = Scan.nextInt();
+		src_y = Scan.nextInt();
+	    //TODO: call RobotMover.ManUpdateINS(x,y,yaw)
 	    System.out.println(result);
 	    
 	    JFrame Dest = new JFrame();
-	    Object Desresult = JOptionPane.showInputDialog(Dest, "Destination Coordinates in X, Y");
+	    String Desresult = JOptionPane.showInputDialog(Dest, "Destination Coordinates in X Y separate with space");
+	    Scan = new Scanner(Desresult);
+	    dest_x =Scan.nextInt();
+	    dest_y =Scan.nextInt();
 	    
 	    System.out.println(Desresult);
+	    
+	    File ascii_map = new File(mapfile);	
+		Mapping map  = new Mapping();
+		map.parse(ascii_map);
+		map.createBuffer();
+		map.printBuffer(this);
+		//map.printMap();
+		
+		PathFind pf  = new PathFind(map,1);
+		pf.A_path(src_x, src_y, dest_x, dest_y, 0);
+		pf.result.printPath();
+		pf.result.printMov();
+		map.printBuffer(this);
 	    //TODO: call PathFind.A_path
+	    
 	    
 	    //TODO: Handle movement list
 	    
@@ -454,11 +488,18 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    	//  XueHuaPos.INS_UpdateX();
             //  XueHuaPos.INS_UpdateY();
               
-              String XueHuaX = Double.toString(XueHuaPos.Xpos);
-              String XueHuaY = Double.toString(XueHuaPos.Ypos);
-              
-              jTextField1.setText(XueHuaX); 
-              jTextField2.setText(XueHuaY);
+	    XueHuaPos.INS_UpdateX();
+        XueHuaPos.INS_UpdateY();
+        
+        String XueHuaX = Double.toString(XueHuaPos.Xpos);
+        String XueHuaY = Double.toString(XueHuaPos.Ypos);
+        
+        jTextField1.setText(XueHuaX); 
+        jTextField2.setText(XueHuaY);
+        
+      double XueHuaTime = s.getElapsedTimeSecs();
+        Time = Double.toString(XueHuaTime);
+        jTextField5.setText(Time);
 
      //         private void jTextField7ActionPerformed(java.awt.event.ActionEvent ) {
                   // TODO add your handling code here:
@@ -495,14 +536,14 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
    public void UpdateMap(String s)
    {
 	   String text = jTextField7.getText();
-	   jTextField7.setText(text+ newline + s);
+	   jTextField7.setText(text+ '\n' + s + '\n');
 	   
    }
    
    // Note that all degree movements are relative to the current heading of the robot, not absolute heading.
     public static void main(String args[]) {
     	
-    	;
+    	s.start();
       
         java.awt.EventQueue.invokeLater(new Runnable() {
             
@@ -510,7 +551,7 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
             public void run() {
                 new NewJFrame().setVisible(true);
                
-                s.start();
+                
                 //code you want to time goes here
               
                 
@@ -552,6 +593,9 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
     private javax.swing.JLabel Map;
     private javax.swing.JButton jButton11;
     private javax.swing.JTextField jTextField7;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JTextArea jTextArea1;
+    
 
     // End of variables declaration//GEN-END:variables
 	@Override
