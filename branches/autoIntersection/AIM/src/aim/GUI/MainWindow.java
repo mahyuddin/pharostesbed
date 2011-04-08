@@ -62,6 +62,11 @@ public class MainWindow extends javax.swing.JFrame {
         jMenuBar1.add(File);
 
         View.setText("View");
+        View.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ViewActionPerformed(evt);
+            }
+        });
 
         Queue.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
         Queue.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aim/GUI/Images/Queue.gif"))); // NOI18N
@@ -126,6 +131,10 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
     }//GEN-LAST:event_QueueActionPerformed
+
+    private void ViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ViewActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ViewActionPerformed
 
     /**
     * @param args the command line arguments

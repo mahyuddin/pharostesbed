@@ -50,18 +50,6 @@ public class RobotsPriorityQueue
     }
 
 
-    public static void update()
-    {
-        int size = queue.size();
-        PriorityQueue<Robot> tempQueue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
-        for( int i=0; i<size; i++ )
-        {
-            tempQueue.add(queue.remove());
-        }
-        queue = tempQueue;
-    }
-
-
     /**
      * Used to print the elements inside the RobotsPriorityQueue in order
      * NOTE: DON't use the default toString() method.. it doesn't print the queue in order
@@ -92,10 +80,10 @@ public class RobotsPriorityQueue
         enqueue( new Robot(2, "laneSpecs", (long)10, (long)1.3, (float)1.4) );
         enqueue( new Robot(3, "laneSpecs", (long)19, (long)1.3, (float)1.4) );
         enqueue( new Robot(4, "laneSpecs", (long)8, (long)1.3, (float)1.4) );
-        enqueue( new Robot(5, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
-        enqueue( new Robot(6, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
-        enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
-        enqueue( new Robot(8, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
+ //       enqueue( new Robot(5, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
+ //       enqueue( new Robot(6, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
+ //       enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
+ //       enqueue( new Robot(8, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
 
 
         /*

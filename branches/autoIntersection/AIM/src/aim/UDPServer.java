@@ -11,9 +11,9 @@ import java.net.*;
 public class UDPServer extends Thread {
 
     private final int PORT = 6665;
-    private DatagramSocket socket = null;
-    private ByteArrayOutputStream bos = null;
-    private ObjectOutputStream oos = null;
+    private DatagramSocket socket;
+    private ByteArrayOutputStream bos;
+    private ObjectOutputStream oos;
 
     /*
     public static void main(String [] args)
@@ -25,6 +25,9 @@ public class UDPServer extends Thread {
 
     public UDPServer() {
         System.out.println("Starting the UDP connection.");
+        socket = null;
+        bos = null;
+        oos = null;
 
         try {
             socket = new DatagramSocket(PORT);
@@ -59,7 +62,7 @@ public class UDPServer extends Thread {
                 bos = new ByteArrayOutputStream();
                 oos = new ObjectOutputStream(bos);
 //                Robot robot = new Robot(0, "laneSpecs", (long)1.2, (long)1.3, (float)1.4);
-                Robot robot = IntersectionManager.manageIntersection();
+                Robot robot = IntersectionManager.getRobotsCompleted().peekFirst();
                 if( robot != null )
                 {
                     oos.writeObject(robot);

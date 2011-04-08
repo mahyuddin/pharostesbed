@@ -14,6 +14,7 @@ public class Robot implements Serializable {
     private long ETC;
     private float velocity;         // might not be needed
     private boolean enqueued;
+    private boolean allowed;
 
     /**
      * Class constructor
@@ -30,7 +31,9 @@ public class Robot implements Serializable {
         this.ETC = new Date().getTime() - Main.startTime + ETC;
         this.velocity = velocity;
         enqueued = false;
+        allowed = false;
     }
+
 
     /**
      *  @return id
@@ -97,6 +100,23 @@ public class Robot implements Serializable {
      */
     public void setEnqueued(boolean b) {
         this.enqueued = b;
+    }
+
+    /**
+     * This method checks if the robot is allowed to pass through the intersection
+     * It is being used as a second safety check
+     *  @return whether true if the robot request is on the queue, false otherwise
+     */
+    public boolean isAllowed() {
+        return this.allowed;
+    }
+
+    /**
+     *  This method sets the boolean variable allowed to b
+     * @param b
+     */
+    public void setAllowed(boolean b) {
+        this.allowed = b;
     }
 
     /**

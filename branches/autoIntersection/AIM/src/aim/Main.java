@@ -1,6 +1,7 @@
 package aim;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.PriorityQueue;
 
 /**
@@ -22,21 +23,27 @@ public class Main {
      */
     public static void main(String[] args) throws InterruptedException  {
         RobotsPriorityQueue.test();
- //       new UDPServer();
 
-         
+ //       Thread.sleep(5000);
+ //       System.out.println(RobotsPriorityQueue.getQueue().peek());
+
+
+    //    UDPClient client = new UDPClient();
+    //    client.start();
+
+        Thread IM = new IntersectionManager();
+        IM.start();
+
+   //     UDPServer server = new UDPServer();
+   //     server.start();
+
+
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new aim.GUI.MainWindow().setVisible(true);
             }
         });
-
-        Thread.sleep(5000);
-        System.out.println(RobotsPriorityQueue.getQueue().peek());
-
-
- //       Thread IM = new IntersectionManager();
- //       IM.start();
+        
     }
 
 }
