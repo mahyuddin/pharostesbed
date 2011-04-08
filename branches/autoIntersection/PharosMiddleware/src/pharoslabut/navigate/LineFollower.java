@@ -16,6 +16,12 @@ import java.util.*;
 public class LineFollower implements BlobfinderListener, Runnable {
 	
 	/**
+	 * This is the cycle period of the LineFollower thread.
+	 * It is in milliseconds.
+	 */
+	public static int CYCLE_PERIOD = 100; // 10Hz
+	
+	/**
 	 * This is the maximum valid age of the blob data.  Anything older than that is discarded.
 	 */
 	public static final long BLOB_MAX_VALID_AGE = 1000;
@@ -124,6 +130,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 			done = false;
 			thread = new Thread(this);
 			thread.start();
+			log("start: thread started");
 		} else
 			log("start: ERROR: Thread already started.");
 	}
@@ -140,6 +147,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 				e.printStackTrace();
 			}
 			thread = null;
+			log("Stop: thread stopped.");
 		} else
 			log("Stop: ERROR: already stopped.");
 	}
@@ -148,6 +156,11 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * The maximum turn angle should be throttled based on the 
 	 * divergence.  A large divergence indicates the
 	 * need for a large turn angle and vice-versa.
+	 * Since the robot is programmed to move faster when the
+	 * divergence is lower, this effectively dampens the robot's 
+	 * turn rate when it is moving faster, thus achieving greater
+	 * stability.  Without this, the robot would have a tendency to 
+	 * swerve side-to-side as it increases in speed. 
 	 * 
 	 * @param divergencePct The percent divergence.
 	 * @return The maximum turn angle.
@@ -185,10 +198,11 @@ public class LineFollower implements BlobfinderListener, Runnable {
 			turnSign = 1;
 		}
 
-		// Make the angle adjustment proportional to the degree to which the heading is off.
+		// Make the angle adjustment proportional to the degree to which the heading has diverged
+		// from being perfectly centered on the line.
 		// A divergencePct of 1 means the robot is the most off in terms of following the line.
 		// A divergencePct of 0 means that the robot is perfectly centered on the line.
-		double divergence = Math.abs(blob.getX() - midPoint);
+		double divergence = Math.abs(blob.getX() - midPoint);  // blob.getX() returns the centroid's X coordinate
 		double divergencePct = divergence / midPoint;
 		log("adjustHeadingAndSpeed: divergencePct = " + divergencePct);
 		
@@ -219,6 +233,10 @@ public class LineFollower implements BlobfinderListener, Runnable {
 //		notifyListeners(lfe);
 	}
 	
+	/**
+	 * Performs the calculations that determine the turn angle and speed to ensure
+	 * the robot follows the line.  It sets variables speed and angle.
+	 */
 	private void doLineFollow() {
 		// Check to make sure we have valid data...
 		if (blobFinderData != null) {
@@ -235,7 +253,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 					if(blobList != null && blobList[0] != null)
 						adjustHeadingAndSpeed(blobList[0]);
 					else {
-						log("doLineFollow: No primary blob, stopping robot...");
+						log("doLineFollow: ERROR: No primary blob, stopping robot...");
 						speed = angle = 0;
 					}
 
@@ -258,6 +276,9 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		}
 	}
 	
+	/**
+	 * This contains the main loop of the LineFollower thread.
+	 */
 	public void run() {
 		
 		while(!done) {
@@ -266,7 +287,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 			log("Sending Robot Command, speed=" + speed + ", angle=" + angle);
 			p2di.setSpeed(speed, dtor(angle));
 			
-			pause(100); // execute while loop at a minimum of 10Hz
+			pause(CYCLE_PERIOD); 
 		}
 		
 		log("run: thread exiting, ensuring robot is stopped...");
