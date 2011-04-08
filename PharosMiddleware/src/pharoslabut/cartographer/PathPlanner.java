@@ -4,7 +4,9 @@ import java.io.BufferedWriter;
 import java.lang.*;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import pharoslabut.MotionArbiter;
@@ -34,6 +36,9 @@ public class PathPlanner implements Position2DListener, IRListener {
 	private List<Square> path;
 	int left = 1;
 	int right = -1;
+	double bearing = 0;//initially facing right. We're gonna need to modify this and make it 0 only 1 time ever.
+	public static long numIRreadings = 0;
+	static ArrayList<ArrayDeque<Float>> dq;
 	
 	private List<Square> pathFind(){
 		int side = 9;
@@ -41,7 +46,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		int direction = -1;
 		OrderedPair start;
 		//start = new OrderedPair(radius,radius);	// middle of the sector
-		start = new OrderedPair(0,0);	// start at the bottom left corner
+		start = new OrderedPair(radius,radius);	// start at the bottom left corner
 		
 		System.out.println("entered sector");
 		switch(direction){
@@ -68,13 +73,15 @@ public class PathPlanner implements Position2DListener, IRListener {
 	
 	public PathPlanner (String serverIP, int serverPort, String fileName) {
 		try {
-			// TODO
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
 			log("Error connecting to Player: ");
 			log("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
+		
+		new LocationTracker();
+		new WorldView();
 		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
 		motors = client.requestInterfacePosition2D(0, 
@@ -105,98 +112,31 @@ public class PathPlanner implements Position2DListener, IRListener {
 		
 		//WorldView.createSampleWorldView();
 		
-		int time,turntime,x1,x2,y1,y2;
-		double bearing = 0;//initially facing right
+		
 		/////////// ASTAR ///////////////
 		//motors.setSpeed(0, Math.PI/8);
 		//pause(4000);
-		motors.setSpeed(0, 0);
-		pause(2000);
+		motors.setSpeed(0, Math.PI/16);
+		pause(3000);
+		motors.setSpeed(0, -Math.PI/16);
+		pause(6000);
+		motors.setSpeed(0, Math.PI/16);
+		pause(3000);
+		
+
+		
 		path = pathFind(); // ordered list of coordinates to follow
-		motors.setSpeed(0, 0);
-		pause(5000);
-		
-		System.out.println("got a path " + path.size());
-		for(int i = path.size()-2; i>=0; i--){
-			y1 = path.get(i+1).getX();
-			y2 = path.get(i).getX();
-			x1 = path.get(i+1).getY();
-			x2 = path.get(i).getY();
-			
-			System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
-			/*
-			// convert from cartesian to polar coordinates
-			double theta = Math.atan2(y2-y1, x2-x1);
-			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
-			double turnAngle = bearing-theta; 
-			int turnDirection = right;	// initially set turn direction to right
-			if (bearing - theta < 0){
-				turnDirection = left;
-			}
-			if( Math.abs(bearing - theta) > Math.PI ){	// special case
-				turnAngle = 2*Math.PI - Math.abs(bearing - theta);
-				turnDirection = turnDirection*(-1);	// find smaller direction
-			}
-			bearing = theta;	// new bearing is theta
-
-			turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
-			// DEBUGGING STATEMENTS
-			//System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
-			//System.out.println("polar(" +r+","+theta+")");
-			//System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
-			//System.out.println("turntime = " + turntime);
-			// TODO
-			motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
-			pause(turntime);
-			time = (int)(((r*WIDTH_OF_ROOMBA)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
-			motors.setSpeed(SPEED_STEP, 0);
-			pause(time);*/
-		}
-		
-		// STOP THE ROOMBA 
-		// TODO
-		motors.setSpeed(0, 0);
-		pause(5000);
-		
-		//RotateDegrees(Math.PI/16, motionArbiter);
-		//currTask = new MotionTask(Priority.SECOND, 0, Math.PI/8);
-		//log("Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-		
-		//currTask = new MotionTask(Priority.FIRST, 0, MotionTask.STOP_HEADING);
-		//log("Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-
-		//motors.setSpeed(0.1, 0);
-		//pause(5000);
-		
-		//motors.setSpeed(0, 0.1);
-		//pause(10000);
-		
-		//motors.setSpeed(.1, 0);
-		//pause(5000);
-		
+		move(path); //moves according to the path. If there is a problem, choose another point based on LURD
 		//motors.setSpeed(0, 0);
 		//pause(5000);
-			
-//		while(true){
-//			//while no obstacle detected, move forward
-//			while((ir.getData()).getRanges()[1]>1000){
-//				currTask = new MotionTask(Priority.FIRST, .2, MotionTask.STOP_HEADING);
-//				log("Submitting: " + currTask);
-//				motionArbiter.submitTask(currTask);
-//				pause(1000);
-//			}
-//			//stop
-//			currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-//			log("Submitting: " + currTask);
-//			motionArbiter.submitTask(currTask);
-//			pause(1000);
-//			
-//			//turn 90 degrees
-//			RotateDegrees((Math.PI)/16,motionArbiter);
-//		}
-//		log("Test complete!");
+		
+		System.out.println("got a path " + path.size());
+		
+		
+		// STOP THE ROOMBA 
+		motors.setSpeed(0, 0);
+		pause(5000);
+
 		
 		try {
 			WorldView.printWorldView();
@@ -213,6 +153,195 @@ public class PathPlanner implements Position2DListener, IRListener {
 		}	
 		
 		System.exit(0);		
+	}
+	
+	/**
+	 * Moves the robot according to the list of Squares passed as the argument
+	 * @param path
+	 */
+	public void move(List<Square> path){
+		int time,turntime,x1,x2,y1,y2;
+		
+		for(int i = path.size()-2; i>=0; i--){
+			y1 = path.get(i+1).getX();
+			y2 = path.get(i).getX();
+			x1 = path.get(i+1).getY();
+			x2 = path.get(i).getY();
+			
+			System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+			
+			// convert from cartesian to polar coordinates
+			double theta = Math.atan2(y2-y1, x2-x1);
+			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+			double turnAngle = bearing-theta; 
+			int turnDirection = right;	// initially set turn direction to right
+			if (bearing - theta < 0){
+				turnDirection = left;
+			}
+			if( Math.abs(bearing - theta) > Math.PI ){	// special case
+				turnAngle = 2*Math.PI - Math.abs(bearing - theta);
+				turnDirection = turnDirection*(-1);	// find smaller direction
+			}
+			
+			//Check to see if the robot can safely traverse to the target location
+			if(checkTerrain(x1,y1,x2,y2)){
+			//if(Math.random() > 0.5){
+					
+				bearing = theta;	// new bearing is theta
+	
+				turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+				// DEBUGGING STATEMENTS
+				//System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+				//System.out.println("polar(" +r+","+theta+")");
+				//System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
+				//System.out.println("turntime = " + turntime);
+				motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
+				pause(turntime);
+				//time = (int)r*1000;
+				time = (int)(((r*WIDTH_OF_ROOMBA)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
+				motors.setSpeed(SPEED_STEP, 0);
+				pause(time);
+			}
+			else { //BACKTRACK
+				System.out.println("ERROR: OBSTACLE DETECTED. WLIL TRY TO REVERSE");
+				motors.setSpeed(0, 0);
+	
+				pause(2000); //pause for 2 seconds
+				for(int j = i+1; j<path.size()-1; j++){
+					y2 = path.get(j+1).getX();
+					y1 = path.get(j).getX();
+					x2 = path.get(j+1).getY();
+					x1 = path.get(j).getY();
+					
+					System.out.println("(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+					
+					// convert from cartesian to polar coordinates
+					theta = Math.atan2(y2-y1, x2-x1);
+					r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+					turnAngle = bearing-theta; 
+					turnDirection = right;	// initially set turn direction to right
+					if (bearing - theta < 0){
+						turnDirection = left;
+					}
+					if( Math.abs(bearing - theta) > Math.PI ){	// special case
+						turnAngle = 2*Math.PI - Math.abs(bearing - theta);
+						turnDirection = turnDirection*(-1);	// find smaller direction
+					}
+					bearing = theta;	// new bearing is theta
+
+					//Check to see if the robot can safely traverse to the target location
+					//if(checkTerrain(x1,y1,x2,y2)){
+
+						turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+						System.out.println("polar(" +r+","+theta+")");
+						motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
+						pause(turntime);
+
+						time = (int)(((r*WIDTH_OF_ROOMBA)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
+						motors.setSpeed(SPEED_STEP, 0);
+						pause(time);
+				}
+				
+				motors.setSpeed(0, 0);
+				pause(5000);
+				//System.exit(0);
+				break;
+			}
+		}
+	}
+	
+	/**
+	 * Checks to see if the destination is traversable before actually going there.
+	 * @param currX
+	 * @param currY
+	 * @param newX
+	 * @param newY
+	 */
+	public boolean checkTerrain(int currX, int currY, int newX, int newY){
+		//There are 8 cases: 4 cardinal direction cases and 4 intermediate direction cases
+		
+		//Case 1: Moving South
+		if(newX == currX && newY > currY){
+			//Need to check the MapSectorElement directly South of the current position
+			if(readWorldView(newX,newY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 2: Moving South
+		else if(newX == currX && newY < currY){
+			//Need to check the MapSectorElement directly South of the current position
+			if(readWorldView(newX,newY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 3: Moving East
+		else if(newX > currX && newY == currY){
+			//Need to check the MapSectorElement directly East of the current position
+			if(readWorldView(newX,newY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 4: Moving West
+		else if(newX < currX && newY == currY){
+			//Need to check the MapSectorElement directly West of the current position
+			if(readWorldView(newX,newY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 5: Moving NorthWest
+		else if(newX < currX && newY > currY){
+			//Need to check 3 MapSectorElements North, NorthWest, and West of the current position
+			if(readWorldView(newX,newY) && readWorldView(currX,currY+1) && readWorldView(currX-1,currY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 6: Moving NorthEast
+		else if(newX > currX && newY > currY){
+			//Need to check 3 MapSectorElements North, NorthEast, and East of the current position
+			if(readWorldView(newX,newY) && readWorldView(currX,currY+1) && readWorldView(currX+1,currY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 7: Moving SouthWest
+		else if(newX < currX && newY < currY){
+			//Need to check 3 MapSectorElements South, SouthWest, and West of the current position
+			if(readWorldView(newX,newY) && readWorldView(currX,currY-1) && readWorldView(currX-1,currY))
+				return true;
+			else 
+				return false;
+		}
+		//Case 8: Moving SouthEast
+		//if(newX > currX && newY < currY){
+		else{
+			//Need to check 3 MapSectorElements South, SouthEast, and East of the current position
+			if(readWorldView(newX,newY) && readWorldView(currX,currY-1) && readWorldView(currX+1,currY))
+				return true;
+			else 
+				return false;
+		}
+
+	}
+	
+	/**
+	 * readWorldView() reads from the World View map only the MapSector element needed to determine if target location is free
+	 * @param x MapSector x-coordinate
+	 * @param y MapSector y-coordinate
+	 */
+	public boolean readWorldView(int x, int y){
+		for(int r = 0; r < 8; r++){
+			for(int c = 0; c < 8; c++){
+				if(WorldView.readConfidence(8*x + r, 8*y + c) > 0.65)
+					return false;
+			}
+		}
+		return true;
+
 	}
 	
 	
@@ -251,11 +380,44 @@ public class PathPlanner implements Position2DListener, IRListener {
 	}
 	
 	public void newPlayerIRData(PlayerIrData data) {
-		float[] dist = data.getRanges();
-		WorldView.recordObstacles(dist);
-		//System.out.println(data.getRanges_count() + " sensors, IR Data: FL=" + dist[0] + ", FC=" + 
-		//		dist[1] + ", FR=" + dist[2] + ", RL=" + dist[3] + ", RC=" + dist[4] + ", RR=" + 
-		//		dist[5]);
+
+		if (++(PathPlanner.numIRreadings) == 1) {
+			dq = new ArrayList<ArrayDeque<Float>>();
+			
+			for (int i = 0; i < 6; i++) {
+				dq.add(new ArrayDeque<Float>(5));
+			}
+		}
+		
+		float [] window = new float [6];
+		float [] ranges = data.getRanges();
+		//5-wide median filter here
+
+		// add all the ranges to each Deque (one per IR sensor)
+		for (int i = 0; i < 6; i++) {
+			dq.get(i).add(ranges[i]);
+		}
+
+		if (numIRreadings > 4) { // taken at least five IR sample sets
+			for (int i = 0; i < 6; i++) {
+				ArrayList<Float> arr = new ArrayList<Float>(5);
+				Float [] fArray = (Float[]) dq.get(i).toArray(new Float[5]);
+				for (int j = 0; j < 5; j++) {
+					arr.add((Float) fArray[j]);
+				}
+				window[i] = findMedian(arr);
+				dq.get(i).removeFirst(); // scrolling window, make room for next sensor reading
+			}
+		}
+
+		WorldView.recordObstacles(window);
+
+		//System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
+	}
+	
+	public static float findMedian (ArrayList<Float> arr) {
+		Collections.sort(arr);
+		return (float) arr.get(2); // always get 3rd element (in a 5-wide window)
 	}
 	
 	private void pause(int duration) {
@@ -292,8 +454,8 @@ public class PathPlanner implements Position2DListener, IRListener {
 	 *****************************************************/
 	public static void main(String[] args) {
 		String fileName = "log.txt";
-		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
-		String serverIP = "128.83.196.235";
+		String serverIP = "10.11.12.10"; // server for SAINTARNOLD
+		//String serverIP = "128.83.52.224";
 		int serverPort = 6665;
 
 		try {
@@ -322,15 +484,14 @@ public class PathPlanner implements Position2DListener, IRListener {
 		System.out.println("File: " + fileName);
 		
 		// TODO
-		new LocationTracker();
-		new WorldView();
+
 		
-		try {
-			WorldView.printWorldView();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			WorldView.printWorldView();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		
 		new PathPlanner(serverIP, serverPort, fileName);
 	}
