@@ -55,13 +55,16 @@ public class MapSector {
 		//this.startCoord = new OrderedPair((int)(currLoc[0]/8), (int)(currLoc[1]/8));
 		// right now, just four possible places
 		OrderedPair end;
-		end = new OrderedPair(startCoord.getX()+radius,startCoord.getY());
+		//end = new OrderedPair(startCoord.getX()+radius,startCoord.getY());
+		end = new OrderedPair(startCoord.getX(),startCoord.getY()-radius);
 		listGoals.add(end);
-		end = new OrderedPair(startCoord.getX()-radius,startCoord.getY());
+		//end = new OrderedPair(startCoord.getX()-radius,startCoord.getY());
+		end = new OrderedPair(startCoord.getX()+radius,startCoord.getY());
 		listGoals.add(end);
 		end = new OrderedPair(startCoord.getX(),startCoord.getY()+radius);
 		listGoals.add(end);
-		end = new OrderedPair(startCoord.getX(),startCoord.getY()-radius);
+		//end = new OrderedPair(startCoord.getX(),startCoord.getY()-radius);
+		end = new OrderedPair(startCoord.getX()-radius,startCoord.getY());
 		listGoals.add(end);
 		//sectorConvert(mapSecCorner); // convert from Worldview to Mapsector format
 	}
@@ -118,7 +121,7 @@ public class MapSector {
 				for(x = 0; x<8; x++){	// for every worldview element in the mapsector element
 					for(y = 0; y<8; y++){
 						//if( x!=y && x+y!=7 && WorldView.readSampleConfidence(xMS*8 + x + corner.x, yMS*8 + y + corner.y) > .5){
-						if( WorldView.readConfidence(xMS*8 + x + corner.x, yMS*8 + y + corner.y) > .65){
+						if( WorldView.readConfidence(xMS*8 + x + corner.x, yMS*8 + y + corner.y) > .5){
 							//if( x!=y && x+y!=7 && WorldView.readConfidence(x + corner.x, y + corner.y) > .5){
 							// if not at a loc coord that is on the X that splits the Mapsector element into quads
 							// and if the Worldview is pretty confident that there's an obstruction at that 5cmx5cm square
