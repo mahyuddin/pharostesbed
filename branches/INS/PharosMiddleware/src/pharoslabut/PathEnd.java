@@ -67,7 +67,7 @@ public class PathEnd
 			waypoint = path_list.get(index);
 			System.out.println("X: "+waypoint.X+" Y: "+waypoint.Y+" H: "+waypoint.H);
 		}
-	}
+	} 
 	
 	public void printMov()
 	{

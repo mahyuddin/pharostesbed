@@ -1,7 +1,7 @@
 
 package pharoslabut;
 public class RoboMov {
-	
+	 
 	public int MovType;
 	public MarkedPath goalWaypoint;
 	//0 Forward, 1 Backward, 2 TurnCW, 3 TurnCCW
