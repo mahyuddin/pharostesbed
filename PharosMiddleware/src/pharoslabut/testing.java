@@ -51,63 +51,74 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		table_size = CompLookUp.size();
 		// if we use one driver change to 6665
 		
+		System.out.println(command);
 		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
 		compassLogger.addListener(this);
 
 		motors.addPos2DListener(this);
 		compassLogger.start(1, fileName);
 		//motors.resetOdometry();
-		//move(1.75, motors);
+	//	move(7, motors);
+		turn_comp(-90, motors);
+		move_odometry(0.5, motors);
+		//pause(1000);
 		//move_odometry(0.5, motors);
-		//turn_comp(1.57, motors);
+		turn_comp(-90, motors);
+		turn_comp(-90, motors);
+		move_odometry(0.5, motors);
+		move_odometry(0.5, motors);
+		turn_comp(-90, motors);
 		//for (;;){
 		//pause(100000);}
 	//	circle(motors);
-		turn_comp(45, motors);
-		
+	//	turn_comp(90, motors);
+	//	turn_comp(90, motors);
 		
 	//	pause(100000);
 	//	pause(100000);
 	//	turn(-2, motors);
-		
-		/*for (int i = 0; i < command.size(); i++)
+	
+		for (int i = 0; i < command.size(); i++)
 		{
-			if(command.get(i) >= 10.0)
+			if(Math.abs(command.get(i)) >= 10.0)
 			{
+				System.out.println(command.get(i));
 				double distance = command.get(i)/20;
-				move(distance, motors);
+				move_odometry(distance, motors);
 			}
+			
 			else
 			{
 				int s = (int)(command.get(i).doubleValue());
+				System.out.println("s:" + s);
 				switch (s)
 				{
 					case -1: 
-						turn(0.392, motors);
+						turn_comp(45, motors);
 						break;
 					case -2:
-						turn(0.785, motors);
+						turn_comp(90, motors);
 						break;
 					case -3:
-						turn(1.178, motors);
+						turn_comp(135, motors);
 						break;
 					case -4:
-						turn(1.571, motors);
+						turn_comp(180, motors);
 						break;
 					case 1: 
-						turn(-0.392, motors);
+						turn_comp(-45, motors);
 						break;
 					case 2:
-						turn(-0.785, motors);
+						turn_comp(-90, motors);
 						break;
 					case 3:
-						turn(-1.178, motors);
+						turn_comp(-135, motors);
 						break;
 					default:
 						break;
 				}
 			}
-		}*/
+		}
 
 		log("Test complete!");
 		compassLogger.stop();
@@ -135,6 +146,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		double speed = 0.2;
 		if (distance <0) {
 			speed = speed * -1;
+			distance = distance* -1;
 			}
 		System.out.println("move");
 		//pause(500);
@@ -166,6 +178,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		//System.out.println(starting);*/
 	    
 		motors.setSpeed(0, 0);
+		odflag = false;
 	}
 	
 
@@ -218,8 +231,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		double ending = 0;
 		int Next;
 		
-		Next = (int) (table_size / (360 / angle));
-		
+		Next = (int) ((double)table_size / (double)(360 / angle));
+		System.out.println("slots: " + Next);
 		if (angle < 0) {
 			speed = speed * -1;
 			}
@@ -229,7 +242,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 				try {
 		            wait();
 		        } catch (InterruptedException e) {}
-		        starting = compreading;
+		        starting = (compreading + Math.PI);
 			}
 		}
 		
@@ -241,15 +254,22 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 				if (Next < 0 && Math.abs(Next) > i) {
 					Next = table_size + Next;
 				}
+					System.out.println("current slot" + i);
+					System.out.println("dest. slot" + (i+Next) % table_size);
 					ending = CompLookUp.get((i+Next) % table_size);
+				//	System.out.println((i+Next) % table_size);
+					System.out.println("starting" + CompLookUp.get(i));
+					System.out.println("ending" + CompLookUp.get((i+Next) % table_size));
+					break;
 			}
 		}
-		System.out.println("move:" + angle);
+		System.out.println("move:" + angle + " " + speed);
 	//	
 		motors.setSpeed(0,speed);
 
-	    while((ending - 0.3) > compreading || compreading < (ending + 0.3)) {
-	    	synchronized(this) {
+	    while((ending - 0.03) > (compreading + Math.PI) && (compreading + Math.PI) < (ending + 0.03)) {
+	//    for(int i = 0; i<10; i++){
+			synchronized(this) {
 		    	try {
 		            wait();
 		        } catch (InterruptedException e) {}
@@ -257,6 +277,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	    }
 	    
 		motors.setSpeed(0,0);
+		compflag=false;
 	}
 
 	private void pause(int duration) {
@@ -331,14 +352,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		System.out.println("File: " + fileName);
 		System.out.println("ShowGUI: " + showGUI);
 		List<Double> command = new ArrayList<Double>();
-		/*
-		command.add(-3.0);
-		command.add(14.0);
-		command.add(1.0);
-		command.add(10.0);
-		command.add(0.0);
-		command.add(10.0);
-		*/
+		
+		//command.add(-3.0);
+//		command.add(14.0);
+//		command.add(1.0);
+		//command.add(10.0);
+		//command.add(0.0);
+//		command.add(-10.0);
+		
 		
 		new testing(serverIP, serverPort, fileName, showGUI, command);
 
