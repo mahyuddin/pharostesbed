@@ -403,7 +403,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
     			{	 
                      XueHua.moveForward(); 
-                     
+                      
                      XueHuaPos.INS_UpdateX();
                      XueHuaPos.INS_UpdateY();
                      

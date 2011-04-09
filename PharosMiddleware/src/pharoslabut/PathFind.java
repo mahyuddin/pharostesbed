@@ -52,7 +52,7 @@ public class PathFind {
         heading  = new int  [map.Width * map.Height];
         prev     = new int  [map.Width * map.Height];        
         g_score  = new int  [map.Width * map.Height];
-        h_score  = new int  [map.Width * map.Height];
+        h_score  = new int  [map.Width * map.Height]; 
         f_score  = new int  [map.Width * map.Height];
     }
     

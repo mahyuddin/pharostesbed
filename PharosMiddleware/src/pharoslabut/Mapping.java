@@ -24,7 +24,7 @@ public class Mapping {
 	public void parse(File ascii) throws IOException {
 		// TODO Auto-generated method stub
 		int y = 0;
-		int x = 0;
+		int x = 0; 
 		int w = 1000;
 		int h = 1000;
 		char c = 0;

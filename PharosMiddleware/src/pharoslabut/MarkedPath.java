@@ -1,6 +1,6 @@
 package pharoslabut;
 
-public class MarkedPath {
+public class MarkedPath { 
 
 	public int X;
 	public int Y;
