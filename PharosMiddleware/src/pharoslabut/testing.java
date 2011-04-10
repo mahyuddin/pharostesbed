@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import pharoslabut.tasks.Priority;
-import pharoslabut.tasks.MotionTask;
 import pharoslabut.logger.*;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
@@ -36,12 +34,12 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			System.exit (1);
 		}
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		//motors.resetOdometry();
 		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
 		}
 		
+		//This generate the lookup table for compass range (0,2pi)
 		try {
 			CompLookUp = IO_Helper.readInput("src/pharoslabut/compass.txt");
 		} catch (FileNotFoundException e) {
@@ -49,35 +47,48 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			e.printStackTrace();
 		}
 		table_size = CompLookUp.size();
-		// if we use one driver change to 6665
 		
+		// if we use one driver change to 6665
 		System.out.println(command);
 		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
 		compassLogger.addListener(this);
 
 		motors.addPos2DListener(this);
 		compassLogger.start(1, fileName);
-		//motors.resetOdometry();
-	//	move(7, motors);
-		turn_comp(-90, motors);
-		move_odometry(0.5, motors);
+		
+		
+		turn_comp(175, motors);
+		move_odometry(0.2, motors);
 		//pause(1000);
 		//move_odometry(0.5, motors);
-		turn_comp(-90, motors);
-		turn_comp(-90, motors);
-		move_odometry(0.5, motors);
-		move_odometry(0.5, motors);
-		turn_comp(-90, motors);
-		//for (;;){
-		//pause(100000);}
-	//	circle(motors);
+	//	turn_comp(180, motors);
+	//	turn_comp(45, motors);
+	//	pause(1000);
+	//	move_odometry(0.5, motors);
+	//	move_odometry(0.5, motors);
+	//	pause(1000);
+	//	turn_comp(-90, motors);
+	//	turn_comp(90, motors);
+
 	//	turn_comp(90, motors);
 	//	turn_comp(90, motors);
 		
-	//	pause(100000);
-	//	pause(100000);
-	//	turn(-2, motors);
-	
+	/*
+	 * This loop go through the movement instructions and figure whether to move forward
+	 * or to turn, the look up table is the following:
+	 * 	 ****************************************	
+		 * 	Lookup Table for move_instruction	*
+		 * 	0  - No turn						*
+		 * 	1  - CW 45							*
+		 *  2  - CW 90							*
+		 *  3  - CW 135							*
+		 * 	-1 - CCW 45							*
+		 *  -2 - CCW 90							*
+		 *  -3 - CCW 135						*
+		 *  -4 - CCW	180						*
+		 *  >=10 - Move forward					*
+		 ****************************************
+	 */
 		for (int i = 0; i < command.size(); i++)
 		{
 			if(Math.abs(command.get(i)) >= 10.0)
@@ -119,27 +130,13 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 				}
 			}
 		}
+		
 
 		log("Test complete!");
 		compassLogger.stop();
 		System.exit(0);
 	}
 	
-	private void move(double distance, Position2DInterface motors){
-		
-		double speed = 0.2;
-		int runtime = 0;
-		if (distance <0) {
-			speed = speed * -1;
-			}
-			
-		runtime = (int)(distance *1000 / speed);
-		//log("Submitting: " + "velocity=" + speed + "runtime=" + runtime);
-		System.out.println("move");
-		motors.setSpeed(speed, 0);
-		pause(runtime);
-		motors.setSpeed(0, 0);
-	}
 	
 	private void move_odometry(double distance, Position2DInterface motors){
 		double starting = 0;
@@ -149,8 +146,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			distance = distance* -1;
 			}
 		System.out.println("move");
-		//pause(500);
-		
+		System.out.println(odflag);
 		while(!odflag){
 			synchronized(this) {
 				try {
@@ -159,9 +155,11 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		        starting = odreading;
 			}
 		}
-		
+		System.out.println("starting od " + starting);
 		motors.setSpeed(speed, 0);
-		
+		/*
+		 * TODO: needs new odometry driver
+		 */
 	    while((starting + distance - 0.04) > odreading) {
 	    	synchronized(this) {
 		    	try {
@@ -179,24 +177,9 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	    
 		motors.setSpeed(0, 0);
 		odflag = false;
+		compflag = false;
 	}
 	
-
-	private void turn(double angle, Position2DInterface motors){
-		double speed = 0.3;
-		double time = 0;
-		int runtime = 0;
-		if (angle <0) {
-			speed = speed * -1;
-			}
-		
-		time = angle * 1000 / speed;
-		runtime = (int) time;
-		System.out.println("move:" + angle);
-		motors.setSpeed(0,speed);
-		pause(runtime);
-		motors.setSpeed(0,0);
-	}
 	
 	private void circle(Position2DInterface motors){
 		double starting = 0;
@@ -227,7 +210,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	
 	private void turn_comp(double angle, Position2DInterface motors){
 		double speed = 0.1;
-		double starting = compreading;
+		double starting = 0;
 		double ending = 0;
 		int Next;
 		
@@ -236,13 +219,17 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		if (angle < 0) {
 			speed = speed * -1;
 			}
-		
+		System.out.println(compflag);
+		/*
+		 * TODO: need to check this
+		 */
 		while(!compflag){
 			synchronized(this) {
 				try {
 		            wait();
 		        } catch (InterruptedException e) {}
 		        starting = (compreading + Math.PI);
+		        System.out.println("Print " + starting);
 			}
 		}
 		
@@ -264,11 +251,10 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			}
 		}
 		System.out.println("move:" + angle + " " + speed);
-	//	
+	
 		motors.setSpeed(0,speed);
 
-	    while((ending - 0.03) > (compreading + Math.PI) && (compreading + Math.PI) < (ending + 0.03)) {
-	//    for(int i = 0; i<10; i++){
+	    while((ending - 0.03) > (compreading + Math.PI) || (compreading + Math.PI) > (ending + 0.03)) {
 			synchronized(this) {
 		    	try {
 		            wait();
@@ -278,6 +264,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	    
 		motors.setSpeed(0,0);
 		compflag=false;
+		odflag = false;
 	}
 
 	private void pause(int duration) {
@@ -371,7 +358,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		odflag = true;
 		odreading = data.getPos().getPx();
 		notifyAll();
-		//System.out.println("Odometry  " + data.getPos().getPx());
+		System.out.println("Odometry  " + data.getPos().getPx());
 		
 	}
 
@@ -380,9 +367,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		compflag = true;
 		compreading = heading;
 		notifyAll();
-		System.out.println(heading);
-		String crap = "" + heading;
-		//log(crap);
+		System.out.println("heading: " + heading);
+		
 		// TODO Auto-generated method stub
 		
 	}
