@@ -106,7 +106,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		}
 		ir.addIRListener(this);
 		//////// END OF IR INTERFACING ////////
-		
+		this.writeOdometry(0, 0, 0);
 		// MOTION STRATEGY
 		pause(2000);	// 2 second initialization delay
 		
@@ -116,26 +116,27 @@ public class PathPlanner implements Position2DListener, IRListener {
 		/////////// ASTAR ///////////////
 		//motors.setSpeed(0, Math.PI/8);
 		//pause(4000);
-		motors.setSpeed(0, Math.PI/16);
+		/*motors.setSpeed(0, Math.PI/8);
 		pause(3000);
-		motors.setSpeed(0, -Math.PI/16);
+		motors.setSpeed(0, -Math.PI/8);
 		pause(6000);
-		motors.setSpeed(0, Math.PI/16);
-		pause(3000);
-		
+		motors.setSpeed(0, Math.PI/8);
+		pause(3000);*/
+		motors.setSpeed(.2, 0);
+		pause(6000);
 
 		
-		path = pathFind(); // ordered list of coordinates to follow
-		move(path); //moves according to the path. If there is a problem, choose another point based on LURD
+		//path = pathFind(); // ordered list of coordinates to follow
+		//move(path); //moves according to the path. If there is a problem, choose another point based on LURD
 		//motors.setSpeed(0, 0);
 		//pause(5000);
 		
-		System.out.println("got a path " + path.size());
+		//System.out.println("got a path " + path.size());
 		
 		
 		// STOP THE ROOMBA 
 		motors.setSpeed(0, 0);
-		pause(5000);
+		pause(2000);
 
 		
 		try {
@@ -454,8 +455,9 @@ public class PathPlanner implements Position2DListener, IRListener {
 	 *****************************************************/
 	public static void main(String[] args) {
 		String fileName = "log.txt";
-		String serverIP = "10.11.12.10"; // server for SAINTARNOLD
+		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
 		//String serverIP = "128.83.52.224";
+		String serverIP = "128.83.196.249";
 		int serverPort = 6665;
 
 		try {

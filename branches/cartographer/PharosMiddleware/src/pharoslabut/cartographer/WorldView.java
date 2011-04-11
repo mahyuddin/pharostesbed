@@ -263,12 +263,21 @@ public class WorldView {
 	 */
 	public static synchronized void recordObstacles(float [] distIR) {
 		// extract IR data from dist[], dist data is in mm, convert back to m
-		float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
+		/*float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
 		float frontCenterRange 	= WorldView.calibrateIR(distIR[1] / 1000);
 		float frontRightRange 	= WorldView.calibrateIR(distIR[2] / 1000);
 		float rearLeftRange 	= WorldView.calibrateIR(distIR[5] / 1000); // [5] is actually the rearLeft
 		float rearCenterRange 	= WorldView.calibrateIR(distIR[4] / 1000);
-		float rearRightRange 	= WorldView.calibrateIR(distIR[3] / 1000); // [3] is actually the rearRight
+		float rearRightRange 	= WorldView.calibrateIR(distIR[3] / 1000); // [3] is actually the rearRight*/
+		
+		float frontLeftRange 	= distIR[0] / 1000;
+		float frontCenterRange 	= distIR[1] / 1000;
+		float frontRightRange 	= distIR[2] / 1000;
+		float rearLeftRange 	= distIR[5] / 1000; // [5] is actually the rearLeft
+		float rearCenterRange 	= distIR[4] / 1000;
+		float rearRightRange 	= distIR[3] / 1000; // [3] is actually the rearRight
+		
+		System.out.println("FL=" + frontLeftRange + ", FC=" + frontCenterRange + ", FR=" + frontRightRange + ", RL=" + rearLeftRange + ", RC=" + rearCenterRange + ", RR=" + rearRightRange);
 		
 		double [] curLoc = LocationTracker.getCurrentLocation();
 		double xPos 	= curLoc[0]; 
