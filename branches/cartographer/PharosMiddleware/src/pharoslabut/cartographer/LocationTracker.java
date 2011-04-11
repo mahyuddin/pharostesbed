@@ -1,14 +1,20 @@
 package pharoslabut.cartographer;
 
+import playerclient.Position2DInterface;
+import playerclient.Position2DListener;
+import playerclient.structures.PlayerConstants;
 import playerclient.structures.PlayerPose;
+import playerclient.structures.position2d.PlayerPosition2dData;
 import pharoslabut.logger.CompassLoggerEvent;
 import pharoslabut.logger.CompassLoggerEventListener;
 
-public class LocationTracker implements CompassLoggerEventListener{
+public class LocationTracker implements CompassLoggerEventListener, Position2DListener{
+	public static Position2DInterface motors;
 	private static CompassLoggerEvent compassLogger;
 	// change initial values to reflect the robot's starting orientation
 	private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
 	private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
+	private static final double initialBearing = Math.PI/2;
 	
 	private static double currentX;
 	private static double currentY;
@@ -19,27 +25,43 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	public LocationTracker() {
 		
+		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
+		motors = (PathPlannerSimpleTest.client).requestInterfacePosition2D(0, 
+				PlayerConstants.PLAYER_OPEN_MODE);
+		
+		
 		// below: the serverIP and 7777 port number do not matter
 		// inside the CompassLoggerEvent constructor, it no longer creates a new player client connection, 
 		//   instead, it just uses the one client connection from the Path Planner and connects to the same port, 
 		//   but using device index "2" for the compass's position2d provider
-		//compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 2, false);
+//		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 2, false);
 																	// 2 is device index, true means showGUI
-		//compassLogger.addListener(this);
+//		compassLogger.addListener(this);
 		
 		// this just logs the data to a file
-		//compassLogger.start(1, "compasslog.txt"); // first param is ignored
+//		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
-		// robot begins in lower-left corner with a bearing of 0, facing east
-		currentX = initialX; currentY = initialY; 
+		currentX = initialX; currentY = initialY; bearing = initialBearing; // facing east
 		
-		// To reset the robot's odometry to (x, y, yaw) = (0,0,0), send
-		// a PLAYER_POSITION2D_REQ_RESET_ODOM request.  Null response.
-		// note: the PlayerClient pkgs refer to the turn angle as "yaw"
+		// robot should begin in lower-left corner with a bearing of 0, facing east
+//		System.out.println("going to write odom");
+//		PlayerPose newPose = new PlayerPose();
+//		newPose.setPx(currentX);
+//		System.out.println("X set to " + newPose.getPx());
+//		newPose.setPy(currentY);
+//		System.out.println("Y set to " + newPose.getPy());
+//		newPose.setPa(bearing);
+//		System.out.println("A set to " + newPose.getPa());
+//		PathPlannerSimpleTest.motors.setOdometry(newPose);
 		
-//		PathPlanner.writeOdometry(initialX, initialY, 0);	
+		writeOdometry(currentX, currentY, bearing);
 		
+		
+		// set odometry here to something like (4,4)
+		
+		
+		motors.addPos2DListener(this);
 		
 		
 	}
@@ -47,8 +69,8 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	public static void updateLocation(PlayerPose newLoc) { 
 		
-		//currentX = calibrateX(newLoc.getPx() + initialX);
-		//currentY = calibrateY(newLoc.getPy() + initialY);
+		currentX = calibrateX(newLoc.getPx());
+		currentY = calibrateY(newLoc.getPy());
 		bearing = calibrateAngle(newLoc.getPa());
 		
 		//boundary checking
@@ -60,7 +82,8 @@ public class LocationTracker implements CompassLoggerEventListener{
 //			System.out.println("currentY was neg");
 			currentY = 0;
 		}	
-		PathPlanner.writeOdometry(currentX, currentY, bearing);
+		
+		//PathPlanner.writeOdometry(currentX, currentY, bearing);
 		
 		bearing = bearing % (2*Math.PI);
 		
@@ -107,19 +130,21 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	private static double calibrateX(double xValue) {
 		// take odometer value and convert to accurate X distance
-		return (double) (-3.7331*xValue*xValue+8.1825*xValue-3.466);
+		// return (double) (-3.7331*xValue*xValue+8.1825*xValue-3.466);
+		return xValue;
 	}
 	
 	
 	private static double calibrateY(double yValue) {
 		// take odometer value and convert to accurate Y distance
-		return (double) (-3.7331*yValue*yValue+8.1825*yValue-3.466);
+		//return (double) (-3.7331*yValue*yValue+8.1825*yValue-3.466);
+		return yValue;
 	}
 	
 	
 	private static double calibrateAngle(double angle) {
 		// take odometer value and convert to accurate angle measurement
-		return 2.04*angle; // preliminary calibration
+		return angle;
 	}
 
 
@@ -128,7 +153,42 @@ public class LocationTracker implements CompassLoggerEventListener{
 		//this is where the compass data is received
 		System.out.println(heading);
 	}
+	
+	
+	public static void writeOdometry(double newX, double newY, double newAngle) {
+		PlayerPose newPose = new PlayerPose();
+		newPose.setPx(newX);
+//		System.out.println("X set to " + newPose.getPx());
+		newPose.setPy(newY);
+//		System.out.println("Y set to " + newPose.getPy());
+		newPose.setPa(newAngle);
+//		System.out.println("A set to " + newPose.getPa());
+//		System.out.println("Writing Odom: newX=" + newX + ", newY=" + newY + ", newA=" + newAngle);
+		
+		motors.setOdometry(newPose);
+		return;
+	}
+	
+	//@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		PlayerPose pp = data.getPos();
+		
+		//insert 5-wide median filter here
+		
+		LocationTracker.updateLocation(pp);
+		//		}
+		//log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
+		//		+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
+		
+//		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
+//				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
+				
+//		System.out.println("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa());
+	}
+	
+
 }
+
 
 
 
