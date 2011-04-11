@@ -23,12 +23,12 @@ public class LocationTracker implements CompassLoggerEventListener{
 		// inside the CompassLoggerEvent constructor, it no longer creates a new player client connection, 
 		//   instead, it just uses the one client connection from the Path Planner and connects to the same port, 
 		//   but using device index "2" for the compass's position2d provider
-		compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 2, false);
+		//compassLogger = new CompassLoggerEvent(PathPlannerSimpleTest.serverIP, 7777, 2, false);
 																	// 2 is device index, true means showGUI
-		compassLogger.addListener(this);
+		//compassLogger.addListener(this);
 		
 		// this just logs the data to a file
-		compassLogger.start(1, "compasslog.txt"); // first param is ignored
+		//compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
 		// robot begins in lower-left corner with a bearing of 0, facing east
@@ -47,8 +47,8 @@ public class LocationTracker implements CompassLoggerEventListener{
 	
 	public static void updateLocation(PlayerPose newLoc) { 
 		
-		currentX = calibrateX(newLoc.getPx() + initialX);
-		currentY = calibrateY(newLoc.getPy() + initialY);
+		//currentX = calibrateX(newLoc.getPx() + initialX);
+		//currentY = calibrateY(newLoc.getPy() + initialY);
 		bearing = calibrateAngle(newLoc.getPa());
 		
 		//boundary checking
@@ -60,7 +60,7 @@ public class LocationTracker implements CompassLoggerEventListener{
 //			System.out.println("currentY was neg");
 			currentY = 0;
 		}	
-//		PathPlanner.writeOdometry(currentX, currentY, bearing);
+		PathPlanner.writeOdometry(currentX, currentY, bearing);
 		
 		bearing = bearing % (2*Math.PI);
 		

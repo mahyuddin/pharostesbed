@@ -424,8 +424,8 @@ public class Position2DInterface extends AbstractPositionDevice {
      */
     public void setOdometry (PlayerPose pose) {
         try {
-        	sendHeader (PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_SET_ODOM, 12);
-        	XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (12);
+        	sendHeader (PLAYER_MSGTYPE_REQ, PLAYER_POSITION2D_REQ_SET_ODOM, 24);
+        	XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (24);
         	xdr.beginEncoding (null, 0);
         	xdr.xdrEncodeDouble (pose.getPx ());
         	xdr.xdrEncodeDouble (pose.getPy ());
