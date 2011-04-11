@@ -23,19 +23,17 @@ import playerclient.structures.player.PlayerDeviceDevlist;
 import playerclient.structures.player.PlayerDeviceDriverInfo;
 import playerclient.structures.ir.PlayerIrData;
 import playerclient.structures.position2d.PlayerPosition2dData;
-import playerclient.IRInterface;
 import playerclient.IRListener;
 
-public class PathPlannerSimpleTest implements Position2DListener, IRListener {
-	public static String serverIP = "128.83.196.235";
+public class PathPlannerSimpleTest {
+	public static String serverIP = "10.11.12.10";
 	//public static String serverIP = "128.83.196.235";
 	public static String fileName = "log.txt";
 	public static PlayerClient client = null;
 	public static FileLogger flogger = null;
-	public static long numIRreadings = 0;
-	static ArrayList<ArrayDeque<Float>> dq;
-
-	private static Position2DInterface motors; 
+	
+	
+ 
 	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
 
 	List<Square> pathFind(){
@@ -79,58 +77,38 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		}
 
 		
-		new LocationTracker();
 		new WorldView();
 		
 		WorldView.createSampleWorldView();
 		
-		
-		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
-		motors = client.requestInterfacePosition2D(0, 
-				PlayerConstants.PLAYER_OPEN_MODE);
-
-		
-		motors.addPos2DListener(this); 
 
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
 		}
 
 
-		/////////// IR INTERFACE ///////////////
-		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (ir == null) {
-			System.out.println("unable to connect to IR interface");
-			System.exit(1);
-		}
-
-		ir.addIRListener(this);
+		new LocationTracker();
 		
-		//motors.setSpeed(0, Math.PI/16);
-		//pause(8000);
-
-		motors.setSpeed(0, 0);
-		pause(4000);
-		//motors.setSpeed(-.2, 0);
-		motors.setSpeed(0, Math.PI/16);
-		pause(2000);
-		motors.setSpeed(0, -Math.PI/16);
-		pause(4000);
-		motors.setSpeed(0, Math.PI/16);
-		pause(2000);
-		//motors.setSpeed(.2, 0);
-		//pause(4000);
-		motors.setSpeed(0.2, 0);
-		pause(5000);
 		
-		motors.setSpeed(0, -Math.PI/16);
-		pause(4000);
+			
+		LocationTracker.motors.setSpeed(0.1, 0);
+		pause (5000);
+		
+//		double start = LocationTracker.getCurrentLocation()[0];
+//		while (LocationTracker.getCurrentLocation()[0] < (start + 0.85)) {}
+		
+		
+//		motors.setSpeed(0, Math.PI/32);
+//		
+//		while (LocationTracker.getCurrentLocation()[2] < Math.PI*0.99) {}
+
 		
 //		motors.setSpeed(0.2, 0);
 //		pause (5000);
 		
-		motors.setSpeed(0, 0);
-		pause(2000);
+		LocationTracker.motors.setSpeed(0, 0);
+		pause(20000);
+		
 		log("Test complete!");
 
 		
@@ -139,92 +117,17 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		List<Square> path = pathFind(); // ordered list of coordinates to follow
+//		List<Square> path = pathFind(); // ordered list of coordinates to follow
 		try {
 			WorldView.fout.close();
 		} 
 		catch (Exception e) {
 			System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
-		}	
-
-		ir.removeIRListener(this);
-		motors.removePos2DListener(this);
+		}		
+		
+		
 		System.exit(0);
-		///////////// END OF IR INTERFACING ///////////////
 
-	}
-
-
-	public static void writeOdometry(double newX, double newY, double newAngle) {
-		PlayerPose newPose = new PlayerPose();
-		newPose.setPx(newX);
-		newPose.setPy(newY);
-		newPose.setPa(newAngle);
-		(PathPlannerSimpleTest.motors).setOdometry(newPose);
-		return;
-	}
-
-
-
-	//@Override
-	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		PlayerPose pp = data.getPos();
-		
-		//TODO insert 5-wide median filter here
-		
-		LocationTracker.updateLocation(pp);
-		//		}
-		//log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-		//		+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
-		
-//		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-//				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
-				
-		System.out.println("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa());
-	}
-
-
-	public void newPlayerIRData(PlayerIrData data) {
-
-		if (++(PathPlannerSimpleTest.numIRreadings) == 1) {
-			dq = new ArrayList<ArrayDeque<Float>>();
-			
-			for (int i = 0; i < 6; i++) {
-				dq.add(new ArrayDeque<Float>(5));
-			}
-		}
-		
-		float [] window = new float [6];
-		float [] ranges = data.getRanges();
-		//5-wide median filter here
-
-		// add all the ranges to each Deque (one per IR sensor)
-		for (int i = 0; i < 6; i++) {
-			dq.get(i).add(ranges[i]);
-		}
-
-		if (numIRreadings > 4) { // taken at least five IR sample sets
-			for (int i = 0; i < 6; i++) {
-				ArrayList<Float> arr = new ArrayList<Float>(5);
-				Float [] fArray = (Float[]) dq.get(i).toArray(new Float[5]);
-				for (int j = 0; j < 5; j++) {
-					arr.add((Float) fArray[j]);
-				}
-				window[i] = findMedian(arr);
-				dq.get(i).removeFirst(); // scrolling window, make room for next sensor reading
-			}
-		}
-
-		WorldView.recordObstacles(window);
-
-		//System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
-	}
-
-
-
-	public static float findMedian (ArrayList<Float> arr) {
-		Collections.sort(arr);
-		return (float) arr.get(2); // always get 3rd element (in a 5-wide window)
 	}
 
 
@@ -290,14 +193,10 @@ public class PathPlannerSimpleTest implements Position2DListener, IRListener {
 		System.out.println("File: " + fileName);
 		
 
-		//		try {
-		//			WorldView.printWorldView();
-		//		} catch (IOException e) {
-		//			e.printStackTrace();
-		//		}
-
 		new PathPlannerSimpleTest(serverIP, serverPort, fileName);
 	}
+	
+
 
 }
 
