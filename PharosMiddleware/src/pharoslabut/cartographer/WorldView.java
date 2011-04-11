@@ -4,6 +4,11 @@ import java.awt.geom.Point2D;
 import java.util.*;
 import java.io.*;
 
+import playerclient.IRInterface;
+import playerclient.IRListener;
+import playerclient.structures.PlayerConstants;
+import playerclient.structures.ir.PlayerIrData;
+
 
 class LocationElement {
 	private Integer xCoord;
@@ -75,7 +80,10 @@ class OrderedPairConfidence extends OrderedPair {
 }
 
 
-public class WorldView {
+public class WorldView implements IRListener {
+	
+	public static long numIRreadings = 0;
+	static ArrayList<ArrayDeque<Float>> dq;
 	
 	public static FileWriter fstream; 
     public static BufferedWriter fout; 
@@ -83,10 +91,11 @@ public class WorldView {
 	public static final int WORLD_SIZE = 72;					// initial dimensions of "world" (below)
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
+	public static ArrayList<OrderedPair> pathTracker; 
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.50; // max short range distance is 175 cm
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.00; // max short range distance is 175 cm
 																// looks like the max long range distance detectable is ~550 cm 
 																// but more accurate when under 300 cm
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
@@ -157,6 +166,7 @@ public class WorldView {
 			}	
 		}
 		
+		pathTracker = new ArrayList<OrderedPair>();
 		
 		try {
 			fstream = new FileWriter("world.txt");
@@ -164,7 +174,18 @@ public class WorldView {
 		} 
 		catch (Exception e) {
 		      System.err.println("Error opening file stream for 'world.txt': " + e.getMessage());
-		}	
+		}
+		
+		
+		/////////// IR INTERFACE ///////////////
+		IRInterface ir = (PathPlannerSimpleTest.client).requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (ir == null) {
+			System.out.println("unable to connect to IR interface");
+			System.exit(1);
+		}
+
+		ir.addIRListener(this);
+		
 	}
 	
 	public static synchronized void createSampleWorldView(){
@@ -248,6 +269,8 @@ public class WorldView {
 				WorldView.writeConfidence(x, y, 0); 
 				WorldView.increaseTraversed(x, y);
 				
+				WorldView.pathTracker.add(new OrderedPair(x,y));
+				
 			}
 		}
 		
@@ -258,8 +281,9 @@ public class WorldView {
 	
 	
 	/**
-	 * @author Kevin
-	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RL, RC, RR
+	 * calculates the location of obstacles based on range values from 6 IR sensors
+	 * @author Kevin Boos
+	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RR, RC, RL
 	 */
 	public static synchronized void recordObstacles(float [] distIR) {
 		// extract IR data from dist[], dist data is in mm, convert back to m
@@ -658,8 +682,60 @@ public class WorldView {
 	
 	
 	
+	public void newPlayerIRData(PlayerIrData data) {
+
+		if (++(numIRreadings) == 1) {
+			dq = new ArrayList<ArrayDeque<Float>>();
+			
+			for (int i = 0; i < 6; i++) {
+				dq.add(new ArrayDeque<Float>(5));
+			}
+		}
+		
+		float [] window = new float [6];
+		float [] ranges = data.getRanges();
+		
+		System.out.println("FL=" + ranges[0] + ", FC=" + ranges[1] + ", FR=" + ranges[2] + ", RL=" + ranges[5] + ", RC=" + ranges[4] + ", RR=" + ranges[3]);
+		
+		//5-wide median filter here
+
+		// add all the ranges to each Deque (one per IR sensor)
+		for (int i = 0; i < 6; i++) {
+			dq.get(i).add(ranges[i]);
+		}
+
+		if (numIRreadings > 4) { // taken at least five IR sample sets
+			for (int i = 0; i < 6; i++) {
+				ArrayList<Float> arr = new ArrayList<Float>(5);
+				Float [] fArray = (Float[]) dq.get(i).toArray(new Float[5]);
+				for (int j = 0; j < 5; j++) {
+					arr.add((Float) fArray[j]);
+				}
+				window[i] = findMedian(arr);
+				dq.get(i).removeFirst(); // scrolling window, make room for next sensor reading
+			}
+		}
+
+		WorldView.recordObstacles(window);
+
+//		System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
+	}
+
+
+
+	public static float findMedian (ArrayList<Float> arr) {
+		Collections.sort(arr);
+		return (float) arr.get(2); // always get 3rd element (in a 5-wide window)
+	}
+
+	
+	
+	
+	
+	
 	private static float calibrateIR(float data) {
-		return (float) (-0.00003*data*data + 1.0509*data - 21.926);
+		//return (float) (-0.00003*data*data + 1.0509*data - 21.926);
+		return data;
 	}
 
 	
@@ -700,9 +776,9 @@ public class WorldView {
 		}
 		
 		try {
+			@SuppressWarnings("unused")
 			BitmapOut bitmap = new BitmapOut(WorldView.WORLD_SIZE,WorldView.WORLD_SIZE);
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 	}
