@@ -24,7 +24,7 @@ class Driver implements ActionListener, KeyListener, WindowStateListener
 		f = new JFrame();
 		pavPanel = new GUI();
 		f.setTitle("PAV Control Panel");
-		f.setSize(700, 500);
+		f.setSize(800, 700);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setJMenuBar(createMainMenu());
 		f.add(pavPanel);
@@ -33,7 +33,11 @@ class Driver implements ActionListener, KeyListener, WindowStateListener
 		f.setVisible(true);
 		f.addKeyListener(this);
 		f.addWindowStateListener(this);
-		pavPanel.canvasMaxRestore(700, 500);
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				pavPanel.canvasMaxRestore(800, 700);
+			}
+		});
 	}
 	
 	private JMenuBar createMainMenu()

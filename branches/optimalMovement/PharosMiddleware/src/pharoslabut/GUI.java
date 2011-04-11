@@ -277,14 +277,13 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	{
 		if(evt.getActionCommand().equals("Calculate Path"))
 		{
-			int startX = 3;
-			int startY = 6;
-			int endX = 5; //Integer.parseInt(theXCoor.getText());
-			int endY = 2; //Integer.parseInt(theYCoor.getText());
+			int startX = 0;
+			int startY = 0;
+			int endX = Integer.parseInt(theXCoor.getText());
+			int endY = Integer.parseInt(theYCoor.getText());
 			boolean startCheck = false;
 			boolean endCheck = false;
 			theMessage.setText("Calculating path............");
-			/*
 			if(pav.getInitStatus()==false)
 			{
 				JOptionPane.showMessageDialog(null,"Please click the map to initialize the PAV location");
@@ -292,10 +291,9 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				pleaseInitLoc = true;
 				return;
 			}
-			*/
 			loadedMapCanvas.setDrawPath(false);
-			//startX = pav.getCurrentX();
-			//startY = pav.getCurrentY();
+			startX = pav.getCurrentX();
+			startY = pav.getCurrentY();
 			if(mapNodeArray[startX][startY].getPath()==1)
 			{
 				startCheck = true;
@@ -348,7 +346,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				theMessage.setText("Incomplete input.");
 			}
 			List <Double> commands = AStar.move_instruction(path, path.first().retrieve());
-			testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+			//testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
 			this.transferFocusUpCycle();
 		}
 		else if(evt.getActionCommand().equals("Abort"))
@@ -479,9 +477,13 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	
 	public void componentResized(ComponentEvent ce)
 	{
-		int sizeX = ce.getComponent().getWidth();
-		int sizeY = ce.getComponent().getHeight();
-		updateCanvasSize(sizeX, sizeY);
+		final int sizeX = ce.getComponent().getWidth();
+		final int sizeY = ce.getComponent().getHeight();
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				updateCanvasSize(sizeX, sizeY);
+			}
+		});
 		//theMessage.setText("Window size is "+sizeX+" x "+sizeY);
 	}
 	
@@ -574,10 +576,10 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 		int baseMapSize = Math.max(height, width);
 		if(baseMapSize <= 200)
 		{
-			sizeOfNewMap = new Dimension(700, baseMapSize+200);
+			sizeOfNewMap = new Dimension(750, baseMapSize+250);
 		}
 		else
-			sizeOfNewMap = new Dimension((baseMapSize)+100, baseMapSize+200);
+			sizeOfNewMap = new Dimension((baseMapSize)+150, baseMapSize+250);
 		loadedMapCanvas.setBaseMapSize(baseMapSize);
 		loadedMapCanvas.setBaseMapHeight(height);
 		loadedMapCanvas.setBaseMapWidth(width);
@@ -607,9 +609,9 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 		int currWinHeight = this.getHeight();
 		int currWinWidth = this.getWidth();
 		int factor = loadedMapCanvas.getFactor();
-		if((((factor*minDimension)+20) < currWinWidth) && (((factor*minDimension)+150) < currWinHeight))
+		if((((factor*minDimension)+50) < currWinWidth) && (((factor*minDimension)+200) < currWinHeight))
 		{
-			if(((((factor+1)*minDimension)+20) < currWinWidth) && ((((factor+1)*minDimension)+150) < currWinHeight))
+			if(((((factor+1)*minDimension)+50) < currWinWidth) && ((((factor+1)*minDimension)+200) < currWinHeight))
 			{
 				loadedMapCanvas.setCurrMapHeight((factor+1)*baseHeight);
 				loadedMapCanvas.setCurrMapWidth((factor+1)*baseWidth);
@@ -629,6 +631,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				repaintCanvases();
 			}
 		}
+		//System.out.println("Factor is: "+factor);
+		//System.out.println("currHeight:  "+loadedMapCanvas.getCurrMapHeight()+"   currWidth: "+loadedMapCanvas.getCurrMapWidth());
 	}
 	
 	public void canvasMaxRestore(int panelX, int panelY)
@@ -640,7 +644,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 		int baseWidth = loadedMapCanvas.getBaseMapWidth();
 		//for(int a = 0; a < 5; a++){
 		int factor = 1;
-		while((((factor*minDimension)+20) < panelX) && (((factor*minDimension)+150) < panelY))
+		while((((factor*minDimension)+50) < panelX) && (((factor*minDimension)+200) < panelY))
 		{
 			factor = factor+1;
 		}
