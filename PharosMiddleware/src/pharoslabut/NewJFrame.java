@@ -535,8 +535,8 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
    
    public void UpdateMap(String s)
    {
-	   String text = jTextField7.getText();
-	   jTextField7.setText(text+ '\n' + s + '\n');
+	   
+	   jTextArea1.append(s);
 	   
    }
    
