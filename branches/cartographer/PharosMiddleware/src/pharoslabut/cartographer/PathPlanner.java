@@ -27,7 +27,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 import playerclient.IRInterface;
 import playerclient.IRListener;
 
-public class PathPlanner implements Position2DListener, IRListener {
+public class PathPlanner {
 	double WIDTH_OF_ROOMBA = 0.38;
 	double SPEED_STEP = .2;
 	private PlayerClient client = null;
@@ -37,8 +37,73 @@ public class PathPlanner implements Position2DListener, IRListener {
 	int left = 1;
 	int right = -1;
 	double bearing = 0;//initially facing right. We're gonna need to modify this and make it 0 only 1 time ever.
-	public static long numIRreadings = 0;
-	static ArrayList<ArrayDeque<Float>> dq;
+	
+	public static String fileName = "log.txt";
+	//public static String serverIP = "10.11.12.10"; // server for SAINTARNOLD
+	//public static String serverIP = "128.83.52.224";
+	public static String serverIP = "128.83.196.249";
+	
+	public PathPlanner (String serverIP, int serverPort, String fileName) {
+		try {
+			client = new PlayerClient(serverIP, serverPort);
+		} catch(PlayerException e) {
+			log("Error connecting to Player: ");
+			log("    [ " + e.toString() + " ]");
+			System.exit (1);
+		}
+		
+		new WorldView();
+		
+		WorldView.createSampleWorldView();
+		
+		if (fileName != null) {
+			flogger = new FileLogger(fileName);
+		}
+
+		new LocationTracker();
+		
+		/////////// ASTAR ///////////////
+		//motors.setSpeed(0, Math.PI/8);
+		//pause(4000);
+		/*motors.setSpeed(0, Math.PI/8);
+		pause(3000);
+		motors.setSpeed(0, -Math.PI/8);
+		pause(6000);
+		motors.setSpeed(0, Math.PI/8);
+		pause(3000);*/
+		LocationTracker.motors.setSpeed(.2, 0);
+		pause(6000);
+
+		
+		//path = pathFind(); // ordered list of coordinates to follow
+		//move(path); //moves according to the path. If there is a problem, choose another point based on LURD
+		//motors.setSpeed(0, 0);
+		//pause(5000);
+		
+		//System.out.println("got a path " + path.size());
+		
+		
+		// STOP THE ROOMBA 
+		LocationTracker.motors.setSpeed(0, 0);
+		pause(2000);
+
+		
+		try {
+			WorldView.printWorldView();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+		try {
+			WorldView.fout.close();
+		} 
+		catch (Exception e) {
+		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
+		}	
+		
+		System.exit(0);		
+	}
 	
 	private List<Square> pathFind(){
 		int side = 9;
@@ -69,91 +134,6 @@ public class PathPlanner implements Position2DListener, IRListener {
 		direction = sector.findPath();	// this exits as soon as it finds a path
 		System.out.println(sector.bestList.size());
 		return sector.bestList;
-	}
-	
-	public PathPlanner (String serverIP, int serverPort, String fileName) {
-		try {
-			client = new PlayerClient(serverIP, serverPort);
-		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
-			System.exit (1);
-		}
-		
-		new LocationTracker();
-		new WorldView();
-		
-		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
-		motors = client.requestInterfacePosition2D(0, 
-				PlayerConstants.PLAYER_OPEN_MODE);
-		
-		motors.addPos2DListener(this); 
-		//MotionArbiter motionArbiter = null;
-		//motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
-
-		if (fileName != null) {
-			flogger = new FileLogger(fileName);
-			//motionArbiter.setFileLogger(flogger);
-		}
-		
-		
-		/////////// IR INTERFACE ///////////////
-		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (ir == null) {
-			System.out.println("unable to connect to IR interface");
-			// TODO
-			//System.exit(1);
-		}
-		ir.addIRListener(this);
-		//////// END OF IR INTERFACING ////////
-		this.writeOdometry(0, 0, 0);
-		// MOTION STRATEGY
-		pause(2000);	// 2 second initialization delay
-		
-		//WorldView.createSampleWorldView();
-		
-		
-		/////////// ASTAR ///////////////
-		//motors.setSpeed(0, Math.PI/8);
-		//pause(4000);
-		/*motors.setSpeed(0, Math.PI/8);
-		pause(3000);
-		motors.setSpeed(0, -Math.PI/8);
-		pause(6000);
-		motors.setSpeed(0, Math.PI/8);
-		pause(3000);*/
-		motors.setSpeed(.2, 0);
-		pause(6000);
-
-		
-		//path = pathFind(); // ordered list of coordinates to follow
-		//move(path); //moves according to the path. If there is a problem, choose another point based on LURD
-		//motors.setSpeed(0, 0);
-		//pause(5000);
-		
-		//System.out.println("got a path " + path.size());
-		
-		
-		// STOP THE ROOMBA 
-		motors.setSpeed(0, 0);
-		pause(2000);
-
-		
-		try {
-			WorldView.printWorldView();
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-		try {
-			WorldView.fout.close();
-		} 
-		catch (Exception e) {
-		      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
-		}	
-		
-		System.exit(0);		
 	}
 	
 	/**
@@ -345,82 +325,6 @@ public class PathPlanner implements Position2DListener, IRListener {
 
 	}
 	
-	
-	public static void writeOdometry(double newX, double newY, double newAngle) {
-		PlayerPose newPose = new PlayerPose();
-		newPose.setPx(newX);
-		newPose.setPy(newY);
-		newPose.setPa(newAngle);
-		(PathPlanner.motors).setOdometry(newPose);
-		return;
-	}
-	
-	
-	
-	public boolean RotateDegrees(double radians, MotionArbiter robot){
-		MotionTask currTask;
-		int time = 5000;
-		//double radiansPerSecond = radians/time;
-		currTask = new MotionTask(Priority.SECOND, 0, -radians);
-		log("Submitting: " + currTask);
-		robot.submitTask(currTask);
-		pause(time);
-		return true;
-	}
-
-	//@Override
-	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		PlayerPose pp = data.getPos();
-		//motors.setOdometry(pp);
-//		if (!(pp.equals(null))) {
-			LocationTracker.updateLocation(pp);
-//		}
-		//System.out.println("compass data = " + pp.getPa());
-		//log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
-		//		+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
-	}
-	
-	public void newPlayerIRData(PlayerIrData data) {
-
-		if (++(PathPlanner.numIRreadings) == 1) {
-			dq = new ArrayList<ArrayDeque<Float>>();
-			
-			for (int i = 0; i < 6; i++) {
-				dq.add(new ArrayDeque<Float>(5));
-			}
-		}
-		
-		float [] window = new float [6];
-		float [] ranges = data.getRanges();
-		//5-wide median filter here
-
-		// add all the ranges to each Deque (one per IR sensor)
-		for (int i = 0; i < 6; i++) {
-			dq.get(i).add(ranges[i]);
-		}
-
-		if (numIRreadings > 4) { // taken at least five IR sample sets
-			for (int i = 0; i < 6; i++) {
-				ArrayList<Float> arr = new ArrayList<Float>(5);
-				Float [] fArray = (Float[]) dq.get(i).toArray(new Float[5]);
-				for (int j = 0; j < 5; j++) {
-					arr.add((Float) fArray[j]);
-				}
-				window[i] = findMedian(arr);
-				dq.get(i).removeFirst(); // scrolling window, make room for next sensor reading
-			}
-		}
-
-		WorldView.recordObstacles(window);
-
-		//System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
-	}
-	
-	public static float findMedian (ArrayList<Float> arr) {
-		Collections.sort(arr);
-		return (float) arr.get(2); // always get 3rd element (in a 5-wide window)
-	}
-	
 	private void pause(int duration) {
 		synchronized(this) {
 			try {
@@ -454,10 +358,6 @@ public class PathPlanner implements Position2DListener, IRListener {
 	 * @param args
 	 *****************************************************/
 	public static void main(String[] args) {
-		String fileName = "log.txt";
-		//String serverIP = "10.11.12.10"; // server for SAINTARNOLD
-		//String serverIP = "128.83.52.224";
-		String serverIP = "128.83.196.249";
 		int serverPort = 6665;
 
 		try {
@@ -485,16 +385,7 @@ public class PathPlanner implements Position2DListener, IRListener {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
 		
-		// TODO
-
-		
-//		try {
-//			WorldView.printWorldView();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-		
+		// TODO		
 		new PathPlanner(serverIP, serverPort, fileName);
 	}
 
