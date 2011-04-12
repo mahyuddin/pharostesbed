@@ -58,19 +58,19 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		compassLogger.start(1, fileName);
 		
 		
-	//	turn_comp(175, motors);
-	//	move_odometry(0.2, motors);
+		turn_comp(-90, motors);
+		move_odometry(0.5, motors);
 		//pause(1000);
 		//move_odometry(0.5, motors);
-	//	turn_comp(180, motors);
+	//	turn_comp(-90, motors);
 	//	turn_comp(45, motors);
 	//	pause(1000);
 	//	move_odometry(0.5, motors);
 	//	move_odometry(0.5, motors);
 	//	pause(1000);
-	//	turn_comp(-90, motors);
+		turn_comp(-90, motors);
 	//	turn_comp(90, motors);
-
+		move_odometry(0.5, motors);
 	//	turn_comp(90, motors);
 	//	turn_comp(90, motors);
 		
@@ -137,6 +137,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 
 		log("Test complete!");
 		compassLogger.stop();
+		motors.removePos2DListener(this);
 		//System.exit(0);
 	}
 	
