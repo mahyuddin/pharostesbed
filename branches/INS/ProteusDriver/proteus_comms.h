@@ -76,7 +76,7 @@ enum{
 };
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE 5
-#define PROTEUS_IR_PACKET_SIZE 12
+#define PROTEUS_IR_PACKET_SIZE 18
 #define PROTEUS_SONAR_PACKET_SIZE 12
 #define PROTEUS_COMPASS_PACKET_SIZE 3
 #define PROTEUS_OPAQUE_PACKET_SIZE 1
@@ -150,14 +150,17 @@ typedef struct {
 	/* Integrated odometric position [m m rad] */
 	double ox, oy, oa;
 
-	/*
-	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
-	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
-	float ir_fr;			//front right SHARP Infrared rangefinder distance, read
-	float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
-	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
-	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
-	*/
+	
+	float ir_1;			
+	float ir_2;			
+	float ir_3;			
+	float ir_4;			
+	float ir_5;			
+	float ir_6;	
+	float ir_7;			
+	float ir_8;			
+	float ir_9;			
+	
 	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
