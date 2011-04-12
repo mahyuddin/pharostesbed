@@ -263,6 +263,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	    }
 	    
 		motors.setSpeed(0,0);
+		motors.resetOdometry();
 		compflag=false;
 		odflag = false;
 	}
