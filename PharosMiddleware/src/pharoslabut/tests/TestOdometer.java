@@ -29,16 +29,28 @@ public class TestOdometer implements Position2DListener{
 	
 	private FileLogger flogger;
 	
-	public TestOdometer(double dist, String fileName) {
-		String serverIP = "localhost";
-		int serverPort = 6665;
+	private String serverAddr;
+	private int serverPort;
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param serverAddr The IP address of the Player server.
+	 * @param serverPort The port on which the Player server is listening.
+	 * @param speed The speed to move at in meters per second.
+	 * @param dist The distance to move in meters.
+	 * @param fileName The name of the file in which to store log data.
+	 */
+	public TestOdometer(String serverAddr, int serverPort, double speed, double dist, String fileName) {
+		this.serverAddr = serverAddr;
+		this.serverPort = serverPort;
 		
 		flogger = new FileLogger(fileName);
 
-		log("Connecting to player server " + serverIP + ":" + serverPort + "...");
+		log("Connecting to player server " + serverAddr + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
-			client = new PlayerClient(serverIP, serverPort);
+			client = new PlayerClient(serverAddr, serverPort);
 		} catch(PlayerException e) {
 			System.err.println("Error connecting to Player: ");
 			System.err.println("    [ " + e.toString() + " ]");
@@ -67,10 +79,10 @@ public class TestOdometer implements Position2DListener{
 		log("Listening for position2D events...");
 		motors.addPos2DListener(this);
 		
-		move(dist);
+		move(speed, dist);
 	}
 	
-	private void move(double dist) {
+	private void move(double speed, double dist) {
 		
 		// busy wait until got compass heading
 		double initHeading = Double.MAX_VALUE;
@@ -81,10 +93,11 @@ public class TestOdometer implements Position2DListener{
 			} catch (NoNewDataException e) {
 				e.printStackTrace();
 			}
+			Thread.yield();
 		}
-		log("Got init heading: " + initHeading);
+		log("Initial heading: " + initHeading);
 		
-		// busy wait until position2d data arrives
+		// busy wait until position2d data arrives (this is the odometer)
 		while (pos2dData == null) {
 			pause(100);
 		}
@@ -144,7 +157,61 @@ public class TestOdometer implements Position2DListener{
 		}
 	}
 	
+	private static void print(String msg) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(msg);
+	}
+	
+	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
+		print("Usage: pharoslabut.tests.TestOdometer <options>\n");
+		print("Where <options> include:");
+		print("\t-server <ip address>: The IP address of the Player Server (default localhost)");
+		print("\t-port <port number>: The Player Server's port number (default 6665)");
+		print("\t-speed <speed>: The speed to move at (default 0.4)");
+		print("\t-dist <distance>: The distance in meters to move (default 5)");
+		print("\t-log <log file>: The log file in which to save results (default TestOdometer.log)");
+		print("\t-debug: enable debug mode");
+	}
+	
 	public static final void main(String[] args) {
-		new TestOdometer(Double.valueOf(args[0]), args[1]);
+		String serverAddr = "localhost";
+		int serverPort = 6665;
+		double speed = 0.4;
+		double dist = 5; 
+		String logFile = "TestOdometer.log";
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-server")) {
+					serverAddr = args[++i];
+				} 
+				else if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-debug") || args[i].equals("-d")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
+				}
+				else if (args[i].equals("-dist")) {
+					dist = Double.valueOf(args[++i]);
+				} 
+				else if (args[i].equals("-speed")) {
+					speed = Double.valueOf(args[++i]);
+				} 
+				else if (args[i].equals("-log")) {
+					logFile = args[++i];
+				}
+				else {
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			usage();
+			System.exit(1);
+		}
+		
+		new TestOdometer(serverAddr, serverPort, speed, dist, logFile);
 	}
 }
