@@ -15,6 +15,7 @@ public class Robot implements Serializable {
     private float velocity;         // might not be needed
     private boolean enqueued;
     private boolean allowed;
+    private long stoppageTime;
 
     /**
      * Class constructor
@@ -32,6 +33,7 @@ public class Robot implements Serializable {
         this.velocity = velocity;
         enqueued = false;
         allowed = false;
+        stoppageTime = 0;
     }
 
 
@@ -117,6 +119,22 @@ public class Robot implements Serializable {
      */
     public void setAllowed(boolean b) {
         this.allowed = b;
+    }
+
+    /**
+     * This method returns the time that the robot should stop at the intersection, in order to avoid collision
+     *  @return stoppageTime
+     */
+    public long getStoppageTime() {
+        return this.stoppageTime;
+    }
+
+    /**
+     *  This method sets the stoppageTime for the robot
+     * @param st
+     */
+    public void setStoppageTime(long st) {
+        this.stoppageTime = st;
     }
 
     /**

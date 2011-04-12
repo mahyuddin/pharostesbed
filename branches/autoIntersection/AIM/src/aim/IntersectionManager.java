@@ -132,11 +132,13 @@ public class IntersectionManager extends Thread {
                     }
                     else
                     {
+                        long ETA_before = robot.getETA();
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
                         nextAvailableETC = nextAvailableETC + timeDifference;
                         robot.setETC(nextAvailableETC);
                         robot.setAllowed(false);
+                        robot.setStoppageTime(robot.getETA() - ETA_before);
                   //      queue.remove();
                         robotsPending.add(robot);
                     }
