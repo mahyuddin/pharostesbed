@@ -346,7 +346,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				theMessage.setText("Incomplete input.");
 			}
 			List <Double> commands = AStar.move_instruction(path, path.first().retrieve());
-			//testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+			testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
 			this.transferFocusUpCycle();
 		}
 		else if(evt.getActionCommand().equals("Abort"))
