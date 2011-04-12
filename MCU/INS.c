@@ -44,7 +44,7 @@
 			}
 
 #define NELEMS(x)  (sizeof(x) / sizeof(x[0]))
-
+                   
 unsigned short tick = 0;
 signed short XDisp=0;
 signed short YDisp=0;
@@ -100,6 +100,11 @@ void INS_Init() {
     Rot_0 = ADC0_In(4);
     for(idx = 0; idx <  NELEMS(Gyro_Table); idx++)
         Gyro_Table[idx].ADC += Rot_0 - Gyro_Table_0;
+        
+    YDisp = 0;
+    XDisp = 0;
+    GyroDisp = 0;
+    YSpeed = 0;
 
     // Start the interrupt!
     TIOS |= 0x40;    // activate TC6 as output compare

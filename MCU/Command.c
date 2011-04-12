@@ -298,7 +298,11 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 		case PROTEUS_OPCODE_SENSORS:
 			processOpcodeSensors();
 			break;*/
-		default: 
+	    case PROTEUS_OPCODE_INS_RESTART:
+            INS_Init();
+            LED_ORANGE1 ^= 1;
+            break;
+	    default: 
 			//LED_ORANGE2 ^= 1; // Command not recognized, toggle LED_RED3
 			break; 
 	} // end switch
