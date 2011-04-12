@@ -32,6 +32,7 @@ void main(void) {
 	SerialDriver_init(57600);//57600 //115200
 	Command_init();
 	INS_Init(); // in INS.h
+	IR_Init();
 	
 	asm cli  // Enable interrupts
 	
@@ -47,5 +48,6 @@ void main(void) {
 		 */
 		TaskHandler_processNextTask();
 		INSPeriodicFG();
+		IRTranslate();
 	} 
 }
