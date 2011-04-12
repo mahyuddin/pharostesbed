@@ -134,7 +134,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 
 		log("Test complete!");
 		compassLogger.stop();
-		System.exit(0);
+		//System.exit(0);
 	}
 	
 	
