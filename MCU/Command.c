@@ -36,8 +36,7 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
-
-//#include "IR.c"
+#include "IR.h"
 
  
 
