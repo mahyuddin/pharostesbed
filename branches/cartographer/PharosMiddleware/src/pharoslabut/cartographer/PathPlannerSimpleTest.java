@@ -90,9 +90,29 @@ public class PathPlannerSimpleTest {
 		new LocationTracker();
 		
 		
-			
+		LocationTracker.motors.setSpeed(0, 0);
+		pause(2000);
+		
 		LocationTracker.motors.setSpeed(0.1, 0);
-		pause (5000);
+		pause (17000);
+		
+		LocationTracker.motors.setSpeed(0, 0);
+		pause (1000);
+		
+		LocationTracker.motors.setSpeed(0, Math.PI/16);
+		pause (4000);
+		
+		LocationTracker.motors.setSpeed(0, 0);
+		pause (1000);
+		
+		LocationTracker.motors.setSpeed(0, -Math.PI/16);
+		pause (8000);
+		
+		LocationTracker.motors.setSpeed(0, 0);
+		pause (1000);
+		
+		LocationTracker.motors.setSpeed(0, Math.PI/16);
+		pause (4000);
 		
 //		double start = LocationTracker.getCurrentLocation()[0];
 //		while (LocationTracker.getCurrentLocation()[0] < (start + 0.85)) {}
@@ -107,7 +127,7 @@ public class PathPlannerSimpleTest {
 //		pause (5000);
 		
 		LocationTracker.motors.setSpeed(0, 0);
-		pause(20000);
+		pause(2000);
 		
 		log("Test complete!");
 
