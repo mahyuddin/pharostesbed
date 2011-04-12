@@ -242,6 +242,8 @@ result_t processTextMessagePacket(proteus_comm_t* r);
 
 result_t processAccelerometerPacket(proteus_comm_t* r);
 
+static inline result_t sendOp(proteus_comm_t* r, uint8_t op);
+
 //int proteus_parse_sensor_packet(proteus_comm_t* r, unsigned char* buf, size_t buflen, uint8_t packcet);
 //int proteus_get_sensors(proteus_comm_t* r, int timeout, uint8_t packet);
 //int proteus_enable_sonar(proteus_comm_t* r);

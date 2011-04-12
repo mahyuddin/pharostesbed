@@ -849,7 +849,7 @@ int Proteus::ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void
 		
 		this->Publish(this->sonar_addr, PLAYER_MSGTYPE_RESP_ACK, PLAYER_SONAR_REQ_GET_GEOM, (void*)&sonar_array);
 	}*/
-	else if(Message::MatchMessage(hdr,PLAYER_MSGTYPE_REQ, PLAYER_OPAQUE_REQ, this->opaque_addr)) {
+	else if(Message::MatchMessage(hdr,PLAYER_MSGTYPE_REQ, PLAYER_OPAQUE_REQ, this->position_addr)) {
 		if (!data) {
 			PLAYER_ERROR("NULL opaque data");
 			return -1;
@@ -863,6 +863,10 @@ int Proteus::ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void
 		//}
 		return 0;
 	}
+    else if(Message::MatchMessage(hdr,PLAYER_MSGTYPE_CMD, 10, this->opaque_addr))  {
+        this->proteus_dev -> statusINSDisplaceRad = this->proteus_dev -> statusINSDisplaceX = this->proteus_dev ->statusINSDisplaceY = 0;
+        sendOp(proteus_dev, 0x6C);
+    }
 	else {
 		gettimeofday(&_currTime, NULL);
 		printf("%ld.%.6ld proteus_driver.cc: ProcessMessage: Unkown message! type=%i, subtype=%i\n",
