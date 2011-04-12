@@ -29,7 +29,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = .75;
+	public static final double MAX_SPEED = .7;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.

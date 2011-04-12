@@ -24,6 +24,11 @@ public class ClientManager {
 		
 		// Start the line follower.  This starts the robot moving following the line.
 		lf.start();
+		
+		// Add the remote intersection manager as a listener to line follower events.
+		// Line follower events include those indicating that the robot is approaching
+		// an intersection.
+		lf.addListener(rim);
 	}
 	
 	/**
