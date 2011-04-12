@@ -48,7 +48,13 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	private Node[][] mapNodeArray;
 	private LinkedList path;
 	private boolean pleaseInitLoc;
+	public boolean startMovement;
+	public boolean abortMovement;
+	private List <Double> commands;
 	private Dimension sizeOfNewMap;
+	private Thread movementThread;
+	testing small_test;
+	Runnable mThread;
 	//private FocusTraversalPolicy ftPolicy;
 	
 /* GUI Constructor
@@ -86,6 +92,23 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			mapNodeArray = interpretMap(map);
 		}
 		path = new LinkedList();
+		
+		mThread = new Runnable(){
+			public void run(){
+				//try{
+					//if(startMovement)
+				//	{
+						small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+				//	}
+				/*} catch(InterruptedException exc){
+					System.out.println("Call to movment thread interrupted");
+					System.exit(1);
+				}*/
+			}
+		};
+		
+		//movementThread = new Thread(mThread);
+		//movementThread.start();
 	}
 	
 	//Make all the objects
@@ -345,8 +368,13 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			{
 				theMessage.setText("Incomplete input.");
 			}
-			List <Double> commands = AStar.move_instruction(path, path.first().retrieve());
-			testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+			if(loadedMapCanvas.getDrawPath())
+			{
+				commands = AStar.move_instruction(path, path.first().retrieve());
+				movementThread = new Thread(mThread);
+				movementThread.start();
+			}
+			//testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
 			this.transferFocusUpCycle();
 		}
 		else if(evt.getActionCommand().equals("Abort"))
@@ -359,6 +387,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			{
 				theMessage.setText("Error.");
 			}
+			this.abortMovement = true;
+			//small_test.abort = true;
 			this.transferFocusUpCycle();
 		}
 		else if(evt.getActionCommand().equals("X Coordinate"))
@@ -490,6 +520,11 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	public void componentShown(ComponentEvent ce)
 	{
 		
+	}
+	
+	public boolean getAbortMovement()
+	{
+		return abortMovement;
 	}
 	
 	public void setMessageDisplay(String m)
@@ -904,6 +939,11 @@ class GUICanvas extends JPanel
 		{
 			repaint();
 		}
+	}
+	
+	public boolean getDrawPath()
+	{
+		return drawPath;
 	}
 	
 	public void setFactor()

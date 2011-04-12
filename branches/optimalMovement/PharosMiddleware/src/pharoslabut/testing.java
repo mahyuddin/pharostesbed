@@ -2,18 +2,20 @@ package pharoslabut;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import pharoslabut.logger.*;
+import playerclient.IRInterface;
+import playerclient.IRListener;
 import playerclient.PlayerClient;
 import playerclient.PlayerException;
 import playerclient.Position2DInterface;
 import playerclient.Position2DListener;
 import playerclient.structures.PlayerConstants;
+import playerclient.structures.ir.PlayerIrData;
 import playerclient.structures.position2d.PlayerPosition2dData;
 
 
-public class testing implements Position2DListener, CompassLoggerEventListener{
+public class testing implements Position2DListener, CompassLoggerEventListener, IRListener {
 	double odreading;
 	double compreading;
 	boolean odflag = false;
@@ -379,4 +381,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		// TODO Auto-generated method stub
 		
 	}
+	
+	@Override
+	public synchronized void newPlayerIRData (PlayerIrData data)
+	{
+		// TODO Auto-generated method stub
+	}
+
+
+	
+	
 }
