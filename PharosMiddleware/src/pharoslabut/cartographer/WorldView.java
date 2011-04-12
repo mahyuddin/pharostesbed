@@ -88,7 +88,7 @@ public class WorldView implements IRListener {
 	public static FileWriter fstream; 
     public static BufferedWriter fout; 
 	
-	public static final int WORLD_SIZE = 72;					// initial dimensions of "world" (below)
+	public static final int WORLD_SIZE = 120;					// initial dimensions of "world" (below)
 	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
 	public static ArrayList<OrderedPair> pathTracker; 
@@ -285,7 +285,7 @@ public class WorldView implements IRListener {
 	 * @author Kevin Boos
 	 * @param dist: an array of the 6 IR distance values (float types). order: FL, FC, FR, RR, RC, RL
 	 */
-	public static synchronized void recordObstacles(float [] distIR) {
+	public static synchronized void recordObstacles(float [] distIR, double [] curLoc) {
 		// extract IR data from dist[], dist data is in mm, convert back to m
 		/*float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
 		float frontCenterRange 	= WorldView.calibrateIR(distIR[1] / 1000);
@@ -303,7 +303,6 @@ public class WorldView implements IRListener {
 		
 		System.out.println("FL=" + frontLeftRange + ", FC=" + frontCenterRange + ", FR=" + frontRightRange + ", RL=" + rearLeftRange + ", RC=" + rearCenterRange + ", RR=" + rearRightRange);
 		
-		double [] curLoc = LocationTracker.getCurrentLocation();
 		double xPos 	= curLoc[0]; 
 		double yPos 	= curLoc[1];
 		double curAngle	= curLoc[2];
@@ -684,6 +683,8 @@ public class WorldView implements IRListener {
 	
 	public void newPlayerIRData(PlayerIrData data) {
 
+		double [] curLoc = LocationTracker.getCurrentLocation();
+		
 		if (++(numIRreadings) == 1) {
 			dq = new ArrayList<ArrayDeque<Float>>();
 			
@@ -716,7 +717,7 @@ public class WorldView implements IRListener {
 			}
 		}
 
-		WorldView.recordObstacles(window);
+		WorldView.recordObstacles(window, curLoc);
 
 //		System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
 	}
