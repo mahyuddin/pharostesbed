@@ -18,6 +18,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	double compreading;
 	boolean odflag = false;
 	boolean compflag = false;
+	boolean abort = false;
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	List <Double> CompLookUp;
@@ -91,6 +92,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	 */
 		for (int i = 0; i < command.size(); i++)
 		{
+			System.out.println("Abort button was pushed: "+abort);
+			
 			if(Math.abs(command.get(i)) >= 10.0)
 			{
 				System.out.println(command.get(i));
