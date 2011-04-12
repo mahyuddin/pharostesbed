@@ -22,7 +22,10 @@
 package playerclient;
 
 import java.io.IOException;
+import java.util.Enumeration;
+import java.util.Vector;
 
+import pharoslabut.logger.CompassLoggerEventListener;
 import playerclient.structures.PlayerMsgHdr;
 import playerclient.structures.PlayerPose;
 import playerclient.structures.ir.PlayerIrData;
@@ -50,7 +53,7 @@ public class IRInterface extends PlayerDevice {
     private boolean      readyPidata = false;
     private PlayerIrPose pipose;
     private boolean      readyPipose = false;
-
+    private Vector <IRListener> listeners = new Vector  <IRListener>();
     /**
      * Constructor for IRInterface.
      * @param pc a reference to the PlayerClient object
@@ -64,14 +67,15 @@ public class IRInterface extends PlayerDevice {
         try {
         	switch (header.getSubtype ()) {
         		case PLAYER_IR_DATA_RANGES: {
+        		/*	
         			// Buffer for reading voltages_count
         			byte[] buffer = new byte[4];
         			// Read voltages_count
         			is.readFully (buffer, 0, 4);
         			
         			// Begin decoding the XDR buffer
-        			XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
-        			xdr.beginDecoding ();
+        		//	XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
+        		//	xdr.beginDecoding ();
         			int voltagesCount = xdr.xdrDecodeInt ();
         			xdr.endDecoding   ();
         			xdr.close ();
@@ -85,6 +89,10 @@ public class IRInterface extends PlayerDevice {
         			float[] voltages = xdr.xdrDecodeFloatVector ();
         			xdr.endDecoding   ();
         			xdr.close ();
+        		*/	
+        			//throw away first 8B
+        			byte [] buffer = new byte[4];
+        			is.readFully(buffer,0, 8);
         			
         			// Buffer for reading ranges_count
         			buffer = new byte[4];
@@ -92,13 +100,14 @@ public class IRInterface extends PlayerDevice {
         			is.readFully (buffer, 0, 4);
         			
         			// Begin decoding the XDR buffer
-        			xdr = new XdrBufferDecodingStream (buffer);
+        			XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
         			xdr.beginDecoding ();
         			int rangesCount = xdr.xdrDecodeInt ();
         			xdr.endDecoding   ();
         			xdr.close ();
         			
         			// Buffer for reading range values
+        			// TODO: From cartographer group, this is set to rangesCount * 4 + 4
         			buffer = new byte[PLAYER_IR_MAX_SAMPLES * 4];
         			// Read range values
         			is.readFully (buffer, 0, rangesCount * 4);
@@ -110,12 +119,15 @@ public class IRInterface extends PlayerDevice {
         			
         			pidata = new PlayerIrData ();
         			
-        			pidata.setVoltages_count (voltagesCount);
-        			pidata.setVoltages       (voltages);
+        			//we do not use voltages and voltages_count in the proteus_driver.cc
+        			
+        			//pidata.setVoltages_count (voltagesCount);
+        			//pidata.setVoltages       (voltages);
         			pidata.setRanges_count   (rangesCount);
         			pidata.setRanges         (ranges);
         			
         			readyPidata = true;
+        			notifyIRListeners();
         			break;
         		}
         	}
@@ -207,6 +219,27 @@ public class IRInterface extends PlayerDevice {
         		("[IR] : Error while XDR-encoding POWER request: " + 
         				e.toString(), e);
         }
+    }
+    
+    /**
+     * Add a listener to this object.  This listener is notified each time a new PlayerIrData 
+     * is available.
+     * 
+     * @param listener  The listener to add.
+     * Added by hbcheng
+     */
+    
+    public void addIRListener (IRListener listen)
+    {
+    	listeners.add(listen);
+    }
+    
+    private void notifyIRListeners() {
+    	Enumeration<IRListener> e = listeners.elements();
+    	while (e.hasMoreElements()) {
+    		e.nextElement().newPlayerIRData(pidata);
+    		//System.out.println("found more elements");
+    	}
     }
     
     /**
