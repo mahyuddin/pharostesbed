@@ -31,41 +31,7 @@ public class PathPlannerSimpleTest {
 	public static String fileName = "log.txt";
 	public static PlayerClient client = null;
 	public static FileLogger flogger = null;
-	
-	
- 
 	//public final PlayerMsgHdr PLAYER_MSGTYPE_DATA           = 1;
-
-	List<Square> pathFind(){
-		int side = 9;
-		int radius = side/2;
-		int direction = -1;
-		OrderedPair start;
-		//start = new OrderedPair(radius,radius);	// middle of the sector
-		start = new OrderedPair(0,0);	// start at the bottom left corner
-		
-		System.out.println("entered sector");
-		switch(direction){
-		case 0:
-			start.y+=32;
-			break;
-		case 1:
-			start.y-=32;
-			break;
-		case 2:
-			start.x-=32;
-			break;
-		case 3:
-			start.x+=32;
-			break;
-		default:
-			break;
-		}
-		MapSector sector = new MapSector(side,side,start, radius);
-		direction = sector.findPath();	// this exits as soon as it finds a path
-		System.out.println(sector.bestList.size());
-		return sector.bestList;
-	}
 	
 	public PathPlannerSimpleTest (String serverIP, int serverPort, String fileName) {
 		try {
@@ -81,11 +47,9 @@ public class PathPlannerSimpleTest {
 		
 		WorldView.createSampleWorldView();
 		
-
 		if (fileName != null) {
 			flogger = new FileLogger(fileName);
 		}
-
 
 		new LocationTracker();
 		
@@ -150,8 +114,37 @@ public class PathPlannerSimpleTest {
 
 	}
 
-
-
+	List<Square> pathFind(){
+		int side = 9;
+		int radius = side/2;
+		int direction = -1;
+		OrderedPair start;
+		//start = new OrderedPair(radius,radius);	// middle of the sector
+		start = new OrderedPair(0,0);	// start at the bottom left corner
+		
+		System.out.println("entered sector");
+		switch(direction){
+		case 0:
+			start.y+=32;
+			break;
+		case 1:
+			start.y-=32;
+			break;
+		case 2:
+			start.x-=32;
+			break;
+		case 3:
+			start.x+=32;
+			break;
+		default:
+			break;
+		}
+		MapSector sector = new MapSector(side,side,start, radius);
+		direction = sector.findPath();	// this exits as soon as it finds a path
+		System.out.println(sector.bestList.size());
+		return sector.bestList;
+	}
+	
 	private void pause(int duration) {
 		synchronized(this) {
 			try {
