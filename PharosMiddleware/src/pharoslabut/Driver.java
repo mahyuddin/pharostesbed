@@ -16,10 +16,10 @@ import javax.swing.*;
 **																		**
 *************************************************************************/
 
-class Driver implements ActionListener, KeyListener, WindowStateListener 
+class Driver implements ActionListener, KeyListener, WindowStateListener
 {
 	private GUI pavPanel;
-	private JFrame f;
+	private JFrame f;;
 	Driver(){
 		f = new JFrame();
 		pavPanel = new GUI();
@@ -38,6 +38,7 @@ class Driver implements ActionListener, KeyListener, WindowStateListener
 				pavPanel.canvasMaxRestore(800, 700);
 			}
 		});
+		
 	}
 	
 	private JMenuBar createMainMenu()
