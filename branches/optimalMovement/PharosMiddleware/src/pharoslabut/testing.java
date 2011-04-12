@@ -57,8 +57,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		compassLogger.start(1, fileName);
 		
 		
-		turn_comp(175, motors);
-		move_odometry(0.2, motors);
+	//	turn_comp(175, motors);
+	//	move_odometry(0.2, motors);
 		//pause(1000);
 		//move_odometry(0.5, motors);
 	//	turn_comp(180, motors);
@@ -145,6 +145,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 			speed = speed * -1;
 			distance = distance* -1;
 			}
+		motors.resetOdometry();
 		System.out.println("move");
 		System.out.println(odflag);
 		while(!odflag){
@@ -155,6 +156,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		        starting = odreading;
 			}
 		}
+		starting = 0;
 		System.out.println("starting od " + starting);
 		motors.setSpeed(speed, 0);
 		/*
@@ -237,7 +239,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 		{
 			if (i == table_size)
 				i = 0;
-			if (starting >= CompLookUp.get(i)-0.03 && starting <= CompLookUp.get(i)+0.03) {
+			if (starting >= CompLookUp.get(i)-0.02 && starting <= CompLookUp.get(i)+0.02) {
 				if (Next < 0 && Math.abs(Next) > i) {
 					Next = table_size + Next;
 				}
@@ -254,7 +256,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	
 		motors.setSpeed(0,speed);
 
-	    while((ending - 0.03) > (compreading + Math.PI) || (compreading + Math.PI) > (ending + 0.03)) {
+	    while((ending - 0.02) > (compreading + Math.PI) || (compreading + Math.PI) > (ending + 0.02)) {
 			synchronized(this) {
 		    	try {
 		            wait();
@@ -263,9 +265,9 @@ public class testing implements Position2DListener, CompassLoggerEventListener{
 	    }
 	    
 		motors.setSpeed(0,0);
-		motors.resetOdometry();
 		compflag=false;
 		odflag = false;
+		motors.resetOdometry();
 	}
 
 	private void pause(int duration) {
