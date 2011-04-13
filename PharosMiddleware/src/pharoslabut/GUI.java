@@ -12,7 +12,7 @@ import java.awt.image.*;
 /*************************************************************************
 **PAV GUI																**
 **Author: Devin Murphy													**
-**Date: 1/24/2011														**
+**Date: 4/12/2011														**
 **Version: 1.1															**
 **Last Modified: 2/27/2011												**
 **About:																**
@@ -53,7 +53,9 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	private List <Double> commands;
 	private Dimension sizeOfNewMap;
 	private Thread movementThread;
+	GUI thisGUI;
 	testing small_test;
+	threadAbortTest taTest;
 	Runnable mThread;
 	//private FocusTraversalPolicy ftPolicy;
 	
@@ -92,13 +94,14 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			mapNodeArray = interpretMap(map);
 		}
 		path = new LinkedList();
-		
+		thisGUI = this;
 		mThread = new Runnable(){
 			public void run(){
 				//try{
 					//if(startMovement)
 				//	{
-						small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+						//small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
+						taTest = new threadAbortTest(thisGUI);
 				//	}
 				/*} catch(InterruptedException exc){
 					System.out.println("Call to movment thread interrupted");
@@ -372,6 +375,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			{
 				commands = AStar.move_instruction(path, path.first().retrieve());
 				movementThread = new Thread(mThread);
+				this.abortMovement = false;
 				movementThread.start();
 			}
 			//testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
@@ -992,16 +996,12 @@ class GUICanvas extends JPanel
 		*/
 		//System.out.println("Map Width: "+currMapWidth+"   Map Height: "+currMapHeight);
 		g.drawImage(theMap, 0, 0, this.currMapWidth, this.currMapHeight, null);
-		g.setXORMode(Color.red);
-		g.fillOval(ddX, ddY, factor, factor);
-		g.setXORMode(Color.yellow);
-		g.fillOval(dcX, dcY, factor, factor);
 		if(drawPath && (path!=null))
 		{
 			if(path.isEmpty()==false)
 			{
 				LinkedListIterator itr = path.first();
-				g.setXORMode(Color.blue);
+				g.setColor(Color.YELLOW);
 	            for(;itr.isValid();itr.advance())
 	            {
 	            	int tempx = ((int)itr.retrieve().getX())*factor;
@@ -1010,6 +1010,10 @@ class GUICanvas extends JPanel
 	            }
 			}
 		}
+		g.setColor(Color.GREEN);
+		g.fillOval(ddX, ddY, factor, factor);
+		g.setColor(Color.BLUE);
+		g.fillOval(dcX, dcY, factor, factor);
 		g.setPaintMode();
 	}
 }
