@@ -10,7 +10,7 @@ import javax.swing.*;
 **Author: Devin Murphy													**
 **Date: 1/24/2011														**
 **Version: 1.1															**
-**Last Modified: 2/27/2011												**
+**Last Modified: 4/12/2011												**
 **About:																**
 **																		**
 **																		**
@@ -19,7 +19,7 @@ import javax.swing.*;
 class Driver implements ActionListener, KeyListener, WindowStateListener
 {
 	private GUI pavPanel;
-	private JFrame f;;
+	private JFrame f;
 	Driver(){
 		f = new JFrame();
 		pavPanel = new GUI();
