@@ -100,8 +100,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				//try{
 					//if(startMovement)
 				//	{
-						//small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
-						taTest = new threadAbortTest(thisGUI);
+						small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
+						//taTest = new threadAbortTest(thisGUI);
 				//	}
 				/*} catch(InterruptedException exc){
 					System.out.println("Call to movment thread interrupted");
