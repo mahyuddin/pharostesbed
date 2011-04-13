@@ -35,7 +35,7 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
-//#include "Sharp_IR.h"
+#include "Sharp_IR.h"
 
 
 /**
@@ -170,6 +170,39 @@ void Command_sendMessagePacket(char* message) {
 	}
 }
 
+
+/**
+ * Function: Command_sendIRPacket()
+ * Input: None 
+ * Output: None
+ * Send IR data to Proteus
+ * Packet format:
+ * BEGIN Packet
+ * PROTEUS_IR_PACKET
+ * Front IR (1 Byte)
+ * Right IR (1 Byte)
+ * Left IR (1 Byte)
+ * END Packet
+ * Added by Le Wang on Apr. 13, 2011
+ */
+void Command_sendIRPacket(){
+  uint8_t outToSerial[MAX_PACKET_LEN];
+  uint16_t indx = 0; // an index into the _outToSerial array
+  uint16_t i;
+  outToSerial[indx++] = PROTEUS_BEGIN; //Package BEGIN packet
+  outToSerial[indx++] = PROTEUS_COMPASS_PACKET; //Identify as IR packet
+  outToSerial[indx++] = IR_getFront(); //Package Front IR data
+  outToSerial[indx++] = IR_getRight(); //Package Right IR data (mounted left, facing right)
+  outToSerial[indx++] = IR_getLeft(); //Package Left IR data (mounted right, facing left)
+  outToSerial[indx++] = PROTEUS_END; //Package END packet
+  //Send all IR data through Serial Port
+  for(i=0; i<indx; i++){
+  SerialDriver_sendByte(outToSerial[i]);
+  }
+
+}
+
+
 /**
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
@@ -177,6 +210,7 @@ void Command_sendData() {
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
 		Command_sendOdometryPacket();
+		Command_sendIRPacket();
 		Compass_getHeading();
 	} else {
 		LED_GREEN2 = LED_OFF;
