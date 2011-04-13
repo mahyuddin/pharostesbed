@@ -185,7 +185,7 @@ void Command_sendMessagePacket(char* message) {
  * END Packet
  * Added by Le Wang on Apr. 13, 2011
  */
-void Command_sendIRPacket(){
+void Command_sendIRPacket(void){
   uint8_t outToSerial[MAX_PACKET_LEN];
   uint16_t indx = 0; // an index into the _outToSerial array
   uint16_t i;
