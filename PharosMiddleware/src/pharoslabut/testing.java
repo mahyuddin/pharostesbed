@@ -15,6 +15,12 @@ import playerclient.structures.ir.PlayerIrData;
 import playerclient.structures.position2d.PlayerPosition2dData;
 
 
+/*
+ * testing.java
+ * Purpose: This class creates a testing object which implements the movement instructions.
+ * Authors: Harvey Cheng and Aniwar Ibrahim
+ * Modified Date: 04/13/11
+ */
 public class testing implements Position2DListener, CompassLoggerEventListener, IRListener {
 	double odreading;
 	double compreading;
@@ -61,8 +67,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		compassLogger.start(1, fileName);
 		
 		
-		turn_comp(-90, motors);
-		move_odometry(0.5, motors);
+	//	turn_comp(-90, motors);
+	//	move_odometry(0.5, motors);
 		//pause(1000);
 		//move_odometry(0.5, motors);
 	//	turn_comp(-90, motors);
@@ -71,9 +77,9 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	//	move_odometry(0.5, motors);
 	//	move_odometry(0.5, motors);
 	//	pause(1000);
-		turn_comp(-90, motors);
+	//	turn_comp(-90, motors);
 	//	turn_comp(90, motors);
-		move_odometry(0.5, motors);
+	//	move_odometry(0.5, motors);
 	//	turn_comp(90, motors);
 	//	turn_comp(90, motors);
 		
@@ -95,9 +101,13 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	 */
 		for (int i = 0; i < command.size(); i++)
 		{
+
+			//System.out.println("Abort button was pushed: "+abort);
+
 			if(pavGUI.abortMovement){
 				break;
 			}
+
 			
 			if(Math.abs(command.get(i)) >= 10.0)
 			{
@@ -165,12 +175,12 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		        starting = odreading;
 			}
 		}
+		//NOTE: this is a hack, since setOdometry() is asynchronous.
 		starting = 0;
 		System.out.println("starting od " + starting);
+		
 		motors.setSpeed(speed, 0);
-		/*
-		 * TODO: needs new odometry driver
-		 */
+	
 	    while((starting + distance - 0.04) > odreading) {
 	    	synchronized(this) {
 		    	try {
@@ -192,33 +202,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	}
 	
 	
-	private void circle(Position2DInterface motors){
-		double starting = 0;
-		double speed = 0.2;
-		
-		while(!compflag){
-			synchronized(this) {
-				try {
-		            wait();
-		        } catch (InterruptedException e) {}
-		        starting = compreading;
-			}
-		}
-		
-		motors.setSpeed(0,speed);
-		
-	    while(true) {
-	    	synchronized(this) {
-		    	try {
-		            wait();
-		        } catch (InterruptedException e) {}
-	    	}
-	    }
-		
-	    //motors.setSpeed(0,0);
-		
-	}
-	
 	private void turn_comp(double angle, Position2DInterface motors){
 		double speed = 0.1;
 		double starting = 0;
@@ -230,9 +213,10 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		if (angle < 0) {
 			speed = speed * -1;
 			}
-		System.out.println(compflag);
+		//	System.out.println(compflag);
 		/*
-		 * TODO: need to check this
+		 * TODO: compflag sometimes changes to true even though we have manually set to false at the end of this method.
+		 * 		 temprarily fixed by setting it to false at the end of move_odometry as well.
 		 */
 		while(!compflag){
 			synchronized(this) {
@@ -278,8 +262,35 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		odflag = false;
 		motors.resetOdometry();
 	}
+	
+	private void circle(Position2DInterface motors){
+		double starting = 0;
+		double speed = 0.2;
+		
+		while(!compflag){
+			synchronized(this) {
+				try {
+		            wait();
+		        } catch (InterruptedException e) {}
+		        starting = compreading;
+			}
+		}
+		
+		motors.setSpeed(0,speed);
+		
+	    while(true) {
+	    	synchronized(this) {
+		    	try {
+		            wait();
+		        } catch (InterruptedException e) {}
+	    	}
+	    }
+		
+	    //motors.setSpeed(0,0);
+		
+	}
 
-	private void pause(int duration) {
+	private void pause (int duration) {
 		synchronized(this) {
 			try {
 				wait(duration);
@@ -350,13 +361,13 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
 		System.out.println("ShowGUI: " + showGUI);
-		List<Double> command = new ArrayList<Double>();
+	//	List<Double> command = new ArrayList<Double>();
 		
-		//command.add(-3.0);
+//		command.add(-3.0);
 //		command.add(14.0);
 //		command.add(1.0);
-		//command.add(10.0);
-		//command.add(0.0);
+//		command.add(10.0);
+//		command.add(0.0);
 //		command.add(-10.0);
 		
 		
