@@ -12,11 +12,9 @@ import javax.swing.*;
  */
 public class DisplayQueue extends JFrame
 {
-    private JPanel queuePanel;
     private final int cellWidth = 300;
     private final int cellHeight = 100;
     private final int maxSize = aim.RobotsPriorityQueue.getDefaultCapacity();
-    private GridLayout gridLayout;
     private int xPosition;
     private int yPosition;
 //    private final int maxSize = 6;
@@ -24,8 +22,9 @@ public class DisplayQueue extends JFrame
     public DisplayQueue()
     {
         super("Robots Priority Queue");
-        setPreferredSize(new Dimension(1500,700) );
+        setPreferredSize(new Dimension(700,700) );
         setBackground(Color.WHITE);
+        this.repaint();
 /*
         Container content = this.getContentPane();
         content.setBackground(Color.lightGray);
@@ -37,7 +36,6 @@ public class DisplayQueue extends JFrame
         add(queueTitle);
         content.add(queueTitle, BorderLayout.NORTH);
 */
-        gridLayout = new GridLayout(maxSize,1);
 
     }
 
@@ -71,13 +69,13 @@ public class DisplayQueue extends JFrame
     @Override
     public void paint(Graphics g)
     {
- //       super.paintComponent(g);
+        super.paint(g);
         xPosition = 10;
         yPosition = 70;
         Graphics2D graphics2 = (Graphics2D) g;
         Font font = new Font("Arial", Font.BOLD, 22);
         graphics2.setFont(font);
-        graphics2.drawString("Robots Queue", xPosition + 80, 55);
+        graphics2.drawString("Robots Priority Queue", xPosition + 40, 55);
 
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
@@ -98,12 +96,10 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
             s = "Estimated time of clearance (ETC): " + robot.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
-            s = "Velocity: " + robot.getVelociy();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
             s = "Enqueued: " + robot.isEnqueued();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
             s = "Allowed: " + robot.isAllowed();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
             
             yPosition += cellHeight;
         }
@@ -113,7 +109,7 @@ public class DisplayQueue extends JFrame
         yPosition = 70;
         font = new Font("Arial", Font.BOLD, 22);
         graphics2.setFont(font);
-        graphics2.drawString("Robots Completed", xPosition + 80, 55);
+        graphics2.drawString("Robots Completed", xPosition + 60, 55);
 
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
@@ -134,51 +130,15 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
             s = "Estimated time of clearance (ETC): " + robot.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
-            s = "Velocity: " + robot.getVelociy();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
             s = "Enqueued: " + robot.isEnqueued();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
             s = "Allowed: " + robot.isAllowed();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
 
             yPosition += cellHeight;
         }
 
-
-        xPosition = 690;
-        yPosition = 70;
-        font = new Font("Arial", Font.BOLD, 22);
-        graphics2.setFont(font);
-        graphics2.drawString("Robots Pending", xPosition + 80, 55);
-
-        font = new Font("Arial", Font.PLAIN, 12);
-        graphics2.setFont(font);
-        s = "";
-        LinkedList<aim.Robot> robotsPending = aim.IntersectionManager.getRobotsPending();
-
-        while(! robotsPending.isEmpty() )
-        {
-            Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
-            graphics2.draw(rectangle);
-
-            aim.Robot robot = robotsPending.removeFirst();
-            s = "Robot ID " + robot.getID();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
-            s = "Lane Specifications: " + robot.getLaneSpecs();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
-            s = "Estimated time of arrival (ETA): " + robot.getETA();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
-            s = "Estimated time of clearance (ETC): " + robot.getETC();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
-            s = "Velocity: " + robot.getVelociy();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
-            s = "Enqueued: " + robot.isEnqueued();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
-            s = "Allowed: " + robot.isAllowed();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
-
-            yPosition += cellHeight;
-        }
+        this.repaint(500);
     }
 
     public void draw()

@@ -14,7 +14,6 @@ public class IntersectionManager extends Thread {
 
     private long nextAvailableETC;
     private static LinkedList<Robot> robotsCompleted;
-    private static LinkedList<Robot> robotsPending;
 
     /**
      * default constructor
@@ -24,7 +23,6 @@ public class IntersectionManager extends Thread {
     {
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
-        robotsPending = new LinkedList<Robot>();
     }
 
     /**
@@ -34,7 +32,7 @@ public class IntersectionManager extends Thread {
      */
     public boolean isAllowedAccess(Robot r)
     {
-        if( nextAvailableETC < r.getETA() )
+        if( nextAvailableETC <= r.getETA() )
             return true;
         return false;
     }
@@ -51,17 +49,6 @@ public class IntersectionManager extends Thread {
         return tempList;
     }
 
-    public static LinkedList<Robot> getRobotsPending()
-    {
-        LinkedList<Robot> tempList = new LinkedList<Robot>();
-        Iterator iterator = robotsPending.iterator();
-        while(iterator.hasNext())
-        {
-            Robot robot = (Robot) iterator.next();
-            tempList.add(robot);
-        }
-        return tempList;
-    }
 
     /**
      * <pre>
@@ -123,27 +110,25 @@ public class IntersectionManager extends Thread {
                     Robot robot = queue.peek();
                     if(isAllowedAccess(robot) )
                     {
+                        System.out.print("nextAvailableETC before :  " + nextAvailableETC);
                         this.nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
                         robot.setAllowed(true);
                         queue.remove();
                         robotsCompleted.add(robot);
-                        if( robotsPending.contains(robot) )
-                            robotsPending.remove(robot);
+                        System.out.println(" --- nextAvailableETC after :  " + nextAvailableETC);
                     }
                     else
                     {
-                        long ETA_before = robot.getETA();
+                        System.out.println("robot " + robot.getID() + " is not allowed, nextavailableETC = " + nextAvailableETC + "robot's ETA: " + robot.getETA());
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
-                        nextAvailableETC = nextAvailableETC + timeDifference;
-                        robot.setETC(nextAvailableETC);
+                //        nextAvailableETC = nextAvailableETC + timeDifference;
+                        robot.setETC(nextAvailableETC + timeDifference);
                         robot.setAllowed(false);
-                        robot.setStoppageTime(robot.getETA() - ETA_before);
                   //      queue.remove();
-                        robotsPending.add(robot);
                     }
+                    Thread.sleep(3000);
                 }
-                Thread.sleep(2000);
             }
             catch(Exception e)
             { e.printStackTrace(); }

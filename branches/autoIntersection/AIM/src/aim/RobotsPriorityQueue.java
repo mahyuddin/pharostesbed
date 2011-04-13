@@ -1,6 +1,7 @@
 package aim;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
@@ -71,15 +72,29 @@ public class RobotsPriorityQueue
 
     /**
      * test
+     * @throws InterruptedException
      */
     public static void test() throws InterruptedException
     {
- //       Thread.sleep(1000);
-        enqueue( new Robot(0, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
-        enqueue( new Robot(1, "laneSpecs", (long)11, (long)1.3, (float)1.4) );
-        enqueue( new Robot(2, "laneSpecs", (long)10, (long)1.3, (float)1.4) );
-        enqueue( new Robot(3, "laneSpecs", (long)19, (long)1.3, (float)1.4) );
-        enqueue( new Robot(4, "laneSpecs", (long)8, (long)1.3, (float)1.4) );
+        long offset = 5;
+
+        long ETA = new Date().getTime() - Main.startTime;
+        enqueue( new Robot(0, "laneSpecs", ETA, ETA+offset ) );
+
+        ETA += 2;
+        enqueue( new Robot(1, "laneSpecs", ETA, ETA+offset ) );
+
+        ETA += 10;
+        enqueue( new Robot(2, "laneSpecs", ETA, ETA+offset ) );
+
+        ETA += 4;
+        enqueue( new Robot(3, "laneSpecs", ETA, ETA+offset ) );
+
+        ETA += 5;
+        enqueue( new Robot(4, "laneSpecs", ETA, ETA+offset ) );
+
+        System.out.println(queue);
+        
  //       enqueue( new Robot(5, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
  //       enqueue( new Robot(6, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
  //       enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );

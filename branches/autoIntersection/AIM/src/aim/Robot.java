@@ -1,7 +1,6 @@
 package aim;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * Creates a new Object Robot
@@ -12,10 +11,8 @@ public class Robot implements Serializable {
     private String laneSpecs;
     private long ETA;
     private long ETC;
-    private float velocity;         // might not be needed
     private boolean enqueued;
     private boolean allowed;
-    private long stoppageTime;
 
     /**
      * Class constructor
@@ -23,17 +20,16 @@ public class Robot implements Serializable {
      * @param laneSpecs Robot's lane specification (direction, path, lane Number)
      * @param ETA Robot's estimated time of arrival (at the intersection)
      * @param ETC Robot's estimated time of clearance (after crossing the intersection)
-     * @param velocity Robot's velocity (when sending the request)
      */
-    public Robot(int id, String laneSpecs, long ETA, long ETC, float velocity) {
+    public Robot(int id, String laneSpecs, long ETA, long ETC) {
         this.id = id;
         this.laneSpecs = laneSpecs;
-        this.ETA = new Date().getTime() - Main.startTime + ETA;
-        this.ETC = new Date().getTime() - Main.startTime + ETC;
-        this.velocity = velocity;
+        this.ETA = ETA;
+        this.ETC = ETC;
+//        this.ETA = new Date().getTime() - Main.startTime + ETA;
+//        this.ETC = new Date().getTime() - Main.startTime + ETC;
         enqueued = false;
         allowed = false;
-        stoppageTime = 0;
     }
 
 
@@ -63,7 +59,8 @@ public class Robot implements Serializable {
      * @param eta The estimated time of arrival
      */
     public void setETA(long eta) {
-        this.ETA = eta + new Date().getTime() - Main.startTime;
+        this.ETA = eta;
+//        this.ETA = eta + new Date().getTime() - Main.startTime;
     }
 
     /**
@@ -78,14 +75,8 @@ public class Robot implements Serializable {
      * @param etc The estimated time of clearance
      */
     public void setETC(long etc) {
-        this.ETC = etc + new Date().getTime() - Main.startTime;
-    }
-
-    /**
-     *  @return velocity
-     */
-    public float getVelociy() {
-        return this.velocity;
+        this.ETC = etc;
+//        this.ETC = etc + new Date().getTime() - Main.startTime;
     }
 
     /**
@@ -121,21 +112,6 @@ public class Robot implements Serializable {
         this.allowed = b;
     }
 
-    /**
-     * This method returns the time that the robot should stop at the intersection, in order to avoid collision
-     *  @return stoppageTime
-     */
-    public long getStoppageTime() {
-        return this.stoppageTime;
-    }
-
-    /**
-     *  This method sets the stoppageTime for the robot
-     * @param st
-     */
-    public void setStoppageTime(long st) {
-        this.stoppageTime = st;
-    }
 
     /**
      * This method overrides the toString() method
@@ -148,8 +124,8 @@ public class Robot implements Serializable {
         output += "laneSpecs : " + laneSpecs + "\n";
         output += "ETA : " + ETA + "\n";
         output += "ETC : " + ETC + "\n";
-        output += "velocity : " + velocity + "\n";
         output += "enqueued : " + enqueued + "\n";
+        output += "allowed : " + allowed + "\n";
         return output;
     }
 
