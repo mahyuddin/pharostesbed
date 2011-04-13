@@ -20,13 +20,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	double compreading;
 	boolean odflag = false;
 	boolean compflag = false;
-	boolean abort = false;
+	GUI pavGUI;
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
 	List <Double> CompLookUp;
 	int table_size = 0;
 	
-	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command) {
+	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command, GUI gui) {
+		pavGUI = gui;
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 			
@@ -94,7 +95,9 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	 */
 		for (int i = 0; i < command.size(); i++)
 		{
-			System.out.println("Abort button was pushed: "+abort);
+			if(pavGUI.abortMovement){
+				break;
+			}
 			
 			if(Math.abs(command.get(i)) >= 10.0)
 			{
@@ -357,7 +360,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 //		command.add(-10.0);
 		
 		
-		new testing(serverIP, serverPort, fileName, showGUI, command);
+		//new testing(serverIP, serverPort, fileName, showGUI, command);
 
 	}
 	
