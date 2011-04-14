@@ -37,20 +37,20 @@
 */
 
 unsigned short IR_getLeft(void){
-  unsigned char raw;
-  raw = (unsigned char)ADC_In(LEFT);
+  unsigned short raw;
+  raw = ADC_In(LEFT);
   return raw; //Left sensor (mounted right, facing left)
 }
 
 unsigned short IR_getFront(void){
-  unsigned char raw;
-  raw = (unsigned char)ADC_In(FRONT);
+  unsigned short raw;
+  raw = ADC_In(FRONT);
   return raw; //Front sensor
 }
 
 unsigned short IR_getRight(void){
-  unsigned char raw;
-  raw = (unsigned char)ADC_In(RIGHT);
+  unsigned short raw;
+  raw = ADC_In(RIGHT);
   return raw; //Right sensor (mounted left, facing right)
 }
 
