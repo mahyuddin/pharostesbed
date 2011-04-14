@@ -33,6 +33,7 @@ void main(void) {
 	Compass_init();
 	SerialDriver_init(57600);
 	Command_init();
+	ADC_Init();
 	
 	asm cli  // Enable interrupts
 	
