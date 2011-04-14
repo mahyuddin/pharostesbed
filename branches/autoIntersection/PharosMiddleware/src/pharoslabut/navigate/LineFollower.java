@@ -29,7 +29,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = .7;
+	public static final double MAX_SPEED = .65;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
@@ -53,6 +53,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	private long blobFinderDataTimestamp;
 	
 	private boolean done = false;
+	private boolean secondaryBlobFlag = false;
 	
 	private Position2DInterface p2di = null;
 	
@@ -166,16 +167,19 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * @return The maximum turn angle.
 	 */
 	private double getMaxTurnAngle(double divergencePct) {
-		if (divergencePct < 10)
+		log("getMaxTurnAgle: " + divergencePct);
+		if (divergencePct < .10)
+			return MAX_TURN_ANGLE * 0.1;
+		if (divergencePct < .20)
+			return MAX_TURN_ANGLE * 0.2;
+		if (divergencePct < .30)
+			return MAX_TURN_ANGLE * 0.3;
+		if (divergencePct < .40)
+			return MAX_TURN_ANGLE * 0.4;
+		if (divergencePct < .50)
 			return MAX_TURN_ANGLE * 0.6;
-		if (divergencePct < 20)
-			return MAX_TURN_ANGLE * 0.7;
-		if (divergencePct < 30)
-			return MAX_TURN_ANGLE * 0.75;
-		if (divergencePct < 40)
-			return MAX_TURN_ANGLE * 0.8;
-		if (divergencePct < 50)
-			return MAX_TURN_ANGLE * 0.9;
+		if (divergencePct < .60)
+			return MAX_TURN_ANGLE * 0.85;
 		return MAX_TURN_ANGLE;
 	}
 	
@@ -185,16 +189,16 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * @param blob The blob to use to calculate the heading of the robot.
 	 */
 	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob) {
-		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight());
+		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight() + ", x=" + blob.getX());
 
 		int midPoint = blobFinderData.getWidth()/2;
 
 		int turnSign;		
 		if (blob.getX() > midPoint) {
-			log("adjustHeadingAndSpeed: Center of blob is left of midpoint, must turn right!");
+			log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn right!");
 			turnSign = -1;
 		} else {
-			log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn left!");
+			log("adjustHeadingAndSpeed: Center of blob is left of midpoint, must turn left!");
 			turnSign = 1;
 		}
 
@@ -224,15 +228,40 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * 
 	 * @param blob
 	 */
-	private void handleSecondaryBlob(PlayerBlobfinderBlob blob) {
+	private void handleSecondaryBlob(PlayerBlobfinderBlob primary, PlayerBlobfinderBlob secondary) {
 		// TODO: Add logic that determines the type of event that was detected.
-		// One the type of event is determined, broadcast it to all registered listeners.
+		// One the type of event is determined, broadcast it to all registered listeners
+		// Here's an example of how to broadcast an APPROACHING event.
+		log("handleSecondaryBlob: " + "area: " + secondary.getArea() + " primary x: " + primary.getX() + " secondary x: " + secondary.getX() + " blob width: " + (Math.abs(secondary.getLeft()-secondary.getRight())) + " flag is " + isSecondaryBlobFlag());
 		
-		// Here's an example of how to broadcast an APPROACHING event. 
-//		LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.APPROACHING);
-//		notifyListeners(lfe);
+		if ((primary.getX() < secondary.getX()) && (isSecondaryBlobFlag() == false) && (Math.abs(secondary.getLeft() - secondary.getRight()) < 80)) {
+			setSecondaryBlobFlag(true); 
+			log("handleSecondaryBlob: Approaching Intersection!");
+			LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.APPROACHING);
+			notifyListeners(lfe);
+		}
+		else if ((primary.getX() > secondary.getX()) && (isSecondaryBlobFlag() == false) && (Math.abs(secondary.getLeft() - secondary.getRight()) < 80)) { 
+			setSecondaryBlobFlag(true); 
+			log("handleSecondaryBlob: Entering Intersection!");
+			LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.ENTERING);
+			notifyListeners(lfe);
+		}
+		else if ((Math.abs(secondary.getLeft() - secondary.getRight()) > 100) && (isSecondaryBlobFlag() == false)) {
+			setSecondaryBlobFlag(true); 
+			log("handleSecondaryBlob: Exiting Intersection!");
+			LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.EXITING);
+			notifyListeners(lfe);
+		}
 	}
 	
+	public void setSecondaryBlobFlag(boolean secondaryBlobFlag) {
+		this.secondaryBlobFlag = secondaryBlobFlag;
+	}
+
+	public boolean isSecondaryBlobFlag() {
+		return secondaryBlobFlag;
+	}
+
 	/**
 	 * Performs the calculations that determine the turn angle and speed to ensure
 	 * the robot follows the line.  It sets variables speed and angle.
@@ -250,7 +279,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 				if(numBlobs > 0) {	
 					PlayerBlobfinderBlob[] blobList = blobFinderData.getBlobs();
 
-					if(blobList != null && blobList[0] != null)
+					if(blobList != null && blobList.length > 0 && blobList[0] != null)
 						adjustHeadingAndSpeed(blobList[0]);
 					else {
 						log("doLineFollow: ERROR: No primary blob, stopping robot...");
@@ -259,9 +288,14 @@ public class LineFollower implements BlobfinderListener, Runnable {
 
 					// Right now only designed for detection of blue secondary blob
 					if(blobList != null && numBlobs > 1 && blobList[1] != null) {
-						handleSecondaryBlob(blobList[1]);
-					} else log("doLineFollow: No secondary blob!");
-				} else {
+						handleSecondaryBlob(blobList[0], blobList[1]);
+					} 
+					else {
+					  log("doLineFollow: No secondary blob!");
+					  setSecondaryBlobFlag(false); 
+					}
+				}
+			    else {
 					log("doLineFollow: ERROR: No blobs present, stopping robot...");
 					speed = angle = 0;
 				}
