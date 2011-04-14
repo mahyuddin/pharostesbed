@@ -190,7 +190,7 @@ void Command_sendIRPacket(void){
   uint16_t indx = 0; // an index into the _outToSerial array
   uint16_t i;
   outToSerial[indx++] = PROTEUS_BEGIN; //Package BEGIN packet
-  outToSerial[indx++] = PROTEUS_COMPASS_PACKET; //Identify as IR packet
+  outToSerial[indx++] = PROTEUS_IR_PACKET; //Identify as IR packet
   indx = saveTwoBytes(outToSerial,indx,IR_getFront());
   indx = saveTwoBytes(outToSerial,indx,IR_getRight());
   indx = saveTwoBytes(outToSerial,indx,IR_getLeft());
