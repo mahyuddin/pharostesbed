@@ -442,9 +442,9 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 
 	    System.out.println(mapfile);
 	    
-	    ImageIcon Display = new ImageIcon(mapfile);
+	 /*   ImageIcon Display = new ImageIcon(mapfile);
 	    jButton11.setIcon(Display);		
-					// display map
+					// display map 8 */
 	    JFrame frame = new JFrame();
 	    String result = JOptionPane.showInputDialog(frame, "Input Initial Coordinates X  Y separate with space");
 		Scanner Scan = new Scanner(result);
