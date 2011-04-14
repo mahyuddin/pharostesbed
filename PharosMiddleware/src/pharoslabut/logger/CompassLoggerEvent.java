@@ -17,7 +17,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
  * 
  * @author Chien-Liang Fok
  */
-public class CompassLoggerEvent implements DeviceLogger, Position2DListener, OpaqueListener {
+public class CompassLoggerEvent implements DeviceLogger, Position2DListener/*, OpaqueListener*/ {
 	
 	private String serverIP = null;
 	private Position2DInterface compass = null;
@@ -69,7 +69,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 				System.err.println("Error: " + pe.getMessage());
 			}
 		}
-		
+	/*	
 		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (oi != null) {
 			log("Subscribed to opaque interface.  Will log MCU messages.");
@@ -77,10 +77,11 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		} else {
 			log("ERROR: Unable to subscribe to opaque interface.  MCU messages will not be received.");
 		}
-		
+		*/
 		if (showGUI)
 			initGUI();
 	}
+	
 	
 	/**
 	 * A constructor that uses an existing Position2DInterface to connect to the compass.
@@ -165,7 +166,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 		if (gui != null)
 			gui.addData(deltaTimeS, heading);
 	}
-	
+	/*
 	@Override
 	public void newOpaqueData(PlayerOpaqueData opaqueData) {
 		if (opaqueData.getDataCount() > 0) {
@@ -173,7 +174,7 @@ public class CompassLoggerEvent implements DeviceLogger, Position2DListener, Opa
 			log("MCU Message: " + s);
 		}
 	}
-	
+	*/
 	private void log(String msg) {
 		String result = "CompassLogger: " + msg;
 		//System.out.println(result);
