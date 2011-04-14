@@ -22,7 +22,7 @@
 
 //all return units of mm
 unsigned short IR_getLeft(void); //front left
-unsigned short IR_getCenter(void); //front center
+unsigned short IR_getFront(void); //front center
 unsigned short IR_getRight(void); //front right
 
 #endif /* _Sharp_IR_H */
