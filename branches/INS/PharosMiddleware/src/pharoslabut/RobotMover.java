@@ -323,18 +323,18 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 				case 0:
 					movAmt = calc_dist(orig_X, mov_cmd.goalWaypoint.X, orig_Y, mov_cmd.goalWaypoint.Y);
 					moveForward(); 
-					while (calc_dist(orig_X, Xpos, orig_Y, Ypos) < movAmt){};
+					while (calc_dist(0, Xpos, 0, Ypos) < movAmt){};
 					break;
-				case 1: break;
+				case 1: break; //Bwd
 				case 2: 
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnRight();
-						while (calc_rad(orig_H, Yaw) < movAmt){};
+						while (calc_rad(0, Yaw) < movAmt){};
 						break;
 				case 3: 
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnLeft();
-						while (calc_rad(orig_H, Yaw) < movAmt){};
+						while (calc_rad(0, Yaw) < movAmt){};
 						break;
 				default: stop(); break;
 			}
