@@ -544,7 +544,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_fl = distance;
+			r->ir_1 = distance;
 			r->newIRdata = 1;
 		}
 		
@@ -554,7 +554,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_fc = distance;
+			r->ir_2 = distance;
 			r->newIRdata = 1;
 		}
 		
@@ -564,7 +564,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_fr = distance;
+			r->ir_3 = distance;
 			r->newIRdata = 1;
 		}
 		
@@ -574,7 +574,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_rl = distance;
+			r->ir_4 = distance;
 			r->newIRdata = 1;
 		}
 		
@@ -584,7 +584,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_rc = distance;
+			r->ir_5 = distance;
 			r->newIRdata = 1;
 		}
 		
@@ -594,10 +594,33 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		if(distance < 10652 && distance > 215){
-			r->ir_rr = distance;
+			r->ir_6 = distance;
 			r->newIRdata = 1;
 		}
-		
+				popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_7 = distance;
+			r->newIRdata = 1;
+		}
+				popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_8 = distance;
+			r->newIRdata = 1;
+		}
+				popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_9 = distance;
+			r->newIRdata = 1;
+		}
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
 		if (r->newIRdata) {
