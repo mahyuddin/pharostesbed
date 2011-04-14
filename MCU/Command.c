@@ -179,9 +179,9 @@ void Command_sendMessagePacket(char* message) {
  * Packet format:
  * BEGIN Packet
  * PROTEUS_IR_PACKET
- * Front IR (1 Byte)
- * Right IR (1 Byte)
- * Left IR (1 Byte)
+ * Front IR (2 Byte)
+ * Right IR (2 Byte)
+ * Left IR (2 Byte)
  * END Packet
  * Added by Le Wang on Apr. 13, 2011
  */
@@ -191,9 +191,12 @@ void Command_sendIRPacket(void){
   uint16_t i;
   outToSerial[indx++] = PROTEUS_BEGIN; //Package BEGIN packet
   outToSerial[indx++] = PROTEUS_COMPASS_PACKET; //Identify as IR packet
-  outToSerial[indx++] = IR_getFront(); //Package Front IR data
-  outToSerial[indx++] = IR_getRight(); //Package Right IR data (mounted left, facing right)
-  outToSerial[indx++] = IR_getLeft(); //Package Left IR data (mounted right, facing left)
+  indx = saveTwoBytes(outToSerial,indx,IR_getFront());
+  indx = saveTwoBytes(outToSerial,indx,IR_getRight());
+  indx = saveTwoBytes(outToSerial,indx,IR_getLeft());
+  //outToSerial[indx++] = IR_getFront(); //Package Front IR data
+  //outToSerial[indx++] = IR_getRight(); //Package Right IR data (mounted left, facing right)
+  //outToSerial[indx++] = IR_getLeft(); //Package Left IR data (mounted right, facing left)
   outToSerial[indx++] = PROTEUS_END; //Package END packet
   //Send all IR data through Serial Port
   for(i=0; i<indx; i++){
