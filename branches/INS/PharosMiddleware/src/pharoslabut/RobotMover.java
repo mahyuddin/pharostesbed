@@ -28,6 +28,9 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 		protected double Xpos;
 		protected double Ypos;
 		protected double Yaw;
+		protected double BaseX;
+		protected double BaseY;
+		protected double BaseYaw;
       	
       	public Position2DInterface motors = null;
       	
@@ -99,7 +102,18 @@ import playerclient.structures.position2d.PlayerPosition2dData;
       		System.exit(0);	
       		*/
       	}
-  
+      	
+      	public void spinRobot(int time){
+      		motors.setSpeed(0,1);
+      		for(int i= 0; i<10000; i++)
+      		try {
+				this.wait(10000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+      	}
+      	
       	public void turnLeft()
       	{
       		motors.setSpeed(0, .2);
@@ -201,9 +215,9 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 		public void newPlayerPosition2dData(PlayerPosition2dData data) {
 			//System.out.println("movement");
 			PlayerPose pose = data.getPos(); 
-			Xpos = pose.getPx();
-			Ypos = pose.getPy();
-			
+			Xpos = BaseX +pose.getPx();
+			Ypos = BaseY +pose.getPy();
+			Yaw =  BaseYaw + pose.getPa();
 			
 			//
 			//position updates and other stuff in here
@@ -211,6 +225,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 			// TODO Auto-generated method stub
 			
 		}
+		
 
 		public double INS_UpdateX(){
 			/*try {
@@ -232,6 +247,10 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 			}*/
 			return Ypos;
 			
+		}
+		
+		public double INS_UpdateOrient(){
+			return Yaw;
 		}
 		
 		public String Orient(){

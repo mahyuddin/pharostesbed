@@ -219,6 +219,40 @@ public class Position2DInterface extends AbstractPositionDevice {
         }
     }
     
+    public void INS_KillSig()
+    {
+          try {
+                sendHeader (PLAYER_MSGTYPE_CMD, 10, 3);
+                XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (3);
+
+                try {
+					xdr.beginEncoding (null, 0);
+				} catch (OncRpcException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                //xdr.xdrEncodeByte  ((byte)0x6C);
+                try {
+					xdr.endEncoding ();
+				} catch (OncRpcException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                os.write (xdr.getXdrData (), 0, xdr.getXdrLength ());
+                try {
+					xdr.close ();
+				} catch (OncRpcException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+                os.flush ();
+            } catch (IOException e) {
+                throw new PlayerException 
+                    ("RobotMover : Couldn't send reset command: " + 
+                            e.toString(), e);
+            } 
+    }
+    
     /**
      * The position interface accepts new carlike velocity (speed and turning angle)
      * for the robot's motors (only supported by some drivers).

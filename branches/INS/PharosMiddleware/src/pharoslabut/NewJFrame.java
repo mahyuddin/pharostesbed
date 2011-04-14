@@ -395,7 +395,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-
+    				 jTextField4.setText("Manual");
                      XueHua.stop();// Add code here 
                      // TODO add your handling code here:
     }//GEN-LAST:event_jButton5ActionPerformed
@@ -435,7 +435,8 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     }//GEN-LAST:event_jButton6ActionPerformed
 
    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException, IOException {//GEN-FIRST:event_jButton10ActionPerformed
-            
+        JFrame Oldinputs = new JFrame();
+        String inputs = JOptionPane.showInputDialog(Oldinputs, "Previous File name is "+mapfile);
 	    JFrame File = new JFrame();
 	    String mapfile = JOptionPane.showInputDialog(File, "Input Map File name");
 
@@ -449,7 +450,9 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 		Scanner Scan = new Scanner(result);
 		
 		src_x = Scan.nextInt();
+		XueHua.BaseX = src_x;
 		src_y = Scan.nextInt();
+		XueHua.BaseY = src_y;
 	    //TODO: call RobotMover.ManUpdateINS(x,y,yaw)
 	    System.out.println(result);
 	    
