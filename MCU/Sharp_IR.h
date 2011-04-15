@@ -16,9 +16,9 @@
 #ifndef _Sharp_IR_H
 #define _Sharp_IR_H 1
 
-#define LEFT 0x83 
-#define FRONT 0x84
-#define RIGHT 0x85
+#define LEFT 0x80 
+#define FRONT 0x81
+#define RIGHT 0x82
 
 //all return units of mm
 unsigned short IR_getLeft(void); //front left
