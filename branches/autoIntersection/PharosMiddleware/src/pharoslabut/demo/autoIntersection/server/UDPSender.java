@@ -8,7 +8,7 @@ import java.net.*;
  *
  * @author Michael Hanna
  */
-public class UDPServer extends Thread {
+public class UDPSender extends Thread {
 
 //    private int serverPort = 6665;
     private int serverPort;
@@ -24,7 +24,7 @@ public class UDPServer extends Thread {
      *
      */
 
-    public UDPServer(int serverPort) {
+    public UDPSender(int serverPort) {
         System.out.println("Starting the UDP connection.");
         this.socket = null;
         this.serverPort = serverPort;

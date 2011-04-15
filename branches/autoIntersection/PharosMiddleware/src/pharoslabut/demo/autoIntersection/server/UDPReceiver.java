@@ -8,13 +8,13 @@ import java.net.*;
  * @author Michael Hanna
  *
  */
-public class UDPClient extends Thread
+public class UDPReceiver extends Thread
 {
 //    private int port = 6665;
     private int port;
     private ObjectInputStream ois;
 
-    public UDPClient(int port)
+    public UDPReceiver(int port)
     {
         this.port = port;
         this.ois = null;

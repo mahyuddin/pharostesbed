@@ -14,7 +14,7 @@ public class IntersectionManager extends Thread {
 
     private long nextAvailableETC;
     public static LinkedList<Robot> robotsCompleted;
-    private UDPServer server;
+    private UDPSender server;
 	private int serverPort;
 
     /**
@@ -26,7 +26,7 @@ public class IntersectionManager extends Thread {
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
         this.serverPort = serverPort;
-        this.server = new UDPServer(this.serverPort);
+        this.server = new UDPSender(this.serverPort);
     }
 
     /**

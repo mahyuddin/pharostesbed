@@ -6,13 +6,13 @@ package pharoslabut.demo.autoIntersection.server;
  */
 public class Receive extends Thread
 {
-    private UDPClient client;
+    private UDPReceiver client;
     private int port;
 
     public Receive(int port)
     {
         this.port = port;
-        this.client = new UDPClient(this.port);
+        this.client = new UDPReceiver(this.port);
     }
 
     @Override
