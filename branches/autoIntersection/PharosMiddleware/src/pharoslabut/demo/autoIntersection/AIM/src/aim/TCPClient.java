@@ -1,4 +1,4 @@
-package aim;
+package pharoslabut.demo.autoIntersection.AIM.src.aim;
 
 import java.io.*;
 import java.net.*;
@@ -62,7 +62,7 @@ public class TCPClient extends Thread
             {
                 if( robot.getETA() < 5000000 )
                 {
-                    oldQueue.enqueue(robot);
+ //                   oldQueue.enqueue(robot);
                     robot.setEnqueued(true);
                 }
             }

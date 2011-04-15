@@ -1,4 +1,4 @@
-package aim;
+package pharoslabut.demo.autoIntersection.AIM.src.aim;
 
 import java.io.*;
 import java.net.*;

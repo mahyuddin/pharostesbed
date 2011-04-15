@@ -1,4 +1,4 @@
-package aim;
+package pharoslabut.demo.autoIntersection.AIM.src.aim;
 
 import java.io.Serializable;
 
@@ -12,7 +12,8 @@ public class Robot implements Serializable {
     private long ETA;
     private long ETC;
     private boolean enqueued;
-    private boolean allowed;
+    private boolean acknowledged;
+    private boolean exited;
 
     /**
      * Class constructor
@@ -29,7 +30,8 @@ public class Robot implements Serializable {
 //        this.ETA = new Date().getTime() - Main.startTime + ETA;
 //        this.ETC = new Date().getTime() - Main.startTime + ETC;
         enqueued = false;
-        allowed = false;
+        acknowledged = false;
+        exited = false;
     }
 
 
@@ -81,7 +83,7 @@ public class Robot implements Serializable {
 
     /**
      * This method checks if the robot request is on the queue
-     *  @return whether true if the robot request is on the queue, false otherwise
+     *  @return true if the robot request is on the queue, false otherwise
      */
     public boolean isEnqueued() {
         return this.enqueued;
@@ -95,21 +97,40 @@ public class Robot implements Serializable {
         this.enqueued = b;
     }
 
+
     /**
-     * This method checks if the robot is allowed to pass through the intersection
-     * It is being used as a second safety check
-     *  @return whether true if the robot request is on the queue, false otherwise
+     * This method checks if the robot has exited the intersection
+     * It is being used as a confirmation that everything is running as expected
+     *  @return true if the robot has exited the intersection, false otherwise
      */
-    public boolean isAllowed() {
-        return this.allowed;
+    public boolean isExited() {
+        return this.exited;
     }
 
     /**
-     *  This method sets the boolean variable allowed to b
+     *  This method sets the boolean variable exited to b
      * @param b
      */
-    public void setAllowed(boolean b) {
-        this.allowed = b;
+    public void setExited(boolean b) {
+        this.exited = b;
+    }
+
+    /**
+     * This method checks if the client(Seth) has received the object robot after setting its ETA and ETC
+     * It is being used as an acknowledgment to make sure there is no packet loss
+     * If no acknowledgment is received from the client side, I will keep sending the object robot
+     *  @return true if an acknowledgment is received from the client saying that it received the message, false otherwise
+     */
+    public boolean isAcknowledged() {
+        return this.acknowledged;
+    }
+
+    /**
+     *  This method sets the boolean variable exited to b
+     * @param b
+     */
+    public void setAcknowledged(boolean b) {
+        this.acknowledged = b;
     }
 
 
@@ -125,7 +146,8 @@ public class Robot implements Serializable {
         output += "ETA : " + ETA + "\n";
         output += "ETC : " + ETC + "\n";
         output += "enqueued : " + enqueued + "\n";
-        output += "allowed : " + allowed + "\n";
+        output += "exited : " + exited + "\n";
+        output += "acknowledged : " + acknowledged + "\n";
         return output;
     }
 

@@ -1,4 +1,4 @@
-package aim.GUI;
+package pharoslabut.demo.autoIntersection.AIM.src.aim.GUI;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -14,7 +14,7 @@ public class DisplayQueue extends JFrame
 {
     private final int cellWidth = 300;
     private final int cellHeight = 100;
-    private final int maxSize = aim.RobotsPriorityQueue.getDefaultCapacity();
+    private final int maxSize = pharoslabut.demo.autoIntersection.AIM.src.aim.RobotsPriorityQueue.getDefaultCapacity();
     private int xPosition;
     private int yPosition;
 //    private final int maxSize = 6;
@@ -79,7 +79,7 @@ public class DisplayQueue extends JFrame
 
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
-        PriorityQueue<aim.Robot> queue = aim.RobotsPriorityQueue.getQueueCopy();
+        PriorityQueue<pharoslabut.demo.autoIntersection.AIM.src.aim.Robot> queue = pharoslabut.demo.autoIntersection.AIM.src.aim.RobotsPriorityQueue.getQueueCopy();
         String s = "";
 
         while(! queue.isEmpty() )
@@ -87,7 +87,7 @@ public class DisplayQueue extends JFrame
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            aim.Robot robot = queue.remove();
+            pharoslabut.demo.autoIntersection.AIM.src.aim.Robot robot = queue.remove();
             s = "Robot ID " + robot.getID();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();
@@ -98,8 +98,10 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
             s = "Enqueued: " + robot.isEnqueued();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
-            s = "Allowed: " + robot.isAllowed();
+            s = "Exited: " + robot.isExited();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
+            s = "Acknowledged: " + robot.isAcknowledged();
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
             
             yPosition += cellHeight;
         }
@@ -114,14 +116,14 @@ public class DisplayQueue extends JFrame
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
         s = "";
-        LinkedList<aim.Robot> robotsCompleted = aim.IntersectionManager.getRobotsCompleted();
+        LinkedList<pharoslabut.demo.autoIntersection.AIM.src.aim.Robot> robotsCompleted = pharoslabut.demo.autoIntersection.AIM.src.aim.IntersectionManager.getRobotsCompletedCopy();
 
         while(! robotsCompleted.isEmpty() )
         {
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            aim.Robot robot = robotsCompleted.removeFirst();
+            pharoslabut.demo.autoIntersection.AIM.src.aim.Robot robot = robotsCompleted.removeFirst();
             s = "Robot ID " + robot.getID();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();
@@ -132,8 +134,10 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
             s = "Enqueued: " + robot.isEnqueued();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
-            s = "Allowed: " + robot.isAllowed();
+            s = "Exited: " + robot.isExited();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
+            s = "Acknowledged: " + robot.isAcknowledged();
+            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
 
             yPosition += cellHeight;
         }

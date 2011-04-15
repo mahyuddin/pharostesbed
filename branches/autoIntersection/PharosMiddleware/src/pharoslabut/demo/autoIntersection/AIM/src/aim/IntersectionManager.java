@@ -1,4 +1,4 @@
-package aim;
+package pharoslabut.demo.autoIntersection.AIM.src.aim;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -13,16 +13,20 @@ import java.util.PriorityQueue;
 public class IntersectionManager extends Thread {
 
     private long nextAvailableETC;
-    private static LinkedList<Robot> robotsCompleted;
+    public static LinkedList<Robot> robotsCompleted;
+    private UDPServer server;
+    private int serverPort;
 
     /**
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
      */
-    public IntersectionManager()
+    public IntersectionManager(int serverPort)
     {
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
+        this.serverPort = serverPort;
+        this.server = new UDPServer(serverPort);
     }
 
     /**
@@ -37,7 +41,7 @@ public class IntersectionManager extends Thread {
         return false;
     }
 
-    public static LinkedList<Robot> getRobotsCompleted()
+    public static LinkedList<Robot> getRobotsCompletedCopy()
     {
         LinkedList<Robot> tempList = new LinkedList<Robot>();
         Iterator iterator = robotsCompleted.iterator();
@@ -112,9 +116,9 @@ public class IntersectionManager extends Thread {
                     {
                         System.out.print("nextAvailableETC before :  " + nextAvailableETC);
                         this.nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
-                        robot.setAllowed(true);
                         queue.remove();
                         robotsCompleted.add(robot);
+                        server.send(robot);
                         System.out.println(" --- nextAvailableETC after :  " + nextAvailableETC);
                     }
                     else
@@ -124,11 +128,24 @@ public class IntersectionManager extends Thread {
                         robot.setETA(nextAvailableETC);
                 //        nextAvailableETC = nextAvailableETC + timeDifference;
                         robot.setETC(nextAvailableETC + timeDifference);
-                        robot.setAllowed(false);
                   //      queue.remove();
                     }
-                    Thread.sleep(3000);
                 }
+
+                // wait 100ms to receive acknowledgment from the client
+                Thread.sleep(100);
+                
+                Iterator iterator = robotsCompleted.iterator();
+                while(iterator.hasNext())
+                {
+                    Robot robot = (Robot) iterator.next();
+                    if(! robot.isAcknowledged() )
+                    {
+                        server.send(robot);
+                    }
+                }
+
+                Thread.sleep(3000);
             }
             catch(Exception e)
             { e.printStackTrace(); }
