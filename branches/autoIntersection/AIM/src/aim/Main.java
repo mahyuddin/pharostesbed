@@ -22,17 +22,17 @@ public class Main {
     public static void main(String[] args) throws InterruptedException  {
         RobotsPriorityQueue.test();
 
- //       Thread.sleep(5000);
- //       System.out.println(RobotsPriorityQueue.getQueue().peek());
 
-
-    //    UDPClient client = new UDPClient();
+    //    UDPClient client = new UDPClient(6665);
     //    client.start();
 
-        Thread IM = new IntersectionManager();
+        Thread IM = new IntersectionManager(6665);
+        Receive receieve = new Receive((IntersectionManager) IM, 6665);
+
+        receieve.start();
         IM.start();
 
-   //     UDPServer server = new UDPServer();
+   //     UDPServer server = new UDPServer(6665);
    //     server.start();
 
 

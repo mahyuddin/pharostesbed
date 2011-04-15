@@ -114,7 +114,7 @@ public class DisplayQueue extends JFrame
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
         s = "";
-        LinkedList<aim.Robot> robotsCompleted = aim.IntersectionManager.getRobotsCompleted();
+        LinkedList<aim.Robot> robotsCompleted = aim.IntersectionManager.getRobotsCompletedCopy();
 
         while(! robotsCompleted.isEmpty() )
         {
