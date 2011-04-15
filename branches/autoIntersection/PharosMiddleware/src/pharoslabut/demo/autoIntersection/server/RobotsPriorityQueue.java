@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim;
+package pharoslabut.demo.autoIntersection.server;
 
 import java.util.Comparator;
 import java.util.Date;
@@ -30,10 +30,10 @@ public class RobotsPriorityQueue
     public static PriorityQueue<Robot> getQueueCopy()
     {
         PriorityQueue<Robot> tempQueue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
-        Iterator iterator = queue.iterator();
+        Iterator<Robot> iterator = queue.iterator();
         while(iterator. hasNext())
         {
-            Robot robot = (Robot) iterator.next();
+            Robot robot = iterator.next();
             tempQueue.add(robot);
         }
         return tempQueue;
@@ -60,10 +60,10 @@ public class RobotsPriorityQueue
     {
   //      update();
         String output = "";
-        Iterator iterator = queue.iterator();
+        Iterator<Robot> iterator = queue.iterator();
         while(iterator.hasNext())
         {
-            Robot robot = (Robot) iterator.next();
+            Robot robot = iterator.next();
             output += robot.getID();
             output += " - ";
         }

@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim.GUI;
+package pharoslabut.demo.autoIntersection.server.GUI;
 
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
@@ -12,9 +12,13 @@ import javax.swing.*;
  */
 public class DisplayQueue extends JFrame
 {
-    private final int cellWidth = 300;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private final int cellWidth = 300;
     private final int cellHeight = 100;
-    private final int maxSize = pharoslabut.demo.autoIntersection.AIM.src.aim.RobotsPriorityQueue.getDefaultCapacity();
+//    private final int maxSize = pharoslabut.demo.autoIntersection.AIM.src.aim.RobotsPriorityQueue.getDefaultCapacity();
     private int xPosition;
     private int yPosition;
 //    private final int maxSize = 6;
@@ -79,7 +83,7 @@ public class DisplayQueue extends JFrame
 
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
-        PriorityQueue<pharoslabut.demo.autoIntersection.AIM.src.aim.Robot> queue = pharoslabut.demo.autoIntersection.AIM.src.aim.RobotsPriorityQueue.getQueueCopy();
+        PriorityQueue<pharoslabut.demo.autoIntersection.server.Robot> queue = pharoslabut.demo.autoIntersection.server.RobotsPriorityQueue.getQueueCopy();
         String s = "";
 
         while(! queue.isEmpty() )
@@ -87,7 +91,7 @@ public class DisplayQueue extends JFrame
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            pharoslabut.demo.autoIntersection.AIM.src.aim.Robot robot = queue.remove();
+            pharoslabut.demo.autoIntersection.server.Robot robot = queue.remove();
             s = "Robot ID " + robot.getID();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();
@@ -116,14 +120,14 @@ public class DisplayQueue extends JFrame
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
         s = "";
-        LinkedList<pharoslabut.demo.autoIntersection.AIM.src.aim.Robot> robotsCompleted = pharoslabut.demo.autoIntersection.AIM.src.aim.IntersectionManager.getRobotsCompletedCopy();
+        LinkedList<pharoslabut.demo.autoIntersection.server.Robot> robotsCompleted = pharoslabut.demo.autoIntersection.server.IntersectionManager.getRobotsCompletedCopy();
 
         while(! robotsCompleted.isEmpty() )
         {
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            pharoslabut.demo.autoIntersection.AIM.src.aim.Robot robot = robotsCompleted.removeFirst();
+            pharoslabut.demo.autoIntersection.server.Robot robot = robotsCompleted.removeFirst();
             s = "Robot ID " + robot.getID();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();

@@ -9,7 +9,7 @@
  * Created on Mar 10, 2011, 3:27:46 PM
  */
 
-package pharoslabut.demo.autoIntersection.AIM.src.aim.GUI;
+package pharoslabut.demo.autoIntersection.server.GUI;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -50,7 +50,9 @@ public class MainWindow extends javax.swing.JFrame {
         File.setText("File");
 
         Exit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
-        Exit.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aim/GUI/Images/exit.png"))); // NOI18N
+        String exitIconName = System.getProperty("user.dir") + "/images/exit.png";
+        //System.out.println("Current Icon Name" + exitIconName);
+        //Exit.setIcon(new javax.swing.ImageIcon(getClass().getResource(exitIconName))); // NOI18N
         Exit.setText("Exit");
         Exit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -69,7 +71,7 @@ public class MainWindow extends javax.swing.JFrame {
         });
 
         Queue.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-        Queue.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aim/GUI/Images/Queue.gif"))); // NOI18N
+  //      Queue.setIcon(new javax.swing.ImageIcon(getClass().getResource("images/Queue.gif"))); // NOI18N
         Queue.setText("Queue");
         Queue.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -83,7 +85,7 @@ public class MainWindow extends javax.swing.JFrame {
         Help.setText("Help");
 
         JavaDocs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F1, 0));
-        JavaDocs.setIcon(new javax.swing.ImageIcon(getClass().getResource("/aim/GUI/Images/java.png"))); // NOI18N
+  //      JavaDocs.setIcon(new javax.swing.ImageIcon(getClass().getResource("images/java.png"))); // NOI18N
         JavaDocs.setText("JavaDocs");
         JavaDocs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -127,7 +129,7 @@ public class MainWindow extends javax.swing.JFrame {
     private void QueueActionPerformed(java.awt.event.ActionEvent evt) {                                      
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new DisplayQueue().createAndShowGUI();
+                DisplayQueue.createAndShowGUI();
             }
         });
     }                                     

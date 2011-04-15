@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim;
+package pharoslabut.demo.autoIntersection.server;
 
 /**
  *
@@ -8,13 +8,11 @@ public class Receive extends Thread
 {
     private UDPClient client;
     private int port;
-    private IntersectionManager IM;
 
-    public Receive(IntersectionManager IM, int port)
+    public Receive(int port)
     {
-        this.IM = IM;
         this.port = port;
-        this.client = new UDPClient(port);
+        this.client = new UDPClient(this.port);
     }
 
     @Override
@@ -30,7 +28,7 @@ public class Receive extends Thread
                 if( robot.isExited() )
                 {
                     // destroy robot
-                    IM.robotsCompleted.remove(robot);
+                    IntersectionManager.robotsCompleted.remove(robot);
                 }
                 else
                 {

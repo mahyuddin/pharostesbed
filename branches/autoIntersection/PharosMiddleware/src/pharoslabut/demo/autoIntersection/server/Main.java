@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim;
+package pharoslabut.demo.autoIntersection.server;
 
 import java.util.Date;
 
@@ -27,7 +27,7 @@ public class Main {
     //    client.start();
 
         Thread IM = new IntersectionManager(6665);
-        Receive receieve = new Receive((IntersectionManager) IM, 6665);
+        Receive receieve = new Receive(6665);
 
         receieve.start();
         IM.start();
@@ -38,7 +38,7 @@ public class Main {
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new pharoslabut.demo.autoIntersection.AIM.src.aim.GUI.MainWindow().setVisible(true);
+                new pharoslabut.demo.autoIntersection.server.GUI.MainWindow().setVisible(true);
             }
         });
         

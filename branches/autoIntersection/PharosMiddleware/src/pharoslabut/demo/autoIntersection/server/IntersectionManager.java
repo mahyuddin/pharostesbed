@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim;
+package pharoslabut.demo.autoIntersection.server;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -15,7 +15,7 @@ public class IntersectionManager extends Thread {
     private long nextAvailableETC;
     public static LinkedList<Robot> robotsCompleted;
     private UDPServer server;
-    private int serverPort;
+	private int serverPort;
 
     /**
      * default constructor
@@ -26,7 +26,7 @@ public class IntersectionManager extends Thread {
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
         this.serverPort = serverPort;
-        this.server = new UDPServer(serverPort);
+        this.server = new UDPServer(this.serverPort);
     }
 
     /**
@@ -44,10 +44,10 @@ public class IntersectionManager extends Thread {
     public static LinkedList<Robot> getRobotsCompletedCopy()
     {
         LinkedList<Robot> tempList = new LinkedList<Robot>();
-        Iterator iterator = robotsCompleted.iterator();
+        Iterator<Robot> iterator = robotsCompleted.iterator();
         while(iterator.hasNext())
         {
-            Robot robot = (Robot) iterator.next();
+            Robot robot = iterator.next();
             tempList.add(robot);
         }
         return tempList;
@@ -135,7 +135,7 @@ public class IntersectionManager extends Thread {
                 // wait 100ms to receive acknowledgment from the client
                 Thread.sleep(100);
                 
-                Iterator iterator = robotsCompleted.iterator();
+                Iterator<Robot> iterator = robotsCompleted.iterator();
                 while(iterator.hasNext())
                 {
                     Robot robot = (Robot) iterator.next();

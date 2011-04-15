@@ -1,12 +1,10 @@
-package pharoslabut.demo.autoIntersection.AIM.src.aim;
-
-import java.io.Serializable;
+package pharoslabut.demo.autoIntersection.server;
 
 /**
  * Creates a new Object Robot
  * @author Michael Hanna
  */
-public class Robot implements Serializable {
+public class Robot implements java.io.Serializable {
     private int id;
     private String laneSpecs;
     private long ETA;
