@@ -241,6 +241,7 @@ result_t proteus_open(proteus_comm_t* r) {
 		r->fd = -1;
 
 
+
 		return FAIL;
 	}*/
 	
@@ -559,7 +560,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance = ((data << 8) & 0xFF00);
 		popRxSerialBuff(r, &data);
-		distance += (data h& 0x00FF);
+		distance += (data & 0x00FF);
 	//	if(distance < 10652 && distance > 215){
 			r->ir_fr = distance;
 			r->newIRdata = 1;
