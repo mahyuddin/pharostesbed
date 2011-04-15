@@ -144,15 +144,14 @@ typedef struct {
 	
 	/* Integrated odometric position [m m rad] */
 	double ox, oy, oa;
-
-	/*
+	
+	uint8_t newIRdata;
 	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
 	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
 	float ir_fr;			//front right SHARP Infrared rangefinder distance, read
-	float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
-	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
-	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
-	*/
+	//float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
+	//float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
+	//float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
 	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
@@ -166,9 +165,6 @@ typedef struct {
 	uint8_t newCompassData;
 	float compass_heading;
 	//float compass;
-	
-	uint8_t newMessage;
-	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
 	
 	uint8_t newOdometryData;
 	unsigned char motor_stall;
@@ -187,12 +183,6 @@ typedef struct {
 	*/
 	unsigned char line_detect;    //if line detecting, 1 for line, 0 for no line (not supported on most robots)
 	
-	
-	uint8_t newStatusData;
-	int16_t statusTachSpeed;
-	int16_t statusTargetSpeed;
-	int16_t statusMotorPower;
-	int16_t statusSteeringAngle;
 	
 	/**
 	 * The following variables are used to buffer incoming serial data.
