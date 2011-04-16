@@ -106,7 +106,7 @@ public class Node{
 	}
 		
 	public Node getBottomleft(){
-			return bottomright;
+			return bottomleft;
 	}
 	
 	
