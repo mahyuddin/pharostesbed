@@ -34,11 +34,10 @@ public class Receive extends Thread
                 {
                     if(! robot.isEnqueued() )
                     {
+                    	robot.setEnqueued(true);
                         RobotsPriorityQueue.enqueue(robot);
-                        robot.setEnqueued(true);
                     }
                 }
-                System.out.println(robot);
             }
         }
     }

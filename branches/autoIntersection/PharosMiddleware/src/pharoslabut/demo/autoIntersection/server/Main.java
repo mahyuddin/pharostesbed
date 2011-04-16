@@ -23,25 +23,18 @@ public class Main {
         RobotsPriorityQueue.test();
 
 
-    //    UDPClient client = new UDPClient(6665);
-    //    client.start();
-
         Thread IM = new IntersectionManager(6665);
-        Receive receieve = new Receive(6665);
+        Receive receive = new Receive(6665);
 
-        receieve.start();
+        receive.start();
         IM.start();
-
-   //     UDPServer server = new UDPServer(6665);
-   //     server.start();
 
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new pharoslabut.demo.autoIntersection.server.GUI.MainWindow().setVisible(true);
             }
-        });
-        
+        });    
     }
 
 }

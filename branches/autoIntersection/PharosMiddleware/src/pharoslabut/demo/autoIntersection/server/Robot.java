@@ -27,9 +27,9 @@ public class Robot implements java.io.Serializable {
         this.ETC = ETC;
 //        this.ETA = new Date().getTime() - Main.startTime + ETA;
 //        this.ETC = new Date().getTime() - Main.startTime + ETC;
-        enqueued = false;
-        acknowledged = false;
-        exited = false;
+        this.enqueued = false;
+        this.acknowledged = false;
+        this.exited = false;
     }
 
 

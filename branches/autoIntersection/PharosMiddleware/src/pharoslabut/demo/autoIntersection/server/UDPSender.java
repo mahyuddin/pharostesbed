@@ -25,7 +25,7 @@ public class UDPSender extends Thread {
      */
 
     public UDPSender(int serverPort) {
-        System.out.println("Starting the UDP connection.");
+        System.out.println("SENDER: Starting the UDP connection.");
         this.socket = null;
         this.serverPort = serverPort;
         this.bos = null;
@@ -35,9 +35,9 @@ public class UDPSender extends Thread {
             this.socket = new DatagramSocket(this.serverPort);
         }
         catch (SocketException e) {
-            System.err.print("SERVER: Whoops! It didn't work!!!\n");
+            System.err.print("SENDER: Whoops! It didn't work!!!\n");
             e.printStackTrace();
-            System.out.println("SERVER: ERROR: Unable to create datagram socket, message: " + e.getMessage());
+            System.out.println("SENDER: ERROR: Unable to create datagram socket, message: " + e.getMessage());
         }       
     }
     
@@ -48,11 +48,11 @@ public class UDPSender extends Thread {
              * The receive method waits forever until a packet is received.
              * If no packet is received, the server makes no further progress and just waits.
              */
-            System.out.println("SERVER: Receiving a request from the client...");
+            System.out.println("SENDER: Receiving a request from the client...");
             byte [] sendByte = new byte[256];
             DatagramPacket sendPacket = new DatagramPacket( sendByte, sendByte.length);
             socket.receive(sendPacket);
-            System.out.println("SERVER: A request is received from the client at address: " + sendPacket.getAddress() + " and port: " + sendPacket.getPort());
+            System.out.println("SENDER: A request is received from the client at address: " + sendPacket.getAddress() + " and port: " + sendPacket.getPort());
 
 
             /** send the response to the client at "address" and "port"
@@ -73,22 +73,22 @@ public class UDPSender extends Thread {
                 InetAddress address = sendPacket.getAddress();
                 int clientPort = sendPacket.getPort();
                 sendPacket = new DatagramPacket(sendByte, sendByte.length, address, clientPort);
-                System.out.println("Sending the following packet to address:" + address + " and port " + clientPort + ":\n" + message);
+                System.out.println("SENDER: Sending the following packet to address:" + address + " and port " + clientPort + ":\n" + message);
                 socket.send(sendPacket);
-                System.out.println("Packet data sent!");
+                System.out.println("SENDER: Packet data sent!");
             }
         }
         catch (UnknownHostException e)
         {
-            System.err.print("Whoops! It didn't work!!!\n");
+            System.err.print("SENDER: Whoops! It didn't work!!!\n");
             e.printStackTrace();
         }
         catch (IOException e) {
-            System.err.print("Whoops! It didn't work!!!\n");
+            System.err.print("SENDER: Whoops! It didn't work!!!\n");
             e.printStackTrace();
         }
         catch (Exception e) {
-            System.err.print("Whoops! It didn't work!!!\n");
+            System.err.print("SENDER: Whoops! It didn't work!!!\n");
             e.printStackTrace();
         }
     }

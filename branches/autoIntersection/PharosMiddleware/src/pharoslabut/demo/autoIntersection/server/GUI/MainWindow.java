@@ -50,9 +50,8 @@ public class MainWindow extends javax.swing.JFrame {
         File.setText("File");
 
         Exit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_X, java.awt.event.InputEvent.CTRL_MASK));
-        String exitIconName = System.getProperty("user.dir") + "/images/exit.png";
-        //System.out.println("Current Icon Name" + exitIconName);
-        //Exit.setIcon(new javax.swing.ImageIcon(getClass().getResource(exitIconName))); // NOI18N
+        String exitIcon = System.getProperty("user.dir") + "/images/exit.png";
+        Exit.setIcon(new javax.swing.ImageIcon(exitIcon));
         Exit.setText("Exit");
         Exit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -71,7 +70,8 @@ public class MainWindow extends javax.swing.JFrame {
         });
 
         Queue.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-  //      Queue.setIcon(new javax.swing.ImageIcon(getClass().getResource("images/Queue.gif"))); // NOI18N
+        String queueIcon = System.getProperty("user.dir") + "/images/Queue.gif";
+        Queue.setIcon(new javax.swing.ImageIcon(queueIcon));
         Queue.setText("Queue");
         Queue.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -85,7 +85,8 @@ public class MainWindow extends javax.swing.JFrame {
         Help.setText("Help");
 
         JavaDocs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_F1, 0));
-  //      JavaDocs.setIcon(new javax.swing.ImageIcon(getClass().getResource("images/java.png"))); // NOI18N
+        String javaDocsIcon = System.getProperty("user.dir") + "/images/java.png";
+        JavaDocs.setIcon(new javax.swing.ImageIcon(javaDocsIcon));
         JavaDocs.setText("JavaDocs");
         JavaDocs.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -126,13 +127,14 @@ public class MainWindow extends javax.swing.JFrame {
 
     }                                        
 
-    private void QueueActionPerformed(java.awt.event.ActionEvent evt) {                                      
-        java.awt.EventQueue.invokeLater(new Runnable() {
+    private void QueueActionPerformed(java.awt.event.ActionEvent evt) {
+    	java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 DisplayQueue.createAndShowGUI();
             }
         });
-    }                                     
+    }      
+    	
 
     private void ViewActionPerformed(java.awt.event.ActionEvent evt) {
         // TODO add your handling code here:

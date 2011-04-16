@@ -12,9 +12,6 @@ import javax.swing.*;
  */
 public class DisplayQueue extends JFrame
 {
-    /**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private final int cellWidth = 300;
     private final int cellHeight = 100;
@@ -146,7 +143,7 @@ public class DisplayQueue extends JFrame
             yPosition += cellHeight;
         }
 
-        this.repaint(500);
+        this.repaint(1000);
     }
 
     public void draw()

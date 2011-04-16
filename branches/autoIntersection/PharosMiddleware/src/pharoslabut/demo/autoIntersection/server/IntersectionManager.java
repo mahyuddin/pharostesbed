@@ -114,16 +114,14 @@ public class IntersectionManager extends Thread {
                     Robot robot = queue.peek();
                     if(isAllowedAccess(robot) )
                     {
-                        System.out.print("nextAvailableETC before :  " + nextAvailableETC);
                         this.nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
                         queue.remove();
                         robotsCompleted.add(robot);
                         server.send(robot);
-                        System.out.println(" --- nextAvailableETC after :  " + nextAvailableETC);
                     }
                     else
                     {
-                        System.out.println("robot " + robot.getID() + " is not allowed, nextavailableETC = " + nextAvailableETC + "robot's ETA: " + robot.getETA());
+                        System.out.println("robot " + robot.getID() + " is not allowed, nextavailableETC = " + nextAvailableETC + ". The robot's ETA: " + robot.getETA());
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
                 //        nextAvailableETC = nextAvailableETC + timeDifference;
@@ -133,7 +131,7 @@ public class IntersectionManager extends Thread {
                 }
 
                 // wait 100ms to receive acknowledgment from the client
-                Thread.sleep(100);
+      /*          Thread.sleep(100);
                 
                 Iterator<Robot> iterator = robotsCompleted.iterator();
                 while(iterator.hasNext())
@@ -144,8 +142,8 @@ public class IntersectionManager extends Thread {
                         server.send(robot);
                     }
                 }
-
-                Thread.sleep(3000);
+*/
+     //           Thread.sleep(3000);
             }
             catch(Exception e)
             { e.printStackTrace(); }

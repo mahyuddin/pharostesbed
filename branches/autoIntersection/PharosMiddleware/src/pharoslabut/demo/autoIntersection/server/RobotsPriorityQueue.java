@@ -79,19 +79,29 @@ public class RobotsPriorityQueue
         long offset = 5;
 
         long ETA = new Date().getTime() - Main.startTime;
-        enqueue( new Robot(0, "laneSpecs", ETA, ETA+offset ) );
+        Robot robot = new Robot(0, "laneSpecs", ETA, ETA+offset );
+        robot.setEnqueued(true);
+        enqueue( robot );
 
         ETA += 2;
-        enqueue( new Robot(1, "laneSpecs", ETA, ETA+offset ) );
+        robot = new Robot(1, "laneSpecs", ETA, ETA+offset );
+        robot.setEnqueued(true);
+        enqueue( robot );
 
         ETA += 10;
-        enqueue( new Robot(2, "laneSpecs", ETA, ETA+offset ) );
+        robot = new Robot(2, "laneSpecs", ETA, ETA+offset );
+        robot.setEnqueued(true);
+        enqueue( robot );
 
         ETA += 4;
-        enqueue( new Robot(3, "laneSpecs", ETA, ETA+offset ) );
+        robot = new Robot(3, "laneSpecs", ETA, ETA+offset );
+        robot.setEnqueued(true);
+        enqueue( robot );
 
         ETA += 5;
-        enqueue( new Robot(4, "laneSpecs", ETA, ETA+offset ) );
+        robot = new Robot(4, "laneSpecs", ETA, ETA+offset );
+        robot.setEnqueued(true);
+        enqueue( robot );
 
         System.out.println(queue);
         
