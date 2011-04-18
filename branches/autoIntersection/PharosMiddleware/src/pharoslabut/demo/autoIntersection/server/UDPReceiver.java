@@ -22,7 +22,7 @@ public class UDPReceiver extends Thread
 
     /**
      * <pre>
-     *  - The client opens a new socket on port 6665
+     *  - The client opens a new socket on port
      *  - Then connect to the server ("localhost")
      *  - Receives an object over the Socket
      *  - starts a thread

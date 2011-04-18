@@ -117,7 +117,7 @@ class Connect extends Thread
     public void run()
     {
         try {
-         oos.writeObject(new Robot(0, "laneSpecs", (long)1.2, (long)1.3 ) );
+         oos.writeObject(new Robot(0, "laneSpecs", (long)1.2/*, (long)1.3 */) );
          oos.flush();
          // close streams and connections
          ois.close();

@@ -20,20 +20,33 @@ public class Robot implements java.io.Serializable {
      * @param ETA Robot's estimated time of arrival (at the intersection)
      * @param ETC Robot's estimated time of clearance (after crossing the intersection)
      */
-    public Robot(int id, String laneSpecs, long ETA, long ETC) {
+    public Robot(int id, String laneSpecs, long ETA /*, long ETC*/) {
         this.id = id;
         this.laneSpecs = laneSpecs;
         this.ETA = ETA;
-        this.ETC = ETC;
-//        this.ETA = new Date().getTime() - Main.startTime + ETA;
-//        this.ETC = new Date().getTime() - Main.startTime + ETC;
+        //this.ETC = ETC;
         this.enqueued = false;
         this.acknowledged = false;
         this.exited = false;
     }
 
-
     /**
+     * Class constructor
+     * @param id Robot's ID (IP address)
+     * Class constructed to handle robot exiting intersection.
+     */
+	public Robot(int id) {
+		// TODO Auto-generated constructor stub
+		this.id = id;
+        this.laneSpecs = "exit";
+        this.ETA = 0;
+		this.enqueued = false;
+        this.acknowledged = false;
+        this.exited = true;
+	}
+
+
+	/**
      *  @return id
      */
     public int getID() {

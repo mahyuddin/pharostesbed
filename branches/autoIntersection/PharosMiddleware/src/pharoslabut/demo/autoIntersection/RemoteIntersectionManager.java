@@ -1,6 +1,9 @@
 package pharoslabut.demo.autoIntersection;
 
 import pharoslabut.navigate.*;
+import pharoslabut.demo.autoIntersection.server.Robot;
+import pharoslabut.demo.autoIntersection.server.UDPReceiver;
+import pharoslabut.demo.autoIntersection.server.UDPSender;
 import pharoslabut.logger.*;
 
 /**
@@ -33,6 +36,17 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 	private FileLogger flogger;
 	
 	/**
+	 * Set if server has given robot priority access through the intersection.
+	 */
+	private boolean access;
+	
+	/**
+	 * Distance from "Approaching" line to "Entering Intersection" line. 
+	 * In cm.
+	 */
+	public static final int distToIntersection_cm = 90;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param lf The LineFollower
@@ -48,28 +62,69 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 
 	@Override
 	public void newLineFollowerEvent(LineFollowerEvent lfe) {
+		
+		UDPSender sender = new UDPSender(6665); // server to request access	
+		UDPReceiver receiver = new UDPReceiver(6665); // to receive from server
+		
 		switch(lfe.getType()) {
 		case APPROACHING:
 			log("Robot is approaching intersection!");
 			//TODO Implement this... Ask server for permission to cross intersection.
+			sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "approaching" , ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()))));
+			receiver.receive();
 			break;
+			
 		case ENTERING:
 			log("Robot is entering intersection!");
 			//TODO Implement this... if approval has not been obtained, pause and wait 
 			// for the approval to arrive (may need to query server again).
+			while(!hasAccess()) {
+				try {
+					
+					this.wait(100);
+					sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "at intersection" , System.currentTimeMillis()));
+					receiver.receive();
+					// wait until new message received
+					// maybe put to sleep?
+					// in receive thread have it notify once a message received?
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} finally {
+					
+				}
+			}
+			// else go through intersection
+			// need to send a new message to server?
 			break;
+			
 		case EXITING:
 			log("Robot is exiting intersection!");
 			//TODO Implement this...Notify server that this robot is leaving the intersection
-			
+			sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())));
 			break;
+			
 		case ERROR:
 			log("Received error from line follower!  Aborting demo.");
 			lf.stop(); // There was an error, stop!
 			break;
 		}
 	}
-	
+
+	/**
+	 * @param access the access to set
+	 */
+	public void setAccess(boolean access) {
+		this.access = access;
+	}
+
+	/**
+	 * @return the access
+	 */
+	public boolean hasAccess() {
+		return access;
+	}
+
 	/**
 	 * Logs a debug message.  This message is only printed when debug mode is enabled.
 	 * 

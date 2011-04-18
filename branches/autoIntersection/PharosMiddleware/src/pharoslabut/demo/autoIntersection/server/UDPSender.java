@@ -16,14 +16,6 @@ public class UDPSender extends Thread {
     private ByteArrayOutputStream bos;
     private ObjectOutputStream oos;
 
-    /*
-    public static void main(String [] args)
-    {
-        new UDPServer();
-    }
-     *
-     */
-
     public UDPSender(int serverPort) {
         System.out.println("SENDER: Starting the UDP connection.");
         this.socket = null;
@@ -60,8 +52,8 @@ public class UDPSender extends Thread {
              */
             bos = new ByteArrayOutputStream();
             oos = new ObjectOutputStream(bos);
-    //                Robot robot = new Robot(0, "laneSpecs", (long)1.2, (long)1.3, (float)1.4);
-    //              Robot robot = IntersectionManager.getRobotsCompleted().peekFirst();
+            // Robot robot = new Robot(0, "laneSpecs", (long)1.2, (long)1.3, (float)1.4);
+            // Robot robot = IntersectionManager.getRobotsCompleted().peekFirst();
             if( message != null )
             {
                 oos.writeObject(message);
