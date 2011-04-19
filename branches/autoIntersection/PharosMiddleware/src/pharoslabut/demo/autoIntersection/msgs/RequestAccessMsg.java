@@ -1,8 +1,6 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
 import pharoslabut.io.*;
-import pharoslabut.io.Message.MsgType;
-
 
 /**
  * This message is sent from the robot to the intersection server when
@@ -13,6 +11,8 @@ import pharoslabut.io.Message.MsgType;
  *
  */
 public class RequestAccessMsg implements Message {
+
+	private static final long serialVersionUID = -3642519285338558989L;
 
 	/**
 	 * The constructor.
