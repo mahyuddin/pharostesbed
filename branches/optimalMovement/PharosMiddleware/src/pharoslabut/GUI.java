@@ -783,6 +783,16 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	{
 		return sizeOfNewMap;
 	}
+	
+	public void incrementPosition()
+	{
+		loadedMapCanvas.incrementNode();
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				loadedMapCanvas.repaint();
+			}
+		});
+	}
 }
 
 class GUICanvas extends JPanel
@@ -801,6 +811,7 @@ class GUICanvas extends JPanel
 	//private double preferredSizeY;
 	private BufferedImage theMap;
 	private LinkedList path;
+	private LinkedListIterator currentNode;
 	private boolean drawPath = false;
 	//private Dimension preferredPSize;
 	
@@ -813,6 +824,12 @@ class GUICanvas extends JPanel
 		factor = 1;
 		theMap = null;
 		path = null;
+		currentNode = path.first();
+	}
+	
+	public void incrementNode()
+	{
+		currentNode.advance();
 	}
 	
 	public void setCurrentLoc(int x, int y, boolean drawPath, boolean repaint)
@@ -929,6 +946,7 @@ class GUICanvas extends JPanel
 	public void setPath(LinkedList p)
 	{
 		path = p;
+		currentNode = path.first();
 	}
 	
 	public void setDrawPath(boolean set)
@@ -1008,6 +1026,8 @@ class GUICanvas extends JPanel
 	            	int tempy = ((int)itr.retrieve().getY())*factor;
 	            	g.fillRect(tempx, tempy, factor, factor);
 	            }
+	            dcX = factor*((int)currentNode.retrieve().getX());
+	            dcY = factor*((int)currentNode.retrieve().getY());
 			}
 		}
 		g.setColor(Color.GREEN);
