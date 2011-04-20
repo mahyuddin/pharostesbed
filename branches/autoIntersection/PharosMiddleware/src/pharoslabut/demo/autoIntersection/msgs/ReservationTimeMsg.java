@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
+import java.net.InetAddress;
+
 /**
  * Sent by the server to the robot assigning it the time at which it may
  * enter the intersection.
@@ -11,8 +13,8 @@ public class ReservationTimeMsg extends AutoIntersectionMsg {
 	private static final long serialVersionUID = 7593577761036988454L;
 	private long ETA;
 	
-	public ReservationTimeMsg(int robotID, long ETA) {
-		super(robotID);
+	public ReservationTimeMsg(InetAddress robotIP, int robotPort, long ETA) {
+		super(robotIP, robotPort);
 		this.ETA = ETA;
 	}
 	

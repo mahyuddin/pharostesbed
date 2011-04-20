@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
+import java.net.InetAddress;
+
 /**
  * What is this for?
  * 
@@ -9,8 +11,8 @@ public class ReservationTimeAcknowledgedMsg extends AutoIntersectionMsg {
 
 	private static final long serialVersionUID = 3490049826053353698L;
 
-	public ReservationTimeAcknowledgedMsg(int robotID) {
-		super(robotID);
+	public ReservationTimeAcknowledgedMsg(InetAddress robotIP, int robotPort) {
+		super(robotIP, robotPort);
 	}
 	
 	public String toString() {

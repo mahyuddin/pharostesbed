@@ -1,5 +1,6 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
+import java.net.*;
 import pharoslabut.io.*;
 
 /**
@@ -14,20 +15,29 @@ public abstract class AutoIntersectionMsg implements Message {
 	 * 
 	 */
 	private static final long serialVersionUID = -1589049167755252361L;
-	private int robotID;
+	private InetAddress robotIP;
+	private int robotPort;
 	
 	/**
 	 * The constructor.
 	 */
-	public AutoIntersectionMsg(int robotID) {
-		this.robotID = robotID;	
+	public AutoIntersectionMsg(InetAddress robotIP, int robotPort) {
+		this.robotIP = robotIP;
+		this.robotPort = robotPort;
 	}
 	
 	/**
-     *  @return robotID
+     *  @return The robot's IP address
      */
-    public int getRobotID() {
-        return this.robotID;
+    public InetAddress getRobotIP() {
+        return robotIP;
+    }
+    
+    /**
+     * @return The robot's port.
+     */
+    public int getRobotPort() {
+    	return robotPort;
     }
 	
 	@Override

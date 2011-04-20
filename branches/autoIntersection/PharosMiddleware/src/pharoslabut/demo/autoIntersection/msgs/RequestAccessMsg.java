@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
+import java.net.InetAddress;
+
 /**
  * This message is sent from the robot to the intersection server when
  * it approaches the intersection.  It's purpose is to request permission 
@@ -19,9 +21,15 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
 	 * The constructor.
 	 * This constructor contains the ETC, laneSpecs which are not currently used
 	 * but will be used in the future
+	 * 
+	 * @param robotIP
+	 * @param robotPort
+	 * @param ETA
+	 * @param ETC
+	 * @param laneSpecs
 	 */
-	public RequestAccessMsg(int robotID, long ETA, long ETC, String laneSpecs) {
-		super(robotID);
+	public RequestAccessMsg(InetAddress robotIP, int robotPort, long ETA, long ETC, String laneSpecs) {
+		super(robotIP, robotPort);
 		this.ETC = ETC;
 		this.ETA = ETA;
 		this.laneSpecs = laneSpecs;
@@ -31,11 +39,12 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
 	 * Another constructor
 	 * without the ETC or the laneSpecs
 	 */
-	public RequestAccessMsg(int robotID, long ETA) {
-		super(robotID);
-		this.ETA = ETA;
-		ETC = -1;
-		laneSpecs = null;
+	public RequestAccessMsg(InetAddress robotIP, int robotPort, long ETA) {
+		this(robotIP, robotPort, ETA, -1, null);
+//		super(robotIP, robotPort);
+//		this.ETA = ETA;
+//		ETC = -1;
+//		laneSpecs = null;
 	}
 	
 	/**
