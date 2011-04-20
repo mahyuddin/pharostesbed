@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection.server;
 
+import java.net.InetAddress;
+
 /**
  *
  * @author Michael Hanna
@@ -9,10 +11,10 @@ public class Receive extends Thread
     private UDPReceiver client;
     private int port;
 
-    public Receive(int port)
+    public Receive(int port, String ipAdd)
     {
         this.port = port;
-        this.client = new UDPReceiver(this.port);
+        this.client = new UDPReceiver(this.port, ipAdd);
     }
 
     @Override
@@ -20,7 +22,7 @@ public class Receive extends Thread
     {
         while(true)
         {
-            Object object = client.receive();
+            /*Object object = client.receive();
             if( (object != null) && (object instanceof Robot) )
             {
                 Robot robot = (Robot) object;
@@ -38,7 +40,7 @@ public class Receive extends Thread
                         RobotsPriorityQueue.enqueue(robot);
                     }
                 }
-            }
+            }*/
         }
     }
 }

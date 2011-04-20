@@ -61,17 +61,17 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 	}
 
 	@Override
-	public void newLineFollowerEvent(LineFollowerEvent lfe) {
+	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
 		
 		UDPSender sender = new UDPSender(6665); // server to request access	
-		UDPReceiver receiver = new UDPReceiver(6665); // to receive from server
+		UDPReceiver receiver = new UDPReceiver(this.serverPort, this.serverIP); // to receive from server
 		
 		switch(lfe.getType()) {
 		case APPROACHING:
 			log("Robot is approaching intersection!");
 			//TODO Implement this... Ask server for permission to cross intersection.
-			sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "approaching" , ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()))));
-			receiver.receive();
+			sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "approaching" , ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis())), 0));
+			//receiver.receive();
 			break;
 			
 		case ENTERING:
@@ -80,18 +80,18 @@ public class RemoteIntersectionManager implements LineFollowerEventListener {
 			// for the approval to arrive (may need to query server again).
 			while(!hasAccess()) {
 				try {
-					
+					lf.stop();
 					this.wait(100);
-					sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "at intersection" , System.currentTimeMillis()));
-					receiver.receive();
+					sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "at intersection" , System.currentTimeMillis(), 0));
+					//receiver.receive();
 					// wait until new message received
 					// maybe put to sleep?
 					// in receive thread have it notify once a message received?
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} finally {
-					
+					// start robot back up once priority access received
+					lf.start();
 				}
 			}
 			// else go through intersection

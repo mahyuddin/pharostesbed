@@ -119,7 +119,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	private void notifyListeners(LineFollowerEvent lfe) {
 		Enumeration<LineFollowerEventListener> e = listeners.elements();
 		while(e.hasMoreElements()) {
-			e.nextElement().newLineFollowerEvent(lfe);
+			e.nextElement().newLineFollowerEvent(lfe, this);
 		}
 	}
 	

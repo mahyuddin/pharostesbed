@@ -24,7 +24,7 @@ public class Main {
 
 
         Thread IM = new IntersectionManager(6665);
-        Receive receive = new Receive(6665);
+        Receive receive = new Receive(6665, "localhost");
 
         receive.start();
         IM.start();

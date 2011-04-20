@@ -14,17 +14,20 @@ import pharoslabut.io.*;
  */
 public class UDPReceiver extends Thread
 {
-//    private int port = 6665;
+
     private int port;
     private ObjectInputStream ois;
+    private String ipAdd;
 
-    public UDPReceiver(int port)
+
+    public UDPReceiver(int port, String add)
     {
         this.port = port;
         this.ois = null;
+        this.ipAdd = add;
     }
 
-    /**
+	/**
      * <pre>
      *  - The client opens a new socket on port
      *  - Then connect to the server ("localhost")
@@ -40,10 +43,10 @@ public class UDPReceiver extends Thread
 	        try {
 	            // get a datagram socket
 	            DatagramSocket socket = new DatagramSocket();
-	
+	        	
 	            // send request
 	            byte[] receiveByte = new byte[256];
-	            InetAddress address = InetAddress.getByName("localhost");
+	            InetAddress address = InetAddress.getByName(ipAdd);//InetAddress.getByName("localhost");
 	            DatagramPacket receivePacket = new DatagramPacket(receiveByte, receiveByte.length, address, port);
 	            socket.send(receivePacket);
 	            System.out.println("RECEIVER: A send request is sent to the server at address:" + address + " and port:" + receivePacket.getPort());
@@ -111,19 +114,17 @@ public class UDPReceiver extends Thread
 	private static void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
 		if(msg != null)
 		{
-			Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
-	        while(iterator.hasNext())
+			//Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
+	        //while(iterator.hasNext())
 	        {
-	            Robot robot = iterator.next();
-	            if( robot.getID() == msg.getRobotID() )
+	            //Robot robot = iterator.next();
+	            //if( robot.getID() == msg.getRobotID() )
 	            {
-	            	IntersectionManager.robotsGrantedAccess.remove(robot);
-	            	break;
+	            	//IntersectionManager.robotsGrantedAccess.remove(robot);
+	            	//break;
 	            }
-	        }
-			
+	        }	
 		}
-		
 	}
 
 	private static void handleExitingMsg(ExitingMsg msg) {
@@ -138,15 +139,19 @@ public class UDPReceiver extends Thread
 	            	IntersectionManager.robotsCompleted.remove(robot);
 	            	break;
 	            }
-	        }
-			
+	        }	
 		}
-		
 	}
 
+	/**
+	 * Check if ack from server matches own id. 
+	 * @param msg is acknowledgment from server to robot, will be robot's id 
+	 */
 	private static void handleExitingAcknowledgedMsg(ExitingAcknowledgedMsg msg) {
 		// TODO SETH
-		
+		if(msg.getRobotID() != Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())) {
+			//send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())));
+		}
+		// else myID matches ack ID from server, continue on
 	}
-
 }

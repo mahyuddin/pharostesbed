@@ -14,7 +14,8 @@ public interface LineFollowerEventListener {
 	 * This is called whenver the line follower detects an event.
 	 * 
 	 * @param lfe The event.
+	 * @param follower is LineFollower object.
 	 */
-	public void newLineFollowerEvent(LineFollowerEvent lfe);
+	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower);
 	
 }
