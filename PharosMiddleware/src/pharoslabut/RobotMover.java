@@ -132,6 +132,10 @@ import playerclient.structures.position2d.PlayerPosition2dData;
       	public void stop()
       	{
       		motors.setSpeed(0, 0);
+      		BaseX = BaseX+ Xpos;
+      		BaseY = BaseY+ Ypos;
+      		BaseYaw = BaseYaw + Yaw;
+      		motors.INS_KillSig();
       	}
       	
       	private void pause(int duration) {
@@ -312,10 +316,10 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 			return Math.abs((n_H%(2*Math.PI)) - (o_H%(2*Math.PI)));
 		}
 		
-		public void FB_Mov(RoboMov mov_cmd)
+		public void FB_Mov(RoboMov mov_cmd, NewJFrame U_I)
 		{
 			//0 Forward, 1 Backward, 2 TurnCW, 3 TurnCCW 4 Stop
-			double orig_X = Xpos, orig_Y = Ypos, orig_H = Yaw;
+			double orig_X = BaseX+ Xpos, orig_Y =BaseY+ Ypos, orig_H =BaseYaw+ Yaw;
 			double movAmt;
 			
 			switch(mov_cmd.MovType)
@@ -323,18 +327,18 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 				case 0:
 					movAmt = calc_dist(orig_X, mov_cmd.goalWaypoint.X, orig_Y, mov_cmd.goalWaypoint.Y);
 					moveForward(); 
-					while (calc_dist(0, Xpos, 0, Ypos) < movAmt){};
+					while (calc_dist(0, Xpos, 0, Ypos) < movAmt){U_I.UpdateInfo();}; // TODO update x and y during while loops
 					break;
 				case 1: break; //Bwd
 				case 2: 
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnRight();
-						while (calc_rad(0, Yaw) < movAmt){};
+						while (calc_rad(0, Yaw) < movAmt){U_I.UpdateInfo();};
 						break;
 				case 3: 
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnLeft();
-						while (calc_rad(0, Yaw) < movAmt){};
+						while (calc_rad(0, Yaw) < movAmt){U_I.UpdateInfo();};
 						break;
 				default: stop(); break;
 			}
