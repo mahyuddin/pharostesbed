@@ -1,11 +1,17 @@
 package pharoslabut.demo.autoIntersection.server;
 
+import java.net.*;
+
 /**
- * Creates a new Object Robot
+ * Encapsulates the data for a robot.
+ * 
  * @author Michael Hanna
+ * @author Chien-Liang Fok
  */
 public class Robot implements java.io.Serializable {
-    private int id;
+    private InetAddress ipAddress;
+    private int port;
+    
     private String laneSpecs;
     private long ETA;
     private long ETC;
@@ -14,14 +20,18 @@ public class Robot implements java.io.Serializable {
     private boolean exited;
 
     /**
-     * Class constructor
-     * @param id Robot's ID (IP address)
+     * Class constructor.
+     * 
+     * @param idAddress Robot's ID (IP address)
+     * @param port The port of the robot
      * @param laneSpecs Robot's lane specification (direction, path, lane Number)
      * @param ETA Robot's estimated time of arrival (at the intersection)
      * @param ETC Robot's estimated time of clearance (after crossing the intersection)
      */
-    public Robot(int id, String laneSpecs, long ETA , long ETC) {
-        this.id = id;
+    public Robot(InetAddress ipAddress, int port, String laneSpecs, long ETA, long ETC) {
+        this.ipAddress = ipAddress;
+        this.port = port;
+        
         this.laneSpecs = laneSpecs;
         this.ETA = ETA;
         this.ETC = ETC;
@@ -32,25 +42,31 @@ public class Robot implements java.io.Serializable {
 
     /**
      * Class constructor
-     * @param id Robot's ID (IP address)
-     * Class constructed to handle robot exiting intersection.
+     * 
+     * @param idAddress Robot's ID (IP address)
+     * @param port The port of the robot
+     * @param ETA Robot's estimated time of arrival (at the intersection)
      */
-	public Robot(int id) {
-		// TODO Auto-generated constructor stub
-		this.id = id;
-        this.laneSpecs = "exit";
-        this.ETA = 0;
-		this.enqueued = false;
-        this.acknowledged = false;
-        this.exited = true;
+	public Robot(InetAddress ipAddress, int port, long ETA) {
+		this(ipAddress, port, "exit", ETA, -1);
+//		this.id = id;
+//        this.laneSpecs = "exit";
+//        this.ETA = 0;
+//		this.enqueued = false;
+//        this.acknowledged = false;
+//        this.exited = true;
 	}
 
 
 	/**
      *  @return id
      */
-    public int getID() {
-        return this.id;
+    public InetAddress getIP() {
+        return ipAddress;
+    }
+    
+    public int getPort() {
+    	return port;
     }
 
     /**
@@ -152,7 +168,7 @@ public class Robot implements java.io.Serializable {
     @Override
     public String toString()
     {
-        String output = "id : " + id + "\n";
+        String output = "Address : " + ipAddress + "\n" + "Port: " + port + "\t";
         output += "laneSpecs : " + laneSpecs + "\n";
         output += "ETA : " + ETA + "\n";
         output += "ETC : " + ETC + "\n";
