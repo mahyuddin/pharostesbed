@@ -89,7 +89,7 @@ public class DisplayQueue extends JFrame
             graphics2.draw(rectangle);
 
             pharoslabut.demo.autoIntersection.server.Robot robot = queue.remove();
-            s = "Robot ID " + robot.getID();
+            s = "Robot ID " + robot.getIP() + ":" + robot.getPort();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
@@ -125,7 +125,7 @@ public class DisplayQueue extends JFrame
             graphics2.draw(rectangle);
 
             pharoslabut.demo.autoIntersection.server.Robot robot = robotsCompleted.removeFirst();
-            s = "Robot ID " + robot.getID();
+            s = "Robot ID " + robot.getIP() + ":" + robot.getPort();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
             s = "Lane Specifications: " + robot.getLaneSpecs();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
