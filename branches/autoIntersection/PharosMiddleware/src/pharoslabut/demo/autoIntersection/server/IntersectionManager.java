@@ -31,6 +31,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
         this.serverPort = serverPort;
 //        this.server = new UDPSender(this.serverPort);
         networkInterface = new UDPNetworkInterface(serverPort);
+        networkInterface.registerMsgListener(this);
     }
 
     /**
