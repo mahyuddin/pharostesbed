@@ -1,16 +1,14 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
-import pharoslabut.io.*;
-
 /**
  * This message is sent from the robot to the intersection server when
  * it approaches the intersection.  It's purpose is to request permission 
  * to cross the intersection.
  * 
  * @author Chien-Liang Fok
- *
+ * @author Michael Hanna
  */
-public class RequestAccessMsg extends Msg implements Message  {
+public class RequestAccessMsg extends AutoIntersectionMsg  {
 
 	private static final long serialVersionUID = -3642519285338558989L;
 	private long ETA;
@@ -83,11 +81,6 @@ public class RequestAccessMsg extends Msg implements Message  {
         this.laneSpecs = specs;
 //        this.ETA = eta + new Date().getTime() - Main.startTime;
     }
-	
-	@Override
-	public MsgType getType() {
-		return MsgType.CUSTOM;
-	}
 	
 	public String toString() {
 		return "RequestAccessMsg";

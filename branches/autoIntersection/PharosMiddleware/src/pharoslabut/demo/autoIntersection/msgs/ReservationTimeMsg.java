@@ -1,8 +1,12 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
-import pharoslabut.io.Message;
-
-public class ReservationTimeMsg extends Msg implements Message {
+/**
+ * Sent by the server to the robot assigning it the time at which it may
+ * enter the intersection.
+ * 
+ * @author Michael Hanna
+ */
+public class ReservationTimeMsg extends AutoIntersectionMsg {
 	
 	private static final long serialVersionUID = 7593577761036988454L;
 	private long ETA;
@@ -27,11 +31,6 @@ public class ReservationTimeMsg extends Msg implements Message {
         this.ETA = eta;
 //        this.ETA = ETA + new Date().getTime() - Main.startTime;
     }
-	
-	@Override
-	public MsgType getType() {
-		return MsgType.CUSTOM;
-	}
 	
 	public String toString() {
 		return "ReservationTimeMsg";

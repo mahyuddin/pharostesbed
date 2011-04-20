@@ -1,18 +1,18 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
-import pharoslabut.io.*;
 
-public class ExitingMsg extends Msg implements Message {
+/**
+ * This message is sent by the robot to the intersection server when it
+ * exits the intersection.
+ * 
+ * @author Michael Hanna
+ */
+public class ExitingMsg extends AutoIntersectionMsg {
 	
 	private static final long serialVersionUID = -5699029124573209933L;
 
 	public ExitingMsg(int robotID) {
 		super(robotID);
-	}
-	
-	@Override
-	public MsgType getType() {
-		return MsgType.CUSTOM;
 	}
 	
 	public String toString() {
