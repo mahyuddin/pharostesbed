@@ -97,6 +97,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		lf.addListener(this);
 	
 		networkInterface = new UDPNetworkInterface(serverPort); // robot listens on same port as server
+		networkInterface.registerMsgListener(this);
 	}
 
 	/**
