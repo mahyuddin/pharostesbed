@@ -332,21 +332,9 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		compassLogger.start(1, fileName);
 		
 
-	//	turn_comp(-90, motors);
-	//  move_odometry(10, motors);
-		//pause(1000);
-		//move_odometry(0.5, motors);
-	//	turn_comp(-90, motors);
-	//	turn_comp(45, motors);
-	//	pause(1000);
-	//	move_odometry(0.5, motors);
-	//	move_odometry(0.5, motors);
-	//	pause(1000);
-	//	turn_comp(-90, motors);
-	//	turn_comp(90, motors);
-	//	move_odometry(0.5, motors);
-	//	turn_comp(90, motors);
-	//	turn_comp(90, motors);
+// 		turn_comp(90, motors);
+//  	move_odometry(0.35, motors);
+//		pause(1000);
 		
 	/*
 	 * This loop go through the movement instructions and figure whether to move forward
@@ -371,7 +359,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 
 			if(pavGUI.abortMovement){
 				break;
-			}
+				}
 
 			
 			if(Math.abs(command.get(i)) >= 10.0)
@@ -379,6 +367,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 				System.out.println(command.get(i));
 				double distance = command.get(i)/20;
 				move_odometry(distance, motors);
+			//	pavGUI.incrementPosition();
 			}
 			
 			else
@@ -416,12 +405,12 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		
 
 		log("Test complete!");
-		/*for(;;){
+		for(;;){
 			move_odometry(0,motors);
-		}*/
-		compassLogger.stop();
-		motors.removePos2DListener(this);
-		irdata.removeIRListener(this);
+		}
+		//compassLogger.stop();
+	//	motors.removePos2DListener(this);
+	//	irdata.removeIRListener(this);
 
 		//System.exit(0);
 	
@@ -429,14 +418,16 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	
 	private void move_odometry(double distance, Position2DInterface motors){
 		double starting = 0;
-		double speed = 0.2;
+		double speed = 0.1;
 		if (distance <0) {
 			speed = speed * -1;
 			distance = distance* -1;
 			}
+		
+		//NOTE: this is a hack, since setOdometry() is asynchronous.
 		motors.resetOdometry();
-		//System.out.println("move");
-		//System.out.println(odflag);
+		
+
 		while(!odflag){
 			synchronized(this) {
 				try {
@@ -445,13 +436,15 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		        starting = odreading;
 			}
 		}
-		//NOTE: this is a hack, since setOdometry() is asynchronous.
-		starting = 0;
+		
 		//System.out.println("starting od " + starting);
 		
 		motors.setSpeed(speed, 0);
-	
-	    while((starting + distance - 0.04) > odreading) {
+		
+		// TODO: for for every 50 cm this misses about less than 1 cm. 
+		// We can possibly try to increase the rate of odometry reading
+		// Resolution of odometry is approx 4cm right now.
+	    while((distance-0.02) > odreading) {
 	    	synchronized(this) {
 		    	try {
 		            wait();
@@ -459,12 +452,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	    	}
 	    }
 	    
-		/*for(starting = odreading; (starting + distance) > odreading;)
-		{
-			System.out.println("position" + odreading); // works with but not without this line ?????
-			pause(80);
-		}
-		//System.out.println(starting);*/
 	    
 		motors.setSpeed(0, 0);
 		odflag = false;
@@ -640,9 +627,11 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 //		command.add(0.0);
 //		command.add(-10.0);
 		
-		GUI pav = new GUI();
-		
-		new testing(serverIP, serverPort, fileName, showGUI, command, pav);
+
+		GUI gui = new GUI();
+		new testing(serverIP, serverPort, fileName, showGUI, command, gui);
+
+
 
 	}
 	
@@ -652,7 +641,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		odflag = true;
 		odreading = data.getPos().getPx();
 		notifyAll();
-		//System.out.println("Odometry  " + data.getPos().getPx());
+	//	System.out.println("Odometry  " + data.getPos().getPx());
 		
 	}
 
@@ -661,7 +650,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		compflag = true;
 		compreading = heading;
 		notifyAll();
-		//System.out.println("heading: " + heading);
+	//	System.out.println("heading: " + heading);
 		
 		// TODO Auto-generated method stub
 		
@@ -670,12 +659,17 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	@Override
 	public synchronized void newPlayerIRData (PlayerIrData data)
 	{
+
+		float [] irData = data.getRanges();
+
 		notifyAll();
 		IRdata = data.getRanges();
-		System.out.println("  raw  " + IRdata[0]);
-		System.out.println("  raw  " + IRdata[1]);
-		System.out.println( "  raw  " + IRdata[2]);
-		System.out.println("\n");
+//		System.out.println(IRdata[0] + " " + IRdata[1] + " " + IRdata[2]);
+//		System.out.println("front  raw  " + IRdata[0]);
+		System.out.println(IRdata[1]);
+//		System.out.println( "left  raw  " + IRdata[2]);
+//		System.out.println("\n");
+
 		// TODO Auto-generated method stub
 	}
 
