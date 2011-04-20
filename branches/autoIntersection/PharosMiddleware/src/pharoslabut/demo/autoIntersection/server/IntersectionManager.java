@@ -9,9 +9,10 @@ import pharoslabut.io.*;
 
 /**
  * The intersection manager defines the strategy for AIM
+ * 
  * @author Michael Hanna
+ * @author Chien-Liang Fok
  */
-
 public class IntersectionManager extends Thread implements MessageReceiver {
 
     private long nextAvailableETC;
@@ -30,6 +31,9 @@ public class IntersectionManager extends Thread implements MessageReceiver {
         robotsCompleted = new LinkedList<Robot>();
         this.serverPort = serverPort;
 //        this.server = new UDPSender(this.serverPort);
+        
+        // Create the network interface and register this object as a listener for
+        // incoming messages.
         networkInterface = new UDPNetworkInterface(serverPort);
         networkInterface.registerMsgListener(this);
     }
@@ -161,7 +165,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     }
 
     /**
-     * Handles incomming messages.
+     * Handles incoming messages.
      */
 	@Override
 	public void newMessage(Message msg) {
