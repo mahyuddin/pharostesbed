@@ -4,18 +4,21 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 
+import pharoslabut.demo.autoIntersection.msgs.*;
+import pharoslabut.io.*;
 
 /**
  * The intersection manager defines the strategy for AIM
  * @author Michael Hanna
  */
 
-public class IntersectionManager extends Thread {
+public class IntersectionManager extends Thread implements MessageReceiver {
 
     private long nextAvailableETC;
     public static LinkedList<Robot> robotsCompleted;
-    private UDPSender server;
+//    private UDPSender server;
 	private int serverPort;
+	private NetworkInterface networkInterface;
 
     /**
      * default constructor
@@ -26,7 +29,8 @@ public class IntersectionManager extends Thread {
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
         this.serverPort = serverPort;
-        this.server = new UDPSender(this.serverPort);
+//        this.server = new UDPSender(this.serverPort);
+        networkInterface = new UDPNetworkInterface(serverPort);
     }
 
     /**
@@ -117,11 +121,16 @@ public class IntersectionManager extends Thread {
                         this.nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
                         queue.remove();
                         robotsCompleted.add(robot);
-                        server.send(robot);
+                        
+                        // Create a ReservationTimeMsg...
+                        ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
+                        networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);
+                        
+//                        server.send(robot);
                     }
                     else
                     {
-                        System.out.println("robot " + robot.getID() + " is not allowed, nextavailableETC = " + nextAvailableETC + ". The robot's ETA: " + robot.getETA());
+                        System.out.println("robot " + robot.getIP() + ":" + robot.getPort() + " is not allowed, nextavailableETC = " + nextAvailableETC + ". The robot's ETA: " + robot.getETA());
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
                 //        nextAvailableETC = nextAvailableETC + timeDifference;
@@ -150,6 +159,64 @@ public class IntersectionManager extends Thread {
         }
     }
 
+    /**
+     * Handles incomming messages.
+     */
+	@Override
+	public void newMessage(Message msg) {
+		if (msg instanceof RequestAccessMsg)
+    		handleRequestAccessMsg( (RequestAccessMsg) msg );
+    	else if (msg instanceof ReservationTimeAcknowledgedMsg)
+    		handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
+    	else if (msg instanceof ExitingMsg)
+    		handleExitingMsg( (ExitingMsg) msg );
+//    	else if (msg instanceof ExitingAcknowledgedMsg)
+//    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
+    	else
+    		System.out.println("RECEIVER: Unknown message " + msg);
+	}
+	
+    private static void handleRequestAccessMsg(RequestAccessMsg msg) {
+		if(msg != null)
+		{
+			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
+			if(! robot.isEnqueued() )
+            {
+            	robot.setEnqueued(true);
+                RobotsPriorityQueue.enqueue(robot);
+            }
+		}
+	}
 
+	private static void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
+		if(msg != null)
+		{
+			//Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
+	        //while(iterator.hasNext())
+	        {
+	            //Robot robot = iterator.next();
+	            //if( robot.getID() == msg.getRobotID() )
+	            {
+	            	//IntersectionManager.robotsGrantedAccess.remove(robot);
+	            	//break;
+	            }
+	        }	
+		}
+	}
 
+	private static void handleExitingMsg(ExitingMsg msg) {
+		if(msg != null)
+		{
+			Iterator<Robot> iterator = IntersectionManager.robotsCompleted.iterator();
+	        while(iterator.hasNext())
+	        {
+	            Robot robot = iterator.next();
+	            if(robot.getIP().equals(msg.getRobotIP()) && robot.getPort() == msg.getRobotPort())
+	            {
+	            	IntersectionManager.robotsCompleted.remove(robot);
+	            	break;
+	            }
+	        }	
+		}
+	}
 }

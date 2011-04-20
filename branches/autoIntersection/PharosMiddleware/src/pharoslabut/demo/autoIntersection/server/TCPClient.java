@@ -6,6 +6,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * NOTE: THIS SHOULD NO LONGER BE USED!!!
+ * 
+ * 
  * Each robot is a client
  * @author Michael Hanna
  */

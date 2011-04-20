@@ -1,7 +1,5 @@
 package pharoslabut.demo.autoIntersection.server;
 
-import java.net.InetAddress;
-
 /**
  * NOTE: THIS SHOULD NO LONGER BE USED!!!
  * 

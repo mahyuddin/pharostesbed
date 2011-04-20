@@ -9,6 +9,9 @@ import java.net.*;
 //////////////////////////////// Class Connect //////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 /**
+ * 
+ * NOTE: THIS SHOULD NO LONGER BE USED!!!
+ * 
  * The server to which the robots will connect
  * @author Michael Hanna
  */
@@ -117,7 +120,7 @@ class Connect extends Thread
     public void run()
     {
         try {
-         oos.writeObject(new Robot(0, "laneSpecs", (long)1.2, (long)1.3 ) );
+         oos.writeObject(new Robot(null, 0, "laneSpecs", (long)1.2, (long)1.3 ) );
          oos.flush();
          // close streams and connections
          ois.close();

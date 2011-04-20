@@ -8,7 +8,7 @@ import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.io.*;
 
 /**
- *
+ * NOTE: THIS SHOULD NO LONGER BE USED!!!
  * @author Michael Hanna
  *
  */
@@ -60,7 +60,7 @@ public class UDPReceiver extends Thread
 	            ois = new ObjectInputStream(new ByteArrayInputStream(receivePacket.getData()));
 	            Object object = ois.readObject();
 	            Message msg = (Message) object;
-	            processMessage(msg);
+//	            processMessage(msg);
 	            
 	            System.out.println("RECEIVER: The folowing Message is received: \n" + msg);
 	            socket.close();
@@ -76,82 +76,23 @@ public class UDPReceiver extends Thread
     	}
     }
     
-    
-    private static void processMessage(Message msg)
-    {
-    	if (msg instanceof RequestAccessMsg)
-    		handleRequestAccessMsg( (RequestAccessMsg) msg );
-    	else if (msg instanceof ReservationTimeMsg)
-    		handleReservationTimeMsg( (ReservationTimeMsg) msg );
-    	else if (msg instanceof ReservationTimeAcknowledgedMsg)
-    		handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
-    	else if (msg instanceof ExitingMsg)
-    		handleExitingMsg( (ExitingMsg) msg );
-    	else if (msg instanceof ExitingAcknowledgedMsg)
-    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
-    	else
-    		System.out.println("RECEIVER: Unknown message " + msg);
-    }
-    
-    
-    private static void handleRequestAccessMsg(RequestAccessMsg msg) {
-		if(msg != null)
-		{
-			Robot robot = new Robot(msg.getRobotID(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
-			if(! robot.isEnqueued() )
-            {
-            	robot.setEnqueued(true);
-                RobotsPriorityQueue.enqueue(robot);
-            }
-		}
-	}
+//    
+//    private static void processMessage(Message msg)
+//    {
+//    	if (msg instanceof RequestAccessMsg)
+//    		handleRequestAccessMsg( (RequestAccessMsg) msg );
+//    	else if (msg instanceof ReservationTimeMsg)
+//    		handleReservationTimeMsg( (ReservationTimeMsg) msg );
+//    	else if (msg instanceof ReservationTimeAcknowledgedMsg)
+//    		handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
+//    	else if (msg instanceof ExitingMsg)
+//    		handleExitingMsg( (ExitingMsg) msg );
+//    	else if (msg instanceof ExitingAcknowledgedMsg)
+//    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
+//    	else
+//    		System.out.println("RECEIVER: Unknown message " + msg);
+//    }
+//    
+//    
 
-	private static void handleReservationTimeMsg(ReservationTimeMsg msg) {
-		// TODO SETH...
-		
-	}
-
-	private static void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
-		if(msg != null)
-		{
-			//Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
-	        //while(iterator.hasNext())
-	        {
-	            //Robot robot = iterator.next();
-	            //if( robot.getID() == msg.getRobotID() )
-	            {
-	            	//IntersectionManager.robotsGrantedAccess.remove(robot);
-	            	//break;
-	            }
-	        }	
-		}
-	}
-
-	private static void handleExitingMsg(ExitingMsg msg) {
-		if(msg != null)
-		{
-			Iterator<Robot> iterator = IntersectionManager.robotsCompleted.iterator();
-	        while(iterator.hasNext())
-	        {
-	            Robot robot = iterator.next();
-	            if( robot.getID() == msg.getRobotID() )
-	            {
-	            	IntersectionManager.robotsCompleted.remove(robot);
-	            	break;
-	            }
-	        }	
-		}
-	}
-
-	/**
-	 * Check if ack from server matches own id. 
-	 * @param msg is acknowledgment from server to robot, will be robot's id 
-	 */
-	private static void handleExitingAcknowledgedMsg(ExitingAcknowledgedMsg msg) {
-		// TODO SETH
-		if(msg.getRobotID() != Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())) {
-			//send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())));
-		}
-		// else myID matches ack ID from server, continue on
-	}
 }
