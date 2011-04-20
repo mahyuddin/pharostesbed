@@ -493,8 +493,13 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    
 	    //TODO: Handle movement list
 	    
+	    int i;
+	    for (i=0; i<pf.result.MovSize(); i++)
+	    {
+	    	XueHua.FB_Mov(pf.result.GetMov(i),this);
+	    }
 	    
-	    
+	    XueHua.stop();
 	    // while new command 
 	    //move
 	    // update
@@ -502,21 +507,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
              
 	    	//  XueHuaPos.INS_UpdateX();
             //  XueHuaPos.INS_UpdateY();
-              
-	    XueHuaPos.INS_UpdateX();
-        XueHuaPos.INS_UpdateY();
-        XueHuaPos.INS_UpdateOrient();
-        
-        String XueHuaX = Double.toString(XueHuaPos.Xpos+XueHuaPos.BaseX);
-        String XueHuaY = Double.toString(XueHuaPos.Ypos+XueHuaPos.BaseY);
-        String XueHuaYaw = Double.toString(XueHuaPos.Yaw+XueHuaPos.BaseYaw);
-        jTextField1.setText(XueHuaX); 
-        jTextField2.setText(XueHuaY);
-        jTextField3.setText(XueHuaYaw);
-        
-      double XueHuaTime = s.getElapsedTimeSecs();
-        Time = Double.toString(XueHuaTime);
-        jTextField5.setText(Time);
+
 
      //         private void jTextField7ActionPerformed(java.awt.event.ActionEvent ) {
                   // TODO add your handling code here:
@@ -524,6 +515,25 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
+   
+   public void UpdateInfo()
+   {
+       XueHuaPos.INS_UpdateX();
+       XueHuaPos.INS_UpdateY();
+       XueHuaPos.INS_UpdateOrient();
+       
+       String XueHuaX = Double.toString(XueHuaPos.Xpos+XueHuaPos.BaseX);
+       String XueHuaY = Double.toString(XueHuaPos.Ypos+XueHuaPos.BaseY);
+       String XueHuaYaw = Double.toString(XueHuaPos.Yaw+XueHuaPos.BaseYaw);
+       jTextField1.setText(XueHuaX); 
+       jTextField2.setText(XueHuaY);
+       jTextField3.setText(XueHuaYaw);
+       
+       double XueHuaTime = s.getElapsedTimeSecs();
+       Time = Double.toString(XueHuaTime);
+       jTextField5.setText(Time);
+   }
+   
    private ImageDisplay ImageDisplay(String mapfile) {
 	// TODO Auto-generated method stub
 	return null;
