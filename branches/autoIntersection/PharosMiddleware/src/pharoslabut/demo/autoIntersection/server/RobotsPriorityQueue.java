@@ -64,7 +64,7 @@ public class RobotsPriorityQueue
         while(iterator.hasNext())
         {
             Robot robot = iterator.next();
-            output += robot.getID();
+            output += robot.getIP() + ":" + robot.getPort();
             output += " - ";
         }
         return output;
@@ -79,30 +79,34 @@ public class RobotsPriorityQueue
         long offset = 5;
 //etc = eta + offset
         
-        long ETA = new Date().getTime() - Main.startTime;
-        Robot robot = new Robot(0, "laneSpecs", ETA, ETA);
-        robot.setEnqueued(true);
-        enqueue( robot );
+        try {
+        	long ETA = new Date().getTime() - Main.startTime;
+        	Robot robot = new Robot(java.net.InetAddress.getByName("10.11.12.0"), 8888, "laneSpecs", ETA, ETA);
+        	robot.setEnqueued(true);
+        	enqueue( robot );
 
-        ETA += 2;
-        robot = new Robot(1, "laneSpecs", ETA, ETA);
-        robot.setEnqueued(true);
-        enqueue( robot );
+        	ETA += 2;
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.1"), 8888, "laneSpecs", ETA, ETA);
+        	robot.setEnqueued(true);
+        	enqueue( robot );
 
-        ETA += 10;
-        robot = new Robot(2, "laneSpecs", ETA, ETA );
-        robot.setEnqueued(true);
-        enqueue( robot );
+        	ETA += 10;
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.2"), 8888, "laneSpecs", ETA, ETA );
+        	robot.setEnqueued(true);
+        	enqueue( robot );
 
-        ETA += 4;
-        robot = new Robot(3, "laneSpecs", ETA, ETA );
-        robot.setEnqueued(true);
-        enqueue( robot );
+        	ETA += 4;
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.3"), 8888, "laneSpecs", ETA, ETA );
+        	robot.setEnqueued(true);
+        	enqueue( robot );
 
-        ETA += 5;
-        robot = new Robot(4, "laneSpecs", ETA, ETA );
-        robot.setEnqueued(true);
-        enqueue( robot );
+        	ETA += 5;
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.4"), 8888, "laneSpecs", ETA, ETA );
+        	robot.setEnqueued(true);
+        	enqueue( robot );
+        } catch(java.net.UnknownHostException e) {
+        	e.printStackTrace();
+        }
 
         System.out.println(queue);
         
