@@ -787,11 +787,14 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	public void incrementPosition()
 	{
 		loadedMapCanvas.incrementNode();
-		SwingUtilities.invokeLater(new Runnable(){
-			public void run(){
-				loadedMapCanvas.repaint();
-			}
-		});
+		if(loadedMapCanvas.getCurrentNode().isValid())
+		{
+			SwingUtilities.invokeLater(new Runnable(){
+				public void run(){
+					loadedMapCanvas.repaint();
+				}
+			});
+		}
 	}
 }
 
@@ -824,12 +827,16 @@ class GUICanvas extends JPanel
 		factor = 1;
 		theMap = null;
 		path = null;
-		currentNode = path.first();
 	}
 	
 	public void incrementNode()
 	{
 		currentNode.advance();
+	}
+	
+	public LinkedListIterator getCurrentNode()
+	{
+		return currentNode;
 	}
 	
 	public void setCurrentLoc(int x, int y, boolean drawPath, boolean repaint)
