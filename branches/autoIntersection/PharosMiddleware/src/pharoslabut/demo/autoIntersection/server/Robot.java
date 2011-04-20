@@ -20,11 +20,11 @@ public class Robot implements java.io.Serializable {
      * @param ETA Robot's estimated time of arrival (at the intersection)
      * @param ETC Robot's estimated time of clearance (after crossing the intersection)
      */
-    public Robot(int id, String laneSpecs, long ETA /*, long ETC*/) {
+    public Robot(int id, String laneSpecs, long ETA , long ETC) {
         this.id = id;
         this.laneSpecs = laneSpecs;
         this.ETA = ETA;
-        //this.ETC = ETC;
+        this.ETC = ETC;
         this.enqueued = false;
         this.acknowledged = false;
         this.exited = false;
