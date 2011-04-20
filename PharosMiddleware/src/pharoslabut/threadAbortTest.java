@@ -14,6 +14,7 @@ public class threadAbortTest {
 				System.exit(1);
 			}
 			System.out.println("Counter: "+counter);
+			pavGUI.incrementPosition();
 		}
 		System.out.println("Thread aborted");
 	}
