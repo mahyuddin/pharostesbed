@@ -4,7 +4,6 @@ import java.net.UnknownHostException;
 import java.net.InetAddress;
 
 import pharoslabut.navigate.*;
-import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 import pharoslabut.io.*;
 import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.logger.*;
