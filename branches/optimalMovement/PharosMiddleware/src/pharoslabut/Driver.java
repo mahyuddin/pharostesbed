@@ -16,7 +16,7 @@ import javax.swing.*;
 **																		**
 *************************************************************************/
 
-class Driver implements ActionListener, KeyListener, WindowStateListener
+class Driver implements ActionListener, WindowStateListener
 {
 	private GUI pavPanel;
 	private JFrame f;
@@ -31,7 +31,6 @@ class Driver implements ActionListener, KeyListener, WindowStateListener
 		Dimension newMinSize = pavPanel.newMapSize();
 		f.setMinimumSize(newMinSize);
 		f.setVisible(true);
-		f.addKeyListener(this);
 		f.addWindowStateListener(this);
 		SwingUtilities.invokeLater(new Runnable(){
 			public void run(){
@@ -121,36 +120,6 @@ class Driver implements ActionListener, KeyListener, WindowStateListener
 		{
 			pavPanel.setMessageDisplay(commandString);
 		}
-	}
-	
-	public void keyPressed(KeyEvent k)
-	{
-		if(k.getKeyCode() == KeyEvent.VK_UP)
-		{
-			pavPanel.movePAVUp();
-		}
-		else if(k.getKeyCode() == KeyEvent.VK_DOWN)
-		{
-			pavPanel.movePAVDown();
-		}
-		else if(k.getKeyCode() == KeyEvent.VK_LEFT)
-		{
-			pavPanel.movePAVLeft();
-		}
-		else if(k.getKeyCode() == KeyEvent.VK_RIGHT)
-		{
-			pavPanel.movePAVRight();
-		}
-	}
-	
-	public void keyTyped(KeyEvent k)
-	{
-		
-	}
-	
-	public void keyReleased(KeyEvent k)
-	{
-		
 	}
 	
 	public void windowStateChanged(WindowEvent w)
