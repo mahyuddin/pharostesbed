@@ -168,14 +168,19 @@ public class AStar {
 		return path;
 	}
 	
-	public static List<Integer> get_heading(LinkedList path, Node start){
+	public static List<Integer> get_heading(LinkedList path, Node start, int initHeading){
 		LinkedListIterator pathitr, pathitr_pre;
 		List<Integer> heading = new ArrayList<Integer>();
 		double x,y;
 		pathitr_pre = path.first();
 		pathitr = path.first();
 		pathitr.advance();
-		heading.add(0);
+		initHeading = initHeading+210;
+		if(initHeading >= 360)
+		{
+			initHeading = initHeading-360;
+		}
+		heading.add(initHeading);
 		for(;pathitr.isValid();pathitr.advance()){
 			x = pathitr.retrieve().getX() - pathitr_pre.retrieve().getX();
 			y = pathitr.retrieve().getY() - pathitr_pre.retrieve().getY();
@@ -202,7 +207,7 @@ public class AStar {
 		return heading;
 	}
 	
-	public static List<Double> move_instruction(LinkedList path, Node start){
+	public static List<Double> move_instruction(LinkedList path, Node start, int initHeading){
 	
 		/****************************************	
 		 * 	Lookup Table for move_instruction	*
@@ -217,7 +222,7 @@ public class AStar {
 		 *  10 - Move forward					*
 		 ****************************************/
 
-		List<Integer> heading = get_heading(path, start);
+		List<Integer> heading = get_heading(path, start, initHeading);
 		List<Double> command = new ArrayList<Double>();
 		double turn_code = 0;
 		double move_dis = 1.0;
@@ -453,8 +458,8 @@ public class AStar {
 		path = findPath(nodemap1,start,end);
 		System.out.println("DISPLAYING PATH");
 		LinkedList.printList(path);
-		heading = get_heading(path,start);
-		command = move_instruction(path, start);
+		heading = get_heading(path,start,0);
+		command = move_instruction(path, start,0);
 		System.out.println("Movement Command");
 		System.out.println(command);
 		ir_range = ir_helper(path,heading);
