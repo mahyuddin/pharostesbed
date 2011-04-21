@@ -12,21 +12,25 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	public static Position2DInterface motors;
 	private static CompassLoggerEvent compassLogger;
 	// change initial values to reflect the robot's starting orientation
-	private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
-	private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
+	//private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
+	//private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
+	private static final double initialX = 60*WorldView.RESOLUTION;
+	private static final double initialY = 60*WorldView.RESOLUTION;
 	private static final double initialBearing = Math.PI/2;
 	
 	private static double currentX;
 	private static double currentY;
 	
 	private static double bearing; // -PI to +PI
+	
+	private static boolean calibrateTurn;
 	// 0 is east, PI/2 is north, PI and -PI are west, and -PI/2 is south
 	
 	
 	public LocationTracker() {
 		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
-		motors = (PathPlannerSimpleTest.client).requestInterfacePosition2D(0, 
+		motors = (PathPlanner.client).requestInterfacePosition2D(0, 
 				PlayerConstants.PLAYER_OPEN_MODE);
 		
 		
@@ -42,7 +46,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
-		currentX = initialX; currentY = initialY; bearing = initialBearing; // facing east
+		currentX = getInitialx(); currentY = initialY; bearing = initialBearing; // facing east
 		
 		// robot should begin in lower-left corner with a bearing of 0, facing east
 //		System.out.println("going to write odom");
@@ -94,7 +98,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 		}
 		
 //		System.out.println("Being sent to recordLocation: " + currentX + ", " + currentY);
-		WorldView.recordLocation(currentX, currentY);
+		WorldView.recordLocation(currentX, currentY);		
 	}
 	
 	
@@ -116,6 +120,34 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	public static Integer [] getCurrentCoordinates() {
 		Integer [] coords = WorldView.locToCoord(getCurrentLocation());
 		return coords;
+	}
+	
+	public static Integer[] getBottomLeftCoord(double[] loc){
+		loc[0] -= WorldView.ROOMBA_RADIUS;
+		loc[1] -= WorldView.ROOMBA_RADIUS;
+		Integer[] coord =  WorldView.locToCoord(loc);
+		return coord;
+	}
+	public static Integer[] getBottomRightCoord(double[] loc){
+		loc[0] += WorldView.ROOMBA_RADIUS;
+		loc[1] -= WorldView.ROOMBA_RADIUS;
+		Integer[] coord =  WorldView.locToCoord(loc);
+		return coord;
+	}
+	public static Integer[] getTopLeftCoord(double[] loc){
+		loc[0] -= WorldView.ROOMBA_RADIUS;
+		loc[1] += WorldView.ROOMBA_RADIUS;
+		Integer[] coord =  WorldView.locToCoord(loc);
+		return coord;
+	}
+	public static Integer[] getTopRightCoord(double[] loc){
+		loc[0] += WorldView.ROOMBA_RADIUS;
+		loc[1] += WorldView.ROOMBA_RADIUS;
+		Integer[] coord =  WorldView.locToCoord(loc);
+		return coord;
+	}
+	public static double getCurrentBearing(){
+		return bearing;
 	}
 	
 	
@@ -174,8 +206,11 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 		PlayerPose pp = data.getPos();
 		
 		//insert 5-wide median filter here
-		
+		//if(calibrateTurn) writeOdometry(pp.getPx(), pp.getPy(), pp.getPa()*1.005);
+		PathPlanner.setPlayerPose(pp);
 		LocationTracker.updateLocation(pp);
+		
+		//writeOdometry(pp.getPx(), pp. getPy(), pp.getPa());
 		//		}
 		//log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() 
 		//		+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
@@ -184,6 +219,19 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //				+ ", vela=" + data.getVel().getPa() + ", stall=" + data.getStall());
 				
 //		System.out.println("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa());
+	}
+	
+	public static void setTurnCalibrate(boolean truth){
+		calibrateTurn = truth;
+	}
+
+
+	public static double getInitialx() {
+		return initialX;
+	}
+	
+	public static double getInitialy() {
+		return initialY;
 	}
 	
 

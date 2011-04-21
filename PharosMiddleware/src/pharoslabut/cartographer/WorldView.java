@@ -15,12 +15,16 @@ class LocationElement {
 	private Integer yCoord;
 	private double confidence; // percentage 
 	private Integer traversedCount;
+	private boolean isFrontier;
+	private boolean isPath;
 	
 	public LocationElement (Integer x, Integer y) {
 		this.xCoord = x;
 		this.yCoord = y;
 		this.confidence = .5;  // initialized to 50% 
-		this.traversedCount = 0;    // initialized to 0, unexplored		
+		this.traversedCount = 0;    // initialized to 0, unexplored
+		this.isFrontier = false;
+		this.isPath = false;
 	}	
 	
 	@Override
@@ -37,6 +41,10 @@ class LocationElement {
 	public void setConfidence(double c) { this.confidence = c; }
 	public Integer getTraversed() { return traversedCount; }
 	public void setTraversed(Integer i) { this.traversedCount = i; }
+	public void setFrontier(boolean t){ this.isFrontier = t; }	// added by felix
+	public boolean getFrontier(){ return isFrontier; }	// added by felix
+	public void setPath(){ this.isPath = true; }	// added by felix
+	public boolean getPath(){ return isPath; }	// added by felix
 	/*************** END GETTERS AND SETTERS ****************/
 	
 	public void incTraversed() { this.traversedCount++; }
@@ -88,16 +96,17 @@ public class WorldView implements IRListener {
 	public static FileWriter fstream; 
     public static BufferedWriter fout; 
 	
-	public static final int WORLD_SIZE = 120;					// initial dimensions of "world" (below)
-	private static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
+	public static final int WORLD_SIZE = 180;					// initial dimensions of "world" (below)
+	public static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
 	public static ArrayList<OrderedPair> pathTracker; 
 	
 	public static final double RESOLUTION 				= 0.05; // 5 cm
 	public static final double MIN_USEFUL_IR_DISTANCE 	= 0.22; // minimum short range distance is 22 cm 
-	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.00; // max short range distance is 175 cm
+	public static final double MAX_USEFUL_IR_DISTANCE 	= 1.50; // max short range distance is 175 cm
 																// looks like the max long range distance detectable is ~550 cm 
 																// but more accurate when under 300 cm
+	public static final double MAX_POSSIBLE_IR_DISTANCE = 3.00;
 	public static final double ROOMBA_RADIUS 			= 0.17; // radius of the roomba from center point out = 17cm
 	
 	// the POSE values are distance from center of roomba to each IR sensor
@@ -125,7 +134,7 @@ public class WorldView implements IRListener {
 	public static final double REAR_CENTER_IR_POSE_HYP		= Math.sqrt(Math.pow(REAR_CENTER_IR_POSE[0], 2) + Math.pow(REAR_CENTER_IR_POSE[1], 2));	//
 	public static final double REAR_RIGHT_IR_POSE_HYP		= Math.sqrt(Math.pow(REAR_RIGHT_IR_POSE[0], 2) + Math.pow(REAR_RIGHT_IR_POSE[1], 2));	//
 	
-	
+	// added by felix for frontier creation and grouping
 	
 	/* Y  | | | | | | | | | | | | | | | | | | | | | | | | 20,20
 	 *    | | | | | | | | | | | | | | | | | | | | | | | | 
@@ -178,7 +187,7 @@ public class WorldView implements IRListener {
 		
 		
 		/////////// IR INTERFACE ///////////////
-		IRInterface ir = (PathPlannerSimpleTest.client).requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+		IRInterface ir = (PathPlanner.client).requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (ir == null) {
 			System.out.println("unable to connect to IR interface");
 			System.exit(1);
@@ -244,7 +253,10 @@ public class WorldView implements IRListener {
 	public static synchronized void recordLocation(double xPos, double yPos) {
 		
 		double [] pos = {xPos, yPos};
-		Integer [] coordinates = locToCoord(pos); // coordinates[0] is xCoord, coordinates[1] is yCoord 
+		Integer [] coordinates = locToCoord(pos); // coordinates[0] is xCoord, coordinates[1] is yCoord
+		PathPlanner.addRoute(coordinates);
+		setPathCell(new OrderedPair(coordinates[0], coordinates[1]));		
+		
 		// "coordinates" corresponds to the middle of the Roomba, 
 		//    and we'll need to clear the locations that cover the whole circular area of the Roomba  
 		
@@ -268,6 +280,7 @@ public class WorldView implements IRListener {
 				//   so the confidence value should be set to zero to indicate no obstacle is present
 				WorldView.writeConfidence(x, y, 0); 
 				WorldView.increaseTraversed(x, y);
+				WorldView.setFrontierCell(new OrderedPair(x,y), false);
 				
 				WorldView.pathTracker.add(new OrderedPair(x,y));
 				
@@ -287,21 +300,14 @@ public class WorldView implements IRListener {
 	 */
 	public static synchronized void recordObstacles(float [] distIR, double [] curLoc) {
 		// extract IR data from dist[], dist data is in mm, convert back to m
-		/*float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
+		float frontLeftRange 	= WorldView.calibrateIR(distIR[0] / 1000);
 		float frontCenterRange 	= WorldView.calibrateIR(distIR[1] / 1000);
 		float frontRightRange 	= WorldView.calibrateIR(distIR[2] / 1000);
 		float rearLeftRange 	= WorldView.calibrateIR(distIR[5] / 1000); // [5] is actually the rearLeft
 		float rearCenterRange 	= WorldView.calibrateIR(distIR[4] / 1000);
-		float rearRightRange 	= WorldView.calibrateIR(distIR[3] / 1000); // [3] is actually the rearRight*/
+		float rearRightRange 	= WorldView.calibrateIR(distIR[3] / 1000); // [3] is actually the rearRight
 		
-		float frontLeftRange 	= distIR[0] / 1000;
-		float frontCenterRange 	= distIR[1] / 1000;
-		float frontRightRange 	= distIR[2] / 1000;
-		float rearLeftRange 	= distIR[5] / 1000; // [5] is actually the rearLeft
-		float rearCenterRange 	= distIR[4] / 1000;
-		float rearRightRange 	= distIR[3] / 1000; // [3] is actually the rearRight
-		
-		System.out.println("FL=" + frontLeftRange + ", FC=" + frontCenterRange + ", FR=" + frontRightRange + ", RL=" + rearLeftRange + ", RC=" + rearCenterRange + ", RR=" + rearRightRange);
+		//System.out.println("FL=" + frontLeftRange + ", FC=" + frontCenterRange + ", FR=" + frontRightRange + ", RL=" + rearLeftRange + ", RC=" + rearCenterRange + ", RR=" + rearRightRange);
 		
 		double xPos 	= curLoc[0]; 
 		double yPos 	= curLoc[1];
@@ -345,7 +351,101 @@ public class WorldView implements IRListener {
 		// | rearCenter			| correct			| untested		|
 		// | rearRight			| correct			| untested		|
 		// ----------------------------------------------------------
-				
+		
+		/////////// Added by felix for frontier mapping /////////////////
+		if (frontLeftRange > MAX_USEFUL_IR_DISTANCE && frontLeftRange < MAX_POSSIBLE_IR_DISTANCE) {
+			frontLeftSensorPoint.setLocation(	curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])),
+					curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0]))  );			
+			obstaclePoint.setLocation(	frontLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_LEFT_IR_ANGLE),
+						frontLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_LEFT_IR_ANGLE)  );						
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontLeftSensorPoint.getX();
+			sensorPos[1] = frontLeftSensorPoint.getY();	
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);			
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);
+		}
+		if (frontCenterRange > MAX_USEFUL_IR_DISTANCE && frontCenterRange < MAX_POSSIBLE_IR_DISTANCE) {
+			frontRightSensorPoint.setLocation(	curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
+					curLoc[1] + FRONT_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0]))  );			
+			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
+						frontRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );			
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontRightSensorPoint.getX();
+			sensorPos[1] = frontRightSensorPoint.getY();
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);			
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
+		}
+		if (frontRightRange > MAX_USEFUL_IR_DISTANCE && frontRightRange < MAX_POSSIBLE_IR_DISTANCE) {
+			frontRightSensorPoint.setLocation(	curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
+					curLoc[1] + FRONT_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0]))  );
+			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
+						frontRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );		
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = frontRightSensorPoint.getX();
+			sensorPos[1] = frontRightSensorPoint.getY();
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
+		}
+		if (rearLeftRange > MAX_USEFUL_IR_DISTANCE && rearLeftRange < MAX_POSSIBLE_IR_DISTANCE) {
+			rearLeftSensorPoint.setLocation(	curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]) + Math.PI),
+					curLoc[1] + REAR_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]) + Math.PI)  );
+			obstaclePoint.setLocation(	rearLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_LEFT_IR_ANGLE),
+						rearLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_LEFT_IR_ANGLE)  );
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = rearLeftSensorPoint.getX();
+			sensorPos[1] = rearLeftSensorPoint.getY();
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);		
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
+		}
+		if (rearCenterRange > MAX_USEFUL_IR_DISTANCE && rearCenterRange < MAX_POSSIBLE_IR_DISTANCE) {
+			rearCenterSensorPoint.setLocation(	curLoc[0] + REAR_CENTER_IR_POSE_HYP*Math.cos(curAngle + Math.PI),
+												curLoc[1] + REAR_CENTER_IR_POSE_HYP*Math.sin(curAngle + Math.PI)  );
+			obstaclePoint.setLocation(	rearCenterSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_CENTER_IR_ANGLE),
+										rearCenterSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_CENTER_IR_ANGLE)  );
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = rearCenterSensorPoint.getX();
+			sensorPos[1] = rearCenterSensorPoint.getY();					
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);					
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);	
+		}
+		if (rearRightRange > MAX_USEFUL_IR_DISTANCE && rearRightRange < MAX_POSSIBLE_IR_DISTANCE) {
+			rearRightSensorPoint.setLocation(	curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]) + Math.PI),
+					curLoc[1] + REAR_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]) + Math.PI)  );
+			obstaclePoint.setLocation(	rearRightSensorPoint.getX() + rearRightRange*Math.cos(curAngle + REAR_RIGHT_IR_ANGLE),
+						rearRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_RIGHT_IR_ANGLE)  );
+			obstaclePos[0] = obstaclePoint.getX();
+			obstaclePos[1] = obstaclePoint.getY();
+			sensorPos[0] = rearRightSensorPoint.getX();
+			sensorPos[1] = rearRightSensorPoint.getY();
+			obstacleCoord = WorldView.locToCoord(obstaclePos);
+			sensorCoord = WorldView.locToCoord(sensorPos);
+			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);			
+			if( WorldView.readConfidence(obstacleCoord[0], obstacleCoord[1]) == 0.5 )
+				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);	
+		}
+		////////// END FELIX & ALEX MODIFICATIONS /////////////
+		
+		
 		if ((frontLeftRange >= MIN_USEFUL_IR_DISTANCE) && (frontLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
 			frontLeftSensorPoint.setLocation(	curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])),
 												curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0]))  );
@@ -368,6 +468,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 		
 		if ((frontCenterRange >= MIN_USEFUL_IR_DISTANCE) && (frontCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -392,7 +494,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
-		
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 
 		if ((frontRightRange >= MIN_USEFUL_IR_DISTANCE) && (frontRightRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -416,6 +519,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 		
 		if ((rearLeftRange >= MIN_USEFUL_IR_DISTANCE) && (rearLeftRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -439,6 +544,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 		
 		if ((rearCenterRange >= MIN_USEFUL_IR_DISTANCE) && (rearCenterRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -463,6 +570,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 		
 		if ((rearRightRange >= MIN_USEFUL_IR_DISTANCE) && (rearRightRange <= MAX_USEFUL_IR_DISTANCE)) {
@@ -486,6 +595,8 @@ public class WorldView implements IRListener {
 			
 			// add all the coordinates that are covered by "lineToClear" to the "locationsToDecrease" list
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);
+			WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), false);
+
 		}
 					
 	
@@ -497,7 +608,7 @@ public class WorldView implements IRListener {
 			OrderedPairConfidence cur = iter.next();
 			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY());
 			if (previousConfidence != -1) { // if no error reading confidence
-				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence + cur.getDeltaConfidence());  
+				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence + cur.getDeltaConfidence()*PathPlanner.getCertaintyFactor());  
 			}
 		}
 		
@@ -509,12 +620,25 @@ public class WorldView implements IRListener {
 			OrderedPairConfidence cur = iter.next();
 			double previousConfidence = WorldView.readConfidence(cur.getX(), cur.getY());
 			if (previousConfidence != -1) {
-				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence - cur.getDeltaConfidence());  
+				WorldView.writeConfidence(cur.getX(), cur.getY(), previousConfidence - cur.getDeltaConfidence()*PathPlanner.getCertaintyFactor());  
 			}
 		}	
 				
 	}
 	
+	/**
+	 * Sets the cell to be either frontier or not
+	 * @param coord	Ordered Pair coordinate of worldview
+	 * @param truth Whether cell is a frontier cell
+	 */
+	private static void setFrontierCell(OrderedPair coord, boolean truth){
+		((world.get(coord.getX())).get(coord.getY())).setFrontier(truth);
+		//PathPlanner.addFrontierCell(coord);
+	}
+	
+	private static void setPathCell(OrderedPair coord){
+		((world.get(coord.getX())).get(coord.getY())).setPath();
+	}
 	
 	/**
 	 * adds OrderedPairs on the line from sensor coordinate to obstacle coordinate to the list
@@ -545,6 +669,7 @@ public class WorldView implements IRListener {
 					yi = maxy + (int) Math.round((xi - minx) * slope);
 				locationsToDecrease.add(new OrderedPairConfidence ( xi, yi,
 						WorldView.rangeBasedConfidenceDecrease(Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) )))); 
+				WorldView.setFrontierCell(new OrderedPair(xi, yi), false);
 				//System.out.print("(" + xi + "," + yi + ")");
 			}
 		}
@@ -557,6 +682,7 @@ public class WorldView implements IRListener {
 					xi = maxx + (int) Math.round((yi - miny) * slope);
 				locationsToDecrease.add(new OrderedPairConfidence ( xi, yi,
 						WorldView.rangeBasedConfidenceDecrease(Math.sqrt( (x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) )))); 
+				WorldView.setFrontierCell(new OrderedPair(xi, yi), false);
 				//System.out.print("(" + xi + "," + yi + ")");		
 			}
 		}
@@ -615,19 +741,19 @@ public class WorldView implements IRListener {
 	 */
 	public static double rangeBasedConfidenceIncrease (float range) {
 		if ((range >= 0.22) && (range < 0.4)) {
-			return 0.07;
+			return 0.15;
 		} else if ((range >= 0.4) && (range < 0.6)) {
-			return 0.06;
+			return 0.13;
 		} else if ((range >= 0.6) && (range < 0.8)) {
-			return 0.05;
+			return 0.12;
 		} else if ((range >= 0.8) && (range < 1.05)) {
 			return 0; // throw out this unstable window where the IR switching board is deciding b/w long and short range IR
 		} else if ((range >= 1.05) && (range < 1.2)) {
-			return 0.03;
+			return 0.06;
 		} else if ((range >= 1.2) && (range < 1.45)) {
-			return 0.02;
+			return 0.04;
 		} else if ((range >= 1.45) && (range < 1.75)) {
-			return 0.01;
+			return 0.02;
 		} else
 			return 0;
 			
@@ -644,17 +770,17 @@ public class WorldView implements IRListener {
 	 */
 	public static double rangeBasedConfidenceDecrease (double range) {
 		if ((range >= 0) && (range < 5)) {
-			return 0.30;
-		} else if ((range >= 5) && (range < 10)) {
-			return 0.20;
-		} else if ((range >= 10) && (range < 15)) {
 			return 0.15;
-		} else if ((range >= 15) && (range < 20)) {
+		} else if ((range >= 5) && (range < 10)) {
+			return 0.10;
+		} else if ((range >= 10) && (range < 15)) {
 			return 0.08;
+		} else if ((range >= 15) && (range < 20)) {
+			return 0.06;
 		} else if ((range >= 20) && (range < 25)) {
 			return 0.04;
 		} else if ((range >= 25) && (range < 30)) {
-			return 0.02;
+			return 0.01;
 		} else if ((range >= 30) && (range < 35)) {
 			return 0.01;
 		} else
@@ -696,7 +822,7 @@ public class WorldView implements IRListener {
 		float [] window = new float [6];
 		float [] ranges = data.getRanges();
 		
-		System.out.println("FL=" + ranges[0] + ", FC=" + ranges[1] + ", FR=" + ranges[2] + ", RL=" + ranges[5] + ", RC=" + ranges[4] + ", RR=" + ranges[3]);
+		//System.out.println("FL=" + ranges[0] + ", FC=" + ranges[1] + ", FR=" + ranges[2] + ", RL=" + ranges[5] + ", RC=" + ranges[4] + ", RR=" + ranges[3]);
 		
 		//5-wide median filter here
 
@@ -718,7 +844,13 @@ public class WorldView implements IRListener {
 		}
 
 		WorldView.recordObstacles(window, curLoc);
-
+		
+		// for Path Planner
+		PathPlanner.setLeftHandDistance(window[0]);
+		PathPlanner.setFaceDistance(window[1]);
+		PathPlanner.setRightHandDistance(window[2]);
+		//PathPlanner.FaceDistance = window[1];
+		//PathPlanner.RightHandDistance = window[2];
 //		System.out.println("FL=" + window[0] + ", FC=" + window[1] + ", FR=" + window[2] + ", RL=" + window[5] + ", RC=" + window[4] + ", RR=" + window[3]);
 	}
 

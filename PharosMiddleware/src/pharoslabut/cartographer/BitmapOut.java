@@ -10,7 +10,8 @@ public class BitmapOut {
 	public static final int	TYPE_3BYTE_BGR = 5;
 	BufferedImage image,bigimage,sampleimage,bigsampleimage;
 	public static final int [] grayscale = {0x00ffffff,0x00e0e0e0,0x00c4c4c4,0x00a8a8a8,0x008c8c8c,
-											0x00707070,0x00545454,0x00383838,0x001c1c1c,0x0000000};
+											0x00707070,0x00545454,0x00383838,0x001c1c1c,0x0000000, 
+											0x002338BF};	// blue, for frontier
 	
 	/**BitmapOut Constructor
 	 * 
@@ -56,6 +57,12 @@ public class BitmapOut {
 						}
 						else{
 							index = (int)(WorldView.readConfidence(i,y-j)*10);
+						}
+						if ((WorldView.world.get(i)).get(y-j).getFrontier()){
+							index = 10;	// blue for frontier
+						}
+						if ((WorldView.world.get(i)).get(y-j).getPath()){
+							index = 10;	// blue for Path
 						}
 						//System.out.println(i + "," + j);
 						image.setRGB(i, j-1, grayscale[index]);						
