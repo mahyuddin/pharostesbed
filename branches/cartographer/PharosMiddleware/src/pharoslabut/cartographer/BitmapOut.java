@@ -1,5 +1,6 @@
 package pharoslabut.cartographer;
 
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -79,5 +80,8 @@ public class BitmapOut {
 		}
 		ImageIO.write(this.bigimage, "BMP", new File("map.bmp"));
 	}
+	public void draw(Graphics g, int x, int y) {
+        g.drawImage(image, x, y, null);
+    }
 }
 
