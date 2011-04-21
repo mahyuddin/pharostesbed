@@ -81,6 +81,7 @@ void proteus_destroy(proteus_comm_t* r) {
 /**
  * Counts the number of bytes in the buffer that needs to be escaped.
  *
+ * @return The total number of bytes with escape characters added.
  */
 static inline uint16_t escapedSize(uint8_t* buff, size_t numBytes) {
 	uint16_t i, result = 0;
@@ -94,10 +95,9 @@ static inline uint16_t escapedSize(uint8_t* buff, size_t numBytes) {
 }
 
 /**
- * Sends the data stored in the buffer to the micro-controller attached
- * to the serial port.
+ * Sends the data stored in the buffer to the micro-controller via the serial port.
  * 
- * @param r The proteus_comm_t object containing a reference to the connection 
+ * @param r The proteus_comm_t struct containing a details of the connection 
  * to the micro-controller.
  * @param buff A pointer to the bytes to send.
  * @param numBytes The number of bytes to send.
@@ -733,7 +733,7 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 
 
 /**
- * Process the serial data was received from the MCU.
+ * Process the serial data received from the MCU.
  * The data is stored in the serialRxBuffer.
  * Each call to this method processes one message.  If there is a possibility
  * that there are more messages in the buffer, SUCCESS is returned.
