@@ -116,10 +116,15 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 * 
 	 * @param lfe The event to broadcast.
 	 */
-	private void notifyListeners(LineFollowerEvent lfe) {
+	private void notifyListeners(final LineFollowerEvent lfe) {
 		Enumeration<LineFollowerEventListener> e = listeners.elements();
 		while(e.hasMoreElements()) {
-			e.nextElement().newLineFollowerEvent(lfe, this);
+			final LineFollowerEventListener lfel = e.nextElement();
+			new Thread(new Runnable() {
+				public void run () {
+					lfel.newLineFollowerEvent(lfe, LineFollower.this);
+				}
+			}).start();
 		}
 	}
 	
@@ -141,12 +146,16 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	 */
 	public void stop() {
 		if (thread != null) {
+			log("Stop: setting done = true");
 			done = true;
+			
+			log("Stop: Joining thread...");
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
+			log("Stop: Thread joined...");
 			thread = null;
 			log("Stop: thread stopped.");
 		} else

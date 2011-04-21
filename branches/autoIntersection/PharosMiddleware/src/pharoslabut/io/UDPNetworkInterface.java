@@ -132,6 +132,7 @@ public class UDPNetworkInterface extends NetworkInterface {
 					} catch(IOException ioe) {
 						log("ERROR: while receiving packet: " + ioe.getMessage(), false);
 						ioe.printStackTrace();
+						socket.close();
 						socket = null;
 					}
 				}

@@ -20,21 +20,20 @@ public class Main {
      * @throws InterruptedException
      */
     public static void main(String[] args) throws InterruptedException  {
-        RobotsPriorityQueue.test();
+ //       RobotsPriorityQueue.test();
 
-
+    	System.setProperty ("PharosMiddleware.debug", "true");
+    	
         Thread IM = new IntersectionManager(6665);
-//        Receive receive = new Receive(6665, "localhost");
-
-//        receive.start();
         IM.start();
 
-
+/*
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new pharoslabut.demo.autoIntersection.server.GUI.MainWindow().setVisible(true);
             }
-        });    
+        });   
+        */ 
     }
 
 }

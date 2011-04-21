@@ -2,6 +2,8 @@ package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
 
+import pharoslabut.io.Message.MsgType;
+
 /**
  * Sent by the server to the robot assigning it the time at which it may
  * enter the intersection.

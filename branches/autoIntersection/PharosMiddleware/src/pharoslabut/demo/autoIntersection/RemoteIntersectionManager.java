@@ -2,6 +2,7 @@ package pharoslabut.demo.autoIntersection;
 
 import java.net.UnknownHostException;
 import java.net.InetAddress;
+import java.util.Timer;
 
 import pharoslabut.navigate.*;
 import pharoslabut.io.*;
@@ -64,6 +65,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 */
 	private NetworkInterface networkInterface;
 	
+	private Timer exitTimer;
+	
 	/**
 	 * The constructor.
 	 * 
@@ -95,7 +98,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		
 		lf.addListener(this);
 	
-		networkInterface = new UDPNetworkInterface(serverPort); // robot listens on same port as server
+		networkInterface = new UDPNetworkInterface(serverPort+1); // robot listens on same port as server
 		networkInterface.registerMsgListener(this);
 	}
 
@@ -113,12 +116,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		// Send the RequestAccessMsg...
 		if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
 			log("WARNING: failed to send RequestAccessMsg...");
-			// TODO Decide what to do here.  Perhaps nothing since robot will
-			// request again when it arrives at the intersection.
-		}
-		
-//		sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "approaching" , ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis())), 0));
-//		receiver.receive();
+		} else
+			log("Sent request to enter intersection...");
 	}
 	
 	/**
@@ -130,6 +129,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		// for the approval to arrive (may need to query server again).
 		
 		while(!accessGranted) {
+			log("No access granted, stopping robot...");
 			try {
 				// Stop the robot
 				lf.stop();
@@ -146,22 +146,19 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 				// Send the RequestAccessMsg...
 				if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
 					log("WARNING: failed to send RequestAccessMsg...");
+				} else {
+					log("Sent request access message again to server...");
 				}
-				
-				//sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP()), "at intersection" , System.currentTimeMillis(), 0));
-				//receiver.receive();
-				// wait until new message received
-				// maybe put to sleep?
-				// in receive thread have it notify once a message received?
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-			} finally {
-				// start robot back up once priority access received
-				lf.start();
-			}
+			} 
 		}
 		// else go through intersection if the current time is at the accessTime
-		// need to send a new message to server?
+		
+		if (accessGranted && System.currentTimeMillis() >= accessTime) {
+			// start robot back up once priority access received
+			lf.start();
+		}
 	}
 	
 	/**
@@ -178,7 +175,14 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		if (!networkInterface.sendMessage(serverAddr, serverPort, em)) {
 			log("WARNING: failed to send ExitingMsg...");
 		}
-//		sender.send(new Robot( Integer.parseInt(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP())));
+		
+		//TODO: start timer, if ack not within 2 seconds then send again
+		exitTimer = new Timer();
+		exitTimer.schedule(new java.util.TimerTask() {
+			public void run() {
+				doExiting();
+			}
+		}, 2000);
 	}
 	
 	@Override
@@ -201,37 +205,32 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	}
 	
 	private void handleReservationTimeMsg(ReservationTimeMsg msg) {
-		
+		log("Received permission to enter intersection at time " + msg.getETA());
+		// verify the message was specified for my robot's id
+		// if()
 		this.accessGranted = true;
 		this.accessTime = msg.getETA();
+		// else
+		//   doEntering();
+	}
+	
+	private void handleExitingAcknowledgedMsg(ExitingAcknowledgedMsg msg) {
+		exitTimer.cancel();
+		this.accessGranted = false; // robot is through and no longer needs access
+		this.accessTime = Long.MAX_VALUE; // set this super high so robot would have to wait at intersection until new access time comes in
 	}
 	
 	@Override
 	public void newMessage(Message msg) {
 		if (msg instanceof ReservationTimeMsg)
     		handleReservationTimeMsg( (ReservationTimeMsg) msg );
-//    	else if (msg instanceof ExitingMsg)
-//    		handleExitingMsg( (ExitingMsg) msg );
-//    	else if (msg instanceof ExitingAcknowledgedMsg)
-//    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
+    	//else if (msg instanceof ExitingMsg)
+    		//handleExitingMsg( (ExitingMsg) msg );
+    	else if (msg instanceof ExitingAcknowledgedMsg)
+    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
     	else
     		System.out.println("RECEIVER: Unknown message " + msg);
-		
 	}
-
-//	/**
-//	 * @param access the access to set
-//	 */
-//	public void setAccess(boolean access) {
-//		this.access = access;
-//	}
-//
-//	/**
-//	 * @return the access
-//	 */
-//	public boolean hasAccess() {
-//		return access;
-//	}
 
 	/**
 	 * Logs a debug message.  This message is only printed when debug mode is enabled.

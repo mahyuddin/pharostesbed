@@ -2,6 +2,8 @@ package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
 
+import pharoslabut.io.Message.MsgType;
+
 /**
  * What is this for?
  * 

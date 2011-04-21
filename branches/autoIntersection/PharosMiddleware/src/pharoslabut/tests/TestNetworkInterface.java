@@ -22,7 +22,7 @@ public class TestNetworkInterface implements MessageReceiver{
 		this.flogger = flogger;
 		
 		if (useUDP) {
-			ni = new UDPNetworkInterface(serverPort);
+			ni = new UDPNetworkInterface(serverPort+1);
 		} else {
 			log("TCP testing not implemented yet.");
 		}
@@ -41,8 +41,9 @@ public class TestNetworkInterface implements MessageReceiver{
 		int cntr = 0;
 		
 		while (true) {
-			Message m = new StartExpMsg("TestExp", "Msg-" + cntr, ExpType.FOLLOW_GPS_MOTION_SCRIPT);
-			
+			//Message m = new StartExpMsg("TestExp", "Msg-" + cntr, ExpType.FOLLOW_GPS_MOTION_SCRIPT);
+			Message m = new pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg(address, 0, 100);
+			//Message m = new pharoslabut.demo.autoIntersection.msgs.ExitingMsg(address, 0);
 			
 			if (ni.sendMessage(address, serverPort, m)) {
 				log("Sent message " + cntr);

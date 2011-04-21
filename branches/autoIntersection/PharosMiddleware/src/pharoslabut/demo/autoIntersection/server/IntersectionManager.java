@@ -6,6 +6,7 @@ import java.util.PriorityQueue;
 
 import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.io.*;
+import pharoslabut.logger.FileLogger;
 
 /**
  * The intersection manager defines the strategy for AIM
@@ -18,18 +19,24 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     private long nextAvailableETC;
     public static LinkedList<Robot> robotsCompleted;
 //    private UDPSender server;
-	private int serverPort;
+//	private int serverPort;
 	private NetworkInterface networkInterface;
 
+	/**
+	 * For logging debug messages.
+	 */
+	private FileLogger flogger;
+	
     /**
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
      */
     public IntersectionManager(int serverPort)
     {
+    	System.out.println("Starting intersection manager on port " + serverPort + "...");
         nextAvailableETC = -1;
         robotsCompleted = new LinkedList<Robot>();
-        this.serverPort = serverPort;
+    //    this.serverPort = serverPort;
 //        this.server = new UDPSender(this.serverPort);
         
         // Create the network interface and register this object as a listener for
@@ -169,6 +176,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
      */
 	@Override
 	public void newMessage(Message msg) {
+		System.out.println("RECEIVED MESSAGE: "  +  msg);
 		if (msg instanceof RequestAccessMsg)
     		handleRequestAccessMsg( (RequestAccessMsg) msg );
     	else if (msg instanceof ReservationTimeAcknowledgedMsg)
@@ -181,19 +189,20 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     		System.out.println("RECEIVER: Unknown message " + msg);
 	}
 	
-    private static void handleRequestAccessMsg(RequestAccessMsg msg) {
+    private void handleRequestAccessMsg(RequestAccessMsg msg) {
 		if(msg != null)
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
 			if(! robot.isEnqueued() )
             {
+				log("enqueued robot object...");
             	robot.setEnqueued(true);
                 RobotsPriorityQueue.enqueue(robot);
             }
 		}
 	}
 
-	private static void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
+	private void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
 		if(msg != null)
 		{
 			//Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
@@ -209,7 +218,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		}
 	}
 
-	private static void handleExitingMsg(ExitingMsg msg) {
+	private void handleExitingMsg(ExitingMsg msg) {
 		if(msg != null)
 		{
 			Iterator<Robot> iterator = IntersectionManager.robotsCompleted.iterator();
@@ -223,5 +232,28 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 	            }
 	        }	
 		}
+	}
+	
+	/**
+	 * Logs a debug message.  This message is only printed when debug mode is enabled.
+	 * 
+	 * @param msg The message to log.
+	 */
+	private void log(String msg) {
+		log(msg, true);
+	}
+	
+	/**
+	 * Logs a message.
+	 * 
+	 * @param msg  The message to log.
+	 * @param isDebugMsg Whether the message is a debug message.
+	 */
+	private void log(String msg, boolean isDebugMsg) {
+		String result = "IntersectionManager: " + msg;
+		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 }
