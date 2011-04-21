@@ -29,9 +29,6 @@ public class TestOdometer implements Position2DListener{
 	
 	private FileLogger flogger;
 	
-	private String serverAddr;
-	private int serverPort;
-	
 	/**
 	 * The constructor.
 	 * 
@@ -39,14 +36,12 @@ public class TestOdometer implements Position2DListener{
 	 * @param serverPort The port on which the Player server is listening.
 	 * @param speed The speed to move at in meters per second.
 	 * @param dist The distance to move in meters.
-	 * @param fileName The name of the file in which to store log data.
+	 * @param useCompass Whether to use the compass.
+	 * @param flogger The FileLogger in which to store log data.
 	 */
-	public TestOdometer(String serverAddr, int serverPort, double speed, double dist, String fileName) {
-		this.serverAddr = serverAddr;
-		this.serverPort = serverPort;
+	public TestOdometer(String serverAddr, int serverPort, double speed, double dist, boolean useCompass, FileLogger flogger) {
+		this.flogger = flogger;
 		
-		flogger = new FileLogger(fileName);
-
 		log("Connecting to player server " + serverAddr + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
@@ -65,13 +60,15 @@ public class TestOdometer implements Position2DListener{
 			System.exit(1);
 		}
 		
-		compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
-		if (compass == null) {
-			System.err.println("compass is null");
-			System.exit(1);
+		if (useCompass) {
+			compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
+			if (compass == null) {
+				System.err.println("compass is null");
+				System.exit(1);
+			}
+			compassDataBuffer = new CompassDataBuffer(compass);
+			compassDataBuffer.setFileLogger(flogger);
 		}
-		compassDataBuffer = new CompassDataBuffer(compass);
-		compassDataBuffer.setFileLogger(flogger);
 		
 		log("Resetting the odometer...");
 		motors.resetOdometry();
@@ -79,10 +76,53 @@ public class TestOdometer implements Position2DListener{
 		log("Listening for position2D events...");
 		motors.addPos2DListener(this);
 		
-		move(speed, dist);
+		if (useCompass)
+			moveCompass(speed, dist);
+		else
+			move(speed, dist);
 	}
 	
+	private synchronized PlayerPosition2dData getPosition2dData() {
+		return pos2dData;
+	}
+	
+	/**
+	 * Moves the robot at a certain speed for a certain distance based solely 
+	 * on odometry readings.
+	 * 
+	 * @param speed The speed to move at in m/s.
+	 * @param dist The distance in meters.
+	 */
 	private void move(double speed, double dist) {
+		// busy wait until position2d data arrives (this is the odometer)
+		while (getPosition2dData() == null) {
+			pause(100);
+		}
+		
+		double startX = getPosition2dData().getPos().getPx();
+		log("Start X = " + startX);
+		
+		PlayerPosition2dData posData;
+		
+		while ((posData = getPosition2dData()).getPos().getPx() - startX < dist) {
+			log("Distance moved: " + (posData.getPos().getPx() - startX));
+			log("Sending move command: speed=" + speed + ", heading = " + 0);
+			motors.setCarCMD(speed, 0);
+			pause(100); // cycle at 10Hz
+		}
+		
+		log("Done moving " + dist + " meters.");
+		motors.setCarCMD(0, 0);
+	}
+	
+	/**
+	 * Moves the robot at a certain speed for a certain distance based on
+	 * compass and odometry readings.
+	 * 
+	 * @param speed The speed to move at in m/s.
+	 * @param dist The distance in meters.
+	 */
+	private void moveCompass(double speed, double dist) {
 		
 		// busy wait until got compass heading
 		double initHeading = Double.MAX_VALUE;
@@ -129,14 +169,18 @@ public class TestOdometer implements Position2DListener{
 			pause(100);
 		}
 		
-		log("Done moving 2 meters.");
+		log("Done moving " + dist + " meters.");
 		motors.setCarCMD(0, 0);
 	}
 
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		// This is the odometer data coming in...
 		log(data.toString());
-		this.pos2dData = data;
+		
+		synchronized(this) {
+			this.pos2dData = data;
+		}
 	}
 	
 	private void pause(long duration) {
@@ -152,9 +196,8 @@ public class TestOdometer implements Position2DListener{
 	private void log(String msg) {
 		String result = "TestOdometer: " + msg;
 		System.out.println(result);
-		if (flogger != null) {
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 	
 	private static void print(String msg) {
@@ -170,6 +213,7 @@ public class TestOdometer implements Position2DListener{
 		print("\t-port <port number>: The Player Server's port number (default 6665)");
 		print("\t-speed <speed>: The speed to move at (default 0.4)");
 		print("\t-dist <distance>: The distance in meters to move (default 5)");
+		print("\t-usecompass: Whether to use the compass to keep the robot going in a straight line.");
 		print("\t-log <log file>: The log file in which to save results (default TestOdometer.log)");
 		print("\t-debug: enable debug mode");
 	}
@@ -180,6 +224,7 @@ public class TestOdometer implements Position2DListener{
 		double speed = 0.4;
 		double dist = 5; 
 		String logFile = "TestOdometer.log";
+		boolean usecompass = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -198,6 +243,9 @@ public class TestOdometer implements Position2DListener{
 				else if (args[i].equals("-speed")) {
 					speed = Double.valueOf(args[++i]);
 				} 
+				else if (args[i].equals("-usecompass")) {
+					usecompass = true;
+				} 
 				else if (args[i].equals("-log")) {
 					logFile = args[++i];
 				}
@@ -212,6 +260,6 @@ public class TestOdometer implements Position2DListener{
 			System.exit(1);
 		}
 		
-		new TestOdometer(serverAddr, serverPort, speed, dist, logFile);
+		new TestOdometer(serverAddr, serverPort, speed, dist, usecompass, new FileLogger(logFile));
 	}
 }
