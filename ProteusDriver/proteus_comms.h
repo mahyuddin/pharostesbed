@@ -48,8 +48,6 @@ extern "C" {
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
 
-#define PROTEUS_DELAY_MODECHANGE_MS       5
-
 enum{
   PROTEUS_MODE_OFF,                  
   PROTEUS_MODE_PASSIVE,              
