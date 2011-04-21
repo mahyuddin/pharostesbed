@@ -53,6 +53,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	private List <Double> commands;
 	private Dimension sizeOfNewMap;
 	private Thread movementThread;
+	private int heading;
 	GUI thisGUI;
 	testing small_test;
 	threadAbortTest taTest;
@@ -373,7 +374,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			}
 			if(loadedMapCanvas.getDrawPath())
 			{
-				commands = AStar.move_instruction(path, path.first().retrieve());
+				commands = AStar.move_instruction(path, path.first().retrieve(), heading);
 				movementThread = new Thread(mThread);
 				this.abortMovement = false;
 				movementThread.start();
@@ -442,6 +443,24 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			int tempx = Integer.parseInt(currentLocX.getText());
 			int tempy = Integer.parseInt(currentLocY.getText());
 			pav.initializePAV(tempx, tempy);
+			String sHeading = JOptionPane.showInputDialog("Please enter an initial heading (north, south, east, or west)");
+			if(sHeading.equals("north"))
+			{
+				heading = 240;
+			}
+			else if(sHeading.equals("south"))
+			{
+				heading = 60;
+			}
+			else if(sHeading.equals("east"))
+			{
+				heading = 150;
+			}
+			else
+			{
+				heading = -30;
+			}
+			loadedMapCanvas.setCurrentDegree(heading);
 			loadedMapCanvas.setCurrentLoc(tempx, tempy, false, true);
 			theMessage.setText("X, Y coordinates of start location set to "+tempx+", "+tempy);
 			if(pleaseInitLoc)
@@ -735,48 +754,9 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 		loadedMapCanvas.repaint();
 	}
 	
-	public void movePAVUp()
+	public void setInitialHeading(int i)
 	{
-		if(pav.getCurrentY()!=0)
-		{
-			pav.setCurrentY(pav.getCurrentY() - 1);
-			loadedMapCanvas.setCurrentLoc(pav.getCurrentX(), pav.getCurrentY(), true, true);
-			currentLocX.setText(""+pav.getCurrentX());
-			currentLocY.setText(""+pav.getCurrentY());
-		}
-	}
-	
-	public void movePAVDown()
-	{
-		if(pav.getCurrentY()!=199)
-		{
-			pav.setCurrentY(pav.getCurrentY() + 1);
-			loadedMapCanvas.setCurrentLoc(pav.getCurrentX(), pav.getCurrentY(), true, true);
-			currentLocX.setText(""+pav.getCurrentX());
-			currentLocY.setText(""+pav.getCurrentY());
-		}
-	}
-	
-	public void movePAVLeft()
-	{
-		if(pav.getCurrentX()!=0)
-		{
-			pav.setCurrentX(pav.getCurrentX() - 1);
-			loadedMapCanvas.setCurrentLoc(pav.getCurrentX(), pav.getCurrentY(), true, true);
-			currentLocX.setText(""+pav.getCurrentX());
-			currentLocY.setText(""+pav.getCurrentY());
-		}
-	}
-	
-	public void movePAVRight()
-	{
-		if(pav.getCurrentX()!=199)
-		{
-			pav.setCurrentX(pav.getCurrentX() + 1);
-			loadedMapCanvas.setCurrentLoc(pav.getCurrentX(), pav.getCurrentY(), true, true);
-			currentLocX.setText(""+pav.getCurrentX());
-			currentLocY.setText(""+pav.getCurrentY());
-		}
+		heading = i;
 	}
 	
 	public Dimension newMapSize()
@@ -787,14 +767,29 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	public void incrementPosition()
 	{
 		loadedMapCanvas.incrementNode();
+		pav.setCurrentX(loadedMapCanvas.getCurrentX());
+		pav.setCurrentY(loadedMapCanvas.getCurrentY());
 		if(loadedMapCanvas.getCurrentNode().isValid())
 		{
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run(){
+					currentLocX.setText(""+loadedMapCanvas.getCurrentX());
+					currentLocY.setText(""+loadedMapCanvas.getCurrentY());
 					loadedMapCanvas.repaint();
 				}
 			});
 		}
+	}
+	
+	public void rotateHeading(int rotation)
+	{
+		
+		heading = loadedMapCanvas.rotateCurrentDegree(rotation);
+		SwingUtilities.invokeLater(new Runnable(){
+			public void run(){
+				loadedMapCanvas.repaint();
+			}
+		});
 	}
 }
 
@@ -815,7 +810,9 @@ class GUICanvas extends JPanel
 	private BufferedImage theMap;
 	private LinkedList path;
 	private LinkedListIterator currentNode;
+	private Node previousNode;
 	private boolean drawPath = false;
+	private int currentDegree;
 	//private Dimension preferredPSize;
 	
 	public void initGUICanvas()
@@ -827,11 +824,39 @@ class GUICanvas extends JPanel
 		factor = 1;
 		theMap = null;
 		path = null;
+		currentDegree = 150;
 	}
 	
 	public void incrementNode()
 	{
-		currentNode.advance();
+		if(currentNode.isValid()){
+			previousNode = currentNode.retrieve();
+			currentNode.advance();
+			if(currentNode.isValid()){
+				currentX = (int)currentNode.retrieve().getX();
+				currentY = (int)currentNode.retrieve().getY();
+			}
+		}
+	}
+	
+	public void setCurrentDegree(int degree)
+	{
+		currentDegree = degree;
+	}
+	
+	public int rotateCurrentDegree(int rotation)
+	{
+		currentDegree = currentDegree + rotation;
+		if(currentDegree == 510)
+		{
+			currentDegree = 150;
+		}
+		return currentDegree;
+	}
+	
+	public int getCurrentDegree()
+	{
+		return currentDegree;
 	}
 	
 	public LinkedListIterator getCurrentNode()
@@ -1033,14 +1058,23 @@ class GUICanvas extends JPanel
 	            	int tempy = ((int)itr.retrieve().getY())*factor;
 	            	g.fillRect(tempx, tempy, factor, factor);
 	            }
-	            dcX = factor*((int)currentNode.retrieve().getX());
-	            dcY = factor*((int)currentNode.retrieve().getY());
+	            /*if(currentNode.isValid()){
+	            	currentX = (int)currentNode.retrieve().getX();
+	            	currentY = (int)currentNode.retrieve().getY();
+	            	dcX = factor*currentX;
+	            	dcY = factor*currentY;
+	            }
+	            else{
+	            	dcX = factor*((int)previousNode.getX());
+	            	dcY = factor*((int)previousNode.getY());
+	            }*/
 			}
 		}
 		g.setColor(Color.GREEN);
 		g.fillOval(ddX, ddY, factor, factor);
 		g.setColor(Color.BLUE);
-		g.fillOval(dcX, dcY, factor, factor);
+		g.fillArc(dcX, dcY, factor, factor, currentDegree, 60);
+		//g.fillOval(dcX, dcY, factor, factor);
 		g.setPaintMode();
 	}
 }
