@@ -29,12 +29,12 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = .65;
+	public static final double MAX_SPEED = .55;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
 	 */
-	public static final double MIN_SPEED = 0.3;
+	public static final double MIN_SPEED = 0.35;
 	
 	/**
 	 * The maximum turn angle of the robot in degrees.
@@ -156,7 +156,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 				e.printStackTrace();
 			}
 			log("Stop: Thread joined...");
-			thread = null;
+			//thread = null; // was causing RemoteIntersectionManager to crash 
 			log("Stop: thread stopped.");
 		} else
 			log("Stop: ERROR: already stopped.");

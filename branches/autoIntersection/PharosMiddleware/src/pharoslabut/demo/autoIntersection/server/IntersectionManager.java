@@ -130,12 +130,13 @@ public class IntersectionManager extends Thread implements MessageReceiver {
                     Robot robot = queue.peek();
                     if(isAllowedAccess(robot) )
                     {
-                        this.nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
+                        this.nextAvailableETC = robot.getETC(); // don't modify the robot ETA, keep it as is
                         queue.remove();
                         robotsCompleted.add(robot);
                         
                         // Create a ReservationTimeMsg...
                         ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
+                        log("Run: Sending Robot " + robot.getIP() + ":" + robot.getPort() + " return message.");
                         networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);
                         
 //                        server.send(robot);

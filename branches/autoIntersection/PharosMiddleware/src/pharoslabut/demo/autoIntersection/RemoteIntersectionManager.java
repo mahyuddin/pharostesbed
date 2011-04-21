@@ -130,31 +130,23 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		
 		while(!accessGranted) {
 			log("No access granted, stopping robot...");
-			try {
-				// Stop the robot
-				lf.stop();
-				
-				// Pause
-				this.wait(100);
-				
-				// Request access from server...
-				
-				// Create the RequestAccessMsg...
-				long eta = System.currentTimeMillis(); // robot is already at intersection
-				RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta);
-				
-				// Send the RequestAccessMsg...
-				if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
-					log("WARNING: failed to send RequestAccessMsg...");
-				} else {
-					log("Sent request access message again to server...");
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} 
+			// Stop the robot
+			lf.stop();
+
+			// Request access from server...
+			
+			// Create the RequestAccessMsg...
+			long eta = System.currentTimeMillis(); // robot is already at intersection
+			RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta);
+			
+			// Send the RequestAccessMsg...
+			if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
+				log("WARNING: failed to send RequestAccessMsg...");
+			} else {
+				log("Sent request access message again to server...");
+			}
 		}
 		// else go through intersection if the current time is at the accessTime
-		
 		if (accessGranted && System.currentTimeMillis() >= accessTime) {
 			// start robot back up once priority access received
 			lf.start();
