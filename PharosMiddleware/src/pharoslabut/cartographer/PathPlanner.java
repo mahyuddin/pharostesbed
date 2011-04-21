@@ -65,9 +65,9 @@ public class PathPlanner {
 	final double NUMBER_OF_CENTROIDS = 3;
 	
 	// Distance to keep from wall in mm
-	final double DISTANCE_FROM_WALL = 0.5*1000;
+	final static double DISTANCE_FROM_WALL = 0.5*1000;
 	//final double FACE_DISTANCE_FROM_WALL = 0.6*1000; 
-	final double FACE_DISTANCE_FROM_WALL = 0.7*1000; 
+	final static double FACE_DISTANCE_FROM_WALL = 0.7*1000; 
 	
 	// Translational Speed
 	final double TRANS_RATE_FAST = .3;	
@@ -94,6 +94,10 @@ public class PathPlanner {
 	private static float LeftHandDistance = 0;
 	private static float RightHandDistance = 0;
 	private static float FaceDistance = 0;
+	
+	private static double LeftInnerHandDistance = 0;
+	private static double RightInnerHandDistance = 0;
+	private static double FaceInnerDistance = 0;
 	
 	private static PlayerPose pose;
 	
@@ -131,9 +135,15 @@ public class PathPlanner {
 			log("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
-				
+		
+		ArrayList<Integer[]> firstLayer = new ArrayList<Integer[]>();
+		myRoute.add(firstLayer);
+		
 		new WorldView();// initialize the World
 		new LocationTracker();// initialize its localization scheme
+		
+		RealtimeImgOut mapThread = new RealtimeImgOut();
+		mapThread.start();
 		
 		//if (fileName != null) {
 		//	flogger = new FileLogger(fileName);
@@ -164,12 +174,15 @@ public class PathPlanner {
 				leftWallFollow();
 				event = State.MAP_EXPLORE;
 				break;
-			case MAP_EXPLORE:			
+			case MAP_EXPLORE:
+				// TODO
 				// exploration strategy
 				//calculateNodes();
 				//myCentroids = makeBatches();
 				goBackwards();
-				event = State.END;
+				leftInnerWallFollow();
+				//event = State.MAP_EXPLORE;
+				event = State.MAP_EXPLORE;
 				break;
 			case END:					
 				//////// Finishing Routine //////////
@@ -178,7 +191,6 @@ public class PathPlanner {
 				try {
 					WorldView.printWorldView();
 				} catch (IOException e1) {
-					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
 				// Close the file and exit
@@ -335,71 +347,6 @@ public class PathPlanner {
 		}
 		else return false;
 	}
-
-	/**
-	 * Follows Right Wall
-	 */
-	private void rightWallFollow() {
-		
-		boolean notDone = true;
-		double arcFactor = 32;
-		int count = 0;
-		System.out.println("feedback wall following");
-		LocationTracker.motors.setSpeed(0, 0);
-		pause(1000);
-		while( notDone ){
-			while( notDone ){
-				
-				LocationTracker.motors.setSpeed(SPEED_STEP, 0);
-				while(RightHandDistance < DISTANCE_FROM_WALL && FaceDistance > DISTANCE_FROM_WALL){ //&& count <2000){
-					pause(250);
-					count += 250;
-				}
-				
-				if(FaceDistance < DISTANCE_FROM_WALL) break;
-				if(count >= RUNTIME*1000){
-					notDone = false;
-					break;
-				}
-				
-				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
-				while(RightHandDistance > DISTANCE_FROM_WALL && FaceDistance > DISTANCE_FROM_WALL){
-					//System.out.println("trying to get closer to wall");
-					//System.out.println("LeftHand = " + LeftHandDistance + ", Face = " + FaceDistance);
-					pause(250);
-					count += 250;
-				}
-				if(FaceDistance < DISTANCE_FROM_WALL) break;
-				
-				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/arcFactor);
-				while(RightHandDistance < DISTANCE_FROM_WALL && FaceDistance > DISTANCE_FROM_WALL) {//&& FaceDistance > DISTANCE_FROM_WALL){
-					//System.out.println("trying to get away from wall");
-					pause(250);
-					count += 250;
-				}
-				if(FaceDistance < DISTANCE_FROM_WALL) break;
-				
-			}
-			
-			// right swipe to get blind spot
-			LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
-			pause(2000);
-			LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
-			pause(2000);
-			count += 4000;
-			
-			// Left turn until free to proceed
-			LocationTracker.motors.setSpeed(0, Math.PI/16);
-			System.out.println("Left Turn");
-			while((LeftHandDistance < DISTANCE_FROM_WALL || FaceDistance < DISTANCE_FROM_WALL) && notDone){
-				pause(250);
-				count += 250;
-				System.out.println("RH = " + RightHandDistance + ", F = " + FaceDistance);
-			}
-			
-		}
-		stop(1000);
-	}
 	
 	private boolean checkHome(int count){
 		if(count >= BUFFER_TIME*1000){
@@ -469,7 +416,7 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
 				
 				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
 				System.out.println("Attempting to distance from wall");
@@ -480,10 +427,10 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
 			}
 			
-			stop(250);
+/*			stop(250);
 			// left swipe to get blind spot
 			LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
 			pause(2000);
@@ -491,7 +438,10 @@ public class PathPlanner {
 			LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
 			pause(2000);
 			stop(250);
-			count += 4750;
+			count += 4750;*/
+			
+			// left swipe to get blind spot
+			count += leftSwipe();
 			
 			// Right turn until free to proceed
 			LocationTracker.motors.setSpeed(0, -Math.PI/12);
@@ -511,6 +461,73 @@ public class PathPlanner {
 			}
 			setCertaintyFactor(1.0);
 			stop(250);
+			if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
+			double theta2 = LocationTracker.getCurrentBearing();
+			System.out.println("theta2 = " + theta2);
+			dtheta = Math.abs(theta1 - theta2);
+			System.out.println("d(theta) = " + dtheta);
+			
+		}
+		stop(1000);
+	}
+	
+	/**
+	 * Follows inner wall
+	 */ 
+	// TODO
+	private void leftInnerWallFollow() {
+		
+		boolean notDone = true;
+		double dtheta = 1;
+		double arcFactor = dtheta * 32;
+		int count = 0;
+		System.out.println("feedback inned wall following");
+		LocationTracker.motors.setSpeed(0, 0);
+		pause(1000);
+		while( notDone ){
+			while( notDone ){			
+				
+				if(count >= RUNTIME*1000){
+					System.out.println("Finished the run");
+					notDone = false;
+					break;
+				}
+				
+				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/arcFactor);
+				System.out.println("Attempting to hug wall");
+				while(LeftInnerHandDistance > DISTANCE_FROM_WALL && FaceInnerDistance > FACE_DISTANCE_FROM_WALL){
+					//System.out.println("LeftHand = " + LeftHandDistance + ", Face = " + FaceDistance);
+					pause(WAIT_TIME);
+					count += WAIT_TIME;
+					//calibrateYaw(.999);
+				}
+				if(FaceInnerDistance < FACE_DISTANCE_FROM_WALL || LeftInnerHandDistance < 0.5*DISTANCE_FROM_WALL) break;
+				if(checkHome(count) == false) notDone = false;
+				
+				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
+				System.out.println("Attempting to distance from wall");
+				while(LeftInnerHandDistance < DISTANCE_FROM_WALL && FaceInnerDistance > FACE_DISTANCE_FROM_WALL) {//&& FaceDistance > DISTANCE_FROM_WALL){
+					//System.out.println("LeftHand = " + LeftHandDistance + ", Face = " + FaceDistance);
+					pause(WAIT_TIME);
+					count += WAIT_TIME;
+					//calibrateYaw(.999);
+				}
+				if(FaceInnerDistance < FACE_DISTANCE_FROM_WALL || LeftInnerHandDistance < 0.5*DISTANCE_FROM_WALL) break;
+				if(checkHome(count) == false) notDone = false;
+			}
+			
+			// Right turn until free to proceed
+			LocationTracker.motors.setSpeed(0, -Math.PI/12);
+			System.out.println("Right Turn");
+			double theta1 = LocationTracker.getCurrentBearing();
+			System.out.println("theta1 = " + theta1);
+			setCertaintyFactor(.50);
+			while((LeftInnerHandDistance < DISTANCE_FROM_WALL || FaceInnerDistance < FACE_DISTANCE_FROM_WALL) && notDone){
+				pause(WAIT_TIME);
+				count += WAIT_TIME;
+			}
+			setCertaintyFactor(1.0);
+			stop(250);
 			if(checkHome(count) == false) notDone = false;
 			double theta2 = LocationTracker.getCurrentBearing();
 			System.out.println("theta2 = " + theta2);
@@ -526,10 +543,21 @@ public class PathPlanner {
 	 * goes backwards the distance of a diameter of a roomba
 	 */
 	private void goBackwards(){
-		int time = ((int)(2*ROOMBA_RADIUS/SPEED_STEP))*1000;
+		int time = ((int)(4*ROOMBA_RADIUS/SPEED_STEP))*1000;
 		LocationTracker.motors.setSpeed(-SPEED_STEP, 0);
 		System.out.println("Pausing for " + time);
 		pause(time);		
+	}
+	
+	private int leftSwipe(){
+		stop(250);
+		LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
+		pause(2000);
+		stop(250);
+		LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
+		pause(2000);
+		stop(250);
+		return 4750;	// return time in ms waited inside this function
 	}
 	
 	private void lawnmowFromLeft() {
@@ -662,6 +690,15 @@ public class PathPlanner {
 	public static void setFaceDistance(float distance){
 		PathPlanner.FaceDistance = distance;
 	}
+	public static void setLeftInnerHandDistance(double distance){
+		PathPlanner.LeftInnerHandDistance = distance;
+	}
+	public static void setRightInnerHandDistance(double distance){
+		PathPlanner.RightInnerHandDistance = distance;
+	}
+	public static void setFaceInnerDistance(double distance){
+		PathPlanner.FaceInnerDistance = distance;
+	}
 	
 	/**
 	 * Adds a coord to the route taken by the robot
@@ -780,8 +817,7 @@ public class PathPlanner {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
-		
-		// TODO		
+			
 		new PathPlanner(serverIP, serverPort, fileName);
 	}
 
