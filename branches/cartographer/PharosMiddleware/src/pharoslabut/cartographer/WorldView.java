@@ -287,6 +287,9 @@ public class WorldView implements IRListener {
 			}
 		}
 		
+		PathPlanner.setLeftInnerHandDistance(leftDistance());
+		PathPlanner.setFaceInnerDistance(frontDistance());
+		
 //		System.out.println("Current Location (m): " + LocationTracker.printCurrentLocation());
 //		System.out.println("Current Coordinates: " + LocationTracker.printCurrentCoordinates());
 		
@@ -914,6 +917,135 @@ public class WorldView implements IRListener {
 		} catch (IOException e2) {
 			e2.printStackTrace();
 		}
+	}
+	
+	/**
+	 * Returns the distance between the current location and the path
+	 * @return
+	 */
+	public static double frontDistance(){
+		double theta = LocationTracker.getCurrentBearing();
+		double [] loc = LocationTracker.getCurrentLocation();
+		loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		Integer [] coord = WorldView.locToCoord(loc);
+		int x = coord[0];
+		int y = coord[1];
+		
+		int xOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL * Math.sin(theta));
+		int yOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL * Math.cos(theta));
+		
+		int newX = x + xOffset;
+		int newY = y + yOffset;
+		
+		int deltaY = newY - y;
+		int deltaX = newX - x;
+		double slope;
+		int xi, yi;
+		int minx = Math.min(x, newX);
+		int miny = Math.min(y, newY);
+		int maxx = Math.max(x, newX);
+		int maxy = Math.max(y, newY);
+		
+		
+		if (Math.abs(deltaX) >= Math.abs(deltaY)){ //if |slope| < 1, increment with x
+			slope = (double) deltaY/deltaX;
+			for(xi = minx + 1; xi < maxx; xi++){
+				if(slope >= 0) //if slope positive, start with miny
+					yi = miny + (int) Math.round((xi - minx) * slope);
+				else //if slope negative, start with maxy
+					yi = maxy + (int) Math.round((xi - minx) * slope);
+				
+				if(WorldView.world.get(xi).get(yi).getPath()){
+					//return distance
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				}
+				
+			}
+		}
+		else{									//if |slope| > 1, increment with y
+			slope = (double) deltaX/deltaY;
+			for(yi = miny + 1; yi < maxy; yi++){
+				if(slope >= 0) //if slope positive, start with minx	
+					xi = minx + (int) Math.round((yi - miny) * slope);
+				else //if slope negative, start with maxx
+					xi = maxx + (int) Math.round((yi - miny) * slope);
+				
+				if(WorldView.world.get(xi).get(yi).getPath()){
+					//return distance
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				}
+				
+			}
+		}
+		
+		
+		return Integer.MAX_VALUE;
+	}
+	
+	/**
+	 * Returns the distance from left to "wall"
+	 * @return
+	 */
+	public static double leftDistance(){
+		double theta = LocationTracker.getCurrentBearing();
+		double thetaOffset = Math.PI/6; //30 degrees
+		double [] loc = LocationTracker.getCurrentLocation();
+		loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		Integer [] coord = WorldView.locToCoord(loc);
+		int x = coord[0];
+		int y = coord[1];
+		
+		int xOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL * Math.sin((theta + thetaOffset)%Math.PI));
+		int yOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL * Math.cos((theta + thetaOffset)%Math.PI));
+		
+		int newX = x + xOffset;
+		int newY = y + yOffset;
+		
+		int deltaY = newY - y;
+		int deltaX = newX - x;
+		double slope;
+		int xi, yi;
+		int minx = Math.min(x, newX);
+		int miny = Math.min(y, newY);
+		int maxx = Math.max(x, newX);
+		int maxy = Math.max(y, newY);
+		
+		
+		if (Math.abs(deltaX) >= Math.abs(deltaY)){ //if |slope| < 1, increment with x
+			slope = (double) deltaY/deltaX;
+			for(xi = minx + 1; xi < maxx; xi++){
+				if(slope >= 0) //if slope positive, start with miny
+					yi = miny + (int) Math.round((xi - minx) * slope);
+				else //if slope negative, start with maxy
+					yi = maxy + (int) Math.round((xi - minx) * slope);
+				
+				if(WorldView.world.get(xi).get(yi).getPath()){
+					//return distance
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				}
+				
+			}
+		}
+		else{									//if |slope| > 1, increment with y
+			slope = (double) deltaX/deltaY;
+			for(yi = miny + 1; yi < maxy; yi++){
+				if(slope >= 0) //if slope positive, start with minx	
+					xi = minx + (int) Math.round((yi - miny) * slope);
+				else //if slope negative, start with maxx
+					xi = maxx + (int) Math.round((yi - miny) * slope);
+				
+				if(WorldView.world.get(xi).get(yi).getPath()){
+					//return distance
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+				}
+				
+			}
+		}
+		
+		
+		return Integer.MAX_VALUE;
 	}
 }
 
