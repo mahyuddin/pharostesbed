@@ -97,11 +97,13 @@ public class PathPlanner {
 	
 	private static PlayerPose pose;
 	
-	private static ArrayList<Integer[]> myRoute = new ArrayList<Integer[]>(); 
+	private static ArrayList<ArrayList<Integer[]>> myRoute = new ArrayList<ArrayList<Integer[]>>(); 
 	private static ArrayList<Integer[]> myNodes = new ArrayList<Integer[]>();
 	private static ArrayList<Integer[]> myCentroids = new ArrayList<Integer[]>();
 	private static ArrayList<Vector> frontierCells = new ArrayList<Vector>();
 	private static double certaintyFactor = 1.0;
+	
+	static int currentLayer = 0;
 	
 	// obsolete definitions
 	int left = 1;
@@ -162,10 +164,11 @@ public class PathPlanner {
 				leftWallFollow();
 				event = State.MAP_EXPLORE;
 				break;
-			case MAP_EXPLORE:				
+			case MAP_EXPLORE:			
 				// exploration strategy
-				calculateNodes();
-				myCentroids = makeBatches();
+				//calculateNodes();
+				//myCentroids = makeBatches();
+				goBackwards();
 				event = State.END;
 				break;
 			case END:					
@@ -196,7 +199,7 @@ public class PathPlanner {
 	private void calculateNodes(){
 		OrderedPair coord;
 		for(int i = 0; i < myRoute.size(); i += myRoute.size()/5){
-			myNodes.add(myRoute.get(i));
+			//myNodes.add(myRoute.get(i));
 		}
 		for(int x = 0; x<WorldView.WORLD_SIZE; x++){
 			for(int y = 0; y<WorldView.WORLD_SIZE; y++){
@@ -401,12 +404,16 @@ public class PathPlanner {
 	private boolean checkHome(int count){
 		if(count >= BUFFER_TIME*1000){
 			if(hasArrivedHome()){
-				boolean state = false;
+				//boolean state = false;
 				// reset location, but not bearing
-				LocationTracker.writeOdometry(LocationTracker.getInitialx(), LocationTracker.getInitialy(), LocationTracker.getCurrentBearing());
+				//LocationTracker.writeOdometry(LocationTracker.getInitialx(), LocationTracker.getInitialy(), LocationTracker.getCurrentBearing());
+				ArrayList<Integer[]> nextLayer = new ArrayList<Integer[]>();
+				myRoute.add(nextLayer);
+				currentLayer++;
+				// currentLayer = myRoute.size()-1;	// should be the same
 				System.out.println("has arrived home!!!");
 				stop(1000);
-				return state;	// initiate exploration
+				return false;	// initiate exploration
 			}
 		}
 		return true;		
@@ -514,10 +521,15 @@ public class PathPlanner {
 		stop(1000);
 	}
 	
+	/**
+	 * goBackwards
+	 * goes backwards the distance of a diameter of a roomba
+	 */
 	private void goBackwards(){
-		
+		int time = ((int)(2*ROOMBA_RADIUS/SPEED_STEP))*1000;
 		LocationTracker.motors.setSpeed(-SPEED_STEP, 0);
-		
+		System.out.println("Pausing for " + time);
+		pause(time);		
 	}
 	
 	private void lawnmowFromLeft() {
@@ -659,14 +671,14 @@ public class PathPlanner {
 		//if(myRoute.indexOf(location) == -1)
 		//	System.out.println();
 		boolean alreadyExists = false;
-		for(int i = 0; i<myRoute.size(); i++){
-			if(myRoute.get(i)[0].equals(location[0]) && myRoute.get(i)[1].equals(location[1])){
+		for(int i = 0; i<myRoute.get(currentLayer).size(); i++){
+			if(myRoute.get(currentLayer).get(i)[0].equals(location[0]) && myRoute.get(currentLayer).get(i)[1].equals(location[1])){
 				alreadyExists = true;
 				break;
 			}				
 		}
 		if(alreadyExists == false)
-			myRoute.add(location);
+			myRoute.get(currentLayer).add(location);
 	}
 	
 	/**
@@ -674,8 +686,10 @@ public class PathPlanner {
 	 * @param location
 	 */
 	public static void printRoute(){
-		for(int i = 0; i<myRoute.size(); i++){
-			System.out.println("(" + myRoute.get(i)[0] + ", " + myRoute.get(i)[1] + ")");
+		for(int n = 0; n<myRoute.size(); n++){				
+			for(int i = 0; i<myRoute.get(n).size(); i++){
+				System.out.println("(" + myRoute.get(n).get(i)[0] + ", " + myRoute.get(n).get(i)[1] + ")");
+			}
 		}
 	}
 	
