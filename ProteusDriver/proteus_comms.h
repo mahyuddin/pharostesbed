@@ -33,7 +33,7 @@ extern "C" {
 
 #define PROTEUS_BEGIN 0x24 //'$' to start transmissions
 #define PROTEUS_END 0x0A // LF terminated transmissions
-#define PROTEUS_ESCAPE 0xFF // Used to escape the above special characters
+#define PROTEUS_ESCAPE 0xAA // Used to escape the above special characters
 
 /* command opcodes */
 #define PROTEUS_OPCODE_HEARTBEAT        0x61
