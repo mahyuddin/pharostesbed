@@ -16,6 +16,7 @@ public class PAV
 	private String name;
 	private int currentX;
 	private int currentY;
+	private int currentNode;
 	
 	public PAV(String n)
 	{
@@ -24,6 +25,7 @@ public class PAV
 		direction = "North";
 		currentX = 0;
 		currentY = 0;
+		currentNode = 0;
 	}
 	
 	public String getName()
@@ -49,6 +51,16 @@ public class PAV
 	public int getCurrentY()
 	{
 		return currentY;
+	}
+	
+	public void incrementNode()
+	{
+		currentNode++;
+	}
+	
+	public int getCurrentNode()
+	{
+		return currentNode;
 	}
 	
 	public void setCurrentX(int x)
