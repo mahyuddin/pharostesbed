@@ -357,10 +357,12 @@ public class WorldView implements IRListener {
 		
 		/////////// Added by felix for frontier mapping /////////////////
 		if (frontLeftRange > MAX_USEFUL_IR_DISTANCE && frontLeftRange < MAX_POSSIBLE_IR_DISTANCE) {
-			frontLeftSensorPoint.setLocation(	curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])),
+			frontLeftSensorPoint.setLocation(	
+					curLoc[0] + FRONT_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0])),
 					curLoc[1] + FRONT_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_LEFT_IR_POSE[1]/FRONT_LEFT_IR_POSE[0]))  );			
-			obstaclePoint.setLocation(	frontLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_LEFT_IR_ANGLE),
-						frontLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_LEFT_IR_ANGLE)  );						
+			obstaclePoint.setLocation(	
+					frontLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_LEFT_IR_ANGLE),
+					frontLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_LEFT_IR_ANGLE)  );						
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
 			sensorPos[0] = frontLeftSensorPoint.getX();
@@ -372,14 +374,16 @@ public class WorldView implements IRListener {
 				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);
 		}
 		if (frontCenterRange > MAX_USEFUL_IR_DISTANCE && frontCenterRange < MAX_POSSIBLE_IR_DISTANCE) {
-			frontRightSensorPoint.setLocation(	curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
-					curLoc[1] + FRONT_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0]))  );			
-			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
-						frontRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );			
+			frontCenterSensorPoint.setLocation(	
+					curLoc[0] + FRONT_CENTER_IR_POSE_HYP*Math.cos(curAngle),
+					curLoc[1] + FRONT_CENTER_IR_POSE_HYP*Math.sin(curAngle)  );			
+			obstaclePoint.setLocation(	
+					frontCenterSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_CENTER_IR_ANGLE),
+					frontCenterSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_CENTER_IR_ANGLE)  );			
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
-			sensorPos[0] = frontRightSensorPoint.getX();
-			sensorPos[1] = frontRightSensorPoint.getY();
+			sensorPos[0] = frontCenterSensorPoint.getX();
+			sensorPos[1] = frontCenterSensorPoint.getY();
 			obstacleCoord = WorldView.locToCoord(obstaclePos);
 			sensorCoord = WorldView.locToCoord(sensorPos);
 			WorldView.decreaseLineConfidence(locationsToDecrease, sensorCoord[0], obstacleCoord[0], sensorCoord[1], obstacleCoord[1]);			
@@ -387,10 +391,12 @@ public class WorldView implements IRListener {
 				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
 		}
 		if (frontRightRange > MAX_USEFUL_IR_DISTANCE && frontRightRange < MAX_POSSIBLE_IR_DISTANCE) {
-			frontRightSensorPoint.setLocation(	curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
+			frontRightSensorPoint.setLocation(	
+					curLoc[0] + FRONT_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0])),
 					curLoc[1] + FRONT_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(FRONT_RIGHT_IR_POSE[1]/FRONT_RIGHT_IR_POSE[0]))  );
-			obstaclePoint.setLocation(	frontRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
-						frontRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );		
+			obstaclePoint.setLocation(	
+					frontRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + FRONT_RIGHT_IR_ANGLE),
+					frontRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + FRONT_RIGHT_IR_ANGLE)  );		
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
 			sensorPos[0] = frontRightSensorPoint.getX();
@@ -402,10 +408,12 @@ public class WorldView implements IRListener {
 				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
 		}
 		if (rearLeftRange > MAX_USEFUL_IR_DISTANCE && rearLeftRange < MAX_POSSIBLE_IR_DISTANCE) {
-			rearLeftSensorPoint.setLocation(	curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]) + Math.PI),
+			rearLeftSensorPoint.setLocation(	
+					curLoc[0] + REAR_LEFT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]) + Math.PI),
 					curLoc[1] + REAR_LEFT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_LEFT_IR_POSE[1]/REAR_LEFT_IR_POSE[0]) + Math.PI)  );
-			obstaclePoint.setLocation(	rearLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_LEFT_IR_ANGLE),
-						rearLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_LEFT_IR_ANGLE)  );
+			obstaclePoint.setLocation(	
+					rearLeftSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_LEFT_IR_ANGLE),
+					rearLeftSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_LEFT_IR_ANGLE)  );
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
 			sensorPos[0] = rearLeftSensorPoint.getX();
@@ -417,10 +425,12 @@ public class WorldView implements IRListener {
 				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);		
 		}
 		if (rearCenterRange > MAX_USEFUL_IR_DISTANCE && rearCenterRange < MAX_POSSIBLE_IR_DISTANCE) {
-			rearCenterSensorPoint.setLocation(	curLoc[0] + REAR_CENTER_IR_POSE_HYP*Math.cos(curAngle + Math.PI),
-												curLoc[1] + REAR_CENTER_IR_POSE_HYP*Math.sin(curAngle + Math.PI)  );
-			obstaclePoint.setLocation(	rearCenterSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_CENTER_IR_ANGLE),
-										rearCenterSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_CENTER_IR_ANGLE)  );
+			rearCenterSensorPoint.setLocation(	
+					curLoc[0] + REAR_CENTER_IR_POSE_HYP*Math.cos(curAngle + Math.PI),
+					curLoc[1] + REAR_CENTER_IR_POSE_HYP*Math.sin(curAngle + Math.PI)  );
+			obstaclePoint.setLocation(	
+					rearCenterSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_CENTER_IR_ANGLE),
+					rearCenterSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_CENTER_IR_ANGLE)  );
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
 			sensorPos[0] = rearCenterSensorPoint.getX();
@@ -432,10 +442,12 @@ public class WorldView implements IRListener {
 				WorldView.setFrontierCell(new OrderedPair(obstacleCoord[0], obstacleCoord[1]), true);	
 		}
 		if (rearRightRange > MAX_USEFUL_IR_DISTANCE && rearRightRange < MAX_POSSIBLE_IR_DISTANCE) {
-			rearRightSensorPoint.setLocation(	curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]) + Math.PI),
+			rearRightSensorPoint.setLocation(	
+					curLoc[0] + REAR_RIGHT_IR_POSE_HYP*Math.cos(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]) + Math.PI),												
 					curLoc[1] + REAR_RIGHT_IR_POSE_HYP*Math.sin(curAngle + Math.atan(REAR_RIGHT_IR_POSE[1]/REAR_RIGHT_IR_POSE[0]) + Math.PI)  );
-			obstaclePoint.setLocation(	rearRightSensorPoint.getX() + rearRightRange*Math.cos(curAngle + REAR_RIGHT_IR_ANGLE),
-						rearRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_RIGHT_IR_ANGLE)  );
+			obstaclePoint.setLocation(	
+					rearRightSensorPoint.getX() + MAX_USEFUL_IR_DISTANCE*Math.cos(curAngle + REAR_RIGHT_IR_ANGLE),
+					rearRightSensorPoint.getY() + MAX_USEFUL_IR_DISTANCE*Math.sin(curAngle + REAR_RIGHT_IR_ANGLE)  );
 			obstaclePos[0] = obstaclePoint.getX();
 			obstaclePos[1] = obstaclePoint.getY();
 			sensorPos[0] = rearRightSensorPoint.getX();

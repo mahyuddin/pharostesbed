@@ -182,7 +182,7 @@ public class PathPlanner {
 				goBackwards(20);
 				leftInnerWallFollow();
 				//event = State.MAP_EXPLORE;
-				event = State.MAP_EXPLORE;
+				event = State.END;
 				break;
 			case END:					
 				//////// Finishing Routine //////////
@@ -222,6 +222,9 @@ public class PathPlanner {
 		}
 	}
 	
+	/**
+	 * @param coord
+	 */
 	public static void addFrontierCell(OrderedPair coord){
 		Integer[] newCoord = {coord.getX(),coord.getY()};
 		Vector v = new Vector(newCoord);
@@ -236,6 +239,11 @@ public class PathPlanner {
 			frontierCells.add(v);
 	}
 	
+	/**
+	 * @param centroids
+	 * @param points
+	 * @return
+	 */
 	public static ArrayList<Integer[]> batch(ArrayList<Vector> centroids, ArrayList<Vector> points){
 		
 		//ArrayList<Vector> newData = dataBase.;
@@ -429,16 +437,6 @@ public class PathPlanner {
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
 				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 			}
-			
-/*			stop(250);
-			// left swipe to get blind spot
-			LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
-			pause(2000);
-			stop(250);
-			LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
-			pause(2000);
-			stop(250);
-			count += 4750;*/
 			
 			// left swipe to get blind spot
 			count += leftSwipe();
