@@ -99,7 +99,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 		}
 		
 		// see if current Location == line again
-		if(checkLine == true){
+		/*if(checkLine == true && PathPlanner.getStartCheck()){
 			double [] pos = {currentX, currentY};
 			Integer [] coordinates = WorldView.locToCoord(pos);
 			if(coordinates[0] == PathPlanner.getLocationSnapshot()[0] && coordinates[1] == PathPlanner.getLocationSnapshot()[1]){
@@ -110,18 +110,19 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 					LocationTracker.motors.setSpeed(0,0);
 					System.out.println("set to false!!!");
 					setLineCheck(false);
+					PathPlanner.setStartCheck(false);
 				}	
 			}
-		}
+		}*/
 		
 //		System.out.println("Being sent to recordLocation: " + currentX + ", " + currentY);
 		WorldView.recordLocation(currentX, currentY);		
 	}
 	
-	public static void setLineCheck (boolean t) {
+	public synchronized static void setLineCheck (boolean t) {
 		checkLine = t;
 	}
-	public static boolean getLineCheck () {
+	public synchronized static boolean getLineCheck () {
 		return checkLine;
 	}
 	

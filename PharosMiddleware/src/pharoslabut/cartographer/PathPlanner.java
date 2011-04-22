@@ -101,6 +101,8 @@ public class PathPlanner {
 	
 	private static Integer [] snapshotLocation = {0,0};
 	
+	private static boolean startCheck = false;
+	
 	private static PlayerPose pose;
 	
 	private static ArrayList<ArrayList<Integer[]>> myRoute = new ArrayList<ArrayList<Integer[]>>(); 
@@ -174,16 +176,20 @@ public class PathPlanner {
 				event = State.MAP_CONTOUR;
 				break;
 			case MAP_CONTOUR:
-				Integer[] testArr = {110,75};
-				double ang = createLine(testArr);
-				faceToAngle(ang);
-				followLine(testArr, ang);
-				//leftWallFollow();
-				findCenter();
+				
+				// contour mapping
+				leftWallFollow();
 				event = State.MAP_EXPLORE;
 				break;
 			case MAP_EXPLORE:
+				
 				// TODO
+				//Integer[] centroid = {60, 110};
+				Integer[] centroid = findCenter();
+				System.out.println("Center: (" + centroid[0] + "," + centroid[1]);
+				double initAng = createLine(centroid);
+				faceToAngle(initAng);
+				followLine(centroid, initAng);
 				// exploration strategy
 				//calculateNodes();
 				//myCentroids = makeBatches();
@@ -600,6 +606,8 @@ public class PathPlanner {
 				else //if slope negative, start with maxy
 					yi = maxy + (int) Math.round((xi - minx) * slope);
 				WorldView.world.get(xi).get(yi).setLinePoint(true);
+				WorldView.world.get(xi-1).get(yi+1).setLinePoint(true);
+				WorldView.world.get(xi+1).get(yi-1).setLinePoint(true);
 				// add the line to clear later
 				Integer [] point = {xi, yi};
 				lineToFollow.add(point);
@@ -614,6 +622,9 @@ public class PathPlanner {
 				else //if slope negative, start with maxx
 					xi = maxx + (int) Math.round((yi - miny) * slope);
 				WorldView.world.get(xi).get(yi).setLinePoint(true);		// set's as line point	
+				WorldView.world.get(xi-1).get(yi+1).setLinePoint(true);
+				WorldView.world.get(xi+1).get(yi-1).setLinePoint(true);
+				
 				// add the line to clear later
 				Integer [] point = {xi, yi};
 				lineToFollow.add(point);
@@ -636,7 +647,7 @@ public class PathPlanner {
 	 */
 	private void faceToAngle(double theta){
 		
-		stop(500);
+		stop(200);
 		bearing = LocationTracker.getCurrentBearing();
 		double turnAngle = bearing-theta; 
 		int turnDirection = right;	// initially set turn direction to right
@@ -717,27 +728,44 @@ public class PathPlanner {
 				pause(WAIT_TIME);
 				count += WAIT_TIME;
 			}
-			locationSnapshot(LocationTracker.getCurrentCoordinates());
 			
+			locationSnapshot(LocationTracker.getCurrentCoordinates());
+			setStartCheck(false);
 			LocationTracker.setLineCheck(true);	// start checking to see when I get back on track
+			
 			System.out.println("set to true!!");
 			count = 0;
 			// follow left wall
-			while(notDone){
+			boolean started = false;
+			boolean lineStatus = false;
+			while(notDone && !lineStatus){
 				
-				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/32);	// attempt to hug wall
-				while(LeftHandDistance > DISTANCE_FROM_WALL){ //&& LocationTracker.getLineCheck()){				
+				if(count >= 4000 && started == false){
+					setStartCheck(true);
+					started = true;
+				}
+				
+				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/32);	// attempt to hug wall
+				while(LeftHandDistance > DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()){				
 					pause(WAIT_TIME);
 					count += WAIT_TIME;
+					if(checkLineStatus()){
+						lineStatus = true;
+						stop(250);
+					}
 				}
-				if(count >= 10000 && LocationTracker.getLineCheck() == false) break;	// 3000 gives the robot a little time to move away from coord
+				//if(LocationTracker.getLineCheck() == false) break;	// 3000 gives the robot a little time to move away from coord
 				
-				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/32);
-				while(LeftHandDistance < DISTANCE_FROM_WALL){ //&& LocationTracker.getLineCheck()) {
+				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/32);
+				while(LeftHandDistance < DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()) {
 					pause(WAIT_TIME);
 					count += WAIT_TIME;
+					if(checkLineStatus()){
+						lineStatus = true;
+						stop(250);
+					}
 				}
-				if(count >= 10000 && LocationTracker.getLineCheck() == false) break;
+				//if(LocationTracker.getLineCheck() == false) break;
 				
 				// Note: This exits when the roomba intersects the original line again
 			}
@@ -748,12 +776,34 @@ public class PathPlanner {
 
 	}
 	
+	private boolean checkLineStatus(){
+		
+		Integer [] coordinates = LocationTracker.getCurrentCoordinates();
+		if(WorldView.world.get(coordinates[0]).get(coordinates[1]).getLinePoint() && getStartCheck()){
+			//LocationTracker.motors.setSpeed(0,0);
+			System.out.println("set to false!!!");
+			//setLineCheck(false);
+			PathPlanner.setStartCheck(false);
+			System.out.println(coordinates[0] + "," + coordinates[1]);
+			return true;	// found its way back
+		}	
+		return false;
+	}
+	
 	private void locationSnapshot(Integer [] snapshotLoc){
 		this.snapshotLocation = snapshotLoc;
 	}
 	
 	public static Integer [] getLocationSnapshot(){
 		return snapshotLocation;
+	}
+	
+	public synchronized static void setStartCheck(boolean t){
+		startCheck = t;
+	}
+	
+	public synchronized static boolean getStartCheck(){
+		return startCheck; 
 	}
 	
 	/**
