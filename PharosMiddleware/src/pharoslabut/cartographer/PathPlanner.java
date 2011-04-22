@@ -172,6 +172,7 @@ public class PathPlanner {
 				break;
 			case MAP_CONTOUR:
 				leftWallFollow();
+				findCenter();
 				event = State.MAP_EXPLORE;
 				break;
 			case MAP_EXPLORE:
@@ -372,6 +373,25 @@ public class PathPlanner {
 			}
 		}
 		return true;		
+	}
+	
+	private Integer [] findCenter(){
+		int sumX = 0;
+		int sumY = 0;
+		int size = myRoute.get(0).size();
+		int centerX = 0;
+		int centerY = 0;
+		
+		for(int a = 0; a < size; a++){
+			sumX += myRoute.get(0).get(a)[0];
+			sumY += myRoute.get(0).get(a)[1];
+		}
+		
+		centerX = sumX / size;
+		centerY = sumY / size;
+		Integer [] centerPt = {centerX, centerY};
+		
+		return centerPt;
 	}
 	
 	/**
