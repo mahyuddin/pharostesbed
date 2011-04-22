@@ -287,6 +287,7 @@ public class WorldView implements IRListener {
 			}
 		}
 		
+		
 		PathPlanner.setLeftInnerHandDistance(leftDistance());
 		PathPlanner.setFaceInnerDistance(frontDistance());
 		
@@ -938,14 +939,14 @@ public class WorldView implements IRListener {
 	public static double frontDistance(){
 		double theta = LocationTracker.getCurrentBearing();
 		double [] loc = LocationTracker.getCurrentLocation();
-		loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
-		loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		//loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		//loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
 		Integer [] coord = WorldView.locToCoord(loc);
 		int x = coord[0];
 		int y = coord[1];
 		
-		int xOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL*RESOLUTION * Math.sin(theta));
-		int yOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL*RESOLUTION * Math.cos(theta));
+		int xOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL*RESOLUTION * Math.cos(theta));
+		int yOffset = (int)((double) PathPlanner.FACE_DISTANCE_FROM_WALL*RESOLUTION * Math.sin(theta));
 		
 		int newX = x + xOffset;
 		int newY = y + yOffset;
@@ -970,7 +971,9 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+					System.out.println("Current Loc @: (" + x + "," + y + ")");
+					System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
 				}
 				
 			}
@@ -985,7 +988,9 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+					System.out.println("Current Loc @: (" + x + "," + y + ")");
+					System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
 				}
 				
 			}
@@ -1004,8 +1009,8 @@ public class WorldView implements IRListener {
 		double thetaOffset = Math.PI/6; //30 degrees
 		double degree = theta + thetaOffset;
 		double [] loc = LocationTracker.getCurrentLocation();
-		loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
-		loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		//loc[0] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
+		//loc[1] += ROOMBA_RADIUS;//add offset of the roomba to get to edge
 		Integer [] coord = WorldView.locToCoord(loc);
 		int x = coord[0];
 		int y = coord[1];
@@ -1014,8 +1019,8 @@ public class WorldView implements IRListener {
 			degree -= 2*Math.PI;
 		}
 		
-		int xOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL*RESOLUTION * Math.sin(degree));
-		int yOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL*RESOLUTION * Math.cos(degree));
+		int xOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL*RESOLUTION * Math.cos(degree));
+		int yOffset = (int)((double) PathPlanner.DISTANCE_FROM_WALL*RESOLUTION * Math.sin(degree));
 		
 		int newX = x + xOffset;
 		int newY = y + yOffset;
@@ -1040,7 +1045,9 @@ public class WorldView implements IRListener {
 				//System.out.println(xi + ", " + yi);
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+					System.out.println("Current Loc @: (" + x + "," + y + ")");
+					System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
 				}
 				
 			}
@@ -1055,7 +1062,9 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+					System.out.println("Current Loc @: (" + x + "," + y + ")");
+					System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
 				}
 				
 			}

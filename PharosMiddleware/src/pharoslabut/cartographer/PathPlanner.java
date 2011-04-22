@@ -438,6 +438,16 @@ public class PathPlanner {
 				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 			}
 			
+/*			stop(250);
+			// left swipe to get blind spot
+			LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
+			pause(2000);
+			stop(250);
+			LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
+			pause(2000);
+			stop(250);
+			count += 4750;*/
+			if(notDone == false) {break;}
 			// left swipe to get blind spot
 			count += leftSwipe();
 			
@@ -490,17 +500,17 @@ public class PathPlanner {
 					notDone = false;
 					break;
 				}
-				
+				System.out.println("OdometryStuff: " + LeftInnerHandDistance + ", " + FaceInnerDistance);
 				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/arcFactor);
 				System.out.println("Attempting to hug wall");
 				while(LeftInnerHandDistance > DISTANCE_FROM_WALL && FaceInnerDistance > FACE_DISTANCE_FROM_WALL){
-					//System.out.println("LeftHand = " + LeftHandDistance + ", Face = " + FaceDistance);
+					System.out.println("LeftHand = " + LeftInnerHandDistance + ", Face = " + FaceInnerDistance);
 					pause(WAIT_TIME);
 					count += WAIT_TIME;
 					//calibrateYaw(.999);
 				}
 				if(FaceInnerDistance < FACE_DISTANCE_FROM_WALL || LeftInnerHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 				
 				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
 				System.out.println("Attempting to distance from wall");
@@ -511,9 +521,10 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceInnerDistance < FACE_DISTANCE_FROM_WALL || LeftInnerHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000  && checkHome(count) == false) {notDone = false; break;}
 			}
 			
+			if(notDone == false) {break;}
 			// Right turn until free to proceed
 			LocationTracker.motors.setSpeed(0, -Math.PI/12);
 			System.out.println("Right Turn");
@@ -526,7 +537,7 @@ public class PathPlanner {
 			}
 			setCertaintyFactor(1.0);
 			stop(250);
-			if(checkHome(count) == false) notDone = false;
+			if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
 			double theta2 = LocationTracker.getCurrentBearing();
 			System.out.println("theta2 = " + theta2);
 			dtheta = Math.abs(theta1 - theta2);
@@ -576,18 +587,22 @@ public class PathPlanner {
 					
 				//bearing = theta;	// new bearing is theta
 	
-				turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+				turntime = (int)(Math.abs(turnAngle)*12/Math.PI * 1000)+1;
 				// DEBUGGING STATEMENTS
 				System.out.println("Backwards:(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
 				System.out.println("polar(" +r+","+theta+")");
 				System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
 				System.out.println("turntime = " + turntime);
-				LocationTracker.motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
+				LocationTracker.motors.setSpeed(0, Math.PI/12*turnDirection);	// turnDirection is either left or right
 				pause(turntime);
 				//time = (int)r*1000;
 				time = (int)(((r*WorldView.RESOLUTION)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
 				LocationTracker.motors.setSpeed(SPEED_STEP, 0);
 				pause(time);
+				
+				//TODO turn to face inside hard coded
+				LocationTracker.motors.setSpeed(0, Math.PI/12);
+				pause(6000);
 		
 		
 	}
