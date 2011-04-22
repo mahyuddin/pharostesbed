@@ -54,7 +54,7 @@ class Vector{
 public class PathPlanner {
 	
 	// Runtime, etc
-	final int RUNTIME = 200;	// in seconds
+	private static int RUNTIME = 180;	// in seconds
 	final int BUFFER_TIME = 10;	// in seconds
 	
 	// Roomba Size
@@ -1101,34 +1101,38 @@ public class PathPlanner {
 	}
 	
 	
-	/******************** MAIN ****************************
+	/******************** beginPathPlanner ****************************
 	 * starts the entire navigation/mapping routine
 	 * @param args
-	 *****************************************************/
-	public static void main(String[] args) {
+	 *****************************************************************/
+	public static void beginPathPlanner(int executionTimeOut) {
 		int serverPort = 6665;
-
-		try {
-			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-server")) {
-					serverIP = args[++i];
-				} 
-				else if (args[i].equals("-port")) {
-					serverPort = Integer.valueOf(args[++i]);
-				}
-				else if (args[i].equals("-file")) {
-					fileName = args[++i];
-				}
-				else {
-					usage();
-					System.exit(1);
-				}
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-			usage();
-			System.exit(1);
-		}
+		PathPlanner.RUNTIME = executionTimeOut;
+		
+		System.out.println("Runtime = " + PathPlanner.RUNTIME);
+		
+//		try {
+//			for (int i=0; i < args.length; i++) {
+//				if (args[i].equals("-server")) {
+//					serverIP = args[++i];
+//				} 
+//				else if (args[i].equals("-port")) {
+//					serverPort = Integer.valueOf(args[++i]);
+//				}
+//				else if (args[i].equals("-file")) {
+//					fileName = args[++i];
+//				}
+//				else {
+//					usage();
+//					System.exit(1);
+//				}
+//			}
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			usage();
+//			System.exit(1);
+//		}
+		
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("File: " + fileName);
