@@ -65,11 +65,9 @@ public class RealtimeImgOut extends Thread {
 			//mandelbrot = new Mandelbrot(newSize.width, newSize.height);
 			c.repaint();
 			
-			
 		}
 		
 		
-
 		public void paint(Graphics g) {
 			if(bit != null)
 				bit.draw(g, 0, 0);
