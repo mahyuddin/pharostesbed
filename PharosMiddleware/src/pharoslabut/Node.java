@@ -63,8 +63,8 @@ public class Node{
 		right = r;
 	}
 	
-	public void setTraversed(){
-		traversed = true;
+	public void setTraversed(boolean t){
+		traversed = t;
 	}
 	
 	public boolean getTraversedStatus(){
@@ -72,7 +72,7 @@ public class Node{
 	}
 		
 	public void getInfo(){
-		System.out.println("Coordinate: " + xCoord + "," + yCoord + " Path: " + path + " g_score: " + g_score);
+		System.out.println("Coordinate: " + xCoord + "," + yCoord + " Path: " + path + " g_score: " + g_score + "Traversed: "+traversed);
 	}
 	
 	public double getX(){
