@@ -831,6 +831,7 @@ class GUICanvas extends JPanel
 	{
 		if(currentNode.isValid()){
 			previousNode = currentNode.retrieve();
+			previousNode.setTraversed();
 			currentNode.advance();
 			if(currentNode.isValid()){
 				currentX = (int)currentNode.retrieve().getX();
@@ -1051,11 +1052,19 @@ class GUICanvas extends JPanel
 			if(path.isEmpty()==false)
 			{
 				LinkedListIterator itr = path.first();
-				g.setColor(Color.YELLOW);
 	            for(;itr.isValid();itr.advance())
 	            {
-	            	int tempx = ((int)itr.retrieve().getX())*factor;
-	            	int tempy = ((int)itr.retrieve().getY())*factor;
+	            	Node n = itr.retrieve();
+	            	int tempx = ((int)n.getX())*factor;
+	            	int tempy = ((int)n.getY())*factor;
+	            	if(n.getTraversedStatus())
+	            	{
+	            		g.setColor(Color.GREEN);
+	            	}
+	            	else
+	            	{
+	            		g.setColor(Color.YELLOW);
+	            	}
 	            	g.fillRect(tempx, tempy, factor, factor);
 	            }
 	            /*if(currentNode.isValid()){
