@@ -779,6 +779,14 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				}
 			});
 		}
+		else
+		{
+			SwingUtilities.invokeLater(new Runnable(){
+				public void run(){
+					loadedMapCanvas.repaint();
+				}
+			});
+		}
 	}
 	
 	public void rotateHeading(int rotation)
