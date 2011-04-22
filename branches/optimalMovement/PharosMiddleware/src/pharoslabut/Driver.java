@@ -22,7 +22,7 @@ class Driver implements ActionListener, WindowStateListener
 	private JFrame f;
 	Driver(){
 		f = new JFrame();
-		pavPanel = new GUI();
+		pavPanel = new GUI(f);
 		f.setTitle("PAV Control Panel");
 		f.setSize(800, 700);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
