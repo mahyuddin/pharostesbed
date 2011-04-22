@@ -17,6 +17,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	private static final double initialX = 60*WorldView.RESOLUTION;
 	private static final double initialY = 60*WorldView.RESOLUTION;
 	private static final double initialBearing = Math.PI/2;
+	private static boolean checkLine = false;
 	
 	private static double currentX;
 	private static double currentY;
@@ -97,10 +98,32 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 			bearing -= 2*Math.PI;
 		}
 		
+		// see if current Location == line again
+		if(checkLine == true){
+			double [] pos = {currentX, currentY};
+			Integer [] coordinates = WorldView.locToCoord(pos);
+			if(coordinates[0] == PathPlanner.getLocationSnapshot()[0] && coordinates[1] == PathPlanner.getLocationSnapshot()[1]){
+				// do nothing
+			}
+			else {
+				if(WorldView.world.get(coordinates[0]).get(coordinates[1]).getLinePoint()){
+					LocationTracker.motors.setSpeed(0,0);
+					System.out.println("set to false!!!");
+					setLineCheck(false);
+				}	
+			}
+		}
+		
 //		System.out.println("Being sent to recordLocation: " + currentX + ", " + currentY);
 		WorldView.recordLocation(currentX, currentY);		
 	}
 	
+	public static void setLineCheck (boolean t) {
+		checkLine = t;
+	}
+	public static boolean getLineCheck () {
+		return checkLine;
+	}
 	
 	/**
 	 * returns current location in terms of position (meters)

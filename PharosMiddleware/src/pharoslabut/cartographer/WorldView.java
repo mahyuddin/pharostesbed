@@ -17,6 +17,7 @@ class LocationElement {
 	private Integer traversedCount;
 	private boolean isFrontier;
 	private boolean isPath;
+	private boolean isPartOfLine;
 	
 	public LocationElement (Integer x, Integer y) {
 		this.xCoord = x;
@@ -25,6 +26,7 @@ class LocationElement {
 		this.traversedCount = 0;    // initialized to 0, unexplored
 		this.isFrontier = false;
 		this.isPath = false;
+		this.isPartOfLine = false;
 	}	
 	
 	@Override
@@ -45,6 +47,8 @@ class LocationElement {
 	public boolean getFrontier(){ return isFrontier; }	// added by felix
 	public void setPath(){ this.isPath = true; }	// added by felix
 	public boolean getPath(){ return isPath; }	// added by felix
+	public void setLinePoint(boolean t){ this.isPartOfLine = t; }
+	public boolean getLinePoint(){ return isPartOfLine; }
 	/*************** END GETTERS AND SETTERS ****************/
 	
 	public void incTraversed() { this.traversedCount++; }
@@ -971,9 +975,9 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					System.out.println("Current Loc @: (" + x + "," + y + ")");
-					System.out.println("Path found @: (" + xi + "," + yi + ")");
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
+					//System.out.println("Current Loc @: (" + x + "," + y + ")");
+					//System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(Math.pow(xi-x,2) + Math.pow(yi-y,2)) * 50;
 				}
 				
 			}
@@ -988,15 +992,13 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					System.out.println("Current Loc @: (" + x + "," + y + ")");
-					System.out.println("Path found @: (" + xi + "," + yi + ")");
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
+					//System.out.println("Current Loc @: (" + x + "," + y + ")");
+					//System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(Math.pow(xi-x,2) + Math.pow(yi-y,2)) * 50;
 				}
 				
 			}
-		}
-		
-		
+		}		
 		return Integer.MAX_VALUE;
 	}
 	
@@ -1045,9 +1047,9 @@ public class WorldView implements IRListener {
 				//System.out.println(xi + ", " + yi);
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					System.out.println("Current Loc @: (" + x + "," + y + ")");
-					System.out.println("Path found @: (" + xi + "," + yi + ")");
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
+					//System.out.println("Current Loc @: (" + x + "," + y + ")");
+					//System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(Math.pow(xi-x,2) + Math.pow(yi-y,2)) * 50;
 				}
 				
 			}
@@ -1062,9 +1064,9 @@ public class WorldView implements IRListener {
 				
 				if(WorldView.world.get(xi).get(yi).getPath()){
 					//return distance
-					System.out.println("Current Loc @: (" + x + "," + y + ")");
-					System.out.println("Path found @: (" + xi + "," + yi + ")");
-					return Math.sqrt(deltaX * deltaX + deltaY * deltaY) * 50;
+					//System.out.println("Current Loc @: (" + x + "," + y + ")");
+					//System.out.println("Path found @: (" + xi + "," + yi + ")");
+					return Math.sqrt(Math.pow(xi-x,2) + Math.pow(yi-y,2)) * 50;
 				}
 				
 			}

@@ -99,11 +99,14 @@ public class PathPlanner {
 	private static double RightInnerHandDistance = 0;
 	private static double FaceInnerDistance = 0;
 	
+	private static Integer [] snapshotLocation = {0,0};
+	
 	private static PlayerPose pose;
 	
 	private static ArrayList<ArrayList<Integer[]>> myRoute = new ArrayList<ArrayList<Integer[]>>(); 
 	private static ArrayList<Integer[]> myNodes = new ArrayList<Integer[]>();
 	private static ArrayList<Integer[]> myCentroids = new ArrayList<Integer[]>();
+	private static ArrayList<Integer[]> lineToFollow= new ArrayList<Integer[]>();
 	private static ArrayList<Vector> frontierCells = new ArrayList<Vector>();
 	private static double certaintyFactor = 1.0;
 	
@@ -167,11 +170,15 @@ public class PathPlanner {
 				// LocationTracker.writeOdometry(0, 0, 0);
 				LocationTracker.motors.setSpeed(0, 0);
 				pause(2000);	// 2s initial delay		
-				swipe();	// initial swipe
+				//swipe();	// initial swipe
 				event = State.MAP_CONTOUR;
 				break;
 			case MAP_CONTOUR:
-				leftWallFollow();
+				Integer[] testArr = {110,75};
+				double ang = createLine(testArr);
+				faceToAngle(ang);
+				followLine(testArr, ang);
+				//leftWallFollow();
 				findCenter();
 				event = State.MAP_EXPLORE;
 				break;
@@ -180,8 +187,8 @@ public class PathPlanner {
 				// exploration strategy
 				//calculateNodes();
 				//myCentroids = makeBatches();
-				goBackwards(20);
-				leftInnerWallFollow();
+				//goBackwards(20);
+				//leftInnerWallFollow();
 				//event = State.MAP_EXPLORE;
 				event = State.END;
 				break;
@@ -357,6 +364,11 @@ public class PathPlanner {
 		else return false;
 	}
 	
+	/**
+	 * Checks whether the robot has closed a loop
+	 * @param count
+	 * @return
+	 */
 	private boolean checkHome(int count){
 		if(count >= BUFFER_TIME*1000){
 			if(hasArrivedHome()){
@@ -458,18 +470,8 @@ public class PathPlanner {
 				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 			}
 			
-/*			stop(250);
-			// left swipe to get blind spot
-			LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
-			pause(2000);
-			stop(250);
-			LocationTracker.motors.setSpeed(0, -ROT_RATE_MED);
-			pause(2000);
-			stop(250);
-			count += 4750;*/
 			if(notDone == false) {break;}
-			// left swipe to get blind spot
-			count += leftSwipe();
+			count += leftSwipe(); // left swipe to get blind spot
 			
 			// Right turn until free to proceed
 			LocationTracker.motors.setSpeed(0, -Math.PI/12);
@@ -568,6 +570,193 @@ public class PathPlanner {
 	}
 	
 	/**
+	 * @param goalPoint
+	 * @return theta to turn to angle toward goal point
+	 */
+	private double createLine(Integer[] goalPoint){
+		
+		//double theta = LocationTracker.getCurrentBearing();
+		double [] loc = LocationTracker.getCurrentLocation();
+		Integer [] coord = WorldView.locToCoord(loc);
+		
+		int newX = goalPoint[0];
+		int newY = goalPoint[1];
+		
+		int deltaY = newY - coord[1];
+		int deltaX = newX - coord[0];
+		double slope;
+		int xi, yi;
+		int minx = Math.min(coord[0], newX);
+		int miny = Math.min(coord[1], newY);
+		int maxx = Math.max(coord[0], newX);
+		int maxy = Math.max(coord[1], newY);
+		double angle = Math.atan2(deltaY, deltaX);
+		
+		if (Math.abs(deltaX) >= Math.abs(deltaY)){ //if |slope| < 1, increment with x
+			slope = (double) deltaY/deltaX;
+			for(xi = minx + 1; xi < maxx; xi++){
+				if(slope >= 0) //if slope positive, start with miny
+					yi = miny + (int) Math.round((xi - minx) * slope);
+				else //if slope negative, start with maxy
+					yi = maxy + (int) Math.round((xi - minx) * slope);
+				WorldView.world.get(xi).get(yi).setLinePoint(true);
+				// add the line to clear later
+				Integer [] point = {xi, yi};
+				lineToFollow.add(point);
+				System.out.println(xi + "," + yi);
+			}
+		}
+		else{									//if |slope| > 1, increment with y
+			slope = (double) deltaX/deltaY;
+			for(yi = miny + 1; yi < maxy; yi++){
+				if(slope >= 0) //if slope positive, start with minx	
+					xi = minx + (int) Math.round((yi - miny) * slope);
+				else //if slope negative, start with maxx
+					xi = maxx + (int) Math.round((yi - miny) * slope);
+				WorldView.world.get(xi).get(yi).setLinePoint(true);		// set's as line point	
+				// add the line to clear later
+				Integer [] point = {xi, yi};
+				lineToFollow.add(point);
+				System.out.println(xi + "," + yi);
+			}
+		}
+		return angle;
+	}
+	
+	/**
+	 * 
+	 */
+	private void clearLineToFollow(){
+		lineToFollow.clear();
+	}
+	
+	/**
+	 * Turns to face a specified angle
+	 * @param theta
+	 */
+	private void faceToAngle(double theta){
+		
+		stop(500);
+		bearing = LocationTracker.getCurrentBearing();
+		double turnAngle = bearing-theta; 
+		int turnDirection = right;	// initially set turn direction to right
+		
+		if (bearing - theta < 0){
+			turnDirection = left;
+		}
+		if( Math.abs(bearing - theta) > Math.PI ){	// special case
+			turnAngle = 2*Math.PI - Math.abs(bearing - theta);
+			turnDirection = turnDirection*(-1);	// find smaller direction
+		}
+
+		int turntime = (int)(Math.abs(turnAngle)*12/Math.PI * 1000)+1;
+		LocationTracker.motors.setSpeed(0, Math.PI/12*turnDirection);	// turnDirection is either left or right
+		pause(turntime);
+	}
+	
+	/**
+	 * Checks whether it has arrived to destination point
+	 * @param goalPoint
+	 * @return
+	 */
+	private boolean hasArrivedToDestination(Integer [] goalPoint){
+		Integer [] loc = LocationTracker.getCurrentCoordinates();
+		if(		goalPoint[0] + 4 > loc[0] && 
+				goalPoint[0] - 4 < loc[0] && 
+				goalPoint[1] + 4 > loc[1] &&
+				goalPoint[1] - 4 < loc[1] )
+		{
+			System.out.println("has arrived to goal!!");
+			stop(500);
+			return true;
+		}
+		else return false;
+	}
+	
+	
+	private boolean checkGoalPoint(Integer [] goalPoint){
+		
+		double[] coord = LocationTracker.getCurrentLocation(); // coord[0] 
+		if(coord[0] < goalPoint[0]+BEACON_RADIUS && coord[1] < goalPoint[1]+BEACON_RADIUS
+				&& coord[0] > goalPoint[0]-BEACON_RADIUS && coord[1] > goalPoint[1]-BEACON_RADIUS){
+			return true;
+		}
+		else return false;
+	}
+	
+	/**
+	 * Follows Line
+	 */ 
+	// TODO
+	private void followLine(Integer [] goalPoint, double theta) {
+		
+		// i am assuming I am already facing the toward the line
+		boolean notDone = true;
+		double dtheta = 1;
+		double arcFactor = dtheta * 32;
+		int count = 0;
+		System.out.println("feedback line following");
+		LocationTracker.motors.setSpeed(0, 0);
+		pause(1000);
+		
+		while(notDone){
+			
+			LocationTracker.motors.setSpeed(SPEED_STEP, 0);	// line following
+			while(FaceDistance > DISTANCE_FROM_WALL && !hasArrivedToDestination(goalPoint)){	// while no obstacle detected in front
+				//follow the line
+				pause(WAIT_TIME);
+				count += WAIT_TIME;
+			}
+			if(hasArrivedToDestination(goalPoint)){
+				notDone = false;
+				break;
+			}
+			
+			LocationTracker.motors.setSpeed(0, -Math.PI/12);	// turning until there is good clearance
+			while((LeftHandDistance < DISTANCE_FROM_WALL || FaceDistance < FACE_DISTANCE_FROM_WALL) && notDone){
+				pause(WAIT_TIME);
+				count += WAIT_TIME;
+			}
+			locationSnapshot(LocationTracker.getCurrentCoordinates());
+			
+			LocationTracker.setLineCheck(true);	// start checking to see when I get back on track
+			System.out.println("set to true!!");
+			count = 0;
+			// follow left wall
+			while(notDone){
+				
+				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/32);	// attempt to hug wall
+				while(LeftHandDistance > DISTANCE_FROM_WALL){ //&& LocationTracker.getLineCheck()){				
+					pause(WAIT_TIME);
+					count += WAIT_TIME;
+				}
+				if(count >= 10000 && LocationTracker.getLineCheck() == false) break;	// 3000 gives the robot a little time to move away from coord
+				
+				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/32);
+				while(LeftHandDistance < DISTANCE_FROM_WALL){ //&& LocationTracker.getLineCheck()) {
+					pause(WAIT_TIME);
+					count += WAIT_TIME;
+				}
+				if(count >= 10000 && LocationTracker.getLineCheck() == false) break;
+				
+				// Note: This exits when the roomba intersects the original line again
+			}
+			// if found line again, then face toward original goal point again
+			System.out.println("face to angle!!");
+			faceToAngle(theta);
+		}	
+
+	}
+	
+	private void locationSnapshot(Integer [] snapshotLoc){
+		this.snapshotLocation = snapshotLoc;
+	}
+	
+	public static Integer [] getLocationSnapshot(){
+		return snapshotLocation;
+	}
+	
+	/**
 	 * goBackwards
 	 * goes backwards the distance of a diameter of a roomba
 	 */
@@ -604,29 +793,32 @@ public class PathPlanner {
 			
 			//Check to see if the robot can safely traverse to the target location
 			//if(checkTerrain(x1,y1,x2,y2)){
-					
-				//bearing = theta;	// new bearing is theta
-	
-				turntime = (int)(Math.abs(turnAngle)*12/Math.PI * 1000)+1;
-				// DEBUGGING STATEMENTS
-				System.out.println("Backwards:(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
-				System.out.println("polar(" +r+","+theta+")");
-				System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
-				System.out.println("turntime = " + turntime);
-				LocationTracker.motors.setSpeed(0, Math.PI/12*turnDirection);	// turnDirection is either left or right
-				pause(turntime);
-				//time = (int)r*1000;
-				time = (int)(((r*WorldView.RESOLUTION)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
-				LocationTracker.motors.setSpeed(SPEED_STEP, 0);
-				pause(time);
 				
-				//TODO turn to face inside hard coded
-				LocationTracker.motors.setSpeed(0, Math.PI/12);
-				pause(6000);
+			//bearing = theta;	// new bearing is theta
+
+			turntime = (int)(Math.abs(turnAngle)*12/Math.PI * 1000)+1;
+			// DEBUGGING STATEMENTS
+			System.out.println("Backwards:(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+			System.out.println("polar(" +r+","+theta+")");
+			System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
+			System.out.println("turntime = " + turntime);
+			LocationTracker.motors.setSpeed(0, Math.PI/12*turnDirection);	// turnDirection is either left or right
+			pause(turntime);
+			//time = (int)r*1000;
+			time = (int)(((r*WorldView.RESOLUTION)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
+			LocationTracker.motors.setSpeed(SPEED_STEP, 0);
+			pause(time);
+			
+			//TODO turn to face inside hard coded
+			LocationTracker.motors.setSpeed(0, Math.PI/12);
+			pause(6000);
 		
 		
 	}
 	
+	/**
+	 * @return count
+	 */
 	private int leftSwipe(){
 		stop(250);
 		LocationTracker.motors.setSpeed(0, ROT_RATE_MED);
@@ -717,11 +909,6 @@ public class PathPlanner {
 		}
 		
 		stop(1000);
-	}
-	
-	public static void calibrateYaw(double perc){
-		LocationTracker.writeOdometry(pose.getPx(), pose.getPy(), (pose.getPa()-perc)%(Math.PI*2));
-		LocationTracker.updateLocation(pose);
 	}
 	
 	private static void setCertaintyFactor(double perc){
