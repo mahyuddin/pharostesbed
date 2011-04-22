@@ -179,7 +179,7 @@ public class PathPlanner {
 				// exploration strategy
 				//calculateNodes();
 				//myCentroids = makeBatches();
-				goBackwards();
+				goBackwards(20);
 				leftInnerWallFollow();
 				//event = State.MAP_EXPLORE;
 				event = State.MAP_EXPLORE;
@@ -416,7 +416,7 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 				
 				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
 				System.out.println("Attempting to distance from wall");
@@ -427,7 +427,7 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
+				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 			}
 			
 /*			stop(250);
@@ -461,7 +461,7 @@ public class PathPlanner {
 			}
 			setCertaintyFactor(1.0);
 			stop(250);
-			if(count >= BUFFER_TIME*1000 && checkHome(count) == false) notDone = false;
+			if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
 			double theta2 = LocationTracker.getCurrentBearing();
 			System.out.println("theta2 = " + theta2);
 			dtheta = Math.abs(theta1 - theta2);
@@ -542,11 +542,56 @@ public class PathPlanner {
 	 * goBackwards
 	 * goes backwards the distance of a diameter of a roomba
 	 */
-	private void goBackwards(){
-		int time = ((int)(4*ROOMBA_RADIUS/SPEED_STEP))*1000;
-		LocationTracker.motors.setSpeed(-SPEED_STEP, 0);
-		System.out.println("Pausing for " + time);
-		pause(time);		
+	private void goBackwards(int numRev){
+//		int time = ((int)(4*ROOMBA_RADIUS/SPEED_STEP))*1000;
+//		LocationTracker.motors.setSpeed(-SPEED_STEP, 0);
+//		System.out.println("Pausing for " + time);
+//		pause(time);
+		
+		int time,turntime,x1,x2,y1,y2;
+		int backLength = myRoute.get(currentLayer-1).size();
+		
+		
+			y2 = myRoute.get(currentLayer-1).get(backLength - 8)[1];
+			y1 = LocationTracker.getCurrentCoordinates()[1];
+			x2 = myRoute.get(currentLayer-1).get(backLength - 8)[0];
+			x1 = LocationTracker.getCurrentCoordinates()[0];
+			
+			//System.out.println("Backwards:(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+			bearing = LocationTracker.getCurrentBearing();
+			// convert from cartesian to polar coordinates
+			double theta = Math.atan2(y2-y1, x2-x1);
+			double r = Math.sqrt(Math.pow(x2-x1,2) + Math.pow(y2-y1,2));
+			double turnAngle = bearing-theta; 
+			int turnDirection = right;	// initially set turn direction to right
+			
+			if (bearing - theta < 0){
+				turnDirection = left;
+			}
+			if( Math.abs(bearing - theta) > Math.PI ){	// special case
+				turnAngle = 2*Math.PI - Math.abs(bearing - theta);
+				turnDirection = turnDirection*(-1);	// find smaller direction
+			}
+			
+			//Check to see if the robot can safely traverse to the target location
+			//if(checkTerrain(x1,y1,x2,y2)){
+					
+				//bearing = theta;	// new bearing is theta
+	
+				turntime = (int)(Math.abs(turnAngle)*8/Math.PI * 1000)+1;
+				// DEBUGGING STATEMENTS
+				System.out.println("Backwards:(" + x1 + "," + y1 + ")===>(" + x2 + "," + y2 + ")");
+				System.out.println("polar(" +r+","+theta+")");
+				System.out.println("turnangle=" + turnAngle + " bearing=" + bearing);
+				System.out.println("turntime = " + turntime);
+				LocationTracker.motors.setSpeed(0, Math.PI/16*turnDirection);	// turnDirection is either left or right
+				pause(turntime);
+				//time = (int)r*1000;
+				time = (int)(((r*WorldView.RESOLUTION)/SPEED_STEP)*1000);	// scales the coord to roughly the size of the roomba
+				LocationTracker.motors.setSpeed(SPEED_STEP, 0);
+				pause(time);
+		
+		
 	}
 	
 	private int leftSwipe(){
