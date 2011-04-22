@@ -58,6 +58,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	testing small_test;
 	threadAbortTest taTest;
 	Runnable mThread;
+	private JFrame frame;
 	//private FocusTraversalPolicy ftPolicy;
 	
 /* GUI Constructor
@@ -72,8 +73,9 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
  * destination.
  */
 	
-	public GUI()
+	public GUI(JFrame f)
 	{
+		frame = f;
 		makeTheObjects();
 		doTheLayout();
 		theXCoor.setActionCommand("X Coordinate");
@@ -101,8 +103,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				//try{
 					//if(startMovement)
 				//	{
-						small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
-						//taTest = new threadAbortTest(thisGUI);
+						//small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
+						taTest = new threadAbortTest(thisGUI);
 				//	}
 				/*} catch(InterruptedException exc){
 					System.out.println("Call to movment thread interrupted");
@@ -345,7 +347,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 		            for(;itr.isValid();itr.advance())
 		            {
 		            	itr.retrieve().setTraversed(false);
-		            	itr.retrieve().getInfo();
+		            	//itr.retrieve().getInfo();
 		            }
 					loadedMapCanvas.setDrawPath(true, true);
 				}
@@ -449,23 +451,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			int tempx = Integer.parseInt(currentLocX.getText());
 			int tempy = Integer.parseInt(currentLocY.getText());
 			pav.initializePAV(tempx, tempy);
-			String sHeading = JOptionPane.showInputDialog("Please enter an initial heading (north, south, east, or west)");
-			if(sHeading.equals("north"))
-			{
-				heading = 240;
-			}
-			else if(sHeading.equals("south"))
-			{
-				heading = 60;
-			}
-			else if(sHeading.equals("east"))
-			{
-				heading = 150;
-			}
-			else
-			{
-				heading = -30;
-			}
+			new HeadingSelectDialog(frame, "Choose an initial heading", this);
+			System.out.println(heading);
 			loadedMapCanvas.setCurrentDegree(heading);
 			loadedMapCanvas.setCurrentLoc(tempx, tempy, false, true);
 			theMessage.setText("X, Y coordinates of start location set to "+tempx+", "+tempy);
@@ -1081,21 +1068,13 @@ class GUICanvas extends JPanel
 	            	}
 	            	g.fillRect(tempx, tempy, factor, factor);
 	            }
-	            /*if(currentNode.isValid()){
-	            	currentX = (int)currentNode.retrieve().getX();
-	            	currentY = (int)currentNode.retrieve().getY();
-	            	dcX = factor*currentX;
-	            	dcY = factor*currentY;
-	            }
-	            else{
-	            	dcX = factor*((int)previousNode.getX());
-	            	dcY = factor*((int)previousNode.getY());
-	            }*/
 			}
 		}
 		g.setColor(Color.GREEN);
 		g.fillOval(ddX, ddY, factor, factor);
 		g.setColor(Color.BLUE);
+		g.fillOval(dcX, dcY, factor, factor);
+		g.setColor(Color.RED);
 		g.fillArc(dcX, dcY, factor, factor, currentDegree, 60);
 		//g.fillOval(dcX, dcY, factor, factor);
 		g.setPaintMode();
