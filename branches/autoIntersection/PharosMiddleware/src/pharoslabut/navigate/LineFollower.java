@@ -156,7 +156,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 				e.printStackTrace();
 			}
 			log("Stop: Thread joined...");
-			//thread = null; // was causing RemoteIntersectionManager to crash 
+			thread = null; // was causing RemoteIntersectionManager to crash 
 			log("Stop: thread stopped.");
 		} else
 			log("Stop: ERROR: already stopped.");

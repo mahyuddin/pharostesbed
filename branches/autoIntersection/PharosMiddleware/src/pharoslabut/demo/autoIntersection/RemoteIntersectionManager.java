@@ -137,7 +137,14 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			log("No access granted, stopping robot...");
 			// Stop the robot
 			lf.stop();
-
+			try {
+				synchronized (this){
+					wait(100);
+				}
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			// Request access from server...
 			
 			// Create the RequestAccessMsg...
