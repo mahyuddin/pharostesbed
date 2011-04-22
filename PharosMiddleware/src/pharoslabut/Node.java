@@ -4,6 +4,7 @@ public class Node{
 	private int path; 
 	private Node up, down, left, right, upright, upleft, bottomright, bottomleft;
 	private double g_score;					// the distance from the starting node to the current node
+	private boolean traversed; //whether or not the node has been visited by the PAV yet
 	
 	public Node(){
 		xCoord = 0;
@@ -18,6 +19,7 @@ public class Node{
 		bottomright = null;
 		bottomleft = null;
 		g_score = 0;
+		traversed = false;
 	}
 	
 	public Node(double x, double y, Node u, Node d, Node l, Node r, Node ur, Node ul, Node br, Node bl, int p){
@@ -59,6 +61,14 @@ public class Node{
 		down= d;
 		left = l;
 		right = r;
+	}
+	
+	public void setTraversed(){
+		traversed = true;
+	}
+	
+	public boolean getTraversedStatus(){
+		return traversed;
 	}
 		
 	public void getInfo(){
