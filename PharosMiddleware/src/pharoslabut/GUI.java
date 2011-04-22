@@ -341,6 +341,12 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				else
 				{
 					theMessage.setText("Path Calculated.");
+					LinkedListIterator itr = path.first();
+		            for(;itr.isValid();itr.advance())
+		            {
+		            	itr.retrieve().setTraversed(false);
+		            	itr.retrieve().getInfo();
+		            }
 					loadedMapCanvas.setDrawPath(true, true);
 				}
 				
@@ -839,7 +845,7 @@ class GUICanvas extends JPanel
 	{
 		if(currentNode.isValid()){
 			previousNode = currentNode.retrieve();
-			previousNode.setTraversed();
+			previousNode.setTraversed(true);
 			currentNode.advance();
 			if(currentNode.isValid()){
 				currentX = (int)currentNode.retrieve().getX();
