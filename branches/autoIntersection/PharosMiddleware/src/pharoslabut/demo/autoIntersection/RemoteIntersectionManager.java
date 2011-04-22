@@ -65,6 +65,11 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 */
 	private NetworkInterface networkInterface;
 	
+	/**
+	 * The time needed to go through the intersection
+	 */
+	private final long INTERSECTION_TIME = 5000;
+	
 	private Timer exitTimer;
 	
 	/**
@@ -111,7 +116,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		
 		// Create the RequestAccessMsg...
 		long eta = ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
-		RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta);
+		RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta, eta+INTERSECTION_TIME, "laneSpecs");
 		
 		// Send the RequestAccessMsg...
 		if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
@@ -137,7 +142,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			
 			// Create the RequestAccessMsg...
 			long eta = System.currentTimeMillis(); // robot is already at intersection
-			RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta);
+			RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta, eta+INTERSECTION_TIME, "laneSpecs");
 			
 			// Send the RequestAccessMsg...
 			if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {

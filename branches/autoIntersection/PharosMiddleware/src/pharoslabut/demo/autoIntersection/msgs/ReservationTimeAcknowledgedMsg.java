@@ -18,7 +18,7 @@ public class ReservationTimeAcknowledgedMsg extends AutoIntersectionMsg {
 	}
 	
 	public String toString() {
-		return "ReservationTimeAcknowledgedMsg";
+		return "ReservationTimeAcknowledgedMsg- "+ "robotIP:" + this.getRobotIP().getHostAddress() + " robotPort:" + this.getRobotPort();
 	}
 	
 }

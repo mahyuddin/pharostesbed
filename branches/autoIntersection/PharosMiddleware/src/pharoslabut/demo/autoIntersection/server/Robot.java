@@ -9,7 +9,8 @@ import java.net.*;
  * @author Chien-Liang Fok
  */
 public class Robot implements java.io.Serializable {
-    private InetAddress ipAddress;
+	private static final long serialVersionUID = 1590099958920681215L;
+	private InetAddress ipAddress;
     private int port;
     
     private String laneSpecs;
@@ -47,14 +48,8 @@ public class Robot implements java.io.Serializable {
      * @param port The port of the robot
      * @param ETA Robot's estimated time of arrival (at the intersection)
      */
-	public Robot(InetAddress ipAddress, int port, long ETA) {
-		this(ipAddress, port, "exit", ETA, -1);
-//		this.id = id;
-//        this.laneSpecs = "exit";
-//        this.ETA = 0;
-//		this.enqueued = false;
-//        this.acknowledged = false;
-//        this.exited = true;
+	public Robot(InetAddress ipAddress, int port) {
+		this(ipAddress, port, "laneSpecs", -1, -1);
 	}
 
 
@@ -168,14 +163,30 @@ public class Robot implements java.io.Serializable {
     @Override
     public String toString()
     {
-        String output = "Address : " + ipAddress + "\n" + "Port: " + port + "\t";
-        output += "laneSpecs : " + laneSpecs + "\n";
-        output += "ETA : " + ETA + "\n";
-        output += "ETC : " + ETC + "\n";
-        output += "enqueued : " + enqueued + "\n";
-        output += "exited : " + exited + "\n";
-        output += "acknowledged : " + acknowledged + "\n";
+        String output = "\t Address : " + ipAddress + "\t" + "Port: " + port + "\n";
+        output += "\t laneSpecs : " + laneSpecs + "\n";
+        output += "\t ETA : " + ETA + "\n";
+        output += "\t ETC : " + ETC + "\n";
+        output += "\t enqueued : " + enqueued + "\n";
+        output += "\t exited : " + exited + "\n";
+        output += "\t acknowledged : " + acknowledged + "\n";
         return output;
+    }
+    
+    /**
+     * This overrides the equals() method
+     * we only compare the robotIP and the robotPort
+     */
+    @Override
+    public boolean equals(Object o)
+    {
+    	if(o == null)
+    		return false;
+    	if(! (o instanceof Robot) )
+    		return false;
+    	
+    	Robot robot = (Robot) o;
+    	return this.getIP().equals(robot.getIP())  &&  this.getPort()==robot.getPort();
     }
 
 }

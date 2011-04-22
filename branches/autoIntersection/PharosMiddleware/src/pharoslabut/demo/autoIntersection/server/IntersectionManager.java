@@ -2,7 +2,6 @@ package pharoslabut.demo.autoIntersection.server;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.PriorityQueue;
 
 import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.io.*;
@@ -17,9 +16,8 @@ import pharoslabut.logger.FileLogger;
 public class IntersectionManager extends Thread implements MessageReceiver {
 
     private long nextAvailableETC;
-    public static LinkedList<Robot> robotsCompleted;
-//    private UDPSender server;
-//	private int serverPort;
+    public LinkedList<Robot> robotsGrantedAccess;
+    public LinkedList<Robot> robotsExiting;
 	private NetworkInterface networkInterface;
 
 	/**
@@ -35,10 +33,9 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     {
     	System.out.println("Starting intersection manager on port " + serverPort + "...");
         nextAvailableETC = -1;
-        robotsCompleted = new LinkedList<Robot>();
-    //    this.serverPort = serverPort;
-//        this.server = new UDPSender(this.serverPort);
-        
+        robotsGrantedAccess = new LinkedList<Robot>();
+        robotsExiting = new LinkedList<Robot>();
+   
         // Create the network interface and register this object as a listener for
         // incoming messages.
         networkInterface = new UDPNetworkInterface(serverPort);
@@ -47,20 +44,20 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 
     /**
      * This method decides whether a robot is allowed to go through the intersection or not
-     * @param r Robot
+     * @param robot Robot
      * @return true if the intersection access is granted, false otherwise
      */
-    public boolean isAllowedAccess(Robot r)
+    public boolean isAllowedAccess(Robot robot)
     {
-        if( nextAvailableETC <= r.getETA() )
+        if( nextAvailableETC <= robot.getETA() )
             return true;
         return false;
     }
 
-    public static LinkedList<Robot> getRobotsCompletedCopy()
+    public LinkedList<Robot> getRobotsGrantedAccessCopy()
     {
         LinkedList<Robot> tempList = new LinkedList<Robot>();
-        Iterator<Robot> iterator = robotsCompleted.iterator();
+        Iterator<Robot> iterator = robotsGrantedAccess.iterator();
         while(iterator.hasNext())
         {
             Robot robot = iterator.next();
@@ -69,102 +66,63 @@ public class IntersectionManager extends Thread implements MessageReceiver {
         return tempList;
     }
 
-
     /**
      * <pre>
      * Starting a new thread
-     * - empty the queue
-     * - start the server connection
      * - loop indefinitely and keep reading the queue
      * - set up the strategy for the intersection
      * - granting/canceling reservations by dealing with the queue and setting the robots' times of arrival
      * </pre>
-     * @return robot - an object robot to be sent back to the client
-     *
-    public static Robot manageIntersection()
-    {
-        PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueueCopy();
-        if(! queue.isEmpty())
-        {
-            Robot robot = queue.peek();
-            if(isAllowedAccess(robot) )
-            {
-                nextAvailableETC = robot.getETC();              // don't modify the robot ETA, keep it as is
-                queue.remove();
-            }
-            else
-            {
-                long timeDifference = robot.getETC() - robot.getETA();
-                robot.setETA(nextAvailableETC);
-                nextAvailableETC = nextAvailableETC + timeDifference;
-                robot.setETC(nextAvailableETC);
-                queue.remove();
-            }
-            return robot;
-        }
-        return null;
-    }
-     * */
-
-    /**
-     * <pre>
-     * Starting a new thread
-     * - empty the queue
-     * - start the server connection
-     * - loop indefinitely and keep reading the queue
-     * - set up the strategy for the intersection
-     * - granting/canceling reservations by dealing with the queue and setting the robots' times of arrival
-     * </pre>
-     * @return robot - an object robot to be sent back to the client
      */
     @Override
     public void run()
     {
-        PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueue();        // this is the static original Queue, not a copy of it
         while(true)
         {
+//            PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueue();        // this is the static original Queue, not a copy of it
             try
             {
-                if(! queue.isEmpty())
+                if(! RobotsPriorityQueue.isEmpty())
                 {
-                    Robot robot = queue.peek();
+                    Robot robot = RobotsPriorityQueue.top();
+                    log("This robot is on top of the queue: " + robot);
                     if(isAllowedAccess(robot) )
                     {
-                        this.nextAvailableETC = robot.getETC(); // don't modify the robot ETA, keep it as is
-                        queue.remove();
-                        robotsCompleted.add(robot);
+                    	log("This robot is allowed to go through the intersection" + robot);
+                        this.nextAvailableETC = robot.getETC(); 	// don't modify the robot ETA, keep it as is
+                        RobotsPriorityQueue.dequeue(robot);
+                        robotsGrantedAccess.add(robot);
                         
                         // Create a ReservationTimeMsg...
                         ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
-                        log("Run: Sending Robot " + robot.getIP() + ":" + robot.getPort() + " return message.");
-                        networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);
+                        log("Run: Sending the ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
                         
-//                        server.send(robot);
+                        if (! networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm)) {
+                			log("WARNING: failed to send ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                		} else {
+                			log("RUN: Sent ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                		}
+                    
+       //                 networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);                        
                     }
                     else
                     {
-                        System.out.println("robot " + robot.getIP() + ":" + robot.getPort() + " is not allowed, nextavailableETC = " + nextAvailableETC + ". The robot's ETA: " + robot.getETA());
+                        log("This robot is not granted access: \n" + robot);
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
-                //        nextAvailableETC = nextAvailableETC + timeDifference;
                         robot.setETC(nextAvailableETC + timeDifference);
-                  //      queue.remove();
                     }
                 }
 
                 // wait 100ms to receive acknowledgment from the client
-      /*          Thread.sleep(100);
+      //          Thread.sleep(100);
                 
-                Iterator<Robot> iterator = robotsCompleted.iterator();
-                while(iterator.hasNext())
-                {
-                    Robot robot = (Robot) iterator.next();
-                    if(! robot.isAcknowledged() )
-                    {
-                        server.send(robot);
-                    }
-                }
-*/
+  //              Iterator<Robot> iterator = robotsGrantedAccess.iterator();
+  //              while(iterator.hasNext())
+  //              {
+  //              	Robot robot = (Robot) iterator.next();
+  //              	queue.add(robot);         
+  //              }
      //           Thread.sleep(3000);
             }
             catch(Exception e)
@@ -177,61 +135,74 @@ public class IntersectionManager extends Thread implements MessageReceiver {
      */
 	@Override
 	public void newMessage(Message msg) {
-		System.out.println("RECEIVED MESSAGE: "  +  msg);
+		System.out.println("RECEIVED SOMETHING.....");
+		log("RECEIVED MESSAGE: " + msg);
 		if (msg instanceof RequestAccessMsg)
     		handleRequestAccessMsg( (RequestAccessMsg) msg );
     	else if (msg instanceof ReservationTimeAcknowledgedMsg)
     		handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
     	else if (msg instanceof ExitingMsg)
     		handleExitingMsg( (ExitingMsg) msg );
-//    	else if (msg instanceof ExitingAcknowledgedMsg)
-//    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
     	else
     		System.out.println("RECEIVER: Unknown message " + msg);
 	}
-	
-    private void handleRequestAccessMsg(RequestAccessMsg msg) {
+
+
+	private void handleRequestAccessMsg(RequestAccessMsg msg) {
 		if(msg != null)
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
-			if(! robot.isEnqueued() )
-            {
-				log("enqueued robot object...");
-            	robot.setEnqueued(true);
-                RobotsPriorityQueue.enqueue(robot);
-            }
+//			if(! robot.isEnqueued() )
+//            {
+				log("enqueueing the robot: \n" + robot);
+//            	robot.setEnqueued(true);
+				if(! robotsGrantedAccess.contains(robot) ) {
+					RobotsPriorityQueue.enqueue(robot);
+				} else {
+					log("This robot was already granted access: \n" + robot);
+				}
+//            }
+		}
+		else
+		{
+			log("The received message is null");
 		}
 	}
 
 	private void handleReservationTimeAcknowledgedMsg(ReservationTimeAcknowledgedMsg msg) {
 		if(msg != null)
 		{
-			//Iterator<Robot> iterator = IntersectionManager.robotsGrantedAccess.iterator();
-	        //while(iterator.hasNext())
-	        {
-	            //Robot robot = iterator.next();
-	            //if( robot.getID() == msg.getRobotID() )
-	            {
-	            	//IntersectionManager.robotsGrantedAccess.remove(robot);
-	            	//break;
-	            }
-	        }	
+			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
+			robotsGrantedAccess.remove(robot);
+			robotsExiting.add(robot);
+//			Iterator<Robot> iterator = robotsGrantedAccess.iterator();
+//	        while(iterator.hasNext())
+//	        {
+//	            Robot robot = iterator.next();
+//	            if( robot.getIP().equals(msg.getRobotIP()) && robot.getPort() == msg.getRobotPort() )
+//	            {	            	
+//	            }
+//	        }	
 		}
 	}
 
 	private void handleExitingMsg(ExitingMsg msg) {
 		if(msg != null)
 		{
-			Iterator<Robot> iterator = IntersectionManager.robotsCompleted.iterator();
-	        while(iterator.hasNext())
-	        {
-	            Robot robot = iterator.next();
-	            if(robot.getIP().equals(msg.getRobotIP()) && robot.getPort() == msg.getRobotPort())
-	            {
-	            	IntersectionManager.robotsCompleted.remove(robot);
-	            	break;
-	            }
-	        }	
+            log("Run: Sending EXITING ACKNOWLEDGED MESSAGE " + msg.getRobotIP() + ":" + msg.getRobotPort());
+            
+            networkInterface.sendMessage(msg.getRobotIP(), msg.getRobotPort(), msg);   
+            Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
+            robotsExiting.remove(robot);
+//			Iterator<Robot> iterator = robotsExiting.iterator();
+//	        while(iterator.hasNext())
+	//        {
+//	            Robot robot = iterator.next();
+//	            if(robot.getIP().equals(msg.getRobotIP()) && robot.getPort() == msg.getRobotPort())
+//	            {
+//	            	robotsExiting.remove(robot);
+//	            }
+//	        }	
 		}
 	}
 	

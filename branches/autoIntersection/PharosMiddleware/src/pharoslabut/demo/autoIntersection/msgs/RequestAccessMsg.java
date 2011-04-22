@@ -2,8 +2,6 @@ package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
 
-import pharoslabut.io.Message.MsgType;
-
 /**
  * This message is sent from the robot to the intersection server when
  * it approaches the intersection.  It's purpose is to request permission 
@@ -94,6 +92,8 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
     }
 	
 	public String toString() {
-		return "RequestAccessMsg";
+		return "RequestAccessMsg- " + "robotIP:" + this.getRobotIP().getHostAddress()
+				+ " robotPort:" + this.getRobotPort() + " ETA:" + this.getETA()
+				+ " ETC:" + this.getETC() + " laneSpecs:" + this.getLaneSpecs();
 	}
 }

@@ -2,8 +2,6 @@ package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
 
-import pharoslabut.io.Message.MsgType;
-
 /**
  * What is this message used for?
  * 
@@ -18,7 +16,7 @@ public class ExitingAcknowledgedMsg extends AutoIntersectionMsg {
 	}
 	
 	public String toString() {
-		return "ExitingAcknowledgedMsg";
+		return "ExitingAcknowledgedMsg- " + "robotIP:" + this.getRobotIP().getHostAddress() + " - robotPort:" + this.getRobotPort();
 	}
 
 }

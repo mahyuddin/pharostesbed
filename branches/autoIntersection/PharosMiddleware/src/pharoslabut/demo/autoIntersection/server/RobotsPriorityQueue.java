@@ -44,10 +44,25 @@ public class RobotsPriorityQueue
     {
         queue.remove();
     }
+    
+    public static void dequeue(Robot robot)
+    {
+        queue.remove(robot);
+    }
 
     public static void enqueue(Robot r)
     {
         queue.add(r);
+    }
+    
+    public static boolean isEmpty()
+    {
+    	return queue.isEmpty();
+    }
+    
+    public static Robot top()
+    {
+    	return queue.peek();
     }
 
 
@@ -115,14 +130,6 @@ public class RobotsPriorityQueue
  //       enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
  //       enqueue( new Robot(8, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
 
-
-        /*
-        while(queue.size() != 0 )
-        {
-            System.out.println(queue.remove() );
-        }
-         *
-         */
     }
 
 }

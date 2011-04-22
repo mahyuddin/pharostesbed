@@ -18,7 +18,7 @@ public class ExitingMsg extends AutoIntersectionMsg {
 	}
 	
 	public String toString() {
-		return "ExitingMsg";
+		return "ExitingMsg- "+ "robotIP:" + this.getRobotIP().getHostAddress() + " robotPort:" + this.getRobotPort();
 	}
 
 }
