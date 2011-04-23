@@ -139,22 +139,54 @@ public class StartGUI extends javax.swing.JFrame {
     }                                                  
 
     private void StartButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
-        if ((TimeLimitTextField.getText()).isEmpty()) {
-            StatusLabel.setText("Starting Default Mapping Routine ...");
-        } else
-            StatusLabel.setText("Starting " + TimeLimitTextField.getText() + " Second Mapping Routine ...");
-        PathPlannerThread ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())));
+        OrderedPair startCoords = null;  
+        double initialBearing = 0;
+//    	if ((TimeLimitTextField.getText()).isEmpty()) {
+//            StatusLabel.setText("Starting Default Mapping Routine ...");
+//        } else
+        StatusLabel.setText("Starting " + TimeLimitTextField.getText() + " Second Mapping Routine...");
+        
+        switch(StartingPositionComboBox.getSelectedIndex()) {
+        case 0: // Bottom Left Corner, Facing North (¹/2)
+        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE/5);
+        	initialBearing = Math.PI/2;        	
+        	break;
+        
+        case 1: // Bottom Right Corner, Facing West (¹)
+        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE*4/5, (Integer) WorldView.WORLD_SIZE/5);
+        	initialBearing = Math.PI;        	
+        	break;
+        
+        case 2: // Upper Left Corner, Facing East (0)
+        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE*4/5);
+        	initialBearing = 0;       	
+        	break;
+        
+        case 3: // Upper Right Corner, Facing South (-¹/2) 
+        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE*4/5, (Integer) WorldView.WORLD_SIZE*4/5);
+        	initialBearing = -Math.PI/2;        	
+        	break;
+        	
+        default:
+        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE/5);
+        	initialBearing = Math.PI/2;
+        	System.out.println("Error: Invalid Combo Box Selection. \n... Reverting to Bottome Left Corner Initialization."); 
+        	break;
+        }
+        
+        PathPlannerThread ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())), startCoords, initialBearing);
         ppt.start();
     }                                           
 
     private void StopMotionActionPerformed(java.awt.event.ActionEvent evt) {                                           
         // TODO stop motors, end path planner, proceed directly to map generation
+    	// there is a state enum in the path planner, potentially change to map generation state
         // PathPlanner.motors.setSpeed(0,0);
         StatusLabel.setText("Motion Stopped.");
     }                                          
 
     private void StartingPositionComboBoxActionPerformed(java.awt.event.ActionEvent evt) {                                                         
-        // TODO add your handling code here:
+    	// do nothing here
     }                                                        
 
     private void EmergencyStopButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                    

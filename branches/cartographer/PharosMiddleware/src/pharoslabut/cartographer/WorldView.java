@@ -72,6 +72,12 @@ class OrderedPair {
 	public Integer getY() {	return y; }
 	public void setY(Integer y) { this.y = y; }
 	/*************** END GETTERS AND SETTERS ****************/
+	
+	
+	@Override
+	public String toString() {
+		return ( "(" + this.x + "," + this.y + ")" );
+	}
 
 }
 
