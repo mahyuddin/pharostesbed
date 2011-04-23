@@ -126,6 +126,10 @@ public class PathPlanner {
 		END
 	}
 	
+	public static OrderedPair startingCoordinates = null;
+	public static double initialBearing = 0;
+	
+	
 	/**
 	 * Path Planner constructor
 	 * @param serverIP
@@ -145,7 +149,7 @@ public class PathPlanner {
 		myRoute.add(firstLayer);
 		
 		new WorldView();// initialize the World
-		new LocationTracker();// initialize its localization scheme
+		new LocationTracker(PathPlanner.startingCoordinates, PathPlanner.initialBearing);// initialize its localization scheme
 		
 		RealtimeImgOut mapThread = new RealtimeImgOut();
 		mapThread.start();
@@ -1103,13 +1107,18 @@ public class PathPlanner {
 	
 	/******************** beginPathPlanner ****************************
 	 * starts the entire navigation/mapping routine
+	 * @param initialBearing 
+	 * @param startingCoordinates 
 	 * @param args
 	 *****************************************************************/
-	public static void beginPathPlanner(int executionTimeOut) {
+	public static void beginPathPlanner(int executionTimeOut, OrderedPair startingCoordinates, double initialBearing) {
 		int serverPort = 6665;
 		PathPlanner.RUNTIME = executionTimeOut;
+		PathPlanner.startingCoordinates = startingCoordinates;
+		PathPlanner.initialBearing = initialBearing;
 		
-		System.out.println("Runtime = " + PathPlanner.RUNTIME);
+		System.out.println("Runtime = " + PathPlanner.RUNTIME + "\nStarting Coordinates: " + 
+				PathPlanner.startingCoordinates + "\nInitial Bearing: " + PathPlanner.initialBearing);
 		
 //		try {
 //			for (int i=0; i < args.length; i++) {

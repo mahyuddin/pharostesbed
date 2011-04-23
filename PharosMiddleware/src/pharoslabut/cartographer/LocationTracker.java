@@ -14,9 +14,9 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	// change initial values to reflect the robot's starting orientation
 	//private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
 	//private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
-	private static final double initialX = 60*WorldView.RESOLUTION;
-	private static final double initialY = 60*WorldView.RESOLUTION;
-	private static final double initialBearing = Math.PI/2;
+	private static double initialX = 60*WorldView.RESOLUTION;
+	private static double initialY = 60*WorldView.RESOLUTION;
+	private static double initialBearing = Math.PI/2;
 	private static boolean checkLine = false;
 	
 	private static double currentX;
@@ -28,7 +28,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	// 0 is east, PI/2 is north, PI and -PI are west, and -PI/2 is south
 	
 	
-	public LocationTracker() {
+	public LocationTracker(OrderedPair sc, double ib) {
 		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
 		motors = (PathPlanner.client).requestInterfacePosition2D(0, 
@@ -47,7 +47,10 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
-		currentX = getInitialx(); currentY = initialY; bearing = initialBearing; // facing east
+		currentX = sc.getX(); currentY = sc.getY(); initialBearing = ib;
+		bearing = initialBearing; 
+		
+//		System.out.println(sc + "\t" + bearing);
 		
 		// robot should begin in lower-left corner with a bearing of 0, facing east
 //		System.out.println("going to write odom");
@@ -60,11 +63,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //		System.out.println("A set to " + newPose.getPa());
 //		PathPlannerSimpleTest.motors.setOdometry(newPose);
 		
-		writeOdometry(currentX, currentY, bearing);
-		
-		
-		// set odometry here to something like (4,4)
-		
+		writeOdometry(currentX, currentY, bearing);		
 		
 		motors.addPos2DListener(this);
 		
