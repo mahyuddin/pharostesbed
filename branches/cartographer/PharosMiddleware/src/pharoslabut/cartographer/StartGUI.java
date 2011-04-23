@@ -146,7 +146,7 @@ public class StartGUI extends javax.swing.JFrame {
 //        } else
         StatusLabel.setText("Starting " + TimeLimitTextField.getText() + " Second Mapping Routine...");
         
-        switch(StartingPositionComboBox.getSelectedIndex()) {
+        switch(StartingPositionComboBox.getSelectedIndex()) { // read the combo box value
         case 0: // Bottom Left Corner, Facing North (¹/2)
         	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE/5);
         	initialBearing = Math.PI/2;        	
@@ -193,6 +193,8 @@ public class StartGUI extends javax.swing.JFrame {
         StatusLabel.setText("Execution halted. System exiting. \nYou may now close the window.");
         
         // TODO maybe bring up a dialog box here?
+        // TODO end path planner motion by calling setSpeed(0,0), then exit without generating map
+        
         System.out.println("Execution halted. System exiting.");
         System.exit(0);
     }                                                   
