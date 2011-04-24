@@ -23,6 +23,13 @@ public abstract class NetworkInterface {
 	protected FileLogger flogger = null;
 	
 	/**
+	 * Returns the local port on which the network interface is listening for packets.
+	 * 
+	 * @return The local port on which messages should arrive.
+	 */
+	public abstract int getLocalPort();
+	
+	/**
 	 * Sends a message.
 	 * 
 	 * @param address The IP address of the destination.

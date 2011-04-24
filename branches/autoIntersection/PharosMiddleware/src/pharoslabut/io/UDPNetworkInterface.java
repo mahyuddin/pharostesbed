@@ -11,13 +11,24 @@ import java.net.*;
 public class UDPNetworkInterface extends NetworkInterface {
 
 	private DatagramSocket socket;
-	private int port;
     private UDPReceiver rcvr;
     
     /**
-     * The constructor.
+     * The port on which to listen for incoming message.  If -1, then select a random port that is available.
+     */
+    private int port = -1;
+    
+    /**
+     * Creates a UDPNetworkInterface that listens on a random port.
+     */
+	public UDPNetworkInterface() {
+		this(-1);
+	}
+	
+	/**
+     * Creates a UDPNetworkInterface that listens on a specific port.
      * 
-     * @param port The port on which to listen for incoming messages.
+     * @param port The port on which to listen.
      */
 	public UDPNetworkInterface(int port) {
 		this.port = port;
@@ -25,6 +36,13 @@ public class UDPNetworkInterface extends NetworkInterface {
 		rcvr = new UDPReceiver();
 	}
 	
+	@Override
+	public int getLocalPort() {
+		if (socket == null)
+			openSocket();
+		
+		return socket.getLocalPort();
+	}
 	@Override
 	public void stop() {
 		rcvr.stop();
@@ -75,7 +93,10 @@ public class UDPNetworkInterface extends NetworkInterface {
 		while (socket == null) {
 			log("Opening server socket...");
 			try {
-				socket = new DatagramSocket(port);
+				if (port == -1)
+					socket = new DatagramSocket();
+				else
+					socket = new DatagramSocket(port);
 			} catch (SocketException e) {
 				log("ERROR: Failed to open server socket, error: " + e.getMessage(), false);
 
