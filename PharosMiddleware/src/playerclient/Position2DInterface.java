@@ -221,12 +221,14 @@ public class Position2DInterface extends AbstractPositionDevice {
     
     public void INS_KillSig()
     {
+    	  System.out.println("Debug Msg: Kill signal sent");
           try {
-                sendHeader (PLAYER_MSGTYPE_CMD, 10, 3);
-                XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (3);
+                sendHeader (PLAYER_MSGTYPE_CMD, 10, 0);
+                XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (0);
 
                 try {
 					xdr.beginEncoding (null, 0);
+		        	//xdr.xdrEncodeByte ((byte)0);
 				} catch (OncRpcException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
