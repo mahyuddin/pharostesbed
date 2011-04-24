@@ -35,6 +35,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
         nextAvailableETC = -1;
         robotsGrantedAccess = new LinkedList<Robot>();
         robotsExiting = new LinkedList<Robot>();
+        flogger = new FileLogger("IntersectionManager.log");
    
         // Create the network interface and register this object as a listener for
         // incoming messages.
@@ -67,75 +68,10 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     }
 
     /**
-     * <pre>
-     * Starting a new thread
-     * - loop indefinitely and keep reading the queue
-     * - set up the strategy for the intersection
-     * - granting/canceling reservations by dealing with the queue and setting the robots' times of arrival
-     * </pre>
-     */
-    @Override
-    public void run()
-    {
-        while(true)
-        {
-//            PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueue();        // this is the static original Queue, not a copy of it
-            try
-            {
-                if(! RobotsPriorityQueue.isEmpty())
-                {
-                    Robot robot = RobotsPriorityQueue.top();
-                    log("This robot is on top of the queue: " + robot);
-                    if(isAllowedAccess(robot) )
-                    {
-                    	log("This robot is allowed to go through the intersection" + robot);
-                        this.nextAvailableETC = robot.getETC(); 	// don't modify the robot ETA, keep it as is
-                        RobotsPriorityQueue.dequeue(robot);
-                        robotsGrantedAccess.add(robot);
-                        
-                        // Create a ReservationTimeMsg...
-                        ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
-                        log("Run: Sending the ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
-                        
-                        if (! networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm)) {
-                			log("WARNING: failed to send ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
-                		} else {
-                			log("RUN: Sent ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
-                		}
-                    
-       //                 networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);                        
-                    }
-                    else
-                    {
-                        log("This robot is not granted access: \n" + robot);
-                        long timeDifference = robot.getETC() - robot.getETA();
-                        robot.setETA(nextAvailableETC);
-                        robot.setETC(nextAvailableETC + timeDifference);
-                    }
-                }
-
-                // wait 100ms to receive acknowledgment from the client
-      //          Thread.sleep(100);
-                
-  //              Iterator<Robot> iterator = robotsGrantedAccess.iterator();
-  //              while(iterator.hasNext())
-  //              {
-  //              	Robot robot = (Robot) iterator.next();
-  //              	queue.add(robot);         
-  //              }
-     //           Thread.sleep(3000);
-            }
-            catch(Exception e)
-            { e.printStackTrace(); }
-        }
-    }
-
-    /**
      * Handles incoming messages.
      */
 	@Override
 	public void newMessage(Message msg) {
-		System.out.println("RECEIVED SOMETHING.....");
 		log("RECEIVED MESSAGE: " + msg);
 		if (msg instanceof RequestAccessMsg)
     		handleRequestAccessMsg( (RequestAccessMsg) msg );
@@ -144,7 +80,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
     	else if (msg instanceof ExitingMsg)
     		handleExitingMsg( (ExitingMsg) msg );
     	else
-    		System.out.println("RECEIVER: Unknown message " + msg);
+    		log("RECEIVER: Unknown message " + msg);
 	}
 
 
@@ -152,16 +88,14 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		if(msg != null)
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
-//			if(! robot.isEnqueued() )
-//            {
+			if( (! robotsGrantedAccess.contains(robot))  && (! RobotsPriorityQueue.contains(robot)) ) {
 				log("enqueueing the robot: \n" + robot);
-//            	robot.setEnqueued(true);
-				if(! robotsGrantedAccess.contains(robot) ) {
-					RobotsPriorityQueue.enqueue(robot);
-				} else {
-					log("This robot was already granted access: \n" + robot);
-				}
-//            }
+				RobotsPriorityQueue.enqueue(robot);
+				log("RobotsPriorityQueue: " + RobotsPriorityQueue.print() );
+//				this.start();
+			} else {
+//				log("This robot was already granted access: \n" + robot);
+			}
 		}
 		else
 		{
@@ -228,4 +162,62 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		if (flogger != null)
 			flogger.log(result);
 	}
+	
+	
+	
+    /**
+     * <pre>
+     * Starting a new thread
+     * - loop indefinitely and keep reading the queue
+     * - set up the strategy for the intersection
+     * - granting/canceling reservations by dealing with the queue and setting the robots' times of arrival
+     * </pre>
+     */
+    @Override
+    public void run()
+    {
+        while(true)
+        {
+//            PriorityQueue<Robot> queue = RobotsPriorityQueue.getQueue();        // this is the static original Queue, not a copy of it
+            try
+            {
+                if(! RobotsPriorityQueue.isEmpty())
+                {
+                    Robot robot = RobotsPriorityQueue.top();
+                    log("This robot is on top of the queue: \n" + robot);
+                    if(isAllowedAccess(robot) )
+                    {
+                    	log("This robot is allowed to go through the intersection:\n" + robot);
+                    	robotsGrantedAccess.add(robot);
+                        this.nextAvailableETC = robot.getETC(); 	// don't modify the robot ETA, keep it as is
+                        RobotsPriorityQueue.dequeue(robot);
+                        
+                        // Create a ReservationTimeMsg...
+                        ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
+                        log("RUN: Sending the ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                        
+                        if (! networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm)) {
+                			log("WARNING: failed to send ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                		} else {
+                			log("RUN: Sent ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                		}
+                    
+          //              networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm);                        
+                    }
+                    else
+                    {
+                        log("This robot is not granted access: \n" + robot);
+                        long timeDifference = robot.getETC() - robot.getETA();
+                        robot.setETA(nextAvailableETC);
+                        robot.setETC(nextAvailableETC + timeDifference);
+                    }
+                }
+                else {
+                	Thread.sleep(50);
+                }
+            }
+            catch(Exception e) {
+            	e.printStackTrace(); }
+        }
+    }
 }

@@ -64,6 +64,10 @@ public class RobotsPriorityQueue
     {
     	return queue.peek();
     }
+    
+    public static boolean contains(Robot robot) {
+    	return queue.contains(robot);
+    }
 
 
     /**

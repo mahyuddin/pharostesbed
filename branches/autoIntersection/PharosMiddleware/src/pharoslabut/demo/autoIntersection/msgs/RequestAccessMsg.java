@@ -88,7 +88,6 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
     
     public void setLaneSpecs(String specs) {
         this.laneSpecs = specs;
-//        this.ETA = eta + new Date().getTime() - Main.startTime;
     }
 	
 	public String toString() {
