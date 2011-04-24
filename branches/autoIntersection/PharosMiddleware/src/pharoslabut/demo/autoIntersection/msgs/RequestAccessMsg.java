@@ -1,6 +1,7 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
+import pharoslabut.demo.autoIntersection.*;
 
 /**
  * This message is sent from the robot to the intersection server when
@@ -12,39 +13,31 @@ import java.net.InetAddress;
  */
 public class RequestAccessMsg extends AutoIntersectionMsg  {
 
-	private static final long serialVersionUID = -3642519285338558989L;
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1877893336642970534L;
+	
 	private long ETA;
 	private long ETC;
-	private String laneSpecs;
+	private LaneSpecs laneSpecs;
 	
 	/**
 	 * The constructor.
 	 * This constructor contains the ETC, laneSpecs which are not currently used
 	 * but will be used in the future
 	 * 
-	 * @param robotIP
-	 * @param robotPort
-	 * @param ETA
-	 * @param ETC
-	 * @param laneSpecs
+	 * @param robotIP The IP address of the robot.
+	 * @param robotPort The port that the robot is listening to.
+	 * @param ETA The estimated time when the robot will enter the intersection.
+	 * @param ETC The estimated time when the robot will exit the intersection.
+	 * @param laneSpecs The lane specification, i.e., which lane the robot will be approaching from.
 	 */
-	public RequestAccessMsg(InetAddress robotIP, int robotPort, long ETA, long ETC, String laneSpecs) {
+	public RequestAccessMsg(InetAddress robotIP, int robotPort, long ETA, long ETC, LaneSpecs laneSpecs) {
 		super(robotIP, robotPort);
 		this.ETC = ETC;
 		this.ETA = ETA;
 		this.laneSpecs = laneSpecs;
-	}
-	
-	/*
-	 * Another constructor
-	 * without the ETC or the laneSpecs
-	 */
-	public RequestAccessMsg(InetAddress robotIP, int robotPort, long ETA) {
-		this(robotIP, robotPort, ETA, -1, null);
-//		super(robotIP, robotPort);
-//		this.ETA = ETA;
-//		ETC = -1;
-//		laneSpecs = null;
 	}
 	
 	/**
@@ -64,8 +57,8 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
     /**
      *  @return laneSpecs
      */
-    public String getLaneSpecs() {
-        return this.laneSpecs;
+    public LaneSpecs getLaneSpecs() {
+        return laneSpecs;
     }
 
     /**
@@ -86,13 +79,13 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
 //        this.ETC = etc + new Date().getTime() - Main.startTime;
     }
     
-    public void setLaneSpecs(String specs) {
+    public void setLaneSpecs(LaneSpecs specs) {
         this.laneSpecs = specs;
     }
 	
 	public String toString() {
-		return "RequestAccessMsg- " + "robotIP:" + this.getRobotIP().getHostAddress()
-				+ " robotPort:" + this.getRobotPort() + " ETA:" + this.getETA()
-				+ " ETC:" + this.getETC() + " laneSpecs:" + this.getLaneSpecs();
+		return "RequestAccessMsg- " + "robotIP:" + getRobotIP().getHostAddress()
+				+ " robotPort:" + getRobotPort() + " ETA:" + getETA()
+				+ " ETC:" + getETC() + " laneSpecs:" + getLaneSpecs();
 	}
 }
