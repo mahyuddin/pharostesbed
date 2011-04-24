@@ -14,10 +14,12 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.util.Scanner;
-import java.util.Timer;
+
+import javax.swing.Timer;
 
 import javax.imageio.ImageIO;
 
@@ -39,8 +41,9 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
     protected  double XueHuaXf = 0, XueHuaYf = 0, XueHuaYaw =0;
-    protected long Half =2, Full = 4;
-    public Timer timer = new Timer(); 
+    protected int Quarter = 1000, Half =2000, T_Quarter = 3000, Full = 4000;
+    protected static int delay = 1000;
+    
     protected String Time;
     BufferedImage image ;
     public String mapfile;
@@ -335,7 +338,19 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
         pack();
     }// </editor-fold>
     
-   
+   /*  ActionListener taskPerformer = new ActionListener() {
+        public void actionPerformed(ActionEvent evt) {
+        	  XueHuaPos.INS_UpdateX();
+              XueHuaPos.INS_UpdateY();
+              
+              String XueHuaX = Double.toString(XueHuaPos.Xpos);
+              String XueHuaY = Double.toString(XueHuaPos.Ypos);
+              
+              jTextField1.setText(XueHuaX); 
+              jTextField2.setText(XueHuaY);
+              
+        }
+    };*/
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     		
@@ -349,46 +364,19 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         // TODO add your handling code here:
         //turn 45 degrees CCW move
-    	XueHua.turnLeft();
-    	try {
-			XueHua.wait(Half);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	XueHua.moveForward();
+    	System.out.println("Debug Msg: Turn NW");
+    	XueHua.movW(Quarter);
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-    			XueHua.turnLeft();
-    			try {
-					XueHua.wait(Full);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				XueHua.stop();
-    			XueHua.moveForward();
+    			System.out.println("Debug Msg: Turn West");
+    			XueHua.movW(Half);
     			jTextField4.setText("30");
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-          
-                     XueHua.turnRight();
-                     try {
-     					XueHua.wait(Full);
-     				} catch (InterruptedException e) {
-     					// TODO Auto-generated catch block
-     					e.printStackTrace();
-     				}
-     				try {
-    					XueHua.wait(Full);
-    				} catch (InterruptedException e) {
-    					// TODO Auto-generated catch block
-    					e.printStackTrace();
-    				}
-                     XueHua.moveForward();
-                     System.out.println("Button 8 pushed");// Add code here        // TODO add your handling code here:
+          		System.out.println("Debug Msg: Move Backwards");
+                     XueHua.movE(Full);
     }//GEN-LAST:event_jButton8ActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
@@ -400,7 +388,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
     			{	 
                      XueHua.moveForward(); 
-                      
+                    
                      XueHuaPos.INS_UpdateX();
                      XueHuaPos.INS_UpdateY();
                      
@@ -419,16 +407,9 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 
     
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
-         
-                     XueHua.turnRight();
-                     try {
-     					XueHua.wait(Full);
-     				} catch (InterruptedException e) {
-     					// TODO Auto-generated catch block
-     					e.printStackTrace();
-     				}
-     				XueHua.stop();
-                     XueHua.moveForward();        // TODO add your handling code here:
+		System.out.println("Debug Msg: Turn East");
+		XueHua.movE(Half);
+		jTextField4.setText("30");
     }//GEN-LAST:event_jButton6ActionPerformed
 
    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException, IOException {//GEN-FIRST:event_jButton10ActionPerformed
@@ -496,6 +477,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	    int i;
 	    for (i=0; i<pf.result.MovSize(); i++)
 	    {
+	    	System.out.println("Debug Msg: Execute cmd "+ i);
 	    	XueHua.FB_Mov(pf.result.GetMov(i),this);
 	    }
 	    
@@ -539,22 +521,23 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
 	return null;
 }
 
-private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+   private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
        // TODO add your handling code here:
        // Turn NW
-       XueHua.moveForward();
+	   System.out.println("Debug Msg: Move NE");
+	   XueHua.movW(Quarter);
    }                                        
 
    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {                                         
        // TODO add your handling code here:
-	   XueHua.turnLeft();
-	   XueHua.moveForward();
+	   System.out.println("Debug Msg: Move SW");
+	   XueHua.movW(T_Quarter);
 	   //turn 225 degrees CCW and move straight
    }                                        
 
-   private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {                                         
-      XueHua.turnRight();
-      XueHua.moveForward();// TODO add your handling code here:
+   private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {
+	  System.out.println("Debug Msg: Move SE");
+      XueHua.movE(T_Quarter);
    }               // turn 315 degrees CCW and move 
     /**
     * @param args the command line arguments
@@ -565,6 +548,11 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
 	   
 	   jTextArea1.append(s);
 	   
+   }
+   
+   public void ReplaceMapLine(String s, int row, int width)
+   {
+	   jTextArea1.replaceRange(s, row*width, row*(width+1));
    }
    
    // Note that all degree movements are relative to the current heading of the robot, not absolute heading.
@@ -578,7 +566,8 @@ private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {
             public void run() {
                 new NewJFrame().setVisible(true);
                
-                
+   /*             new Timer(delay, taskPerformer).start(); */
+
                 //code you want to time goes here
               
                 

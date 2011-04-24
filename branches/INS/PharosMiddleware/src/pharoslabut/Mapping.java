@@ -77,6 +77,7 @@ public class Mapping {
 			}
 			MapBuffer.add(lineBuf);
 		}
+		
 		System.out.println("Width: "+Width+" Height: "+Height);
 		
 	}
@@ -109,9 +110,10 @@ public class Mapping {
 		System.out.println("Width: "+Width+" Height: "+Height);
 	}
 
-	public void bufAltChar(int col, int row, char c)
+	public void bufAltChar(int col, int row, char c )
 	{
 		StringBuffer linebuf = MapBuffer.get(row);
 		linebuf.setCharAt(col, c);
+		//U_I.ReplaceMapLine(linebuf.toString(), row, Width+1);
 	}
 }

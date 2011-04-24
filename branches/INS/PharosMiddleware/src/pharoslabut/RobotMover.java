@@ -135,7 +135,26 @@ import playerclient.structures.position2d.PlayerPosition2dData;
       		BaseX = BaseX+ Xpos;
       		BaseY = BaseY+ Ypos;
       		BaseYaw = BaseYaw + Yaw;
+      		Xpos = 0;
+      		Ypos = 0;
+      		Yaw = 0;
       		motors.INS_KillSig();
+      	}
+      	
+      	public void movW(int turnTime)
+      	{
+      		turnLeft();
+			pause(turnTime);
+			stop();
+			moveForward();
+      	}
+      	
+      	public void movE(int turnTime)
+      	{
+      		turnRight();
+			pause(turnTime);
+			stop();
+			moveForward();
       	}
       	
       	private void pause(int duration) {
@@ -325,17 +344,24 @@ import playerclient.structures.position2d.PlayerPosition2dData;
 			switch(mov_cmd.MovType)
 			{
 				case 0:
+					stop();
 					movAmt = calc_dist(orig_X, mov_cmd.goalWaypoint.X, orig_Y, mov_cmd.goalWaypoint.Y);
+					System.out.println("Moving Forward by "+movAmt);
 					moveForward(); 
 					while (calc_dist(0, Xpos, 0, Ypos) < movAmt){U_I.UpdateInfo();}; // TODO update x and y during while loops
+					System.out.println("Done");
 					break;
 				case 1: break; //Bwd
-				case 2: 
+				case 2:
+					stop();
+					System.out.println("Turning CW");
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnRight();
 						while (calc_rad(0, Yaw) < movAmt){U_I.UpdateInfo();};
 						break;
 				case 3: 
+					stop();
+					System.out.println("Turning CCW");
 						movAmt = calc_rad(orig_H, mov_cmd.goalWaypoint.H);
 						turnLeft();
 						while (calc_rad(0, Yaw) < movAmt){U_I.UpdateInfo();};
