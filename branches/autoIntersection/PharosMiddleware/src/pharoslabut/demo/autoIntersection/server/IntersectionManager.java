@@ -39,7 +39,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
    
         // Create the network interface and register this object as a listener for
         // incoming messages.
-        networkInterface = new UDPNetworkInterface(serverPort);
+        networkInterface = new TCPNetworkInterface(serverPort); //UDPNetworkInterface(serverPort);
         networkInterface.registerMsgListener(this);
     }
 

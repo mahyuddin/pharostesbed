@@ -1,5 +1,6 @@
 package pharoslabut.demo.autoIntersection.server;
 
+import pharoslabut.demo.autoIntersection.*;
 import java.net.*;
 
 /**
@@ -13,7 +14,7 @@ public class Robot implements java.io.Serializable {
 	private InetAddress ipAddress;
     private int port;
     
-    private String laneSpecs;
+    private LaneSpecs laneSpecs;
     private long ETA;
     private long ETC;
     private boolean enqueued;
@@ -29,7 +30,7 @@ public class Robot implements java.io.Serializable {
      * @param ETA Robot's estimated time of arrival (at the intersection)
      * @param ETC Robot's estimated time of clearance (after crossing the intersection)
      */
-    public Robot(InetAddress ipAddress, int port, String laneSpecs, long ETA, long ETC) {
+    public Robot(InetAddress ipAddress, int port, LaneSpecs laneSpecs, long ETA, long ETC) {
         this.ipAddress = ipAddress;
         this.port = port;
         
@@ -49,7 +50,7 @@ public class Robot implements java.io.Serializable {
      * @param ETA Robot's estimated time of arrival (at the intersection)
      */
 	public Robot(InetAddress ipAddress, int port) {
-		this(ipAddress, port, "laneSpecs", -1, -1);
+		this(ipAddress, port, new LaneSpecs(), -1, -1);
 	}
 
 
@@ -67,7 +68,7 @@ public class Robot implements java.io.Serializable {
     /**
      *  @return laneSpecs
      */
-    public String getLaneSpecs() {
+    public LaneSpecs getLaneSpecs() {
         return this.laneSpecs;
     }
 

@@ -2,7 +2,7 @@ package pharoslabut.demo.autoIntersection.server;
 
 import java.io.*;
 import java.net.*;
-
+import pharoslabut.demo.autoIntersection.*;
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ class Connect extends Thread
     public void run()
     {
         try {
-         oos.writeObject(new Robot(null, 0, "laneSpecs", (long)1.2, (long)1.3 ) );
+         oos.writeObject(new Robot(null, 0, new LaneSpecs(), (long)1.2, (long)1.3 ) );
          oos.flush();
          // close streams and connections
          ois.close();

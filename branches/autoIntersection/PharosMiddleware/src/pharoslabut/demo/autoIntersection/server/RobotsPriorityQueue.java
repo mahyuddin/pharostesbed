@@ -5,6 +5,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 
+import pharoslabut.demo.autoIntersection.*;
+
 /**
  *
  * @author Michael Hanna
@@ -100,27 +102,27 @@ public class RobotsPriorityQueue
         
         try {
         	long ETA = new Date().getTime() - Main.startTime;
-        	Robot robot = new Robot(java.net.InetAddress.getByName("10.11.12.0"), 8888, "laneSpecs", ETA, ETA);
+        	Robot robot = new Robot(java.net.InetAddress.getByName("10.11.12.0"), 8888, new LaneSpecs(), ETA, ETA);
         	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 2;
-        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.1"), 8888, "laneSpecs", ETA, ETA);
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.1"), 8888, new LaneSpecs(), ETA, ETA);
         	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 10;
-        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.2"), 8888, "laneSpecs", ETA, ETA );
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.2"), 8888, new LaneSpecs(), ETA, ETA );
         	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 4;
-        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.3"), 8888, "laneSpecs", ETA, ETA );
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.3"), 8888, new LaneSpecs(), ETA, ETA );
         	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 5;
-        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.4"), 8888, "laneSpecs", ETA, ETA );
+        	robot = new Robot(java.net.InetAddress.getByName("10.11.12.4"), 8888, new LaneSpecs(), ETA, ETA );
         	robot.setEnqueued(true);
         	enqueue( robot );
         } catch(java.net.UnknownHostException e) {
