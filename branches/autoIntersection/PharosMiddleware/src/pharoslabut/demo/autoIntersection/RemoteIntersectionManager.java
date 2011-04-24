@@ -58,7 +58,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 * Distance from "Approaching" line to "Entering Intersection" line. 
 	 * In cm.
 	 */
-	public static final int distToIntersection_cm = 90;
+	public static final double distToIntersection_m = .90; // 90 cm distance to enter = .9 m
 	
 	/**
 	 * The connection to the server.
@@ -115,7 +115,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		log("Robot is approaching intersection!");
 		
 		// Create a RequestAccessMsg...
-		long eta = ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
+		long eta = ((long)(((distToIntersection_m / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
 		RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), 
 				eta, eta+INTERSECTION_TIME, new LaneSpecs());
 		
