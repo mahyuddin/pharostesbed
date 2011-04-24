@@ -76,8 +76,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 * The constructor.
 	 * 
 	 * @param lf The LineFollower
-	 * @param serverIP The IP address of the server.
-	 * @param serverPort The port on which the server is listening.  
+	 * @param serverIP The IP address of the intersection manager server.
+	 * @param serverPort The port on which the intersection manager server is listening.
 	 * This is also the port on which the robot is listening
 	 * @param flogger The FileLogger for recording debug statements.
 	 */
@@ -88,7 +88,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		} catch (UnknownHostException e) {
 			log("ERROR: Unable to get server address...");
 			e.printStackTrace();
-			System.exit(1);
+			System.exit(1); // fatal error
 		}
 		this.serverPort = serverPort;
 		this.flogger = flogger;
@@ -98,12 +98,12 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		} catch (UnknownHostException e) {
 			log("ERROR: Unable to get robot's IP address.");
 			e.printStackTrace();
-			System.exit(1); // fatal error.
+			System.exit(1); // fatal error
 		}
 		
 		lf.addListener(this);
 	
-		networkInterface = new UDPNetworkInterface(serverPort+1); // robot listens on same port as server
+		networkInterface = new UDPNetworkInterface(); // robot listens on any available port
 		networkInterface.registerMsgListener(this);
 	}
 
@@ -114,11 +114,11 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	private void doApproaching() {
 		log("Robot is approaching intersection!");
 		
-		// Create the RequestAccessMsg...
+		// Create a RequestAccessMsg...
 		long eta = ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
-		RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta, eta+INTERSECTION_TIME, null);
+		RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), eta, eta+INTERSECTION_TIME, null);
 		
-		// Send the RequestAccessMsg...
+		// Send the RequestAccessMsg to the intersection server...
 		if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
 			log("WARNING: failed to send RequestAccessMsg...");
 		} else
@@ -149,7 +149,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			
 			// Create the RequestAccessMsg...
 			long eta = System.currentTimeMillis(); // robot is already at intersection
-			RequestAccessMsg ram = new RequestAccessMsg(robotIP, serverPort, eta, eta+INTERSECTION_TIME, null);
+			RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), eta, eta+INTERSECTION_TIME, null);
 			
 			// Send the RequestAccessMsg...
 			if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
@@ -173,9 +173,9 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		log("Robot is exiting intersection!");
 		
 		// Create an ExitingMsg
-		ExitingMsg em = new ExitingMsg(robotIP, serverPort);
+		ExitingMsg em = new ExitingMsg(robotIP, networkInterface.getLocalPort());
 		
-		// Send the ExitingMsg
+		// Send the ExitingMsg to intersection server.
 		if (!networkInterface.sendMessage(serverAddr, serverPort, em)) {
 			log("WARNING: failed to send ExitingMsg...");
 		}
@@ -224,6 +224,9 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		this.accessTime = Long.MAX_VALUE; // set this super high so robot would have to wait at intersection until new access time comes in
 	}
 	
+	/**
+	 * Handles messages sent from the intersection server.
+	 */
 	@Override
 	public void newMessage(Message msg) {
 		if (msg instanceof ReservationTimeMsg)
