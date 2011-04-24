@@ -22,5 +22,8 @@ public class PathPlannerThread extends Thread {
 			System.out.println("PathPlanner thread already executing. " +
 				"\nCreating multiple PathPlanner threads is forbidden.");
 	}
+	
+	
+	public static boolean isRunning() { return PathPlannerThread.running; }
 
 }

@@ -10,6 +10,8 @@
  */
 package pharoslabut.cartographer;
 
+import java.io.IOException;
+
 
 /**
  *
@@ -18,6 +20,8 @@ package pharoslabut.cartographer;
 public class StartGUI extends javax.swing.JFrame {
 
 	static String [] mainArgs = null;
+	static PathPlannerThread ppt = null;
+	static boolean started = false;
 	
     /** Creates new form StartGUI */
     public StartGUI() {
@@ -174,29 +178,56 @@ public class StartGUI extends javax.swing.JFrame {
         	break;
         }
         
-        PathPlannerThread ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())), startCoords, initialBearing);
+        StartGUI.started = true;
+        ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())), startCoords, initialBearing);
         ppt.start();
     }                                           
 
-    private void StopMotionActionPerformed(java.awt.event.ActionEvent evt) {                                           
-        // TODO stop motors, end path planner, proceed directly to map generation
-    	// there is a state enum in the path planner, potentially change to map generation state
-        // PathPlanner.motors.setSpeed(0,0);
-        StatusLabel.setText("Motion Stopped.");
-    }                                          
+    @SuppressWarnings("deprecation")
+	private void StopMotionActionPerformed(java.awt.event.ActionEvent evt) {                                           
+            
+        // stop motors, end path planner, proceed directly to map generation
+    	if (StartGUI.started) {
+    		LocationTracker.motors.setSpeed(0, 0); //immediately stop all motion
+    	
+	        if (PathPlannerThread.isRunning()) {
+	    		StartGUI.ppt.stop(); // end PathPlannerThread (yes, i know this is deprecated)
+	    		System.out.println("Killed Path Planner Thread.");
+	        }
+	        
+	        StatusLabel.setText("Motion Stopped. \nYou may now close the window.");
+    	} else {
+    		StatusLabel.setText("Error: Path Planner has not been initialized or started.");
+    	}
+	}   
+    
 
     private void StartingPositionComboBoxActionPerformed(java.awt.event.ActionEvent evt) {                                                         
     	// do nothing here
     }                                                        
 
-    private void EmergencyStopButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                    
-        StatusLabel.setText("Execution halted. System exiting. \nYou may now close the window.");
+    
+    @SuppressWarnings("deprecation")
+	private void EmergencyStopButtonActionPerformed(java.awt.event.ActionEvent evt) {                                                    
         
         // TODO maybe bring up a dialog box here?
-        // TODO end path planner motion by calling setSpeed(0,0), then exit without generating map
         
-        System.out.println("Execution halted. System exiting.");
-        System.exit(0);
+    	if (StartGUI.started) {
+    		LocationTracker.motors.setSpeed(0, 0); //immediately stop all motion
+    	
+	        if (PathPlannerThread.isRunning()) {
+	    		StartGUI.ppt.stop(); // end PathPlannerThread (yes, i know this is deprecated)
+	    		System.out.println("Killed Path Planner Thread.");
+	        }
+	        
+	        System.out.println("Execution halted. System exiting.");
+	        System.exit(0);
+	        
+    	} else {
+    		StatusLabel.setText("Error: Path Planner has not been initialized or started.");
+    	}
+    	
+        
     }                                                   
 
     /**
