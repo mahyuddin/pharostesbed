@@ -52,12 +52,12 @@ public class UDPNetworkInterface extends NetworkInterface {
 	public boolean sendMessage(InetAddress address, int port, Message m) {
 		
         if(m == null) {
-        	log("ERROR: Attempted to send null message...", false);
+        	log("sendMessage: ERROR: message is null", false);
         	return false;
         }
         
         if (socket == null) {
-        	log("ERROR: while trying to send, the socket is null...", false);
+        	log("sendMessage: ERROR: socket is null...", false);
         	return false;
         }
 
@@ -67,17 +67,20 @@ public class UDPNetworkInterface extends NetworkInterface {
         	ObjectOutputStream oos = new ObjectOutputStream(bos);
         	oos.writeObject(m);
         	oos.flush();
+        	bos.flush();
         	oos.close();
+        	bos.close();
         	
         	byte[] sendByte = bos.toByteArray();
-        	bos.close();
+        	
+        	log("sendMessage: packet size= " + sendByte.length);
         	
         	DatagramPacket pkt = new DatagramPacket(sendByte, sendByte.length, address, port);
         	socket.send(pkt);
         	
-        	log("Sent message " + m + " to " + address + ":" + port);
+        	log("sendMessage: Sent message " + m + " to " + address + ":" + port);
         } catch(IOException ioe) {
-        	log("ERROR: while sending datagram packet, error: " + ioe.getMessage(), false);
+        	log("sendMessage: ERROR: while sending datagram packet, error: " + ioe.getMessage(), false);
         	ioe.printStackTrace();
         	return false;
         }
@@ -97,6 +100,7 @@ public class UDPNetworkInterface extends NetworkInterface {
 					socket = new DatagramSocket();
 				else
 					socket = new DatagramSocket(port);
+				log("Server socket listening on port " + getLocalPort() + ", sendBufferSize=" + socket.getSendBufferSize());
 			} catch (SocketException e) {
 				log("ERROR: Failed to open server socket, error: " + e.getMessage(), false);
 
@@ -169,8 +173,10 @@ public class UDPNetworkInterface extends NetworkInterface {
 	
 	private void log(String msg, boolean isDebugMsg) {
 		String result = "UDPNetworkInterface: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg)
+		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg) {
 			System.out.println(result);
+			System.out.flush();
+		}
 		if (flogger != null)
 			flogger.log(result);
 	}
