@@ -117,7 +117,7 @@ public class DisplayQueue extends JFrame
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
         s = "";
-        LinkedList<pharoslabut.demo.autoIntersection.server.Robot> robotsCompleted = pharoslabut.demo.autoIntersection.server.IntersectionManager.getRobotsCompletedCopy();
+        LinkedList<pharoslabut.demo.autoIntersection.server.Robot> robotsCompleted = null; //pharoslabut.demo.autoIntersection.server.IntersectionManager.getRobotsCompletedCopy();
 
         while(! robotsCompleted.isEmpty() )
         {
