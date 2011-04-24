@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import pharoslabut.ExpType;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
+import pharoslabut.demo.autoIntersection.*;
 
 /**
  * Tests the network interface abstractions.
@@ -42,7 +43,7 @@ public class TestNetworkInterface implements MessageReceiver{
 		
 		while (true) {
 			//Message m = new StartExpMsg("TestExp", "Msg-" + cntr, ExpType.FOLLOW_GPS_MOTION_SCRIPT);
-			Message m = new pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg(address, 0, 100);
+			Message m = new pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg(address, 0, 100, 200, new LaneSpecs());
 			//Message m = new pharoslabut.demo.autoIntersection.msgs.ExitingMsg(address, 0);
 			
 			if (ni.sendMessage(address, serverPort, m)) {
