@@ -103,7 +103,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		
 		lf.addListener(this);
 	
-		networkInterface = new UDPNetworkInterface(); // robot listens on any available port
+		networkInterface = new TCPNetworkInterface(); //new UDPNetworkInterface(); // robot listens on any available port
 		networkInterface.registerMsgListener(this);
 	}
 
@@ -116,7 +116,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		
 		// Create a RequestAccessMsg...
 		long eta = ((long)(((distToIntersection_cm / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
-		RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), eta, eta+INTERSECTION_TIME, null);
+		RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), 
+				eta, eta+INTERSECTION_TIME, new LaneSpecs());
 		
 		// Send the RequestAccessMsg to the intersection server...
 		if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
@@ -133,36 +134,55 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		//TODO Implement this... if approval has not been obtained, pause and wait 
 		// for the approval to arrive (may need to query server again).
 		
-		while(!accessGranted) {
+		if (!accessGranted) {
 			log("No access granted, stopping robot...");
-			// Stop the robot
 			lf.stop();
+			
+			int tryCount = 1;
+			
+			// Repeatedly send RequestAccessMsg to server...
+			while(!accessGranted) {
+				// Create the RequestAccessMsg...
+				long eta = System.currentTimeMillis(); // robot is already at intersection
+				RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), 
+						eta, eta+INTERSECTION_TIME, new LaneSpecs());
+
+				// Send the RequestAccessMsg...
+				if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
+					log("WARNING: failed to send RequestAccessMsg...");
+				} else {
+					log("Sent RequestAccessMsg " + (tryCount++) + " to server...");
+				}
+				
+				try {
+					synchronized (this){
+						wait(1000);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		// Access has been granted
+		assert accessGranted : "Expected access granted"; // Will throw error if access not granted.
+		
+		long currTime;
+		
+		// Wait until the granted access time has been reached.
+		while ((currTime = System.currentTimeMillis()) < accessTime) {
+			log("Access granted but access time in the future (curr time=" + currTime + ", accessTime=" + accessTime);
 			try {
 				synchronized (this){
-					wait(100);
+					wait(1000);
 				}
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			// Request access from server...
-			
-			// Create the RequestAccessMsg...
-			long eta = System.currentTimeMillis(); // robot is already at intersection
-			RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), eta, eta+INTERSECTION_TIME, null);
-			
-			// Send the RequestAccessMsg...
-			if (!networkInterface.sendMessage(serverAddr, serverPort, ram)) {
-				log("WARNING: failed to send RequestAccessMsg...");
-			} else {
-				log("Sent request access message again to server...");
-			}
 		}
-		// else go through intersection if the current time is at the accessTime
-		if (accessGranted && System.currentTimeMillis() >= accessTime) {
-			// start robot back up once priority access received
-			lf.start();
-		}
+		
+		// start robot back up once priority access received
+		lf.start();
 	}
 	
 	/**
@@ -180,7 +200,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			log("WARNING: failed to send ExitingMsg...");
 		}
 		
-		//TODO: start timer, if ack not within 2 seconds then send again
+		//Start timer, if no ACK received within 2 seconds then send again
 		exitTimer = new Timer();
 		exitTimer.schedule(new java.util.TimerTask() {
 			public void run() {
