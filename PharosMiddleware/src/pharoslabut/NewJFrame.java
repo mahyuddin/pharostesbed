@@ -37,7 +37,7 @@ import javax.imageio.ImageIO;
  *
  * @author Tad M
  */
-public class NewJFrame extends javax.swing.JFrame implements Position2DListener  {
+public class NewJFrame extends javax.swing.JFrame implements Position2DListener, ActionListener  {
     /** Creates new form NewJFrame */
     private static RobotMover XueHua, XueHuaPos;
     protected  double XueHuaXf = 0, XueHuaYf = 0, XueHuaYaw =0;
@@ -50,11 +50,27 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     public int src_x, src_y, dest_x, dest_y;
     private final static String newline = "\n";
     static StopWatch s = new StopWatch();
+  protected static int count= 0;
+    
     public NewJFrame() {
         initComponents();
       XueHua =  new RobotMover("10.11.12.32", 6665, "log.txt",  false);
       XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
-  
+      ActionListener taskPerformer = new ActionListener() {
+          public void actionPerformed(ActionEvent evt) {
+          	  XueHuaPos.INS_UpdateX();
+                XueHuaPos.INS_UpdateY();
+                
+                String XueHuaX = Double.toString(XueHuaPos.Xpos);
+                String XueHuaY = Double.toString(XueHuaPos.Ypos);
+                
+                jTextField1.setText(XueHuaX); 
+                jTextField2.setText(XueHuaY);
+                
+          }
+      };
+      Timer insT = new Timer(delay, taskPerformer);
+      insT.start();
          
     }
 
@@ -338,19 +354,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
         pack();
     }// </editor-fold>
     
-   /*  ActionListener taskPerformer = new ActionListener() {
-        public void actionPerformed(ActionEvent evt) {
-        	  XueHuaPos.INS_UpdateX();
-              XueHuaPos.INS_UpdateY();
-              
-              String XueHuaX = Double.toString(XueHuaPos.Xpos);
-              String XueHuaY = Double.toString(XueHuaPos.Ypos);
-              
-              jTextField1.setText(XueHuaX); 
-              jTextField2.setText(XueHuaY);
-              
-        }
-    };*/
+     
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
     		
@@ -401,15 +405,16 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
                    double XueHuaTime = s.getElapsedTimeSecs();
                      Time = Double.toString(XueHuaTime);
                      jTextField5.setText(Time);
+                     
+                                          }
 
     			}// TODO add your handling code here:
-    }//GEN-LAST:event_jButton2ActionPerformed
+    //GEN-LAST:event_jButton2ActionPerformed
 
     
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
 		System.out.println("Debug Msg: Turn East");
 		XueHua.movE(Half);
-		jTextField4.setText("30");
     }//GEN-LAST:event_jButton6ActionPerformed
 
    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException, IOException {//GEN-FIRST:event_jButton10ActionPerformed
@@ -559,14 +564,15 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     public static void main(String args[]) {
     	
     	s.start();
-      
+  
+    	
         java.awt.EventQueue.invokeLater(new Runnable() {
             
             
             public void run() {
                 new NewJFrame().setVisible(true);
                
-   /*             new Timer(delay, taskPerformer).start(); */
+  //            s.start(delay, taskPerformer); 
 
                 //code you want to time goes here
               
@@ -600,8 +606,8 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JTextField jTextField1;
-    private javax.swing.JTextField jTextField2;
+    private  javax.swing.JTextField jTextField1;
+    private  javax.swing.JTextField jTextField2;
     private javax.swing.JTextField jTextField3;
     private javax.swing.JTextField jTextField4;
     private javax.swing.JTextField jTextField5;
@@ -616,6 +622,12 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener 
     // End of variables declaration//GEN-END:variables
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
 		// TODO Auto-generated method stub
 		
 	}
