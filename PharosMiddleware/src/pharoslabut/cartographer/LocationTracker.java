@@ -14,9 +14,9 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	// change initial values to reflect the robot's starting orientation
 	//private static final double initialX = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
 	//private static final double initialY = WorldView.WORLD_SIZE/2*WorldView.RESOLUTION;
-	private static double initialX = 60*WorldView.RESOLUTION;
-	private static double initialY = 60*WorldView.RESOLUTION;
-	private static double initialBearing = Math.PI/2;
+	private static double initialX;
+	private static double initialY;
+	private static double initialBearing;
 	private static boolean checkLine = false;
 	
 	private static double currentX;
@@ -47,8 +47,8 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
-		currentX = sl.getX(); currentY = sl.getY(); initialBearing = ib;
-		bearing = initialBearing; 
+		initialX = sl.getX(); initialY = sl.getY(); initialBearing = ib;
+		currentX = initialX; currentY = initialY; bearing = initialBearing; 
 		
 //		System.out.println(sc + "\t" + bearing);
 		

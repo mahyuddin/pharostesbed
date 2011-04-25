@@ -20,7 +20,7 @@ public class RealtimeImgOut extends Thread {
 		frame = new Frame("Map Output");
 		canvas = new MyCanvas();
 		frame.add(canvas);
-		frame.setSize(5*WorldView.WORLD_SIZE, 5*WorldView.WORLD_SIZE); // use worldview size
+		frame.setSize(3*WorldView.WORLD_SIZE, 3*WorldView.WORLD_SIZE); // use worldview size
 		frame.setVisible(true);
 		
 	}
@@ -81,7 +81,7 @@ public class RealtimeImgOut extends Thread {
 			// call refresh img fctn here
 			
 			try {
-				Thread.sleep(5000);
+				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

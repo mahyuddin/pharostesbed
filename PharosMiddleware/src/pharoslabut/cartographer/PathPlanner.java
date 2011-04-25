@@ -61,7 +61,7 @@ public class PathPlanner {
 	final double ROOMBA_RADIUS = WorldView.ROOMBA_RADIUS;
 	final double WIDTH_OF_ROOMBA = ROOMBA_RADIUS*2;
 	
-	final double BEACON_RADIUS = ROOMBA_RADIUS;
+	final double BEACON_RADIUS = ROOMBA_RADIUS*2;
 	final double NUMBER_OF_CENTROIDS = 3;
 	
 	// Distance to keep from wall in mm
@@ -190,7 +190,7 @@ public class PathPlanner {
 				// TODO
 				//Integer[] centroid = {60, 110};
 				Integer[] centroid = findCenter();
-				System.out.println("Center: (" + centroid[0] + "," + centroid[1]);
+				System.out.println("Center: (" + centroid[0] + "," + centroid[1] + ")");
 				double initAng = createLine(centroid);
 				faceToAngle(initAng);
 				followLine(centroid, initAng);
@@ -466,7 +466,7 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
+				if(checkHome(count) == false) {notDone = false; break;}
 				
 				LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/arcFactor);
 				System.out.println("Attempting to distance from wall");
@@ -477,7 +477,7 @@ public class PathPlanner {
 					//calibrateYaw(.999);
 				}
 				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;
-				if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
+				if(checkHome(count) == false) {notDone = false; break;}
 			}
 			
 			if(notDone == false) {break;}
@@ -501,7 +501,7 @@ public class PathPlanner {
 			}
 			setCertaintyFactor(1.0);
 			stop(250);
-			if(count >= BUFFER_TIME*1000 && checkHome(count) == false) {notDone = false; break;}
+			if(checkHome(count) == false) {notDone = false; break;}
 			double theta2 = LocationTracker.getCurrentBearing();
 			System.out.println("theta2 = " + theta2);
 			dtheta = Math.abs(theta1 - theta2);

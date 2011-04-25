@@ -323,8 +323,8 @@ public class WorldView implements IRListener {
 		}
 		
 		
-		PathPlanner.setLeftInnerHandDistance(leftDistance());
-		PathPlanner.setFaceInnerDistance(frontDistance());
+		//PathPlanner.setLeftInnerHandDistance(leftDistance());
+		//PathPlanner.setFaceInnerDistance(frontDistance());
 		
 //		System.out.println("Current Location (m): " + LocationTracker.printCurrentLocation());
 //		System.out.println("Current Coordinates: " + LocationTracker.printCurrentCoordinates());
