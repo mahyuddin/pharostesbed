@@ -353,7 +353,24 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
 
         pack();
     }// </editor-fold>
-    
+
+    public void UpdateInfo()
+    {
+        XueHuaPos.INS_UpdateX();
+        XueHuaPos.INS_UpdateY();
+        XueHuaPos.INS_UpdateOrient();
+        
+        String XueHuaX = Double.toString(XueHuaPos.Xpos+XueHuaPos.BaseX);
+        String XueHuaY = Double.toString(XueHuaPos.Ypos+XueHuaPos.BaseY);
+        String XueHuaYaw = Double.toString(XueHuaPos.Yaw+XueHuaPos.BaseYaw);
+        jTextField1.setText(XueHuaX); 
+        jTextField2.setText(XueHuaY);
+        jTextField3.setText(XueHuaYaw);
+        
+        double XueHuaTime = s.getElapsedTimeSecs();
+        Time = Double.toString(XueHuaTime);
+        jTextField5.setText(Time);
+    } 
      
     private void jTextField1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jTextField1ActionPerformed
         // TODO add your handling code here:
@@ -366,57 +383,83 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
     }//GEN-LAST:event_jTextField2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+
         // TODO add your handling code here:
         //turn 45 degrees CCW move
     	System.out.println("Debug Msg: Turn NW");
     	XueHua.movW(Quarter);
     }//GEN-LAST:event_jButton1ActionPerformed
+    
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+		{	 
+             XueHua.moveForward(); 
+            
+             XueHuaPos.INS_UpdateX();
+             XueHuaPos.INS_UpdateY();
+             
+             String XueHuaX = Double.toString(XueHuaPos.Xpos);
+             String XueHuaY = Double.toString(XueHuaPos.Ypos);
+             
+             jTextField1.setText(XueHuaX); 
+             jTextField2.setText(XueHuaY);
+             
+           double XueHuaTime = s.getElapsedTimeSecs();
+             Time = Double.toString(XueHuaTime);
+             jTextField5.setText(Time);
+             
+                                  }
 
+		}// TODO add your handling code here:
+//GEN-LAST:event_jButton2ActionPerformed
+
+    
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        // TODO add your handling code here:
+        // Turn NW
+ 	   System.out.println("Debug Msg: Move NE");
+ 	   XueHua.movW(Quarter);
+    }          
+    
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
     			System.out.println("Debug Msg: Turn West");
     			XueHua.movW(Half);
     			jTextField4.setText("30");
     }//GEN-LAST:event_jButton4ActionPerformed
 
-    private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-          		System.out.println("Debug Msg: Move Backwards");
-                     XueHua.movE(Full);
-    }//GEN-LAST:event_jButton8ActionPerformed
+  
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
     				 jTextField4.setText("Manual");
                      XueHua.stop();// Add code here 
                      // TODO add your handling code here:
     }//GEN-LAST:event_jButton5ActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    			{	 
-                     XueHua.moveForward(); 
-                    
-                     XueHuaPos.INS_UpdateX();
-                     XueHuaPos.INS_UpdateY();
-                     
-                     String XueHuaX = Double.toString(XueHuaPos.Xpos);
-                     String XueHuaY = Double.toString(XueHuaPos.Ypos);
-                     
-                     jTextField1.setText(XueHuaX); 
-                     jTextField2.setText(XueHuaY);
-                     
-                   double XueHuaTime = s.getElapsedTimeSecs();
-                     Time = Double.toString(XueHuaTime);
-                     jTextField5.setText(Time);
-                     
-                                          }
-
-    			}// TODO add your handling code here:
-    //GEN-LAST:event_jButton2ActionPerformed
-
+ 
     
     private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
 		System.out.println("Debug Msg: Turn East");
 		XueHua.movE(Half);
     }//GEN-LAST:event_jButton6ActionPerformed
+                            
 
+   private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+       // TODO add your handling code here:
+	   System.out.println("Debug Msg: Move SW");
+	   XueHua.movW(T_Quarter);
+	   //turn 225 degrees CCW and move straight
+   }                                        
+
+   private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
+ 		System.out.println("Debug Msg: Move Backwards");
+            XueHua.movE(Full);
+}//GEN-LAST:event_jButton8ActionPerformed
+   private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {
+	  System.out.println("Debug Msg: Move SE");
+      XueHua.movE(T_Quarter);
+   }               // turn 315 degrees CCW and move 
+    /**
+    * @param args the command line arguments
+    */
+   
    private void jButton10ActionPerformed(java.awt.event.ActionEvent evt) throws NoNewDataException, IOException {//GEN-FIRST:event_jButton10ActionPerformed
        	jTextField4.setText("Pathfinding Mode");
 	    JFrame Oldinputs = new JFrame();
@@ -503,50 +546,6 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
 // TODO add your handling code here: this is a temp button for manual updates from INS for nowT
     }//GEN-LAST:event_jButton10ActionPerformed
    
-   public void UpdateInfo()
-   {
-       XueHuaPos.INS_UpdateX();
-       XueHuaPos.INS_UpdateY();
-       XueHuaPos.INS_UpdateOrient();
-       
-       String XueHuaX = Double.toString(XueHuaPos.Xpos+XueHuaPos.BaseX);
-       String XueHuaY = Double.toString(XueHuaPos.Ypos+XueHuaPos.BaseY);
-       String XueHuaYaw = Double.toString(XueHuaPos.Yaw+XueHuaPos.BaseYaw);
-       jTextField1.setText(XueHuaX); 
-       jTextField2.setText(XueHuaY);
-       jTextField3.setText(XueHuaYaw);
-       
-       double XueHuaTime = s.getElapsedTimeSecs();
-       Time = Double.toString(XueHuaTime);
-       jTextField5.setText(Time);
-   }
-   
-   private ImageDisplay ImageDisplay(String mapfile) {
-	// TODO Auto-generated method stub
-	return null;
-}
-
-   private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
-       // TODO add your handling code here:
-       // Turn NW
-	   System.out.println("Debug Msg: Move NE");
-	   XueHua.movW(Quarter);
-   }                                        
-
-   private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {                                         
-       // TODO add your handling code here:
-	   System.out.println("Debug Msg: Move SW");
-	   XueHua.movW(T_Quarter);
-	   //turn 225 degrees CCW and move straight
-   }                                        
-
-   private void jButton9ActionPerformed(java.awt.event.ActionEvent evt) {
-	  System.out.println("Debug Msg: Move SE");
-      XueHua.movE(T_Quarter);
-   }               // turn 315 degrees CCW and move 
-    /**
-    * @param args the command line arguments
-    */
    
    public void UpdateMap(String s)
    {
