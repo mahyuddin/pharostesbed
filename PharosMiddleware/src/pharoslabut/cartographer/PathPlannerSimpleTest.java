@@ -51,7 +51,7 @@ public class PathPlannerSimpleTest {
 			flogger = new FileLogger(fileName);
 		}
 
-		new LocationTracker(new OrderedPair(WorldView.WORLD_SIZE/5, WorldView.WORLD_SIZE/5), Math.PI/2);
+		new LocationTracker(new OrderedPairDouble(WorldView.WORLD_SIZE/5, WorldView.WORLD_SIZE/5), Math.PI/2);
 		
 		
 		LocationTracker.motors.setSpeed(0, 0);

@@ -126,7 +126,7 @@ public class PathPlanner {
 		END
 	}
 	
-	public static OrderedPair startingCoordinates = null;
+	public static OrderedPairDouble startingCoordinates = null;
 	public static double initialBearing = 0;
 	
 	
@@ -1108,13 +1108,13 @@ public class PathPlanner {
 	/******************** beginPathPlanner ****************************
 	 * starts the entire navigation/mapping routine
 	 * @param initialBearing 
-	 * @param startingCoordinates 
+	 * @param sl 
 	 * @param args
 	 *****************************************************************/
-	public static void beginPathPlanner(int executionTimeOut, OrderedPair startingCoordinates, double initialBearing) {
+	public static void beginPathPlanner(int executionTimeOut, OrderedPairDouble sl, double initialBearing) {
 		int serverPort = 6665;
 		PathPlanner.RUNTIME = executionTimeOut;
-		PathPlanner.startingCoordinates = startingCoordinates;
+		PathPlanner.startingCoordinates = sl;
 		PathPlanner.initialBearing = initialBearing;
 		
 		System.out.println("Runtime = " + PathPlanner.RUNTIME + "\nStarting Coordinates: " + 

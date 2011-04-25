@@ -67,7 +67,7 @@ public class StartGUI extends javax.swing.JFrame {
 
         StatusLabel.setText("Waiting to start mapping routine ...");
 
-        StartingPositionComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Bottom Left Corner, Facing North (¹/2)", "Bottom Right Corner, Facing West (¹)", "Upper Left Corner, Facing East (0)", "Upper Right Corner, Facing South (-¹/2)" }));
+        StartingPositionComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Bottom Left Corner, Facing North (pi/2)", "Bottom Right Corner, Facing West (pi)", "Upper Left Corner, Facing East (0)", "Upper Right Corner, Facing South (-pi/2)" }));
         StartingPositionComboBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 StartingPositionComboBoxActionPerformed(evt);
@@ -143,43 +143,44 @@ public class StartGUI extends javax.swing.JFrame {
     }                                                  
 
     private void StartButtonActionPerformed(java.awt.event.ActionEvent evt) {                                            
-        OrderedPair startCoords = null;  
+        OrderedPairDouble startLoc = null;  
         double initialBearing = 0;
 //    	if ((TimeLimitTextField.getText()).isEmpty()) {
 //            StatusLabel.setText("Starting Default Mapping Routine ...");
 //        } else
         StatusLabel.setText("Starting " + TimeLimitTextField.getText() + " Second Mapping Routine...");
-        
+        startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/2, WorldView.WORLD_SIZE*WorldView.RESOLUTION/2); // default is middle of map
+    	
         switch(StartingPositionComboBox.getSelectedIndex()) { // read the combo box value
-        case 0: // Bottom Left Corner, Facing North (¹/2)
-        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE/5);
+        case 0: // Bottom Left Corner, Facing North (pi/2)
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
         	initialBearing = Math.PI/2;        	
         	break;
         
-        case 1: // Bottom Right Corner, Facing West (¹)
-        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE*4/5, (Integer) WorldView.WORLD_SIZE/5);
+        case 1: // Bottom Right Corner, Facing West (pi)
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
         	initialBearing = Math.PI;        	
         	break;
         
         case 2: // Upper Left Corner, Facing East (0)
-        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE*4/5);
-        	initialBearing = 0;       	
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5);
+        	initialBearing = 0;        	
         	break;
         
-        case 3: // Upper Right Corner, Facing South (-¹/2) 
-        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE*4/5, (Integer) WorldView.WORLD_SIZE*4/5);
+        case 3: // Upper Right Corner, Facing South (-pi/2) 
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5);
         	initialBearing = -Math.PI/2;        	
         	break;
         	
         default:
-        	startCoords = new OrderedPair( (Integer) WorldView.WORLD_SIZE/5, (Integer) WorldView.WORLD_SIZE/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
         	initialBearing = Math.PI/2;
-        	System.out.println("Error: Invalid Combo Box Selection. \n... Reverting to Bottome Left Corner Initialization."); 
+        	System.out.println("Error: Invalid Combo Box Selection. \n... Reverting to Bottom Left Corner Initialization."); 
         	break;
         }
         
         StartGUI.started = true;
-        ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())), startCoords, initialBearing);
+        ppt = new PathPlannerThread(Integer.parseInt((TimeLimitTextField.getText())), startLoc, initialBearing);
         ppt.start();
     }                                           
 
