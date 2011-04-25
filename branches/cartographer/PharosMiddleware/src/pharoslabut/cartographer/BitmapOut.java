@@ -23,32 +23,9 @@ public class BitmapOut {
 	 */	
 	public BitmapOut(int x, int y) throws IOException{
 		image = new BufferedImage(x,y,TYPE_3BYTE_BGR);
-		bigimage = new BufferedImage(5*x,5*y,TYPE_3BYTE_BGR);
-		sampleimage = new BufferedImage(x,y,TYPE_3BYTE_BGR);
-		bigsampleimage = new BufferedImage(5*x,5*y,TYPE_3BYTE_BGR);
-		for (int i = 0; i < x; i++){
-			for (int j = y; j > 0; j--) {
-						int index;
-						if (((WorldView.sampleworld.get(i)).get(y-j)).getConfidence() == 1){
-							index = 9;
-						}
-						else{
-							index = (int)(((WorldView.sampleworld.get(i)).get(y-j)).getConfidence()*10);
-						}
-						//System.out.println(i + "," + j);
-						sampleimage.setRGB(i, j-1, grayscale[index]);						
-			}
-		}
-		for (int i = 0; i < bigsampleimage.getHeight(); i+=5){
-			for (int j = 0; j < bigsampleimage.getWidth(); j+=5) {
-				for(int k = i; k < i+5; k++){
-					for(int l=j; l < j+5; l++ ){
-						bigsampleimage.setRGB(k, l, sampleimage.getRGB(i/5, j/5));						
-					}
-				}
-			}
-		}
-		ImageIO.write(this.bigsampleimage, "BMP", new File("samplemap.bmp"));
+		bigimage = new BufferedImage(3*x,3*y,TYPE_3BYTE_BGR);
+		//sampleimage = new BufferedImage(x,y,TYPE_3BYTE_BGR);
+		//bigsampleimage = new BufferedImage(5*x,5*y,TYPE_3BYTE_BGR);
 		
 		for (int i = 0; i < x; i++){
 			for (int j = y; j > 0; j--) {
@@ -69,11 +46,11 @@ public class BitmapOut {
 						image.setRGB(i, j-1, grayscale[index]);						
 								}
 		}
-		for (int i = 0; i < bigimage.getHeight(); i+=5){
-			for (int j = 0; j < bigimage.getWidth(); j+=5) {
-				for(int k = i; k < i+5; k++){
-					for(int l=j; l < j+5; l++ ){
-						bigimage.setRGB(k, l, image.getRGB(i/5, j/5));						
+		for (int i = 0; i < bigimage.getHeight(); i+=3){
+			for (int j = 0; j < bigimage.getWidth(); j+=3) {
+				for(int k = i; k < i+3; k++){
+					for(int l=j; l < j+3; l++ ){
+						bigimage.setRGB(k, l, image.getRGB(i/3, j/3));						
 					}
 				}
 			}
@@ -81,7 +58,7 @@ public class BitmapOut {
 		ImageIO.write(this.bigimage, "BMP", new File("map.bmp"));
 	}
 	public void draw(Graphics g, int x, int y) {
-        g.drawImage(image, x, y, null);
+        g.drawImage(bigimage, x, y, null);
     }
 }
 
