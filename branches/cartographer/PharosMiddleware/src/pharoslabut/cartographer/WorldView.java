@@ -98,6 +98,31 @@ class OrderedPairConfidence extends OrderedPair {
 }
 
 
+class OrderedPairDouble {
+	
+	double x;
+	double y;
+	
+	public OrderedPairDouble(double xValue, double yValue) {
+		this.x = xValue;
+		this.y = yValue;
+	}
+	
+	/**************** GETTERS AND SETTERS ******************/
+	public double getX() { return x; }
+	public void setX(double x) { this.x = x; }
+	public double getY() {	return y; }
+	public void setY(double y) { this.y = y; }
+	/*************** END GETTERS AND SETTERS ****************/
+	
+	
+	@Override
+	public String toString() {
+		return ( "(" + this.x + "," + this.y + ")" );
+	}
+
+}
+
 public class WorldView implements IRListener {
 	
 	public static long numIRreadings = 0;

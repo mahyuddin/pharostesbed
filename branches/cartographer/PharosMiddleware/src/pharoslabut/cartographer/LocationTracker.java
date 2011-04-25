@@ -28,7 +28,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 	// 0 is east, PI/2 is north, PI and -PI are west, and -PI/2 is south
 	
 	
-	public LocationTracker(OrderedPair sc, double ib) {
+	public LocationTracker(OrderedPairDouble sl, double ib) {
 		
 		/////////// ROOMBA/ODOMETRY INTERFACE ////////////
 		motors = (PathPlanner.client).requestInterfacePosition2D(0, 
@@ -47,7 +47,7 @@ public class LocationTracker implements CompassLoggerEventListener, Position2DLi
 //		compassLogger.start(1, "compasslog.txt"); // first param is ignored
 			
 		
-		currentX = sc.getX(); currentY = sc.getY(); initialBearing = ib;
+		currentX = sl.getX(); currentY = sl.getY(); initialBearing = ib;
 		bearing = initialBearing; 
 		
 //		System.out.println(sc + "\t" + bearing);

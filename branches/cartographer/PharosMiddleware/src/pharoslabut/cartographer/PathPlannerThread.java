@@ -4,12 +4,12 @@ public class PathPlannerThread extends Thread {
 
 	private static boolean running = false;
 	private int executionTime = 180;
-	private OrderedPair startingCoordinates = null;
+	private OrderedPairDouble startingCoordinates = null;
 	private double initialBearing = 0;
 	
-	public PathPlannerThread (int time, OrderedPair sc, double ib) {
+	public PathPlannerThread (int time, OrderedPairDouble sl, double ib) {
 		this.executionTime = time;  
-		this.startingCoordinates = sc;
+		this.startingCoordinates = sl;
 		this.initialBearing = ib;	
 	}
 	
