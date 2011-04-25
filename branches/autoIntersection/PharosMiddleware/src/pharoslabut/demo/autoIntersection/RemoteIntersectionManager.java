@@ -200,13 +200,13 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			log("WARNING: failed to send ExitingMsg...");
 		}
 		
-		//Start timer, if no ACK received within 2 seconds then send again
+		//Start timer, if no ACK received within 4 seconds then send again
 		exitTimer = new Timer();
 		exitTimer.schedule(new java.util.TimerTask() {
 			public void run() {
 				doExiting();
 			}
-		}, 2000);
+		}, 4000);
 	}
 	
 	@Override
@@ -239,6 +239,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	}
 	
 	private void handleExitingAcknowledgedMsg(ExitingAcknowledgedMsg msg) {
+		log("handleExitingAcknowledgedMsg: Canceling Exit Timer, ACK received.");
 		exitTimer.cancel();
 		this.accessGranted = false; // robot is through and no longer needs access
 		this.accessTime = Long.MAX_VALUE; // set this super high so robot would have to wait at intersection until new access time comes in
@@ -249,10 +250,9 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 */
 	@Override
 	public void newMessage(Message msg) {
+		log("newMessage: Received new message from server: " + msg);
 		if (msg instanceof ReservationTimeMsg)
     		handleReservationTimeMsg( (ReservationTimeMsg) msg );
-    	//else if (msg instanceof ExitingMsg)
-    		//handleExitingMsg( (ExitingMsg) msg );
     	else if (msg instanceof ExitingAcknowledgedMsg)
     		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
     	else

@@ -25,6 +25,9 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 	 */
 	private FileLogger flogger;
 	
+	//for testing of robot's ability to wait for 10 secs every other traversal
+	private boolean testingFlag = false;
+	
     /**
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
@@ -88,11 +91,19 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		if(msg != null)
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
+			
+			//testing to make robot wait 10 secs every other loop traversal 
+			if(testingFlag) {
+				nextAvailableETC = robot.getETA()+10000; // 10 seconds after intersection arrival
+				testingFlag = false;
+			}
+			else testingFlag = true;
+			
 			if( (! robotsGrantedAccess.contains(robot))  && (! RobotsPriorityQueue.contains(robot)) ) {
 				log("enqueueing the robot: \n" + robot);
 				RobotsPriorityQueue.enqueue(robot);
 				log("RobotsPriorityQueue: " + RobotsPriorityQueue.print() );
-//				this.start();
+				//this.start();
 			} else {
 //				log("This robot was already granted access: \n" + robot);
 			}
