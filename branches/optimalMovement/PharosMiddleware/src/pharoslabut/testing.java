@@ -34,7 +34,110 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	List <Double> CompLookUp;
 	int table_size = 0;
 	
-	
+	double [] ir_table = {100.388,//	34
+			98.6252	,//	35
+			96.759	,//	36
+			94.7861	,//	37
+			92.7081	,//	38
+			90.5329	,//	39
+			88.278	,//	40
+			85.97	,//	41
+			83.6438	,//	42
+			81.3377	,//	43
+			79.0875	,//	44
+			76.9212	,//	45
+			74.8572	,//	46
+			72.9045	,//	47
+			71.0644	,//	48
+			69.3336	,//	49
+			67.7059	,//	50
+			66.1735	,//	51
+			64.7284	,//	52
+			63.363	,//	53
+			62.0699	,//	54
+			60.8424	,//	55
+			59.6745	,//	56
+			58.5609	,//	57
+			57.4967	,//	58
+			56.4777	,//	59
+			55.5001	,//	60
+			54.5605	,//	61
+			53.6561	,//	62
+			52.784	,//	63
+			51.9419	,//	64
+			51.1277	,//	65
+			50.3393	,//	66
+			49.5752	,//	67
+			48.8337	,//	68
+			48.1133	,//	69
+			47.4128	,//	70
+			46.731	,//	71
+			46.0668	,//	72
+			45.4192	,//	73
+			44.7873	,//	74
+			44.1704	,//	75
+			43.5675	,//	76
+			42.978	,//	77
+			42.4012	,//	78
+			41.8366	,//	79
+			41.2836	,//	80
+			40.7415	,//	81
+			40.21	,//	82
+			39.6886	,//	83
+			39.1768	,//	84
+			38.6743	,//	85
+			38.1807	,//	86
+			37.6956	,//	87
+			37.2186	,//	88
+			36.7496	,//	89
+			36.2881	,//	90
+			35.8339	,//	91
+			35.3868	,//	92
+			34.9464	,//	93
+			34.5126	,//	94
+			34.0851	,//	95
+			33.6638	,//	96
+			33.2484	,//	97
+			32.8387	,//	98
+			32.4346	,//	99
+			32.0358	,//	100
+			31.6423	,//	101
+			31.2538	,//	102
+			30.8702	,//	103
+			30.4914	,//	104
+			30.1172	,//	105
+			29.7475	,//	106
+			29.3821	,//	107
+			29.0211	,//	108
+			28.6641	,//	109
+			28.3112	,//	110
+			27.9623	,//	111
+			27.6171	,//	112
+			27.2757	,//	113
+			26.9379	,//	114
+			26.6036	,//	115
+			26.2728	,//	116
+			25.9454	,//	117
+			25.6213	,//	118
+			25.3004	,//	119
+			24.9826	,//	120
+			24.6679	,//	121
+			24.3562	,//	122
+			24.0475	,//	123
+			23.7416	,//	124
+			23.4385	,//	125
+			23.1381	,//	126
+			22.8405	,//	127
+			22.5455	,//	128
+			22.2531	,//	129
+			21.9632	,//	130
+			21.6757	,//	131
+			21.3907	,//	132
+			21.1081	,//	133
+			20.8278	,//	134
+			20.5498	,//	135
+			20.2741	//	136
+			};
 	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command, GUI gui) {
 		pavGUI = gui;
 		try {
@@ -72,7 +175,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		
 
 //		turn_comp(180, motors);
-//		move_odometry(0.35, motors);
+		move_odometry(0.35, motors);
 //		turn_comp(45, motors);
 //		move_odometry(0.35, motors);
 //		pause(1000);
@@ -98,7 +201,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		for (int i = 0; i < command.size(); i++)
 		{
 
-			//System.out.println("Abort button was pushed: "+abort);
 
 			if(pavGUI.abortMovement){
 				break;
@@ -157,11 +259,15 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		
 
 		log("Test complete!");
-		
+	/*	for(;;)
+		{
+			motors.setSpeed(0,0);
+		}
+		*/
 		compassLogger.stop();
 		motors.removePos2DListener(this);
 		irdata.removeIRListener(this);
-
+//*/
 		//System.exit(0);
 	
 	}
@@ -174,20 +280,17 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 			distance = distance* -1;
 			}
 		
-		
-		
-		
-
 		while(!odflag){
 			synchronized(this) {
 				try {
 		            wait();
 		        } catch (InterruptedException e) {}
 		        motors.resetOdometry();
+		        pause(100);
 		        starting = odreading;
 			}
 		}
-		System.out.println("starting od " + starting);
+	//	System.out.println("starting od " + starting);
 		
 		motors.setSpeed(speed, 0);
 		
@@ -390,7 +493,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		odflag = true;
 		odreading = data.getPos().getPx();
 		notifyAll();
-		System.out.println("Odometry  " + data.getPos().getPx());
+//		System.out.println("Odometry  " + data.getPos().getPx());
 		
 	}
 
@@ -408,7 +511,18 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	{
 		notifyAll();
 		IRdata = data.getRanges();
+		//0 right
+		//1 front
+		//2 left
 //		System.out.println(IRdata[0] + " " + IRdata[1] + " " + IRdata[2]);
+		if (IRdata[1] >= 34 && IRdata[1] <= 136 )
+		{
+			System.out.println(ir_table[(int) (IRdata[1]-34)]);
+		}
+		else
+		{
+			System.out.println(-1);
+		}
 //		System.out.println("front  raw  " + IRdata[0]);
 //		System.out.println(IRdata[1]);
 //		System.out.println( "left  raw  " + IRdata[2]);
