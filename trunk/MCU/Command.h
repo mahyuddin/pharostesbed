@@ -32,6 +32,11 @@
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
 
+#define POSITION2D_INTERFACE 0x01
+#define COMPASS_INTERFACE 0x02
+#define IR_INTERFACE 0x04
+#define OPAQUE_INTERFACE 0x08
+
 enum{
   PROTEUS_MODE_OFF,
   PROTEUS_MODE_PASSIVE,
@@ -62,6 +67,11 @@ typedef struct ProteusDrivePacket {
 	int16_t speed;
 	int16_t angle;
 } proteusDrivePkt;
+
+typedef struct ProteusHeartbeatPacket {
+  uint8_t pktType;
+	uint16_t interfacesEnabled;
+} proteusHeartbeatPkt;
 
 typedef struct ProteusCompassPacket {
 	uint8_t pktType;
@@ -101,7 +111,9 @@ void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading);
 void Command_startSendingData(void);
 void Command_stopSendingData(void);
 void Command_sendStatus(void);
+void Command_sendIRPacket(void);
 void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
+
 
 #endif /* _PROTEUS_COMMAND_H */
