@@ -84,6 +84,11 @@ enum{
 #define MAX_CMD_LEN                      12 
 #define MAX_PACKET_LEN MAX_CMD_LEN+PROTEUS_PACKET_OVERHEAD
 
+#define POSITION2D_INTERFACE 0x01
+#define COMPASS_INTERFACE 0x02
+#define IR_INTERFACE 0x04
+#define OPAQUE_INTERFACE 0x08
+
 // This is used to distinguish the type of compass data
 enum {
 	I2C_DATA,
@@ -151,14 +156,13 @@ typedef struct {
 	float distance;
 	float steering_angle;
 	
-	/*
+	uint8_t newIRdata;
 	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
 	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
 	float ir_fr;			//front right SHARP Infrared rangefinder distance, read
 	float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
 	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
 	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
-	*/
 	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
@@ -210,7 +214,7 @@ void proteus_destroy(proteus_comm_t* r);
 
 result_t proteus_open(proteus_comm_t* r);
 
-result_t proteus_sendHeartBeat(proteus_comm_t* r);
+result_t proteus_sendHeartBeat(proteus_comm_t* r, unit16_t interfacesEnabled);
 
 //int proteus_init(proteus_comm_t* r, bool fullcontrol); // replaced by heartbeat
 
