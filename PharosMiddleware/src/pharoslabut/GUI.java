@@ -51,6 +51,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	public boolean startMovement;
 	public boolean abortMovement;
 	private List <Double> commands;
+	private List <Integer> headings;
+	private List<List<Double>> ir_Range;
 	private Dimension sizeOfNewMap;
 	private Thread movementThread;
 	private int heading;
@@ -103,8 +105,8 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 				//try{
 					//if(startMovement)
 				//	{
-						//small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, thisGUI);
-						taTest = new threadAbortTest(thisGUI);
+						small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands, headings, ir_Range, thisGUI);
+						//taTest = new threadAbortTest(thisGUI);
 				//	}
 				/*} catch(InterruptedException exc){
 					System.out.println("Call to movment thread interrupted");
@@ -383,11 +385,13 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 			if(loadedMapCanvas.getDrawPath())
 			{
 				commands = AStar.move_instruction(path, path.first().retrieve(), heading);
+				headings = AStar.get_heading(path, path.first().retrieve(), heading);
+				ir_Range = AStar.ir_helper(path, headings);
 				movementThread = new Thread(mThread);
 				this.abortMovement = false;
 				movementThread.start();
 			}
-			//testing small_test = new testing("10.11.12.31", 6665, "log.txt",false, commands);
+			
 			this.transferFocusUpCycle();
 		}
 		else if(evt.getActionCommand().equals("Abort"))
