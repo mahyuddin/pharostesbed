@@ -40,7 +40,7 @@
 #define ADC_IR_8 0x8E
 #define ADC_IR_9 0x87
 
-#define IR_SAMPLE_FREQ 1000 
+#define IR_SAMPLE_FREQ 10 
 
 //all return units of mm
 unsigned short IR_get1(void);
