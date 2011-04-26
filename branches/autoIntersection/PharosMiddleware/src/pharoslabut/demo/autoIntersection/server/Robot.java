@@ -17,9 +17,6 @@ public class Robot implements java.io.Serializable {
     private LaneSpecs laneSpecs;
     private long ETA;
     private long ETC;
-    private boolean enqueued;
-    private boolean acknowledged;
-    private boolean exited;
 
     /**
      * Class constructor.
@@ -37,9 +34,6 @@ public class Robot implements java.io.Serializable {
         this.laneSpecs = laneSpecs;
         this.ETA = ETA;
         this.ETC = ETC;
-        this.enqueued = false;
-        this.acknowledged = false;
-        this.exited = false;
     }
 
     /**
@@ -78,6 +72,13 @@ public class Robot implements java.io.Serializable {
     public long getETA() {
         return this.ETA;
     }
+    
+    /**
+     *  @return ETC
+     */
+    public long getETC() {
+        return this.ETC;
+    }
 
     /**
      *  this method sets a new ETA for the robot
@@ -86,13 +87,6 @@ public class Robot implements java.io.Serializable {
     public void setETA(long eta) {
         this.ETA = eta;
 //        this.ETA = eta + new Date().getTime() - Main.startTime;
-    }
-
-    /**
-     *  @return ETC
-     */
-    public long getETC() {
-        return this.ETC;
     }
 
     /**
@@ -105,59 +99,6 @@ public class Robot implements java.io.Serializable {
     }
 
     /**
-     * This method checks if the robot request is on the queue
-     *  @return true if the robot request is on the queue, false otherwise
-     */
-    public boolean isEnqueued() {
-        return this.enqueued;
-    }
-
-    /**
-     *  This method sets the boolean variable enqueued to b
-     * @param b
-     */
-    public void setEnqueued(boolean b) {
-        this.enqueued = b;
-    }
-
-
-    /**
-     * This method checks if the robot has exited the intersection
-     * It is being used as a confirmation that everything is running as expected
-     *  @return true if the robot has exited the intersection, false otherwise
-     */
-    public boolean isExited() {
-        return this.exited;
-    }
-
-    /**
-     *  This method sets the boolean variable exited to b
-     * @param b
-     */
-    public void setExited(boolean b) {
-        this.exited = b;
-    }
-
-    /**
-     * This method checks if the client(Seth) has received the object robot after setting its ETA and ETC
-     * It is being used as an acknowledgment to make sure there is no packet loss
-     * If no acknowledgment is received from the client side, I will keep sending the object robot
-     *  @return true if an acknowledgment is received from the client saying that it received the message, false otherwise
-     */
-    public boolean isAcknowledged() {
-        return this.acknowledged;
-    }
-
-    /**
-     *  This method sets the boolean variable exited to b
-     * @param b
-     */
-    public void setAcknowledged(boolean b) {
-        this.acknowledged = b;
-    }
-
-
-    /**
      * This method overrides the toString() method
      * @return String with all the robot attributes
      */
@@ -168,9 +109,6 @@ public class Robot implements java.io.Serializable {
         output += "\t laneSpecs : " + laneSpecs + "\n";
         output += "\t ETA : " + ETA + "\n";
         output += "\t ETC : " + ETC + "\n";
-        output += "\t enqueued : " + enqueued + "\n";
-        output += "\t exited : " + exited + "\n";
-        output += "\t acknowledged : " + acknowledged + "\n";
         return output;
     }
     

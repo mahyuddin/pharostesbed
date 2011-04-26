@@ -13,7 +13,7 @@ import pharoslabut.demo.autoIntersection.*;
  */
 public class RobotsPriorityQueue
 {
-    private static final int DEFAULT_CAPACITY = 15;
+    private static final int DEFAULT_CAPACITY = 10;
     private static Comparator<Robot> comparator = new RobotsComparator();
     private static PriorityQueue<Robot> queue = new PriorityQueue<Robot>(DEFAULT_CAPACITY, comparator);
 
@@ -98,44 +98,33 @@ public class RobotsPriorityQueue
     public static void test() throws InterruptedException
     {
         long offset = 5;
-//etc = eta + offset
+        //etc = eta + offset
         
         try {
-        	long ETA = new Date().getTime() - Main.startTime;
+        	long ETA = new Date().getTime();
         	Robot robot = new Robot(java.net.InetAddress.getByName("10.11.12.0"), 8888, new LaneSpecs(), ETA, ETA);
-        	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 2;
         	robot = new Robot(java.net.InetAddress.getByName("10.11.12.1"), 8888, new LaneSpecs(), ETA, ETA);
-        	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 10;
         	robot = new Robot(java.net.InetAddress.getByName("10.11.12.2"), 8888, new LaneSpecs(), ETA, ETA );
-        	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 4;
         	robot = new Robot(java.net.InetAddress.getByName("10.11.12.3"), 8888, new LaneSpecs(), ETA, ETA );
-        	robot.setEnqueued(true);
         	enqueue( robot );
 
         	ETA += 5;
         	robot = new Robot(java.net.InetAddress.getByName("10.11.12.4"), 8888, new LaneSpecs(), ETA, ETA );
-        	robot.setEnqueued(true);
         	enqueue( robot );
         } catch(java.net.UnknownHostException e) {
         	e.printStackTrace();
         }
 
         System.out.println(queue);
-        
- //       enqueue( new Robot(5, "laneSpecs", (long)12, (long)1.3, (float)1.4) );
- //       enqueue( new Robot(6, "laneSpecs", (long)7, (long)1.3, (float)1.4) );
- //       enqueue( new Robot(7, "laneSpecs", (long)22, (long)1.3, (float)1.4) );
- //       enqueue( new Robot(8, "laneSpecs", (long)6, (long)1.3, (float)1.4) );
-
     }
 
 }

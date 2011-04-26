@@ -97,12 +97,6 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
             s = "Estimated time of clearance (ETC): " + robot.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
-            s = "Enqueued: " + robot.isEnqueued();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
-            s = "Exited: " + robot.isExited();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
-            s = "Acknowledged: " + robot.isAcknowledged();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
             
             yPosition += cellHeight;
         }
@@ -133,12 +127,6 @@ public class DisplayQueue extends JFrame
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
             s = "Estimated time of clearance (ETC): " + robot.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
-            s = "Enqueued: " + robot.isEnqueued();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*4);
-            s = "Exited: " + robot.isExited();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*5);
-            s = "Acknowledged: " + robot.isAcknowledged();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*6);
 
             yPosition += cellHeight;
         }
