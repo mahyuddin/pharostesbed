@@ -173,6 +173,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			// Wait until the granted access time has been reached.
 			while ((currTime = System.currentTimeMillis()) < accessTime) {
 				log("Access granted but access time in the future (curr time=" + currTime + ", accessTime=" + accessTime);
+				lf.stop();
 				try {
 					synchronized (this){
 						wait(1000);
