@@ -33,7 +33,7 @@ extern "C" {
 
 #define PROTEUS_BEGIN 0x24 //'$' to start transmissions
 #define PROTEUS_END 0x0A // LF terminated transmissions
-#define PROTEUS_ESCAPE 0xFF // Used to escape the above special characters
+#define PROTEUS_ESCAPE 0xAA // Used to escape the above special characters
 
 /* command opcodes */
 #define PROTEUS_OPCODE_HEARTBEAT        0x61
@@ -47,8 +47,6 @@ extern "C" {
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
-
-#define PROTEUS_DELAY_MODECHANGE_MS       5
 
 enum{
   PROTEUS_MODE_OFF,                  
@@ -85,6 +83,11 @@ enum{
 
 #define MAX_CMD_LEN                      12 
 #define MAX_PACKET_LEN MAX_CMD_LEN+PROTEUS_PACKET_OVERHEAD
+
+#define POSITION2D_INTERFACE 0x01
+#define COMPASS_INTERFACE 0x02
+#define IR_INTERFACE 0x04
+#define OPAQUE_INTERFACE 0x08
 
 // This is used to distinguish the type of compass data
 enum {
@@ -144,15 +147,22 @@ typedef struct {
 	
 	/* Integrated odometric position [m m rad] */
 	double ox, oy, oa;
-
-	/*
+	
+	/**
+	 * The following store the robot's odometry data.
+	 */
+	uint8_t newOdometryData;
+	unsigned char motor_stall;
+	float distance;
+	float steering_angle;
+	
+	uint8_t newIRdata;
 	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
 	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
 	float ir_fr;			//front right SHARP Infrared rangefinder distance, read
 	float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
 	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
 	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
-	*/
 	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
@@ -169,11 +179,6 @@ typedef struct {
 	
 	uint8_t newMessage;
 	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
-	
-	uint8_t newOdometryData;
-	unsigned char motor_stall;
-	float distance;
-	float steering_angle;
 	
 	/*
 	float srf_fl;			//front left SRF08 ultrasonic rangefinder distance, read
@@ -209,7 +214,7 @@ void proteus_destroy(proteus_comm_t* r);
 
 result_t proteus_open(proteus_comm_t* r);
 
-result_t proteus_sendHeartBeat(proteus_comm_t* r);
+result_t proteus_sendHeartBeat(proteus_comm_t* r, uint16_t interfacesEnabled);
 
 //int proteus_init(proteus_comm_t* r, bool fullcontrol); // replaced by heartbeat
 

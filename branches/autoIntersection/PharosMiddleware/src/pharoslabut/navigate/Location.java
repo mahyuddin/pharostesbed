@@ -86,7 +86,7 @@ public class Location implements java.io.Serializable {
 	/*::                                                                         :*/
 	/*::  Official Web site: http://www.zipcodeworld.com                         :*/
 	/*::                                                                         :*/
-	/*::  Hexa Software Development Center © All Rights Reserved 2004            :*/
+	/*::  Hexa Software Development Center (c) All Rights Reserved 2004          :*/
 	/*::                                                                         :*/
 	/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 	private static double distance(double lat1, double lon1, double lat2, double lon2, char unit) {

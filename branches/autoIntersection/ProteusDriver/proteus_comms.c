@@ -81,6 +81,7 @@ void proteus_destroy(proteus_comm_t* r) {
 /**
  * Counts the number of bytes in the buffer that needs to be escaped.
  *
+ * @return The total number of bytes with escape characters added.
  */
 static inline uint16_t escapedSize(uint8_t* buff, size_t numBytes) {
 	uint16_t i, result = 0;
@@ -94,10 +95,9 @@ static inline uint16_t escapedSize(uint8_t* buff, size_t numBytes) {
 }
 
 /**
- * Sends the data stored in the buffer to the micro-controller attached
- * to the serial port.
+ * Sends the data stored in the buffer to the micro-controller via the serial port.
  * 
- * @param r The proteus_comm_t object containing a reference to the connection 
+ * @param r The proteus_comm_t struct containing a details of the connection 
  * to the micro-controller.
  * @param buff A pointer to the bytes to send.
  * @param numBytes The number of bytes to send.
@@ -309,11 +309,33 @@ static inline result_t sendOp(proteus_comm_t* r, uint8_t op) {
  *
  * @param r The proteus_comm_t object containing a reference to the connection 
  * to the micro-controller.
+ * @param interfacesEnabled Specifies which interfaces are enabled.
  * @return SUCCESS if successful, FAIL otherwise
  */
-result_t proteus_sendHeartBeat(proteus_comm_t* r) {
+result_t proteus_sendHeartBeat(proteus_comm_t* r, uint16_t interfacesEnabled) {
 	//printf("proteus_comms: sendHeartBeat: sending heartbeat.\n");
-	return sendOp(r, PROTEUS_OPCODE_HEARTBEAT);
+	//return sendOp(r, PROTEUS_OPCODE_HEARTBEAT);
+	if (r != NULL) {
+		uint8_t cmdbuf[5];
+		
+		printf("proteus_comms: proteus_sendHeartBeat: Sending heartbeat, interfacesEnabled=0x%x\n",
+			interfacesEnabled);
+		
+		cmdbuf[0] = PROTEUS_BEGIN;
+		cmdbuf[1] = PROTEUS_OPCODE_HEARTBEAT;
+		cmdbuf[2] = (uint8_t)(interfacesEnabled >> 8); // store 16-bit value in big-endian format
+		cmdbuf[3] = (uint8_t)(interfacesEnabled & 0xFF);
+		cmdbuf[4] = PROTEUS_END;
+		
+		if (sendToMCU(r, cmdbuf, sizeof(cmdbuf)) == FAIL) {
+			printf("proteus_comms.c: proteus_sendHeartBeat: Failed to send heartbeat.\n");
+			return FAIL;
+		} else
+			return SUCCESS;
+	} else {
+		printf("proteus_comms: proteus_sendHeartBeat: ERROR: r was NULL\n");
+		return FAIL; // r was null!
+	}
 }
 
 /**
@@ -517,6 +539,97 @@ result_t processOdometryPacket(proteus_comm_t* r) {
 	}
 }
 
+result_t processIRPacket(proteus_comm_t* r) {
+	timeval _currTime;
+	if (rxSerialBufferSize(r) >= PROTEUS_IR_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
+		uint8_t data; // temporary variable for holding data from the serial Rx buffer.
+		uint16_t distance = 0;
+		
+		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
+		popRxSerialBuff(r, NULL); // pop PROTEUS IR PACKET
+		
+		// The next 12 bytes are the distance reading for 
+		// FL, FC, FR, RL, RC, RR, in that order
+		// The first two bytes are FL
+		
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fl = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are FC
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fc = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are FR
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_fr = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RL
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rl = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RC
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rc = distance;
+			r->newIRdata = 1;
+		}
+		
+		// The first two bytes are RR
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);
+		if(distance < 10652 && distance > 215){
+			r->ir_rr = distance;
+			r->newIRdata = 1;
+		}
+		
+		popRxSerialBuff(r, NULL); // pop PROTEUS_END
+		
+		if (r->newIRdata) {
+			// taking this out... because this massive printing lags the performance of the computer too much
+			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
+			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
+			printf("proteus_comms: processIRPacket: Front Right : %f mm\n", ((r->newIRdata)?(r->ir_fr):0));
+			printf("proteus_comms: processIRPacket: Rear Left   : %f mm\n", ((r->newIRdata)?(r->ir_rl):0));
+			printf("proteus_comms: processIRPacket: Rear Center : %f mm\n", ((r->newIRdata)?(r->ir_rc):0));
+			printf("proteus_comms: processIRPacket: Rear Right  : %f mm\n\n", ((r->newIRdata)?(r->ir_rr):0));
+			*/
+		}
+		
+		return SUCCESS;
+	} else {
+		return FAIL;  // else not enough data has arrived yet, wait till next time
+	}
+}
+
 result_t processCompassPacket(proteus_comm_t* r) {
 	timeval _currTime;
 	if (rxSerialBufferSize(r) >= PROTEUS_COMPASS_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
@@ -542,7 +655,7 @@ result_t processCompassPacket(proteus_comm_t* r) {
 		// clip rotation to +/-PI
 		if (headingRadians > 2*PI) {
 			// bad data, notify the x86 so it can be recorded
-			sprintf((char*)r->messageBuffer, "ERROR: Invalid heading: %f", headingRadians);
+			sprintf((char*)r->messageBuffer, "ERROR: Invalid heading: %f radians (%i 1/10 degrees)", headingRadians, heading);
 			r->newMessage = 1;
 		} else if (headingRadians > PI) { 
 			r->compass_heading = headingRadians - 2*PI;
@@ -733,7 +846,7 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 
 
 /**
- * Process the serial data was received from the MCU.
+ * Process the serial data received from the MCU.
  * The data is stored in the serialRxBuffer.
  * Each call to this method processes one message.  If there is a possibility
  * that there are more messages in the buffer, SUCCESS is returned.
@@ -778,36 +891,25 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		switch(msgType) {
 			case PROTEUS_ODOMETRY_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
-				if (processOdometryPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				return processOdometryPacket(r);
+			case PROTEUS_IR_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
+				return processIRPacket(r);
 			case PROTEUS_COMPASS_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
-				if (processCompassPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				return processCompassPacket(r);
 			case PROTEUS_TACHOMETER_PACKET:
-				if (processTachPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				//printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
+				return processTachPacket(r);
 			case PROTEUS_STATUS_PACKET:
-				if (processStatusPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				//printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
+				return processStatusPacket(r);
 			case PROTEUS_MOTOR_SAFETY_PACKET:
-				if (processMotorSafetyPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				//printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
+				return processMotorSafetyPacket(r);
 			case PROTEUS_TEXT_MESSAGE_PACKET:
-				if (processTextMessagePacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
+				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
+				return processTextMessagePacket(r);
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.

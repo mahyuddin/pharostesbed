@@ -8,6 +8,10 @@
  *  - Removed dependence on Scheduler
  *  - Added Enhanced Capture Timer, Channel 2, to generate 20Hz interrupts 
  *    for setting _setMotor to be TRUE.
+ * Modified by Chien-Liang Fok <liangfok@mail.utexas.edu> on 02/09/2011.
+ *  - Added method Servo_calcNewSetPoint that simplifies the code within
+ *    Servo_updatePosition.
+ *  - 
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -15,6 +19,8 @@
 #include "LED.h"
 #include "Types.h"
 #include "TaskHandler.h"
+#include "Command.h"
+#include <stdio.h>
 
 uint8_t ActualSetpoint1 = 128, ActualSetpoint2 = 128, ActualSetpoint3 = 128, ActualSetpoint4 = 128;
 uint8_t TargetSetpoint1 = 128, TargetSetpoint2 = 128, TargetSetpoint3 = 128, TargetSetpoint4 = 128;
@@ -29,7 +35,7 @@ bool Servo1Enabled, Servo2Enabled, Servo3Enabled, Servo4Enabled;
  * Concatenates 2/3, 4/5, 6/7
  */
 void Servo_init() {
-	DDRT |= 0x04;     //set directional bit PT2--output
+	DDRT |= 0x04;     // set directional bit PT2--output
 	PWME = 0x00;      // disable channels 0-7
 	PWMPOL |= 0xFF;   // PP0-7 high then low
 	PWMCLK |= 0xFC;   // use clock SA,SB on channels 7-2
@@ -64,33 +70,36 @@ void Servo_init() {
 }
 
 /**
+ * Compares the actual set point to the target set point, and adjusts the
+ * actual set point closer to the target set point.  The maximum amount
+ * of change is specified by MaxChangePerPeriod.
+ *
+ * @param actualSP The actual set point.
+ * @param targetSP The target set point.
+ * @return The new value of the actual set point.
+ */
+uint8_t Servo_calcNewSetPoint(uint8_t actualSP, uint8_t targetSP) {
+	if(actualSP - MaxChangePerPeriod > targetSP) 
+		// Target is lower than actual minus the max change per period
+		return actualSP - MaxChangePerPeriod;
+	else if(actualSP + MaxChangePerPeriod < targetSP) 
+		// Target is higher than actual plus the max change per period
+		return actualSP + MaxChangePerPeriod;
+	else
+		// The change is smaller than the max change per period.  Just jump to the target value.
+		return targetSP;
+}
+
+/**
  * Each time an interrupt occurs, update the servo positions.
  * This should be executed at 50Hz.
  */
 void Servo_updatePosition(void) {
-	short as2, ts2, as3, ts3, as4, ts4, mcpp;
-	
 	LED_BLUE1 ^= 1;
 	
-	as2 = (short) ActualSetpoint2;
-	ts2 = (short) TargetSetpoint2;
-	as3 = (short) ActualSetpoint3;
-	ts3 = (short) TargetSetpoint3;
-	as4 = (short) ActualSetpoint4;
-	ts4 = (short) TargetSetpoint4;
-	mcpp = (short) MaxChangePerPeriod;
-	
-	if(as2 - mcpp > ts2) ActualSetpoint2 = ActualSetpoint2 - MaxChangePerPeriod;
-	else if(as2 + mcpp < ts2) ActualSetpoint2 = ActualSetpoint2 + MaxChangePerPeriod;
-	else ActualSetpoint2 = TargetSetpoint2;
-	
-	if(as3 - mcpp > ts3) ActualSetpoint3 = ActualSetpoint3 - MaxChangePerPeriod;
-	else if(as3 + mcpp < ts3) ActualSetpoint3 = ActualSetpoint3 + MaxChangePerPeriod;
-	else ActualSetpoint3 = TargetSetpoint3;
-	
-	if(as4 - mcpp > ts4) ActualSetpoint4 = ActualSetpoint4 - MaxChangePerPeriod;
-	else if(as4 + mcpp < ts4) ActualSetpoint4 = ActualSetpoint4 + MaxChangePerPeriod;
-	else ActualSetpoint4 = TargetSetpoint4;
+	ActualSetpoint2 = Servo_calcNewSetPoint(ActualSetpoint2, TargetSetpoint2);
+	ActualSetpoint3 = Servo_calcNewSetPoint(ActualSetpoint3, TargetSetpoint3);
+	ActualSetpoint4 = Servo_calcNewSetPoint(ActualSetpoint4, TargetSetpoint4);
 	
 	_Servo2_set(ActualSetpoint2);   //128 straight
 	_Servo3_set(ActualSetpoint3);
@@ -197,7 +206,7 @@ void Servo_set1(unsigned char setpoint){
 	TargetSetpoint1 = setpoint; 
 }*/
 
-void Servo_set2(unsigned char setpoint){
+void Servo_set2(uint8_t setpoint){
 	TargetSetpoint2 = setpoint; 
 }
 
@@ -234,87 +243,108 @@ unsigned char Servo_get4(void) {
  *        +: left, -: right
  */
 int16_t Servo_getSteeringAngle() {
-	uint16_t x0,x2;
-	int16_t y0,y1,y3;
-	int16_t temp;
-	x0 = Servo_get2();
-	x2 = 128 + SERVO_CENTER_CALIB;
+	int16_t angle;
+	int32_t target = Servo_get2();
+	int32_t center = 128 + SERVO_CENTER_CALIB;
 	
-	if(x0 <= x2) { //steering left
-		y1 = SERVO_STEERING_LEFT_CALIB;
+	if(target <= center) { //steering left
+	
+		// Suppose target = 20
+		//   angle = -1 * 5200 * 20 / 128 + 5200 = 4387 (0.4387 radians)
+		angle = (int16_t)(-1 * SERVO_STEERING_LEFT_CALIB * target / center + SERVO_STEERING_LEFT_CALIB);
 		
-		//y0 = -y1*x0/x2 + y1
-		asm  ldd   y1
-		asm  coma
-		asm  comb
-		asm  addd  #1
-		asm  ldy   x0
-		asm  emuls   
-		asm  ldx   x2
-		asm  edivs
-		asm  tfr   y,d
-		asm  addd  y1
-		asm  std   y0 
 	} else { //steering right
-		y3 = SERVO_STEERING_RIGHT_CALIB;
-		temp = 255 - x2;
 		
-		//y0 = y3*(x0-x2)/(255-x2)
-		asm  ldd   x0
-		asm  subd  x2
-		asm  ldy   y3
-		asm  emuls
-		asm  ldx   temp
-		asm  edivs
-		asm  sty   y0 
+		// Suppose target = 235
+		//    angle = -5000 * (235 - 128) / (255 - 128) = -4212 (-0.4212 radians)
+		angle = (int16_t)(SERVO_STEERING_RIGHT_CALIB * (target - center) / (255 - center));
 	}
 	
-	return y0;
+	return angle;
 }
 
 /**
- * Sets steering angle (.0001 radians) 
- * Piecewise linear conversion (left and right)
+ * Sets the steering angle (.0001 radians) 
+ * Piecewise linear conversion (left and right).
+ * This converts the input angle from units of .0001 radians into 
+ * into a unit-less value between 20 and 235.
+ *
  * Input:  Steering angle (.0001 radians)
  * Output: none
  *        +: left, -: right
  */
-void Servo_setSteeringAngle(short angle) {
-	unsigned short x0,x2;
-	short y0,y1,y3;
-	y0 = angle;
-	x2 = 128 + SERVO_CENTER_CALIB;
+void Servo_setSteeringAngle(int16_t angle) {
+	int32_t center = 128 + SERVO_CENTER_CALIB;
+	int32_t target32;
+	uint8_t target;
 	
-	if(y0 >= 0) { //left
-		y1 = SERVO_STEERING_LEFT_CALIB;
-		if(y0 > y1) y0 = y1;
+	if(angle >= 0) { // Turn left
 		
-		//x0 = (y1-y0)*x2/y1
-		asm  ldd   y1
-		asm  subd  y0
-		asm  ldy   x2
-		asm  emuls
-		asm  ldx   y1
-		asm  edivs
-		asm  sty   x0
-	} else { //right
-		y3 = SERVO_STEERING_RIGHT_CALIB;
-		if(y0 < y3) y0 = y3;
-		//x0 = (255-x2)*y0/y3 + x2
-		asm  ldd   #255
-		asm  subd  x2
-		asm  ldy   y0
-		asm  emuls
-		asm  ldx   y3
-		asm  edivs
-		asm  tfr   y,d
-		asm  addd  x2
-		asm  std   x0
+		// Bound left turn angle to be <= SERVO_STEERING_LEFT_CALIB
+		if(angle > SERVO_STEERING_LEFT_CALIB) 
+			angle = SERVO_STEERING_LEFT_CALIB; 
+		
+		// The following code translates the angle into a value between 0 (full-lock-left) and 128 (center).
+		//
+		// For example, suppose angle = 15700 (pi/2).  Since this is greater than SERVO_STEERING_LEFT_CALIB,
+		// it will be re-assigned a value of SERVO_STEERING_LEFT_CALIB, which is 5200.
+		// Thus, the target will be:
+		//    target = (5200 - 5200) * 128 / 5200 = 0;
+		// In fact, any angle greater than 0.52 radians will result in a target of 0.
+		//
+		// Suppose angle = 3140 (pi/10 radians):
+		//    target = (5200 - 3140) * 128 / 5200 = 50.71
+		//
+		// Suppose angle = 0 (0 radians):
+		//    target = (5200 - 0) * 128 / 5200 = 128
+		// This is exactly the center value.
+		//
+		// Suppose angle = 1000 (0.1 radians):
+		//    target = (5200 - 1000) * 128 / 5200 = 103
+		//
+		// Suppose angle = 100 (0.01 radians):
+		//    target = (5200 - 100) * 128 / 5200 = 125  
+		// This is very close to the center value of 128
+		//
+		// Suppose angle = 0 (0 radians):
+		//    target = (5200 - 0) * 128 / 5200 = 128
+		target32 = ((SERVO_STEERING_LEFT_CALIB - angle) * center) / SERVO_STEERING_LEFT_CALIB;
+		
+	} else { // Turn right
+		// Bound right turn angle to be >= SERVO_STEERING_RIGHT_CALIB
+		if(angle < SERVO_STEERING_RIGHT_CALIB) 
+			angle = SERVO_STEERING_RIGHT_CALIB;
+		
+		// The following code translates the angle into a value between 128 (center) and 255 (full-lock-right)
+		// 
+		// Suppose angle = -15700 (-pi/2 radians)
+		//    target = (255 - 128) * -5000 / -5000 + 128 = 255
+		//
+		// Suppose angle = -3140 (-pi/10 radians)
+		//    target = (255 - 128) * -3140 / -5000 + 128 = 207
+		//
+		// Suppose angle = -1000 (0.1 radians):
+		//    target = (255 - 128) * -1000 / -5000 + 128 = 153
+		//
+		// Suppose angle = -100 (0.01 radians):
+		//    target = (255 - 128) * -100 / -5000 + 128 = 130
+		//
+		target32 = (255 - center) * angle / SERVO_STEERING_RIGHT_CALIB + center;
 	}
 	
-	if(x0 < 20) x0 = 20; 
-	if(x0 > 235) x0 = 235;
-	Servo_set2((unsigned char)x0);
+	target = (uint8_t) target32;
+	
+	// Bound the target to be between 20 and 235
+	if(target < 20) target = 20; 
+	if(target > 235) target = 235;
+	
+	/*{ // for debugging
+		char message[100];
+		if (sprintf(message, "Servo_setSteeringAngle: angle = %i, target32 = %li, target = %i", angle, target32, target) > 0)
+			Command_sendMessagePacket(message);
+	}*/
+	
+	Servo_set2(target); // sets the target set point
 }
 
 /**
