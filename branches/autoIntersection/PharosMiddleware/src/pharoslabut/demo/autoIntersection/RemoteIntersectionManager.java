@@ -163,21 +163,23 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 				}
 			}
 		}
+		else {
 		
-		// Access has been granted
-		assert accessGranted : "Expected access granted"; // Will throw error if access not granted.
-		
-		long currTime;
-		
-		// Wait until the granted access time has been reached.
-		while ((currTime = System.currentTimeMillis()) < accessTime) {
-			log("Access granted but access time in the future (curr time=" + currTime + ", accessTime=" + accessTime);
-			try {
-				synchronized (this){
-					wait(1000);
+			// Access has been granted
+			assert accessGranted : "Expected access granted"; // Will throw error if access not granted.
+			
+			long currTime;
+			
+			// Wait until the granted access time has been reached.
+			while ((currTime = System.currentTimeMillis()) < accessTime) {
+				log("Access granted but access time in the future (curr time=" + currTime + ", accessTime=" + accessTime);
+				try {
+					synchronized (this){
+						wait(1000);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
 				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
 			}
 		}
 		
@@ -200,13 +202,16 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			log("WARNING: failed to send ExitingMsg...");
 		}
 		
+		accessGranted = false; // be sure to reset this, otherwise it will go forever
+		
 		//Start timer, if no ACK received within 4 seconds then send again
-		exitTimer = new Timer();
-		exitTimer.schedule(new java.util.TimerTask() {
-			public void run() {
-				doExiting();
-			}
-		}, 4000);
+		//Use for UDP, keep commented out for TCP
+		//exitTimer = new Timer();
+		//exitTimer.schedule(new java.util.TimerTask() {
+		//	public void run() {
+		//		doExiting();
+		//	}
+		//}, 4000);
 	}
 	
 	@Override
@@ -238,12 +243,15 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		//   doEntering();
 	}
 	
+	/*
+	 * unused for now because of TCP, need method for UDP
 	private void handleExitingAcknowledgedMsg(ExitingAcknowledgedMsg msg) {
 		log("handleExitingAcknowledgedMsg: Canceling Exit Timer, ACK received.");
 		exitTimer.cancel();
 		this.accessGranted = false; // robot is through and no longer needs access
 		this.accessTime = Long.MAX_VALUE; // set this super high so robot would have to wait at intersection until new access time comes in
 	}
+	*/
 	
 	/**
 	 * Handles messages sent from the intersection server.
@@ -253,8 +261,9 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		log("newMessage: Received new message from server: " + msg);
 		if (msg instanceof ReservationTimeMsg)
     		handleReservationTimeMsg( (ReservationTimeMsg) msg );
-    	else if (msg instanceof ExitingAcknowledgedMsg)
-    		handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
+		//Uncomment if using UDP, keep commented out for TCP
+    	//else if (msg instanceof ExitingAcknowledgedMsg)
+    		//handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
     	else
     		System.out.println("RECEIVER: Unknown message " + msg);
 	}

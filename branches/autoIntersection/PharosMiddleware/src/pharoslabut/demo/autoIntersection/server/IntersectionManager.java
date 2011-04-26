@@ -78,10 +78,10 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		log("RECEIVED MESSAGE: " + msg);
 		if (msg instanceof RequestAccessMsg)
     		handleRequestAccessMsg( (RequestAccessMsg) msg );
-    	else if (msg instanceof ReservationTimeAcknowledgedMsg)
-    		handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
+    	//else if (msg instanceof ReservationTimeAcknowledgedMsg)
+    		//handleReservationTimeAcknowledgedMsg( (ReservationTimeAcknowledgedMsg) msg );
     	else if (msg instanceof ExitingMsg)
-    		handleExitingMsg( (ExitingMsg) msg );
+    		handleExitingMsg((ExitingMsg) msg );
     	else
     		log("RECEIVER: Unknown message " + msg);
 	}
@@ -92,12 +92,16 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
 			
-			//testing to make robot wait 10 secs every other loop traversal 
+			//testing to make robot wait 10 secs every other loop traversal
 			if(testingFlag) {
+				log("Testing flag UP!");
 				nextAvailableETC = robot.getETA()+10000; // 10 seconds after intersection arrival
 				testingFlag = false;
 			}
-			else testingFlag = true;
+			else {
+				testingFlag = true;
+				log("Testing flag DOWN!");
+			}
 			
 			if( (! robotsGrantedAccess.contains(robot))  && (! RobotsPriorityQueue.contains(robot)) ) {
 				log("enqueueing the robot: \n" + robot);
@@ -105,7 +109,7 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 				log("RobotsPriorityQueue: " + RobotsPriorityQueue.print() );
 				//this.start();
 			} else {
-//				log("This robot was already granted access: \n" + robot);
+				log("This robot was already granted access: \n" + robot);
 			}
 		}
 		else
@@ -134,11 +138,18 @@ public class IntersectionManager extends Thread implements MessageReceiver {
 	private void handleExitingMsg(ExitingMsg msg) {
 		if(msg != null)
 		{
-            log("Run: Sending EXITING ACKNOWLEDGED MESSAGE " + msg.getRobotIP() + ":" + msg.getRobotPort());
+			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
+			
+			robotsGrantedAccess.remove(robot);
+			//robotsExiting.add(robot);
+			//robotsExiting.remove(robot);
             
-            networkInterface.sendMessage(msg.getRobotIP(), msg.getRobotPort(), msg);   
-            Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
-            robotsExiting.remove(robot);
+			log("Robot exiting! Removing robot from queue.");
+			
+			//uncomment line below if using UDP
+            //networkInterface.sendMessage(msg.getRobotIP(), msg.getRobotPort(), msg);   
+            
+            
 //			Iterator<Robot> iterator = robotsExiting.iterator();
 //	        while(iterator.hasNext())
 	//        {
