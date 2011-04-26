@@ -174,10 +174,10 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		compassLogger.start(1, fileName);
 		
 
-//		turn_comp(180, motors);
-		move_odometry(0.35, motors);
+		turn_comp(90, motors);
+//		move_odometry(0.17, motors);
 //		turn_comp(45, motors);
-//		move_odometry(0.35, motors);
+//		move_odometry(0.18, motors);
 //		pause(1000);
 		
 	/*
@@ -305,6 +305,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	    
 	    
 		motors.setSpeed(0, 0);
+		motors.resetOdometry();
+		pause(100);
 		odflag = false;
 		compflag = false;
 	}
@@ -332,8 +334,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		            wait();
 		        } catch (InterruptedException e) {}
 	//	        motors.resetOdometry();
-		        starting = (compreading + Math.PI);
-		        System.out.println("Print " + starting);
+		        starting = compreading;
+	//	        System.out.println("Print " + starting);
 			}
 		}
 		
@@ -345,20 +347,20 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 				if (Next < 0 && Math.abs(Next) > i) {
 					Next = table_size + Next;
 				}
-				//	System.out.println("current slot" + i);
-				//	System.out.println("dest. slot" + (i+Next) % table_size);
+//					System.out.println("current slot" + i);
+//					System.out.println("dest. slot" + (i+Next) % table_size);
 					ending = CompLookUp.get((i+Next) % table_size);
-				//	System.out.println((i+Next) % table_size);
-				//	System.out.println("starting" + CompLookUp.get(i));
-				//	System.out.println("ending" + CompLookUp.get((i+Next) % table_size));
+//					System.out.println((i+Next) % table_size);
+//					System.out.println("starting" + CompLookUp.get(i));
+//					System.out.println("ending" + CompLookUp.get((i+Next) % table_size));
 					break;
 			}
 		}
-		System.out.println("move:" + angle + " " + speed);
+//		System.out.println("move:" + angle + " " + speed);
 	
 		motors.setSpeed(0,speed);
 
-	    while((ending - 0.02) > (compreading + Math.PI) || (compreading + Math.PI) > (ending + 0.02)) {
+	    while((ending - 0.02) > compreading || compreading > (ending + 0.02)) {
 			synchronized(this) {
 		    	try {
 		            wait();
@@ -493,16 +495,16 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		odflag = true;
 		odreading = data.getPos().getPx();
 		notifyAll();
-//		System.out.println("Odometry  " + data.getPos().getPx());
+		System.out.println("Odometry  " + data.getPos().getPx());
 		
 	}
 
 	@Override
 	public synchronized void newHeading(double heading) {
 		compflag = true;
-		compreading = heading;
+		compreading = heading + Math.PI;
 		notifyAll();
-//		System.out.println("heading: " + heading);
+		System.out.println("heading: " + compreading);
 				
 	}
 	
