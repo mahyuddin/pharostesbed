@@ -96,7 +96,7 @@ void processHeartbeat(uint8_t* pkt, uint16_t numBytes) {
 		_heartbeatTimerArmed = FALSE; // disarm the heartbeat timer
 	} else {
 		char message[50];
-		if (sprintf(message, "ERROR: heartbeat size %i != %i", numBytes, sizeof(proteusDrivePkt)) > 0)
+		if (sprintf(message, "ERROR: heartbeat size %i != %i", numBytes, sizeof(proteusHeartbeatPkt)) > 0)
 		  Command_sendMessagePacket(message);
 	}
 }
@@ -234,6 +234,10 @@ void Command_sendIRPacket(void) {
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
 void Command_sendData() {
+  //char message[50];
+	//if (sprintf(message, "Command_sendData Called") > 0)
+		  //Command_sendMessagePacket(message);
+		
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
 		

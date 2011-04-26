@@ -69,6 +69,7 @@ typedef struct ProteusDrivePacket {
 } proteusDrivePkt;
 
 typedef struct ProteusHeartbeatPacket {
+  uint8_t pktType;
 	uint16_t interfacesEnabled;
 } proteusHeartbeatPkt;
 
