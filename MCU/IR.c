@@ -3,6 +3,7 @@
 
 #include "IR.h"
 #include "LED.h"
+#include "command.h"
 
 unsigned short IR_default_tab[256] = {	 // these values need to be modified depending on long range or short range sensors
 10651	,  //  0
@@ -402,7 +403,7 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
       
     }else{ ir[9] = -1;}
     
-    Command_sendIRPacket(void);
+    Command_sendIRPacket();
    
    return ir;    
   }
