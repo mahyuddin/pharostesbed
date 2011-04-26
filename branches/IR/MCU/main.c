@@ -20,6 +20,7 @@
 #include "TaskHandler.h"
 #include "Tach.h"
 #include "Compass.h"
+#include "adc.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
