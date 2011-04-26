@@ -61,25 +61,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
       XueHuaPos = new RobotMover("10.11.12.32", 6666, "log.txt", false);
       ActionListener taskPerformer = new ActionListener() {
           public void actionPerformed(ActionEvent evt) {
-          	  XueHuaPos.INS_UpdateX();
-                XueHuaPos.INS_UpdateY();
-                XueHua.INS_UpdateX();
-                XueHua.INS_UpdateY();
-                
-                
-                String XueHuaX = Double.toString(XueHuaPos.Xpos);
-                String XueHuaY = Double.toString(XueHuaPos.Ypos);
-                
-                jTextField1.setText(XueHuaX); 
-                jTextField2.setText(XueHuaY);
-                
-                String XueHuaX2 = Double.toString(XueHua.Xpos);
-                String XueHuaY2 = Double.toString(XueHua.Ypos);
-                
-                jTextField9.setText(XueHuaX2); 
-                jTextField10.setText(XueHuaY2);
-                
-                
+        	  UpdateInfo();
           }
       };
       Timer insT = new Timer(delay, taskPerformer);
@@ -397,6 +379,16 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
         jTextField1.setText(XueHuaX); 
         jTextField2.setText(XueHuaY);
         jTextField3.setText(XueHuaYaw);
+        
+        XueHua.INS_UpdateX();
+        XueHua.INS_UpdateY();
+      
+        
+        String XueHuaX2 = Double.toString(XueHua.Xpos+XueHua.BaseX);
+        String XueHuaY2 = Double.toString(XueHua.Ypos+XueHua.BaseY);
+        jTextField9.setText(XueHuaX2); 
+        jTextField10.setText(XueHuaY2);
+       
         
         double XueHuaTime = s.getElapsedTimeSecs();
         Time = Double.toString(XueHuaTime);
