@@ -122,7 +122,7 @@ class GUI extends JPanel implements ActionListener, MouseListener, MouseMotionLi
 	{	
 		//Try to open the default map file and store it as a BufferedImage
 		try{
-			defaultMap = ImageIO.read(new File("src/pharoslabut/7 by 7.bmp"));
+			defaultMap = ImageIO.read(new File("src/pharoslabut/15x15_2.bmp"));
 			map = defaultMap;
 		}
 		catch (IOException e){
