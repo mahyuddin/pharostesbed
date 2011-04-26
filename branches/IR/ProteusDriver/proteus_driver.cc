@@ -168,7 +168,7 @@ class Proteus : public Driver {
 		 */
 		player_devaddr_t position_addr;
 		// player_devaddr_t power_addr;
-		//player_devaddr_t ir_addr;
+		player_devaddr_t ir_addr;
 		//player_devaddr_t sonar_addr;
 		player_devaddr_t opaque_addr;
 		player_devaddr_t compass_addr;

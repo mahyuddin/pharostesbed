@@ -214,7 +214,7 @@ void proteus_destroy(proteus_comm_t* r);
 
 result_t proteus_open(proteus_comm_t* r);
 
-result_t proteus_sendHeartBeat(proteus_comm_t* r, unit16_t interfacesEnabled);
+result_t proteus_sendHeartBeat(proteus_comm_t* r, uint16_t interfacesEnabled);
 
 //int proteus_init(proteus_comm_t* r, bool fullcontrol); // replaced by heartbeat
 
