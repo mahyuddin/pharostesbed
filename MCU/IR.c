@@ -322,7 +322,7 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
       TC1   = TCNT + 100; // interrupt immediately
     }
     
-   interrupt 8 void IRPeriodic(void){
+   interrupt 1 void IRPeriodic(void){
     unsigned short input;
     char i = 0;
     TFLG1 = 0x01;         // acknowledge OC5
@@ -362,13 +362,14 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
     IR9_Fifo_Put(input);	
   }
   
+  short ir[10] = {0};
   // Foreground thread:
   // todo translate values into positions around the vehicle
   // separate out combined sensor readings
   // readings will return as -1 if fifo is empty
   short* IRTranslate(){
     const short divider = 128; //division between sensor readings in combined IR
-    short ir[9] = {0};
+    
     unsigned long x1,x2,x3,x5,x6,x7,x8,x9; // no x4 
     unsigned long y1,y2,y3,y4,y5,y6,y7; // no y8-9 because of positioning
     
@@ -400,6 +401,36 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
 	if(IR9_Fifo_Get(&ir[9]) == 1){
       
     }else{ ir[9] = -1;}
+    
+    Command_sendIRPacket(void);
    
    return ir;    
+  }
+ 
+  unsigned short IR_get1(void){
+    return IR_default_tab[ir[1]];
+  }
+  unsigned short IR_get2(void){
+    return IR_default_tab[ir[2]];
+  }
+  unsigned short IR_get3(void){
+    return IR_default_tab[ir[3]];
+  }
+  unsigned short IR_get4(void){
+    return IR_default_tab[ir[4]];
+  }
+  unsigned short IR_get5(void){
+    return IR_default_tab[ir[5]];
+  }
+  unsigned short IR_get6(void){
+    return IR_default_tab[ir[6]];
+  }
+  unsigned short IR_get7(void){
+    return IR_default_tab[ir[7]];
+  }
+  unsigned short IR_get8(void){
+    return IR_default_tab[ir[8]];
+  }
+  unsigned short IR_get9(void){
+    return IR_default_tab[ir[9]];
   }
