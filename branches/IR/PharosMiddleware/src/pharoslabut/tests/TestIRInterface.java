@@ -11,6 +11,18 @@ import playerclient.structures.opaque.PlayerOpaqueData;
  * range data received.  There are six IR sensors and they are printed in the following
  * order: FL, FC, FR, RL, RC, RR.
  * 
+ * When running this test, be sure the player server is using a configuration with the
+ * "ir" and "opaque" interfaces.  For example:
+ * 
+ * <pre>
+ * driver (
+ *   name "proteus"
+ *   plugin "/usr/local/share/player/modules/libproteusdriver.so"
+ *   provides ["opaque:0" "ir:0"]
+ *   port "/dev/ttyS0"
+ *   safe 1
+ * )
+ * 
  * @author Chien-Liang Fok
  */
 public class TestIRInterface implements IRListener, OpaqueListener {
