@@ -146,7 +146,7 @@ class Proteus : public Driver {
 		
 		void updatePos2D();
 		void updateCompass();
-		//void updateIR();
+		void updateIR();
 		//void updateSonar();
 		//void updateOpaque();
 		
@@ -168,7 +168,7 @@ class Proteus : public Driver {
 		 */
 		player_devaddr_t position_addr;
 		// player_devaddr_t power_addr;
-		//player_devaddr_t ir_addr;
+		player_devaddr_t ir_addr;
 		//player_devaddr_t sonar_addr;
 		player_devaddr_t opaque_addr;
 		player_devaddr_t compass_addr;
@@ -187,8 +187,8 @@ class Proteus : public Driver {
 		player_opaque_data_t opaque_data;
 		
 		// Whether the interface is being used
-		bool b_position2d_interface, b_compass_interface, b_opaque_interface;
-		// bool b_ir_interface, b_sonar_interface;
+		uint16_t interfacesEnabled;
+		
 		int packet_type;
 		
 		timeval _currTime;
@@ -222,17 +222,13 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 	// Clear the device addresses...
 	memset(&this->position_addr,0,sizeof(player_devaddr_t));
 	//memset(&this->power_addr,0,sizeof(player_devaddr_t));
-	//memset(&this->ir_addr,0,sizeof(player_devaddr_t));
+	memset(&this->ir_addr,0,sizeof(player_devaddr_t));
 	//memset(&this->sonar_addr,0,sizeof(player_devaddr_t));
 	memset(&this->opaque_addr,0,sizeof(player_devaddr_t));
 	memset(&this->compass_addr, 0, sizeof(player_devaddr_t));
 	
-	
-	b_position2d_interface = false;
-	//b_ir_interface = false;
-	//b_sonar_interface = false;
-	b_opaque_interface = false;
-	b_compass_interface = false;
+	// Reset the interfaces enabled...
+	interfacesEnabled = 0;
 	
 	/*
 	 *  Do we create a position 2D interface?
@@ -247,7 +243,7 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 			this->SetError(-1);
 			return;
 		}
-		b_position2d_interface = true;
+		interfacesEnabled |= POSITION2D_INTERFACE;
 	}
 	
 	// Do we create a compass position interface?
@@ -256,7 +252,7 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 			this->SetError(-1);
 			return;
 		}
-		b_compass_interface = true;
+		interfacesEnabled |= COMPASS_INTERFACE;
 	}
 	
 	
@@ -268,14 +264,14 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 		}
 	}*/
 	
-	// Do we create a IR interface?
-	/*if(cf->ReadDeviceAddr(&(this->ir_addr), section, "provides", PLAYER_IR_CODE, -1, NULL) == 0) {
+	// Do we create an IR interface?
+	if(cf->ReadDeviceAddr(&(this->ir_addr), section, "provides", PLAYER_IR_CODE, -1, NULL) == 0) {
 		if(this->AddInterface(this->ir_addr) != 0) {
 			this->SetError(-1);
 			return;
 		}
-		b_ir_interface = true;
-	}*/
+		interfacesEnabled |= IR_INTERFACE;
+	}
 	
 	// Do we create a sonar interface?
 	/*if(cf->ReadDeviceAddr(&(this->sonar_addr), section, "provides", PLAYER_SONAR_CODE, -1, NULL) == 0) {
@@ -292,7 +288,7 @@ Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new c
 			this->SetError(-1);
 			return;
 		}
-		b_opaque_interface = true;
+		interfacesEnabled |= OPAQUE_INTERFACE;
 		printf("proteus_driver: opaque interface enabled.\n");
 	}
 	
@@ -425,9 +421,10 @@ void Proteus::updateCompass() {
 		(void*)&compassdata);
 }
 
-/*void Proteus::updateIR() {
-	////////////////////////////
-	// Update IR data
+/**
+ * Take the new IR data and publish it.
+ */
+void Proteus::updateIR() {
 	player_ir_data_t irdata;
 	memset(&irdata,0,sizeof(irdata)); // clear the irdata struct
 	
@@ -442,7 +439,7 @@ void Proteus::updateCompass() {
 	
 	this->Publish(this->ir_addr, PLAYER_MSGTYPE_DATA, PLAYER_IR_DATA_RANGES, (void*)&irdata);
 	delete [] irdata.ranges;
-}*/
+}
 
 /*void Proteus::updateSonar() {
 	////////////////////////////
@@ -536,7 +533,7 @@ void Proteus::Main() {
 		 */
 		if (loopCount % 10 == 0) {
 			// send a heart beat at 1Hz
-			commOK = proteus_sendHeartBeat(this->proteus_dev);
+			commOK = proteus_sendHeartBeat(this->proteus_dev, interfacesEnabled);
 		}
 		loopCount++;
 		
@@ -578,6 +575,11 @@ void Proteus::Main() {
 					this->proteus_dev->newCompassData = false;
 				}
 				
+				if (this->proteus_dev->newIRdata) {
+					this->updateIR();
+					this->proteus_dev->newIRdata = false;
+				}
+				
 				if (proteus_dev->newStatusData) {
 					uint8_t textMessage[500];
 					sprintf((char*)textMessage, "MCU_STATUS: tach speed = %i, target speed = %i, motor power = %i, steering angle = %f", 
@@ -587,7 +589,6 @@ void Proteus::Main() {
 					proteus_dev->newStatusData = false;
 				}
 				
-				//this->updateIR();
 				//this->updateSonar();
 				
 				if (proteus_dev->newMessage) {
