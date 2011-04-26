@@ -892,48 +892,24 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 			case PROTEUS_ODOMETRY_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
 				return processOdometryPacket(r);
-				//if (processOdometryPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_IR_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
 				return processIRPacket(r);
-				//if (processIRPacket(r) == FAIL)
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_COMPASS_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
 				return processCompassPacket(r);
-				//if (processCompassPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_TACHOMETER_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
 				return processTachPacket(r);
-				//if (processTachPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_STATUS_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
 				return processStatusPacket(r);
-				//if (processStatusPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_MOTOR_SAFETY_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
 				return processMotorSafetyPacket(r);
-				//if (processMotorSafetyPacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			case PROTEUS_TEXT_MESSAGE_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
-				//if (processTextMessagePacket(r) == FAIL) return FAIL;
-					//done = true; // no point in processing more packets from the MCU
-				//numPktsProcessed++;
-				break;
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.
