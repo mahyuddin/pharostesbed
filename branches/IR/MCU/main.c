@@ -32,6 +32,7 @@ void main(void) {
 	Tach_init();
 	Compass_init();
 	SerialDriver_init(57600);
+	ADC0_Init(); // enable IR sensors
 	Command_init();
 	
 	asm cli  // Enable interrupts

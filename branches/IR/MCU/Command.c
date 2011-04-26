@@ -21,6 +21,10 @@
  *  - Removed the InterfaceFG, commands are now processed synchronously as they are
  *    assembled by the SerialDriver.
  *  - Added interrupt 9 (ECT ch 1) for periodically delivering sensor data to x86.
+ *
+ * Modified by Chien-Liang Fok on 04/25/2011
+ *  - Added support for IR sensors.  Changes based on Xiaomeng Wu's code in the 
+ *    cartographer branch of the Pharos Lab SVN repo.
  */
 
 #include <mc9s12dp512.h>     /* derivative information */
@@ -35,7 +39,7 @@
 #include "SerialDriver.h"
 #include "String.h"
 #include <stdio.h>
-//#include "Sharp_IR.h"
+#include "Sharp_IR.h"
 
 
 /**
@@ -43,8 +47,9 @@
  */
 uint16_t _int9Count = 0;
 
+uint16_t _interfacesEnabled = 0;
 bool _heartbeatReceived = FALSE;
-bool _heartBeatTimerArmed = FALSE;
+bool _heartbeatTimerArmed = FALSE;
 
 /**
  * Initializes the command component.
@@ -65,16 +70,33 @@ void Command_init() {
  * @param numBytes The number of bytes within the command
  */
 void processDriveCmd(uint8_t* pkt, uint16_t numBytes) {
-	
-	// Verify that the number of bytes received is the amount expected.
-	if (numBytes == sizeof(proteusDrivePkt)) {
+	if (numBytes == sizeof(proteusDrivePkt)) {  // Verify that the number of bytes received is the amount expected.
 		struct ProteusDrivePacket* drivePkt = (struct ProteusDrivePacket*)pkt;
 		MotorControl_setTargetSpeed(drivePkt->speed);
 		Servo_setSteeringAngle(drivePkt->angle);
 	} else {
 		char message[50];
-		if (sprintf(message, "ERROR: Cmd drive size %i != %i [%x %x %x %x %x]", numBytes, sizeof(proteusDrivePkt),
-			pkt[0], pkt[1], pkt[2], pkt[3], pkt[4]) > 0)
+		if (sprintf(message, "ERROR: Cmd drive size %i != %i", numBytes, sizeof(proteusDrivePkt)) > 0)
+		  Command_sendMessagePacket(message);
+	}
+}
+
+/**
+ * Reads the interfaces that are enabled and saves it in global variable _interfacesEnabled.
+ * Records the fact that a heartbeat was received, and disarms the heartbeat timer.
+ *
+ * @param pkt The command received from the x86.
+ * @param numBytes The number of bytes within the command
+ */
+void processHeartbeat(uint8_t* pkt, uint16_t numBytes) {
+	if (numBytes == sizeof(proteusHeartbeatPkt)) {  // Verify that the number of bytes received is the amount expected.
+		struct ProteusHeartbeatPacket* heartbeatPkt = (struct ProteusHeartbeatPacket*)pkt;
+		_interfacesEnabled = heartbeatPkt->interfacesEnabled;
+		_heartbeatReceived = TRUE; // indicates that a heartbeat was received from the x86.
+		_heartbeatTimerArmed = FALSE; // disarm the heartbeat timer
+	} else {
+		char message[50];
+		if (sprintf(message, "ERROR: heartbeat size %i != %i", numBytes, sizeof(proteusDrivePkt)) > 0)
 		  Command_sendMessagePacket(message);
 	}
 }
@@ -171,13 +193,58 @@ void Command_sendMessagePacket(char* message) {
 }
 
 /**
+ * Function: Command_sendIRPacket()
+ * Inputs: None
+ * Outputs: None
+ * Desc: Sends an IR packet to the x86 computer.
+ * DATA PACKETS COME LIKE THIS:
+ * BEGIN Packet
+ * PROTEUS_IR_PACKET
+ * FL Data (2Bytes)
+ * FC Data (2Bytes)
+ * FR Data (2Bytes)
+ * RL Data (2Bytes)
+ * RC Data (2Bytes)
+ * RR Data (2Bytes)
+ * END Packet
+ */
+void Command_sendIRPacket(void) {
+	uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+	uint16_t i;
+	
+	outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
+	indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
+	indx = saveTwoBytes(outToSerial, indx, IR_getFC()); // Package Front Center data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getFR()); // Package Front Right data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRL()); // Package Rear Left data  
+	indx = saveTwoBytes(outToSerial, indx, IR_getRC()); // Package Rear Center data 
+	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data  		
+	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+	
+	//i should equal PROTEUS_IR_PACKET_SIZE 
+	// Send all of the IR Data through the Serial Port
+	for(i=0; i<indx; i++) {
+		SerialDriver_sendByte(outToSerial[i]);
+	}
+}
+
+/**
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
 void Command_sendData() {
 	if (_heartbeatReceived) {
 		LED_GREEN2 ^= 1;
-		Command_sendOdometryPacket();
-		Compass_getHeading();
+		
+		if (_interfacesEnabled & POSITION2D_INTERFACE)
+			Command_sendOdometryPacket();
+		
+		if (_interfacesEnabled & COMPASS_INTERFACE)
+			Compass_getHeading();
+			
+		if (_interfacesEnabled & IR_INTERFACE)
+			Command_sendIRPacket();
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
@@ -230,8 +297,7 @@ void Command_stopSendingData() {
 void Command_processCmd(uint8_t* cmd, uint16_t size) {
 	switch(cmd[0]) { // Look at opcode (loosely based on roomba command set)
 		case PROTEUS_OPCODE_HEARTBEAT:
-			_heartbeatReceived = TRUE; // indicates that a heartbeat was received from the x86.
-			_heartBeatTimerArmed = FALSE; // disarm the heartbeat timer
+			processHeartbeat(cmd, size);
 			break;
 		case PROTEUS_OPCODE_BAUD:
 			// TODO: change SCI baud rate
@@ -296,10 +362,10 @@ interrupt 9 void sendDataInterrupt(void) {
 	 * as the x86 is connected and alive.
 	 */
 	if (_int9Count == 70) { // 20ms * 70 = 1400ms (0.71Hz)
-		if (_heartBeatTimerArmed) {
+		if (_heartbeatTimerArmed) {
 			_heartbeatReceived = FALSE;
 		}
-		_heartBeatTimerArmed = TRUE;
+		_heartbeatTimerArmed = TRUE;
 		_int9Count = 0;
 		TaskHandler_postTask(&Command_sendStatus);
 	}
