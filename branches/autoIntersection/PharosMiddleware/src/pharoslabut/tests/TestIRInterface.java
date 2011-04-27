@@ -1,6 +1,7 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.*;
+import pharoslabut.sensors.*;
 import playerclient.*;
 import playerclient.structures.*;
 import playerclient.structures.ir.PlayerIrData;
@@ -28,6 +29,7 @@ import playerclient.structures.opaque.PlayerOpaqueData;
 public class TestIRInterface implements IRListener, OpaqueListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
+	private IRVisualizer irVisualizer;
 	
 	public TestIRInterface(String serverIP, int serverPort, String logFileName) {
 		try {
@@ -41,6 +43,9 @@ public class TestIRInterface implements IRListener, OpaqueListener {
 		if (logFileName != null)
 			flogger = new FileLogger(logFileName);
 		
+		irVisualizer = new IRVisualizer();
+		irVisualizer.show();
+		
 		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		oi.addOpaqueListener(this);
 		
@@ -52,6 +57,7 @@ public class TestIRInterface implements IRListener, OpaqueListener {
 	@Override
 	public void newPlayerIRData(PlayerIrData data) {
 		//System.out.println("Opaque data: " + opaqueData);
+		irVisualizer.updateDistances(data);
 		float[] ranges = data.getRanges();
 		String s = "";
 		for (int i=0; i < ranges.length; i++) {
