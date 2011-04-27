@@ -31,9 +31,9 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
      */
-    public ServerIntersectionManager(int serverPort)
+    public ServerIntersectionManager(int serverPort, FileLogger flogger)
     {
-    	flogger = new FileLogger("IntersectionManager.log");
+    	this.flogger = flogger;
     	log("Starting intersection manager on port " + serverPort + "...");
         nextAvailableETC = -1;
         robotsGrantedAccess = new LinkedList<Robot>();
@@ -211,20 +211,55 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			flogger.log(result);
 	}
     
+	private static void print(String msg) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(msg);
+	}
     
+	private static void usage() {
+		System.setProperty ("PharosMiddleware.debug", "true");
+		print("Usage: pharoslabut.demo.autoIntersection.server.ServerIntersectionManager <options>\n");
+		print("Where <options> include:");
+		print("\t-port <port number>: The port on which to listen (default 6665)");
+		print("\t-log <log file name>: The name of the file in which to save debug output (default ServerIntersectionManager.log)");
+		print("\t-debug: enable debug mode");
+	}
+	
     /**
      * call the IntersectionManager and start running the code
      * @param args the command line arguments
      * @throws InterruptedException
      */
-    public static void main(String [] args)
-    {
+    public static void main(String [] args) {
+		int serverPort = 6665;
+		String logFileName = "ServerIntersectionManager.log";
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
+				} else if (args[i].equals("-log")) {
+					logFileName = args[++i];
+				} else {
+					print("Unknown argument " + args[i]);
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		FileLogger flogger = new FileLogger(logFileName);
+		
 //       RobotsPriorityQueue.test();
-
-    	System.setProperty ("PharosMiddleware.debug", "true");
     	
-        Thread IM = new ServerIntersectionManager(6665);
-        IM.start();
+        Thread sim = new ServerIntersectionManager(serverPort, flogger);
+        
+        sim.start();
 
 /*
         java.awt.EventQueue.invokeLater(new Runnable() {
