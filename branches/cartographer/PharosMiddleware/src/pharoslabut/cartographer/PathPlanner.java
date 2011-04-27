@@ -194,6 +194,7 @@ public class PathPlanner {
 				double initAng = createLine(centroid);
 				faceToAngle(initAng);
 				followLine(centroid, initAng);
+				swipe();
 				// exploration strategy
 				//calculateNodes();
 				//myCentroids = makeBatches();
@@ -219,9 +220,10 @@ public class PathPlanner {
 				      System.err.println("Error closing file stream for 'world.txt': " + e.getMessage());
 				}
 				finally{
-					System.exit(0);	
+					//System.exit(0);	
+					while(true){}
 				}
-				break;
+				//break;
 			}
 		}
 	}
@@ -700,7 +702,7 @@ public class PathPlanner {
 			LocationTracker.motors.setSpeed(SPEED_STEP, 0);	// line following
 			while(FaceDistance > DISTANCE_FROM_WALL 
 				&& LeftHandDistance > DISTANCE_FROM_WALL 
-				&& RightHandDistance > DISTANCE_FROM_WALL 
+				&& RightHandDistance > DISTANCE_FROM_WALL
 				&& !hasArrivedToDestination(goalPoint)){	// while no obstacle detected in front
 				//follow the line
 				pause(WAIT_TIME);
@@ -710,11 +712,28 @@ public class PathPlanner {
 				notDone = false;
 				break;
 			}
+			int leftToleranceFactor = 1; 
+			int rightToleranceFactor = 1;
 			
-			LocationTracker.motors.setSpeed(0, -Math.PI/12);	// turning until there is good clearance
-			while((LeftHandDistance < DISTANCE_FROM_WALL 
+			int leftTurn = 1;
+			boolean distanceChoice = true; // true = left
+			// check to see if turning left or turnin right is better
+			if(LeftHandDistance<RightHandDistance){
+				LocationTracker.motors.setSpeed(0, -Math.PI/12);	// turning until there is good clearance
+				rightToleranceFactor = 2;
+				distanceChoice = true;
+				leftTurn = 1;
+			}
+			else{
+				LocationTracker.motors.setSpeed(0, Math.PI/12);	// turning until there is good clearance
+				leftToleranceFactor = 2;
+				distanceChoice = false;
+				leftTurn = -1;
+			}
+			
+			while((LeftHandDistance < DISTANCE_FROM_WALL/leftToleranceFactor
 					|| FaceDistance < FACE_DISTANCE_FROM_WALL
-					|| RightHandDistance < DISTANCE_FROM_WALL) 
+					|| RightHandDistance < DISTANCE_FROM_WALL/rightToleranceFactor) 
 					&& notDone){
 				pause(WAIT_TIME);
 				count += WAIT_TIME;
@@ -736,8 +755,10 @@ public class PathPlanner {
 					started = true;
 				}
 				
-				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/32);	// attempt to hug wall
-				while(LeftHandDistance > DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()){				
+				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, leftTurn * Math.PI/32);	// attempt to hug wall
+				//while(LeftHandDistance > DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()){
+				//while(distance > DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()){
+				while((distanceChoice?LeftHandDistance:RightHandDistance) > DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()){
 					pause(WAIT_TIME);
 					count += WAIT_TIME;
 					if(checkLineStatus()){
@@ -747,8 +768,10 @@ public class PathPlanner {
 				}
 				//if(LocationTracker.getLineCheck() == false) break;	// 3000 gives the robot a little time to move away from coord
 				
-				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, -Math.PI/32);
-				while(LeftHandDistance < DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()) {
+				if(!lineStatus) LocationTracker.motors.setSpeed(SPEED_STEP, (-1) * leftTurn * Math.PI/32);
+				//while(LeftHandDistance < DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()) {
+				//while(distance < DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()) {
+				while((distanceChoice?LeftHandDistance:RightHandDistance) < DISTANCE_FROM_WALL && !lineStatus){ //&& LocationTracker.getLineCheck()) {
 					pause(WAIT_TIME);
 					count += WAIT_TIME;
 					if(checkLineStatus()){
@@ -764,6 +787,7 @@ public class PathPlanner {
 			System.out.println("face to angle!!");
 			faceToAngle(theta);
 		}	
+		
 
 	}
 	
@@ -1134,6 +1158,7 @@ public class PathPlanner {
 		System.out.println("File: " + fileName);
 			
 		new PathPlanner(serverIP, serverPort, fileName);
+		
 	}
 
 }

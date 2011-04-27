@@ -153,27 +153,27 @@ public class StartGUI extends javax.swing.JFrame {
     	
         switch(StartingPositionComboBox.getSelectedIndex()) { // read the combo box value
         case 0: // Bottom Left Corner, Facing North (pi/2)
-        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/4, WorldView.WORLD_SIZE*WorldView.RESOLUTION/4);
         	initialBearing = Math.PI/2;        	
         	break;
         
         case 1: // Bottom Right Corner, Facing West (pi)
-        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*3/4, WorldView.WORLD_SIZE*WorldView.RESOLUTION/4);
         	initialBearing = Math.PI;        	
         	break;
         
         case 2: // Upper Left Corner, Facing East (0)
-        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/4, WorldView.WORLD_SIZE*WorldView.RESOLUTION*3/4);
         	initialBearing = 0;        	
         	break;
         
         case 3: // Upper Right Corner, Facing South (-pi/2) 
-        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION*4/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION*3/4, WorldView.WORLD_SIZE*WorldView.RESOLUTION*3/4);
         	initialBearing = -Math.PI/2;        	
         	break;
         	
         default:
-        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/5, WorldView.WORLD_SIZE*WorldView.RESOLUTION/5);
+        	startLoc = new OrderedPairDouble(WorldView.WORLD_SIZE*WorldView.RESOLUTION/4, WorldView.WORLD_SIZE*WorldView.RESOLUTION/4);
         	initialBearing = Math.PI/2;
         	System.out.println("Error: Invalid Combo Box Selection. \n... Reverting to Bottom Left Corner Initialization."); 
         	break;

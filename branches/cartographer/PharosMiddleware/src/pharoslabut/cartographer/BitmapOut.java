@@ -9,6 +9,7 @@ import javax.imageio.ImageIO;
 
 public class BitmapOut {
 	public static final int	TYPE_3BYTE_BGR = 5;
+	public static final int imagescale = 5;
 	BufferedImage image,bigimage,sampleimage,bigsampleimage;
 	public static final int [] grayscale = {0x00ffffff,0x00e0e0e0,0x00c4c4c4,0x00a8a8a8,0x008c8c8c,
 											0x00707070,0x00545454,0x00383838,0x001c1c1c,0x0000000, 
@@ -23,7 +24,7 @@ public class BitmapOut {
 	 */	
 	public BitmapOut(int x, int y) throws IOException{
 		image = new BufferedImage(x,y,TYPE_3BYTE_BGR);
-		bigimage = new BufferedImage(3*x,3*y,TYPE_3BYTE_BGR);
+		bigimage = new BufferedImage(imagescale*x,imagescale*y,TYPE_3BYTE_BGR);
 		//sampleimage = new BufferedImage(x,y,TYPE_3BYTE_BGR);
 		//bigsampleimage = new BufferedImage(5*x,5*y,TYPE_3BYTE_BGR);
 		
@@ -46,11 +47,11 @@ public class BitmapOut {
 						image.setRGB(i, j-1, grayscale[index]);						
 								}
 		}
-		for (int i = 0; i < bigimage.getHeight(); i+=3){
-			for (int j = 0; j < bigimage.getWidth(); j+=3) {
-				for(int k = i; k < i+3; k++){
-					for(int l=j; l < j+3; l++ ){
-						bigimage.setRGB(k, l, image.getRGB(i/3, j/3));						
+		for (int i = 0; i < bigimage.getHeight(); i+=imagescale){
+			for (int j = 0; j < bigimage.getWidth(); j+=imagescale) {
+				for(int k = i; k < i+imagescale; k++){
+					for(int l=j; l < j+imagescale; l++ ){
+						bigimage.setRGB(k, l, image.getRGB(i/imagescale, j/imagescale));						
 					}
 				}
 			}
