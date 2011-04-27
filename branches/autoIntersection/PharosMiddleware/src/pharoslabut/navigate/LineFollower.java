@@ -94,6 +94,13 @@ public class LineFollower implements BlobfinderListener, Runnable {
 	}
 	
 	/**
+	 * @return The player client.
+	 */
+	public PlayerClient getPlayerClient() {
+		return client;
+	}
+	
+	/**
 	 * Adds a LineFollowerEventListener to this object.
 	 * 
 	 * @param lfel the LineFollowerEventListener to add.
