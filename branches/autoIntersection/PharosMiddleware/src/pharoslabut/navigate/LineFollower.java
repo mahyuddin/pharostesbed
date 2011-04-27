@@ -77,17 +77,17 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		// connect to player server
 		try{
 			client = new PlayerClient(serverIP, serverPort);
-		} catch (PlayerException e) { System.out.println("Error, could not connect to server."); System.exit(1); }
+		} catch (PlayerException e) { log("Error, could not connect to server.", false); System.exit(1); }
 		
 		// connect to blobfinder
 		try{
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}
+		} catch (PlayerException e) { log("Error, could not connect to blob finder proxy.", false); System.exit(1);}
 	
 		//set up pos. 2d proxy
 		try{
 			p2di = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { System.out.println("Error, could not connect to position 2d proxy."); System.exit(1);}
+		} catch (PlayerException e) { log("Error, could not connect to position 2d proxy.", false); System.exit(1);}
 		
 		bfi.addListener(this);
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
