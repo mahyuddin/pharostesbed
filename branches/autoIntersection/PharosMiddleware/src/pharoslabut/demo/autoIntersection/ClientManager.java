@@ -2,6 +2,8 @@ package pharoslabut.demo.autoIntersection;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.navigate.LineFollowerEvent;
+import pharoslabut.navigate.LineFollowerEventListener;
 
 /**
  * The top-level class of the autonomous intersection
@@ -9,21 +11,107 @@ import pharoslabut.navigate.LineFollower;
  * 
  * @author Chien-Liang Fok
  */
-public class ClientManager {
+public class ClientManager implements LineFollowerEventListener {
 
+	/**
+	 * Defines the possible states that the client manager can be in.
+	 */
+	public static enum ClientManagerState {IDLE, FOLLOW_LINE, REMOTE_TRAVERSAL, LOCAL_TRAVERSAL};
+    
+	private ClientManagerState currState = ClientManagerState.IDLE;
 	private FileLogger flogger;
 	private LineFollower lf;
 	private RemoteIntersectionManager rim;
+	private LocalIntersectionManager lim;
 	
 	public ClientManager(String serverIP, int port, String playerIP, int playerPort, FileLogger flogger) {
 		
 		this.flogger = flogger;
 		
 		lf = new LineFollower(playerIP, playerPort, flogger);
-		rim = new RemoteIntersectionManager(lf, serverIP, port, flogger);
+		rim = new RemoteIntersectionManager(lf, serverIP, port, this, flogger);
+		lim = new LocalIntersectionManager(lf, this, flogger);
+		
+		// This class is a listener for line follower events.
+		lf.addListener(this);
 		
 		// Start the line follower.  This starts the robot moving following the line.
+		currState = ClientManagerState.FOLLOW_LINE;
 		lf.start();
+	}
+	
+	/**
+	 * This should be called whenever the RemoteIntersectionManager is done.
+	 * 
+	 * @param success Whether the RemoteIntersectionManager successfully traversed
+	 * the intersection.
+	 */
+	public void remoteIntersectionMgrDone(boolean success) {
+		if (success) {
+			log("remoteIntersectionMgrDone: The RemoteIntersectionManager succeeded, returning to FOLLOW_LINE state...");
+			currState = ClientManagerState.FOLLOW_LINE;
+		} else {
+			log("remoteIntersectionMgrDone: The RemoteIntersectionManager failed...");
+			if (currState == ClientManagerState.REMOTE_TRAVERSAL) {
+				log("remoteIntersectionMgrDone: Switching to the LocalIntersectionManager...");
+				currState = ClientManagerState.LOCAL_TRAVERSAL;
+				lim.start(getLaneSpecs());
+			} else {
+				log("remoteIntersectionMgrDone: ERROR: Unexpected state: " + currState + ", aborting demo...", false);
+				lf.stop();
+				currState = ClientManagerState.IDLE;
+			}
+		}
+	}
+	
+	/**
+	 * This should be called whenever the LocalIntersectionManager is done.
+	 * 
+	 * @param success Whether the LocalIntersectionManager successfully traversed
+	 * the intersection.
+	 */
+	public void localIntersectionMgrDone(boolean success) {
+		if (success) {
+			log("localIntersectionMgrDone: The LocalIntersectionManager succeeded, returning to FOLLOW_LINE state...");
+			currState = ClientManagerState.FOLLOW_LINE;
+		} else {
+			// At this point in time, we have no recourse but to abort the demo...
+			log("localIntersectionMgrDone: ERROR: The LocalIntersectionManager failed...", false);
+			lf.stop();
+			currState = ClientManagerState.IDLE;
+		}
+	}
+	
+	/**
+	 * @return The specifications of the lane that the robot is traversing.
+	 */
+	private LaneSpecs getLaneSpecs() {
+		// TODO
+		return new LaneSpecs();
+	}
+	
+	
+	@Override
+	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
+		
+		// If the LineFollower fails, abort!
+		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
+			log("Received error from the LineFollower, aborting demo...");
+			currState = ClientManagerState.IDLE;
+			lf.stop(); // There was an error, stop!
+		}
+		
+		// The only time the ClientManager is interested in a LineFollowerEvent
+		// is if it is in the FOLLOW_LINE state.
+		else if (currState == ClientManagerState.FOLLOW_LINE) {
+			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
+				log("Robot is approaching intersection, activating RemoteIntersectionManager...");
+				currState = ClientManagerState.REMOTE_TRAVERSAL;
+				rim.start(getLaneSpecs());
+			} else
+				log("newLineFollowerEvent: Discarding unexpected event from LineFollower: " + lfe);
+		} else
+			log("newLineFollowerEvent: Ignoring LineFollowerEvent because not in FOLLOW_LINE state.");
 	}
 	
 	/**
