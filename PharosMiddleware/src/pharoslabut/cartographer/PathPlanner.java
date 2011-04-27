@@ -437,25 +437,6 @@ public class PathPlanner {
 					notDone = false;
 					break;
 				}
-				/*
-				if(count >= BUFFER_TIME*1000){
-					if(hasArrivedHome()){
-						notDone = false;
-						// reset location, but not bearing
-						LocationTracker.writeOdometry(LocationTracker.getInitialx(), LocationTracker.getInitialy(), LocationTracker.getCurrentBearing());
-						System.out.println("has arrived home!!!");
-						stop(1000);
-						return;	// initiate exploration
-					}
-				}
-				
-				LocationTracker.motors.setSpeed(SPEED_STEP, 0);
-				System.out.println("Going straight forward");
-				while(LeftHandDistance < DISTANCE_FROM_WALL && FaceDistance > FACE_DISTANCE_FROM_WALL){ //&& count <2000){
-					pause(WAIT_TIME);
-					count += WAIT_TIME;
-				}
-				if(FaceDistance < FACE_DISTANCE_FROM_WALL || LeftHandDistance < 0.5*DISTANCE_FROM_WALL) break;*/
 				
 				LocationTracker.motors.setSpeed(SPEED_STEP, Math.PI/arcFactor);
 				System.out.println("Attempting to hug wall");
@@ -717,7 +698,10 @@ public class PathPlanner {
 		while(notDone){
 			
 			LocationTracker.motors.setSpeed(SPEED_STEP, 0);	// line following
-			while(FaceDistance > DISTANCE_FROM_WALL && !hasArrivedToDestination(goalPoint)){	// while no obstacle detected in front
+			while(FaceDistance > DISTANCE_FROM_WALL 
+				&& LeftHandDistance > DISTANCE_FROM_WALL 
+				&& RightHandDistance > DISTANCE_FROM_WALL 
+				&& !hasArrivedToDestination(goalPoint)){	// while no obstacle detected in front
 				//follow the line
 				pause(WAIT_TIME);
 				count += WAIT_TIME;
@@ -728,7 +712,10 @@ public class PathPlanner {
 			}
 			
 			LocationTracker.motors.setSpeed(0, -Math.PI/12);	// turning until there is good clearance
-			while((LeftHandDistance < DISTANCE_FROM_WALL || FaceDistance < FACE_DISTANCE_FROM_WALL) && notDone){
+			while((LeftHandDistance < DISTANCE_FROM_WALL 
+					|| FaceDistance < FACE_DISTANCE_FROM_WALL
+					|| RightHandDistance < DISTANCE_FROM_WALL) 
+					&& notDone){
 				pause(WAIT_TIME);
 				count += WAIT_TIME;
 			}
