@@ -181,7 +181,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			
 			robotsGrantedAccess.remove(robot);
             
-			log("Robot exiting! Removing robot from queue.");
+			log("Robot exiting! Removing robot from the list.");
 			
 			//uncomment line below if using UDP
             //networkInterface.sendMessage(msg.getRobotIP(), msg.getRobotPort(), msg);	
