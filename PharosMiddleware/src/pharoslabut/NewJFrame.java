@@ -69,6 +69,12 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
          
     }
 
+    
+	public void RobotStop()
+	{
+        XueHua.stop();
+        XueHuaPos.motors.INS_KillSig();
+	}
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -453,7 +459,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
     				 jTextField4.setText("Manual");
-                     XueHua.stop();// Add code here 
+                     RobotStop();// Add code here 
                      // TODO add your handling code here:
     }//GEN-LAST:event_jButton5ActionPerformed
  
@@ -500,7 +506,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
 		Scanner Scan = new Scanner(result);
 		
 		// Stop movement
-		XueHua.stop();
+		RobotStop();
 		if(result.equals("/n")){
 			src_x = src_x+0;
 			src_y = src_y+0;
@@ -552,7 +558,7 @@ public class NewJFrame extends javax.swing.JFrame implements Position2DListener,
 	    	XueHua.FB_Mov(pf.result.GetMov(i),this);
 	    }
 	    
-	    XueHua.stop();
+	    RobotStop();
 	    // while new command 
 	    //move
 	    // update
