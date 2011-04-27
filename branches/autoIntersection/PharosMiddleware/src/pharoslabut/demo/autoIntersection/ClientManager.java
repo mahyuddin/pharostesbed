@@ -4,6 +4,7 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.LineFollowerEvent;
 import pharoslabut.navigate.LineFollowerEventListener;
+import pharoslabut.sensors.*;
 
 /**
  * The top-level class of the autonomous intersection
@@ -11,7 +12,7 @@ import pharoslabut.navigate.LineFollowerEventListener;
  * 
  * @author Chien-Liang Fok
  */
-public class ClientManager implements LineFollowerEventListener {
+public class ClientManager implements LineFollowerEventListener  {
 
 	/**
 	 * Defines the possible states that the client manager can be in.
