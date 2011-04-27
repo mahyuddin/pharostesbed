@@ -4,8 +4,10 @@ import pharoslabut.sensors.*;
 
 public class LaneIdentifier implements CricketDataListener{
 
-	public LaneIdentifier() {
-		CricketInterface ci  = new CricketInterface("/dev/ttyUSB0");
+	private LaneSpecs currentLane = new LaneSpecs();
+	
+	public LaneIdentifier(String comPortName) { 
+		CricketInterface ci  = new CricketInterface(comPortName);
 		ci.registerCricketDataListener(this);
 	}
 	
@@ -13,16 +15,17 @@ public class LaneIdentifier implements CricketDataListener{
 	 * @return The lane that the robot is currently in.
 	 */
 	public LaneSpecs getCurrentLane() {
-		return null;
+		return currentLane;
 	}
 	
 	@Override
 	public void newCricketData(CricketData cd) {
-		// TODO Auto-generated method stub
-		
+		// full cricket mote specs
+		if (cd.getConnection()) {
+			if(cd.getDistance() < 40) {
+				currentLane.setEntry(Integer.valueOf(cd.getSpaceID().substring(1)));
+			}
+		}
 	}
-	
-	public static void main(String[] args) {
-		new LaneIdentifier();
-	}
+
 }

@@ -54,6 +54,10 @@ public class LaneSpecs implements java.io.Serializable {
 		return this.exit;
 	}
 	
+	public void setEntry(int ent) {
+		this.entry = ent;
+	}
+	
 	public int getHeading() {
 		return this.heading;
 	}
@@ -70,5 +74,6 @@ public class LaneSpecs implements java.io.Serializable {
 	public String toString() {
 		return "LaneSpecs";
 	}
+
 	
 }

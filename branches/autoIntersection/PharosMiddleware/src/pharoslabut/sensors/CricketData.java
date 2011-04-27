@@ -57,7 +57,7 @@ public class CricketData {
 		return sysTime;
 	}
 	
-	public boolean getIsConnected(){
+	public boolean getConnection(){
 		return isConnected;
 	}
 	

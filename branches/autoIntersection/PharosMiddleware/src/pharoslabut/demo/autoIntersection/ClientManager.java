@@ -24,6 +24,7 @@ public class ClientManager implements LineFollowerEventListener  {
 	private LineFollower lf;
 	private RemoteIntersectionManager rim;
 	private LocalIntersectionManager lim;
+	private LaneIdentifier li;
 	
 	public ClientManager(String serverIP, int port, String playerIP, int playerPort, FileLogger flogger) {
 		
@@ -32,6 +33,7 @@ public class ClientManager implements LineFollowerEventListener  {
 		lf = new LineFollower(playerIP, playerPort, flogger);
 		rim = new RemoteIntersectionManager(lf, serverIP, port, this, flogger);
 		lim = new LocalIntersectionManager(lf, this, flogger);
+		li = new LaneIdentifier("/dev/ttyS1");
 		
 		// This class is a listener for line follower events.
 		lf.addListener(this);
@@ -87,8 +89,7 @@ public class ClientManager implements LineFollowerEventListener  {
 	 * @return The specifications of the lane that the robot is traversing.
 	 */
 	private LaneSpecs getLaneSpecs() {
-		// TODO
-		return new LaneSpecs();
+		return li.getCurrentLane();
 	}
 	
 	

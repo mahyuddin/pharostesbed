@@ -10,14 +10,6 @@ import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import pharoslabut.io.Message;
-import pharoslabut.io.MessageReceiver;
-
-/*TODO: add param to constr ser port crick is att, own thread that reads data from serial,
- * parse out into for each line and package into class "CricketData" and publishes data to
- * registered listeners 
- * 
- */
 
 public class CricketInterface {
 
@@ -56,7 +48,7 @@ public class CricketInterface {
 	 */
 	private void newCricketData(CricketData cd) {
 		
-		log("Publishing new cricket data: " + cd);
+		//log("Publishing new cricket data: " + cd);
 		
 		Enumeration<CricketDataListener> e = listeners.elements();
 		while (e.hasMoreElements()) {
@@ -123,8 +115,6 @@ public class CricketInterface {
 	         		 String sysTime    = parseData(rawStr[3]);  // parse out system time
 	         		 newCricketData(new CricketData(Double.parseDouble(version), cricketID, spaceID, Long.parseLong(sysTime)));
             	 }
-        		 
-            	 System.out.println("Read line has " + rawStr.length + " elements in it with "+ line.length() + " characters: \"" + line + "\"");
                }
             }
             catch ( IOException e ) {
@@ -143,8 +133,8 @@ public class CricketInterface {
     }
     
     //take out later
-    public static void main(String[] args) {
+    /*public static void main(String[] args) {
             new CricketInterface("/dev/ttyUSB0");
-	}
+	}*/
 
 }
