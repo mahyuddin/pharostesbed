@@ -138,7 +138,7 @@ import playerclient.structures.position2d.PlayerPosition2dData;
       		Xpos = 0;
       		Ypos = 0;
       		Yaw = 0;
-      		motors.INS_KillSig();
+      		
       	}
       	
       	public void movW(int turnTime)

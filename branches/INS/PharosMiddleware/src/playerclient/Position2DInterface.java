@@ -221,39 +221,8 @@ public class Position2DInterface extends AbstractPositionDevice {
     
     public void INS_KillSig()
     {
-    	  System.out.println("Debug Msg: Kill signal sent");
-          try {
-                sendHeader (PLAYER_MSGTYPE_CMD, 10, 0);
-                XdrBufferEncodingStream xdr = new XdrBufferEncodingStream (0);
-
-                try {
-					xdr.beginEncoding (null, 0);
-		        	//xdr.xdrEncodeByte ((byte)0);
-				} catch (OncRpcException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-                //xdr.xdrEncodeByte  ((byte)0x6C);
-                try {
-					xdr.endEncoding ();
-				} catch (OncRpcException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-                os.write (xdr.getXdrData (), 0, xdr.getXdrLength ());
-                try {
-					xdr.close ();
-				} catch (OncRpcException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-                os.flush ();
-            } catch (IOException e) {
-                throw new PlayerException 
-                    ("RobotMover : Couldn't send reset command: " + 
-                            e.toString(), e);
-            } 
-    }
+    	  setSpeed(0, 0);
+     } 
     
     /**
      * The position interface accepts new carlike velocity (speed and turning angle)
