@@ -131,7 +131,7 @@ public class WorldView implements IRListener {
 	public static FileWriter fstream; 
     public static BufferedWriter fout; 
 	
-	public static final int WORLD_SIZE = 180;					// initial dimensions of "world" (below)
+	public static final int WORLD_SIZE = 120;					// initial dimensions of "world" (below)
 	public static ArrayList<ArrayList<LocationElement>> world; // full 2-D matrix, world view
 	public static ArrayList<ArrayList<LocationElement>> sampleworld; // full 2-D matrix, world view
 	public static ArrayList<OrderedPair> pathTracker; 

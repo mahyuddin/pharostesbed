@@ -20,7 +20,7 @@ public class RealtimeImgOut extends Thread {
 		frame = new Frame("Map Output");
 		canvas = new MyCanvas();
 		frame.add(canvas);
-		frame.setSize(3*WorldView.WORLD_SIZE, 3*WorldView.WORLD_SIZE); // use worldview size
+		frame.setSize(BitmapOut.imagescale*WorldView.WORLD_SIZE, BitmapOut.imagescale*WorldView.WORLD_SIZE); // use worldview size
 		frame.setVisible(true);
 		
 	}
