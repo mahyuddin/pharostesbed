@@ -25,9 +25,10 @@ import playerclient.structures.position2d.PlayerPosition2dData;
  * Authors: Harvey Cheng and Aniwar Ibrahim
  * Modified Date: 04/13/11
  */
-public class testing implements Position2DListener, CompassLoggerEventListener, IRListener {
+public class testing implements Position2DListener/*, CompassLoggerEventListener */, IRListener {
 	double odreading;
 	double compreading;
+	double yawreading;
 	boolean odflag = false;
 	boolean compflag = false;
 	float [] IRdata = new float[3];
@@ -143,6 +144,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 			20.5498	,//	135
 			20.2741	//	136
 			};
+	
 	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command, List<Integer> heading, List<List<Double>> ir_range, GUI gui) {
 		pavGUI = gui;
 		try {
@@ -169,19 +171,19 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		table_size = CompLookUp.size();
 		
 		// if we use one driver change to 6665
-		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
+//		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
 		IRInterface irdata = (client).requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
 		irdata.addIRListener(this);
-		compassLogger.addListener(this);
+//		compassLogger.addListener(this);
 		motors.addPos2DListener(this);
 		
-		compassLogger.start(1, fileName);
+//		compassLogger.start(1, fileName);
 		
 
-//		turn_comp(90, motors);
+//		turn_odometry(45, motors);
 //		move_odometry(0.17, motors);
-//		turn_comp(45, motors);
+
 //		move_odometry(0.18, motors);
 //		pause(1000);
 		
@@ -239,35 +241,35 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 				switch (s)
 				{
 					case -1: 
-						turn_comp(45, motors);
+						turn_odometry(45, motors);
 						pavGUI.rotateHeading(45);
 						break;
 					case -2:
-						turn_comp(90, motors);
+						turn_odometry(90, motors);
 						pavGUI.rotateHeading(90);
 						break;
 					case -3:
-						turn_comp(135, motors);
+						turn_odometry(135, motors);
 						pavGUI.rotateHeading(135);
 						break;
 					case -4:
-						turn_comp(180, motors);
+						turn_odometry(180, motors);
 						pavGUI.rotateHeading(180);
 						break;
 					case 1: 
-						turn_comp(-45, motors);
+						turn_odometry(-45, motors);
 						pavGUI.rotateHeading(-45);
 						break;
 					case 2:
-						turn_comp(-90, motors);
+						turn_odometry(-90, motors);
 						pavGUI.rotateHeading(-90);
 						break;
 					case 3:
-						turn_comp(-135, motors);
+						turn_odometry(-135, motors);
 						pavGUI.rotateHeading(-135);
 						break;
 					case 4:
-						turn_comp(-180, motors);
+						turn_odometry(-180, motors);
 						pavGUI.rotateHeading(-180);
 					default:
 						break;
@@ -277,16 +279,15 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		
 
 		log("Test complete!");
-		for(;;)
+/*		for(;;)
 		{
-			motors.setSpeed(0,0.1);
+			motors.setSpeed(0,0);
 		}
-		
 
-
+*/
 //		compassLogger.stop();
-//		motors.removePos2DListener(this);
-//		irdata.removeIRListener(this);
+		motors.removePos2DListener(this);
+		irdata.removeIRListener(this);
 
 
 		//System.exit(0);
@@ -382,7 +383,7 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		System.out.println("adjangle" + adjangle);
 		System.out.println("halfway " + halfway);
 		if(adjangle>5)
-			turn_comp(adjangle,motors);
+			turn_odometry(adjangle,motors);
 	}
 	
 	/***
@@ -480,6 +481,63 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		odflag = false;
 		compflag = false;
 	}
+	
+	
+	private void turn_odometry(double degree, Position2DInterface motors){
+		double starting = 0;
+		double speed = Math.PI/20;
+		if (degree < 0) {
+			speed = speed * -1;
+		//	degree = degree* -1;
+			}
+		
+		while(!odflag){
+			synchronized(this) {
+				try {
+		            wait();
+		        } catch (InterruptedException e) {}
+		        motors.resetOdometry();
+		        pause(100);
+		        starting = yawreading;
+			}
+		}
+	//	System.out.println("starting od " + starting);
+		
+		motors.setSpeed(0, speed);
+		
+		//NOTE: this is a hack, since setOdometry() is asynchronous.
+		
+		if (speed > 0)
+		{
+			while((degree*Math.PI/180-0.08) > yawreading) {
+	    		synchronized(this) {
+	    			try {
+	    				wait();
+	    			} catch (InterruptedException e) {}
+	    		}
+	    	}
+		}
+		
+		else
+		{
+			while((degree*Math.PI/180+0.08) < yawreading) {
+		    	synchronized(this) {
+			    	try {
+			            wait();
+			        } catch (InterruptedException e) {}
+		    	}
+		    }
+			
+		}
+	    
+	    
+		motors.setSpeed(0, 0);
+		motors.resetOdometry();
+		pause(100);
+		odflag = false;
+		compflag = false;
+	}
+	
 	
 	
 
@@ -653,7 +711,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 //		command.add(14.0);
 //		command.add(1.0);
 //		command.add(10.0);
-//		command.add(0.0);
 //		command.add(-10.0);
 		
 
@@ -671,13 +728,13 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	public synchronized void newPlayerPosition2dData(PlayerPosition2dData data) {
 		odflag = true;
 		odreading = data.getPos().getPx();
-		double odreading2 = data.getPos().getPa();
+		yawreading = data.getPos().getPa();
 		notifyAll();
 //		System.out.println("Odometry  " + data.getPos().getPx());
-		System.out.println("Odometry yaw " + odreading2);
+//		System.out.println("Odometry yaw " + yawreading);
 	}
 
-	@Override
+	/*
 	public synchronized void newHeading(double heading) {
 		compflag = true;
 		compreading = heading + Math.PI;
@@ -685,6 +742,8 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 	//	System.out.println("heading: " + compreading);
 				
 	}
+	
+	*/
 	
 	@Override
 	public synchronized void newPlayerIRData (PlayerIrData data)
@@ -701,7 +760,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		if (IRdata[0] >= 34 && IRdata[0] <= 136 )
 		{
 			convert[0] = ir_table[(int) (IRdata[0]-34)];
-	//		System.out.println("right: " + ir_table[(int) (IRdata[0]-34)]);
 		}
 		else
 		{
@@ -711,7 +769,6 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		if (IRdata[1] >= 34 && IRdata[1] <= 136 )
 		{
 			convert[1] = ir_table[(int) (IRdata[1]-34)]; 
-	//		System.out.println("front: " + ir_table[(int) (IRdata[1]-34)]);
 		}
 		else
 		{
@@ -722,22 +779,14 @@ public class testing implements Position2DListener, CompassLoggerEventListener, 
 		if (IRdata[2] >= 34 && IRdata[2] <= 136 )
 		{
 			convert[2] = ir_table[(int) (IRdata[2]-34)]; 
-	//		System.out.println("left: " + ir_table[(int) (IRdata[2]-34)]);
 		}
 		else
 		{
 			convert[2] = -1;
 		}
 		
-	//	System.out.println("right: " + convert[0] + "\t front: " + convert[1] + "\t left: " + convert[2] );
+		System.out.println("right: " + convert[0] + "\t front: " + convert[1] + "\t left: " + convert[2] );
 		IRMatrix.add(Arrays.asList(convert[0],convert[1], convert[2]));
-
-
-
-
-
-
-
 	}
 
 
