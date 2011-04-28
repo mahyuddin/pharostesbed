@@ -233,7 +233,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			}
 		}
 		
-		// start robot back up once priority access received
+		// start robot moving once priority access received
+		log("doEntering: Starting the robot moving...");
 		lf.start();
 	}
 	
@@ -242,7 +243,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 * It notifies the server that this robot is leaving the intersection
 	 */
 	private void doExiting() {
-		log("Robot is exiting intersection!");
+		log("doExiting: Robot is exiting intersection!");
 		
 		// Create an ExitingMsg
 		ExitingMsg em = new ExitingMsg(robotIP, networkInterface.getLocalPort());
@@ -258,6 +259,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		isRunning = false; // The remote intersection manager is done running.
 		
 		// Notify the client manager that the RemoteIntersectionManager is done
+		log("doExiting: notifying ClientManager that RemoteIntersectionmanager is done.");
 		clientMgr.remoteIntersectionMgrDone(true);
 	}
 	
