@@ -25,18 +25,15 @@ import playerclient.structures.position2d.PlayerPosition2dData;
  * Authors: Harvey Cheng and Aniwar Ibrahim
  * Modified Date: 04/13/11
  */
-public class testing implements Position2DListener/*, CompassLoggerEventListener */, IRListener {
+public class testing implements Position2DListener, IRListener {
 	double odreading;
-	double compreading;
 	double yawreading;
 	boolean odflag = false;
-	boolean compflag = false;
 	float [] IRdata = new float[3];
 	GUI pavGUI;
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
-	List <Double> CompLookUp;
-	int table_size = 0;
+
 	double halfway = 0;
 	List<List<Double>> IRMatrix = new ArrayList<List<Double>>();
 	
@@ -146,7 +143,6 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 			};
 	
 	public testing(String serverIP, int serverPort, String fileName, boolean showGUI, List<Double> command, List<Integer> heading, List<List<Double>> ir_range, GUI gui) {
-		pavGUI = gui;
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 			
@@ -161,37 +157,23 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 			log("motors is null");
 			System.exit(1);
 		}
-	
-		//This generate the lookup table for compass range (0,2pi)
-		try {
-			CompLookUp = IO_Helper.readInput("src/pharoslabut/compass.txt");
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		table_size = CompLookUp.size();
-		
-		// if we use one driver change to 6665
-//		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, 6665, 2 /* device index */, showGUI);
+			
+		pavGUI = gui;
 		IRInterface irdata = (client).requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
 		irdata.addIRListener(this);
-//		compassLogger.addListener(this);
 		motors.addPos2DListener(this);
-		
-//		compassLogger.start(1, fileName);
 		
 
 //		turn_odometry(45, motors);
-//		move_odometry(0.17, motors);
-
-//		move_odometry(0.18, motors);
+//		move_odometry(-0.18, motors);
 //		pause(1000);
 		
-	/*
+	/***
 	 * This loop go through the movement instructions and figure whether to move forward
 	 * or to turn, the look up table is the following:
 	 * 	 ****************************************	
-		 * 	Lookup Table for move_instruction	*
+	 	 * 	Lookup Table for move_instruction	*
 		 * 	0  - No turn						*
 		 * 	1  - CW 45							*
 		 *  2  - CW 90							*
@@ -200,29 +182,27 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		 * 	-1 - CCW 45							*
 		 *  -2 - CCW 90							*
 		 *  -3 - CCW 135						*
-		 *  -4 - CCW	180						*
+		 *  -4 - CCW 180						*
 		 *  >=10 - Move forward					*
 		 ****************************************
 	 */
+		
 		System.out.println("Command received: " + command);
 		for (int i = 0; i < command.size(); i++)
 		{
-
-
-			if(pavGUI.abortMovement){
+			if(pavGUI.abortMovement)
+			{
 				break;
-				}
-
+			}
 			
 			if(Math.abs(command.get(i)) >= 10.0)
 			{
 				IRMatrix.clear();
-//				System.out.println(command.get(i));
 				double distance = command.get(i) * 0.035;
 				int nodeindex = i/2+1;
 				int h = heading.get(nodeindex);
 				move_odometry(distance, motors);
-				if(ir_range.get(nodeindex).get(1)<3.0)
+				if(ir_range.get(nodeindex).get(1)<3.0&&ir_range.get(nodeindex).get(1)>0.0)
 				{
 					long start = System.currentTimeMillis();
 					while (System.currentTimeMillis() - start < 1000){}
@@ -230,8 +210,7 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 				}
 				if(h%90==0)
 					ir_adjustheading1(ir_range,IRMatrix,nodeindex,motors);
-				else
-					ir_adjustheading2(ir_range,IRMatrix,nodeindex,motors); 
+; 
 				pavGUI.incrementPosition();
 			}
 			
@@ -274,6 +253,8 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 					default:
 						break;
 				}
+				long start = System.currentTimeMillis();
+				while (System.currentTimeMillis() - start < 1000){}
 			}
 		}
 		
@@ -283,9 +264,9 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		{
 			motors.setSpeed(0,0);
 		}
-
 */
-//		compassLogger.stop();
+
+
 		motors.removePos2DListener(this);
 		irdata.removeIRListener(this);
 
@@ -294,8 +275,8 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 	
 	}
 	
-	/*
-	 * Function ir_adjust: Adjust distance movement using IR data
+	/***
+	 * Function ir_adjustdistance: Adjust distance movement using IR data
 	 * Input:
 	 * 		ir_data: Readings from IR sensors
 	 * 		ir_range: Obstacle distances according to map
@@ -304,28 +285,28 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 	 * Added by Le Wang on Apr. 19, 2011
 	 */
 	private void ir_adjustdistance(List<List<Double>> ir_range,List<List<Double>> ir_data,
-			int nodeindex,int heading,Position2DInterface motors){
-		System.out.println("Adjust Distance");
+			int nodeindex, int heading, Position2DInterface motors){
+	//	System.out.println("Adjust Distance");
 		int size = ir_data.size();
-		double gridsize = 35,frontoffset = 0,angeloffset = 1;
+		double gridsize = 35,frontoffset = 10,angleoffset = 1;
 		double frontmap,frontfinal,fronterror;
 		if(heading%90 != 0)
-			angeloffset = Math.sqrt(2);
-		frontmap = angeloffset*(gridsize*ir_range.get(nodeindex).get(1)+frontoffset);
+			angleoffset = 1.4;
+		frontmap = angleoffset*(gridsize*ir_range.get(nodeindex).get(1)+frontoffset);
 		frontfinal = ir_data.get(size-1).get(1);
 		//correct for straight line movement error
 		fronterror = frontfinal - frontmap;
-		System.out.println("map " + frontmap);
-		System.out.println("final " + frontfinal);
-	//	System.out.println(fronterror);
-		if(fronterror>5 && frontmap<gridsize*4+frontoffset){
+	//	System.out.println("map " + frontmap);
+	//	System.out.println("final " + frontfinal);
+		System.out.println("fronterror: " + fronterror);
+		if((fronterror > 6 || fronterror < -4 )&& frontmap<100){
 			move_odometry(fronterror/100,motors);
-			System.out.println("Done");
+	//		System.out.println("Done");
 		}
 	}
 	
 	/***
-	 * Function ir_adjust: Adjust heading using IR data(heading is 90, 180, 270)
+	 * Function ir_adjustheading: Adjust heading using IR data(heading is 90, 180, 270)
 	 * Input:
 	 * 		ir_data: Readings from IR sensors
 	 * 		ir_range: Obstacle distances according to map
@@ -335,7 +316,6 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 	 */
 	private void ir_adjustheading1(List<List<Double>> ir_range,List<List<Double>> ir_data,
 			int nodeindex,Position2DInterface motors){
-		System.out.println("adjust heading 1");
 		int indexmid,indexright = 0,indexleft = 0;
 		int size = ir_data.size();
 		boolean flagleft = false,flagright = false;
@@ -374,83 +354,27 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 			error = ir_data.get(size-1).get(2)-ir_data.get(indexleft).get(2);
 		else if(rightmap<3)
 			error = ir_data.get(indexright).get(0)-ir_data.get(size-1).get(2);
-		System.out.println(error);
+//		System.out.println(error);
 		if(!flagright && !flagleft)
 			adjangle = Math.atan(error/halfway);
 		else
 			adjangle = Math.atan(error/(2*halfway));
 		adjangle = 180*adjangle/Math.PI;
-		System.out.println("adjangle" + adjangle);
-		System.out.println("halfway " + halfway);
+//		System.out.println("adjangle" + adjangle);
+//		System.out.println("halfway " + halfway);
 		if(adjangle>5)
 			turn_odometry(adjangle,motors);
 	}
 	
-	/***
-	 * Function ir_adjust: Adjust heading using IR data(heading is 45, 135, 225, 315)
-	 * Input:
-	 * 		ir_data: Readings from IR sensors
-	 * 		ir_range: Obstacle distances according to map
-	 * 		nodeindex: index of current node on the path
-	 * Output: none
-	 * Added by Le Wang on Apr. 22, 2011
-	 */
-	private void ir_adjustheading2(List<List<Double>> ir_range,List<List<Double>> ir_data,
-			int nodeindex,Position2DInterface motors){
-		
-		System.out.println("adjust heading 2");
-		int indexmid = 0,indexright = 0,indexleft = 0;
-		int size = ir_data.size();
-		boolean flagright = false,flagleft = false;
-		double frontfinal,frontmid,leftmax=0,leftmin=255,rightmax=0,rightmin=255,rightmap,leftmap;
-		double adjangle = 0,lefterror,righterror;
-		frontfinal = ir_data.get(size-1).get(1);
-		leftmap = ir_range.get(nodeindex).get(2);
-		rightmap = ir_range.get(nodeindex).get(0);
-		for(int i=1;i<size-1;i++){
-			if(Math.abs(ir_data.get(i).get(0)-ir_data.get(i-1).get(0))>24)
-				indexright = Math.min(size-1,i+1);
-		}
-		if(indexright == 0)
-			flagright = true;
-		for(int i=1;i<size-1;i++){
-			if(Math.abs(ir_data.get(i).get(2)-ir_data.get(i-1).get(2))>24)
-				indexleft = Math.min(size-1,i+1);
-		}
-		for(int i=indexleft;i<size;i++){
-			if(leftmin>ir_data.get(i).get(2))
-				leftmin = ir_data.get(i).get(2);
-			if(leftmax<ir_data.get(i).get(2))
-					leftmax = ir_data.get(i).get(2);
-		}
-		for(int i=indexright;i<size;i++){
-			if(rightmin>ir_data.get(i).get(0))
-				rightmin = ir_data.get(i).get(0);
-			if(rightmax<ir_data.get(i).get(0))
-					rightmax = ir_data.get(i).get(0);
-		}
-		lefterror = leftmax - leftmin;
-		righterror = rightmax - rightmin;
-		if(leftmap<2 && rightmap<2)
-			adjangle = Math.atan2(halfway,(lefterror+righterror)/2) - Math.PI/4;
-		else if(leftmap<2)
-			adjangle = Math.atan2(halfway,lefterror) - Math.PI/4;
-		else if(rightmap<2)
-			adjangle = Math.atan2(halfway,righterror) - Math.PI/4;
-		adjangle = 180*adjangle/Math.PI;
-		if(adjangle>5)
-			turn_comp((180*adjangle/Math.PI),motors);
-	}
 
 	private void move_odometry(double distance, Position2DInterface motors){
 		double starting = 0;
 		double speed = 0.1;
 		if (distance <0) {
 			speed = speed * -1;
-			distance = distance* -1;
 			}
-		
-		while(!odflag){
+		System.out.println("hi");
+		while(!odflag || odreading > 0.02){
 			synchronized(this) {
 				try {
 		            wait();
@@ -460,26 +384,36 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		        starting = odreading;
 			}
 		}
-	//	System.out.println("starting od " + starting);
+		System.out.println("starting od " + starting);
 		
 		motors.setSpeed(speed, 0);
 		
 		//NOTE: this is a hack, since setOdometry() is asynchronous.
-	    while((distance-0.02) > odreading) {
+	   if (distance > 0) {
+		while((distance-0.02) > odreading) {
 	    	synchronized(this) {
 		    	try {
 		            wait();
 		        } catch (InterruptedException e) {}
 	    	}
 	    }
+	   }
+	   else{
+	    while((distance+0.02) < odreading) {
+	    	synchronized(this) {
+		    	try {
+		            wait();
+		        } catch (InterruptedException e) {}
+	    	}
+	    }
+	   }
 	    
 	    
 		motors.setSpeed(0, 0);
 		halfway = odreading*100/2;
 		motors.resetOdometry();
-		pause(100);
+//		pause(100);
 		odflag = false;
-		compflag = false;
 	}
 	
 	
@@ -488,10 +422,9 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		double speed = Math.PI/20;
 		if (degree < 0) {
 			speed = speed * -1;
-		//	degree = degree* -1;
 			}
 		
-		while(!odflag){
+		while(!odflag || yawreading > 0.02){
 			synchronized(this) {
 				try {
 		            wait();
@@ -501,7 +434,6 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		        starting = yawreading;
 			}
 		}
-	//	System.out.println("starting od " + starting);
 		
 		motors.setSpeed(0, speed);
 		
@@ -533,103 +465,10 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 	    
 		motors.setSpeed(0, 0);
 		motors.resetOdometry();
-		pause(100);
+//		pause(100);
 		odflag = false;
-		compflag = false;
 	}
 	
-	
-	
-
-	private void turn_comp(double angle, Position2DInterface motors){
-		double speed = 0.1;
-		double starting = 0;
-		double ending = 0;
-		int Next;
-		
-		Next = (int) ((double)table_size / (double)(360 / angle));
-		System.out.println("slots: " + Next);
-		if (angle < 0) {
-			speed = speed * -1;
-			}
-		
-		/*
-		 * NOTE: compflag sometimes changes to true even though we have manually set to false at the end of this method.
-		 * 		 temprarily fixed by setting it to false at the end of move_odometry as well.
-		 */
-		while(!compflag){
-			synchronized(this) {
-				try {
-		            wait();
-		        } catch (InterruptedException e) {}
-	//	        motors.resetOdometry();
-		        starting = compreading;
-	//	        System.out.println("Print " + starting);
-			}
-		}
-		
-		for (int i = 0; i < table_size; i++)
-		{
-			if (i == table_size)
-				i = 0;
-			if (starting >= CompLookUp.get(i)-0.02 && starting <= CompLookUp.get(i)+0.02) {
-				if (Next < 0 && Math.abs(Next) > i) {
-					Next = table_size + Next;
-				}
-//					System.out.println("current slot" + i);
-//					System.out.println("dest. slot" + (i+Next) % table_size);
-					ending = CompLookUp.get((i+Next) % table_size);
-//					System.out.println((i+Next) % table_size);
-//					System.out.println("starting" + CompLookUp.get(i));
-//					System.out.println("ending" + CompLookUp.get((i+Next) % table_size));
-					break;
-			}
-		}
-//		System.out.println("move:" + angle + " " + speed);
-	
-		motors.setSpeed(0,speed);
-
-	    while((ending - 0.02) > compreading || compreading > (ending + 0.02)) {
-			synchronized(this) {
-		    	try {
-		            wait();
-		        } catch (InterruptedException e) {}
-	    	}
-	    }
-	    
-		motors.setSpeed(0,0);
-		compflag=false;
-		odflag = false;
-		motors.resetOdometry();
-		pause(100);
-	}
-	
-	private void circle(Position2DInterface motors){
-		double starting = 0;
-		double speed = 0.2;
-		
-		while(!compflag){
-			synchronized(this) {
-				try {
-		            wait();
-		        } catch (InterruptedException e) {}
-		        starting = compreading;
-			}
-		}
-		
-		motors.setSpeed(0,speed);
-		
-	    while(true) {
-	    	synchronized(this) {
-		    	try {
-		            wait();
-		        } catch (InterruptedException e) {}
-	    	}
-	    }
-		
-	    //motors.setSpeed(0,0);
-		
-	}
 
 	private void pause (int duration) {
 		synchronized(this) {
@@ -710,10 +549,7 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 //		command.add(10.0);
 //		command.add(14.0);
 //		command.add(1.0);
-//		command.add(10.0);
-//		command.add(-10.0);
 		
-
 		heading.add(0);
 		heading.add(0);
 		ir_range.add(Arrays.asList(3.0,3.0,1.0));
@@ -723,27 +559,6 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		new testing(serverIP, serverPort, fileName, showGUI, command, heading, ir_range, gui);
 
 	}
-	
-	@Override
-	public synchronized void newPlayerPosition2dData(PlayerPosition2dData data) {
-		odflag = true;
-		odreading = data.getPos().getPx();
-		yawreading = data.getPos().getPa();
-		notifyAll();
-//		System.out.println("Odometry  " + data.getPos().getPx());
-//		System.out.println("Odometry yaw " + yawreading);
-	}
-
-	/*
-	public synchronized void newHeading(double heading) {
-		compflag = true;
-		compreading = heading + Math.PI;
-		notifyAll();
-	//	System.out.println("heading: " + compreading);
-				
-	}
-	
-	*/
 	
 	@Override
 	public synchronized void newPlayerIRData (PlayerIrData data)
@@ -788,6 +603,16 @@ public class testing implements Position2DListener/*, CompassLoggerEventListener
 		System.out.println("right: " + convert[0] + "\t front: " + convert[1] + "\t left: " + convert[2] );
 		IRMatrix.add(Arrays.asList(convert[0],convert[1], convert[2]));
 	}
+
+	public synchronized void newPlayerPosition2dData(PlayerPosition2dData data) {
+		odflag = true;
+		odreading = data.getPos().getPx();
+		yawreading = data.getPos().getPa();
+		notifyAll();
+		System.out.println("Odometry  " + data.getPos().getPx());
+//		System.out.println("Odometry yaw " + yawreading);
+	}
+
 
 
 
