@@ -51,10 +51,10 @@ public class ClientManager implements LineFollowerEventListener  {
 	 */
 	public void remoteIntersectionMgrDone(boolean success) {
 		if (success) {
-			log("remoteIntersectionMgrDone: The RemoteIntersectionManager succeeded, returning to FOLLOW_LINE state...");
+			log("remoteIntersectionMgrDone: Success!  Returning to FOLLOW_LINE state...");
 			currState = ClientManagerState.FOLLOW_LINE;
 		} else {
-			log("remoteIntersectionMgrDone: The RemoteIntersectionManager failed...");
+			log("remoteIntersectionMgrDone: Fail!");
 			if (currState == ClientManagerState.REMOTE_TRAVERSAL) {
 				log("remoteIntersectionMgrDone: Switching to the LocalIntersectionManager...");
 				currState = ClientManagerState.LOCAL_TRAVERSAL;
@@ -98,7 +98,7 @@ public class ClientManager implements LineFollowerEventListener  {
 		
 		// If the LineFollower fails, abort!
 		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
-			log("Received error from the LineFollower, aborting demo...");
+			log("newLineFollowerEvent: Received error from the LineFollower, aborting demo...");
 			currState = ClientManagerState.IDLE;
 			lf.stop(); // There was an error, stop!
 		}
@@ -107,13 +107,13 @@ public class ClientManager implements LineFollowerEventListener  {
 		// is if it is in the FOLLOW_LINE state.
 		else if (currState == ClientManagerState.FOLLOW_LINE) {
 			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
-				log("Robot is approaching intersection, activating RemoteIntersectionManager...");
+				log("newLineFollowerEvent: Robot is approaching intersection, activating RemoteIntersectionManager...");
 				currState = ClientManagerState.REMOTE_TRAVERSAL;
 				rim.start(getLaneSpecs());
 			} else
 				log("newLineFollowerEvent: Discarding unexpected event from LineFollower: " + lfe);
 		} else
-			log("newLineFollowerEvent: Ignoring LineFollowerEvent because not in FOLLOW_LINE state.");
+			log("newLineFollowerEvent: Ignoring LineFollowerEvent because not in FOLLOW_LINE state, event=" + lfe);
 	}
 	
 	/**
