@@ -152,7 +152,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 			thread.start();
 			log("start: thread started");
 		} else
-			log("start: ERROR: Thread already started.");
+			log("start: WARNING: Thread already started.");
 	}
 	
 	/**
@@ -173,7 +173,7 @@ public class LineFollower implements BlobfinderListener, Runnable {
 			thread = null; // was causing RemoteIntersectionManager to crash 
 			log("Stop: thread stopped.");
 		} else
-			log("Stop: ERROR: already stopped.");
+			log("Stop: WARNING: already stopped.");
 	}
 	
 	/**
