@@ -10,14 +10,14 @@ import java.util.Vector;
 public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 
 	private static final long serialVersionUID = -2737528121576109063L;
-	
+		
 	private static HashMap<Integer, Vector<Integer>> mapEntry2Exits = mapEntry2Exits();
-	private static HashMap<Integer, Character> mapEntry2Heading = mapEntry2Heading();
-	private static HashMap<Integer, Character> mapExit2Heading = mapExit2Heading();
+	private static HashMap<Integer, Character> mapEntry2Direction = mapEntry2Direction();
+	private static HashMap<Integer, Character> mapExit2Direction = mapExit2Direction();
 	
 	
-	public TwoLaneFourWayIntersectionSpecs() {
-		super(4, 2, mapEntry2Exits, mapEntry2Heading, mapExit2Heading);
+	public TwoLaneFourWayIntersectionSpecs(int intersectionWidth) {
+		super(4, 2, intersectionWidth, mapEntry2Exits, mapEntry2Direction, mapExit2Direction);
 	}
 	
 	public static HashMap<Integer, Vector<Integer>> mapEntry2Exits() {
@@ -51,21 +51,21 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 		return mapEntry2Exits;
 	}
 	
-	public static HashMap<Integer, Character> mapEntry2Heading() {
-		HashMap<Integer, Character> mapEntry2Heading = new HashMap<Integer, Character>();
-		mapEntry2Heading.put(1, 'N');
-		mapEntry2Heading.put(2, 'W');
-		mapEntry2Heading.put(3, 'S');
-		mapEntry2Heading.put(4, 'E');
-		return mapEntry2Heading;
+	public static HashMap<Integer, Character> mapEntry2Direction() {
+		HashMap<Integer, Character> mapEntry2Direction = new HashMap<Integer, Character>();
+		mapEntry2Direction.put(1, 'N');
+		mapEntry2Direction.put(2, 'W');
+		mapEntry2Direction.put(3, 'S');
+		mapEntry2Direction.put(4, 'E');
+		return mapEntry2Direction;
 	}
 	
-	public static HashMap<Integer, Character> mapExit2Heading() {
-		HashMap<Integer, Character> mapExit2Heading = new HashMap<Integer, Character>();
-		mapExit2Heading.put(1, 'S');
-		mapExit2Heading.put(2, 'E');
-		mapExit2Heading.put(3, 'N');
-		mapExit2Heading.put(4, 'W');
-		return mapExit2Heading;
+	public static HashMap<Integer, Character> mapExit2Direction() {
+		HashMap<Integer, Character> mapExit2Direction = new HashMap<Integer, Character>();
+		mapExit2Direction.put(1, 'S');
+		mapExit2Direction.put(2, 'E');
+		mapExit2Direction.put(3, 'N');
+		mapExit2Direction.put(4, 'W');
+		return mapExit2Direction;
 	}
 }

@@ -3,6 +3,7 @@ package pharoslabut.demo.autoIntersection.server;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+import pharoslabut.demo.autoIntersection.*;
 import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
@@ -162,7 +163,6 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 				log("enqueueing the robot: \n" + robot);
 				RobotsPriorityQueue.enqueue(robot);
 				log("RobotsPriorityQueue: " + RobotsPriorityQueue.print() );
-				//this.start();
 			} else {
 				log("This robot was already granted access: \n" + robot);
 			}
@@ -178,9 +178,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 		if(msg != null)
 		{
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
-			
 			robotsGrantedAccess.remove(robot);
-            
 			log("Robot exiting! Removing robot from the list.");
 			
 			//uncomment line below if using UDP
@@ -204,7 +202,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 	 * @param isDebugMsg Whether the message is a debug message.
 	 */
 	private void log(String msg, boolean isDebugMsg) {
-		String result = "IntersectionManager: " + msg;
+		String result = "ServerIntersectionManager: " + msg;
 		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
@@ -221,18 +219,24 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 		print("Usage: pharoslabut.demo.autoIntersection.server.ServerIntersectionManager <options>\n");
 		print("Where <options> include:");
 		print("\t-port <port number>: The port on which to listen (default 6665)");
+		print("\t-ways <number of ways>: the number of ways in the intersection (default 4)");
+		print("\t-lanes <number of lanes>: the number of lanes in each way of the the intersection (default 2)");
+		print("\t-width <Intersection width>: the width of the intersection in cm (default 150cm)");
 		print("\t-log <log file name>: The name of the file in which to save debug output (default ServerIntersectionManager.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
     /**
-     * call the IntersectionManager and start running the code
+     * call the ServerIntersectionManager and start running the code
      * @param args the command line arguments
      * @throws InterruptedException
      */
     public static void main(String [] args) {
 		int serverPort = 6665;
 		String logFileName = "ServerIntersectionManager.log";
+		int nWays = 4;
+		int nLanes = 2;
+		int intersectionWidth = 150;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -242,6 +246,12 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 					System.setProperty ("PharosMiddleware.debug", "true");
 				} else if (args[i].equals("-log")) {
 					logFileName = args[++i];
+				} else if (args[i].equals("-ways")) {
+					nWays =  Integer.valueOf(args[++i]);
+				} else if (args[i].equals("-lanes")) {
+					nLanes = Integer.valueOf(args[++i]);
+				} else if (args[i].equals("-width")) {
+					intersectionWidth = Integer.valueOf(args[++i]);
 				} else {
 					print("Unknown argument " + args[i]);
 					usage();
@@ -254,6 +264,10 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 		}
 		
 		FileLogger flogger = new FileLogger(logFileName);
+		
+		if( nWays == 4  &&  nLanes == 2 ) {
+			TwoLaneFourWayIntersectionSpecs is = new TwoLaneFourWayIntersectionSpecs(intersectionWidth);
+		}
 		
 //       RobotsPriorityQueue.test();
     	

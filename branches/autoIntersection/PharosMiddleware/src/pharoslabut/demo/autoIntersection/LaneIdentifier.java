@@ -23,7 +23,7 @@ public class LaneIdentifier implements CricketDataListener{
 		// full cricket mote specs
 		if (cd.getConnection()) {
 			if(cd.getDistance() < 40) {
-				currentLane.setEntry(Integer.valueOf(cd.getSpaceID().substring(1)));
+				currentLane.setEntryID(Integer.valueOf(cd.getSpaceID().substring(1)));
 			}
 		}
 	}

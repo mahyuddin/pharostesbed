@@ -31,14 +31,20 @@ public class IntersectionSpecs implements java.io.Serializable {
 	private int nLanes;
 	
 	/**
-	 * The total number of lanes entering the intersection in a 4-way intersection
+	 * The total number of lanes entering the intersection
 	 */
 	private int nEntries;
 	
 	/**
-	 * The total number of lanes exiting the intersection in a 4-way intersection
+	 * The total number of lanes exiting the intersection
 	 */
 	private int nExits;
+	
+	/**
+	 * The width of the intersection in cm
+	 * assuming the intersection length == the intersection width
+	 */
+	private int intersectionWidth;
 	
 	/**
 	 * mapEntry2Exits is a hashtable to map every entry point to a list(vector) of allowed exit points
@@ -46,40 +52,45 @@ public class IntersectionSpecs implements java.io.Serializable {
 	private HashMap<Integer, Vector<Integer>> mapEntry2Exits;
 	
 	/**
-	 * mapEntry2Heading is a hashtable to map every entry point to the corresponding entry heading
-	 * The heading type is a Character
+	 * mapEntry2Direction is a hashtable to map every entry point to the corresponding entry direction
+	 * The direction type is a Character
 	 * 'N' = North
 	 * 'S' = South
 	 * 'E' = EAST
 	 * 'W' = WEST
+	 * 'I' = IN the intersection, in case of circular intersections
+	 * 'O' = OUT of the intersection, in case of circular intersections
 	 */
-	private HashMap<Integer, Character> mapEntry2Heading;
+	private HashMap<Integer, Character> mapEntry2Direction;
 	
 	/**
-	 * mapExit2Heading is a hashtable to map every exit point to the corresponding exit heading
-	 * The heading type is a Character
+	 * mapExit2Direction is a hashtable to map every exit point to the corresponding exit direction
+	 * The direction type is a Character
 	 * 'N' = North
 	 * 'S' = South
 	 * 'E' = EAST
 	 * 'W' = WEST
+	 * 'I' = IN the intersection, in case of circular intersections
+	 * 'O' = OUT of the intersection, in case of circular intersections
 	 */
-	private HashMap<Integer, Character> mapExit2Heading;
+	private HashMap<Integer, Character> mapExit2Direction;
 	
 	/**
 	 * The constructor
 	 * @param nWays
 	 * @param nLanes
 	 */
-	public IntersectionSpecs(int nWays, int nLanes, HashMap<Integer, Vector<Integer>> mapEntry2Exits,
-			HashMap<Integer, Character> mapEntry2Heading, HashMap<Integer, Character> mapExit2Heading) {
+	public IntersectionSpecs(int nWays, int nLanes, int intersectionWidth, HashMap<Integer, Vector<Integer>> mapEntry2Exits,
+			HashMap<Integer, Character> mapEntry2Direction, HashMap<Integer, Character> mapExit2Direction) {
 		this.nWays = nWays;
 		this.nLanes = nLanes;
 		this.nEntries = (nLanes/2) * nWays;
 		this.nExits = (nLanes/2) * nWays;
+		this.intersectionWidth = intersectionWidth;
 		
 		this.mapEntry2Exits = mapEntry2Exits;
-		this.mapEntry2Heading = mapEntry2Heading;
-		this.mapExit2Heading = mapExit2Heading;
+		this.mapEntry2Direction = mapEntry2Direction;
+		this.mapExit2Direction = mapExit2Direction;
 	}
 	
 	public int getNWays() {
@@ -98,16 +109,20 @@ public class IntersectionSpecs implements java.io.Serializable {
 		return this.nExits;
 	}
 	
+	public int getIntersectionWidth() {
+		return this.intersectionWidth;
+	}
+	
 	public HashMap<Integer, Vector<Integer>> getMapEntry2Exits() {
 		return mapEntry2Exits;
 	}
 	
-	public HashMap<Integer, Character> getMapEntry2Heading() {
-		return mapEntry2Heading;
+	public HashMap<Integer, Character> getMapEntry2Direction() {
+		return mapEntry2Direction;
 	}
 	
-	public HashMap<Integer, Character> getMapExit2Heading() {
-		return mapExit2Heading;
+	public HashMap<Integer, Character> getMapExit2Direction() {
+		return mapExit2Direction;
 	}
 	
 	@SuppressWarnings("unchecked")
