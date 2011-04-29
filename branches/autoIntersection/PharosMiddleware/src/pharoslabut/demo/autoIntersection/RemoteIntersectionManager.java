@@ -117,6 +117,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			System.exit(1); // fatal error
 		}
 		this.serverPort = serverPort;
+		this.clientMgr = clientMgr;
 		this.flogger = flogger;
 		
 		try {
@@ -253,13 +254,14 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			// TODO Handle this situation!  Try to retransmit the message a certain number
 			// of times before giving up.
 			log("doExiting: WARNING: failed to send ExitingMsg...");
-		}
+		} else
+			log("doExiting: sent ExitingMsg to server...");
 		
 		accessGranted = false; // be sure to reset this, otherwise it will go forever
 		isRunning = false; // The remote intersection manager is done running.
 		
 		// Notify the client manager that the RemoteIntersectionManager is done
-		log("doExiting: notifying ClientManager that RemoteIntersectionmanager is done.");
+		log("doExiting: notifying ClientManager that RemoteIntersectionmanager is done (success = true)");
 		clientMgr.remoteIntersectionMgrDone(true);
 	}
 	
