@@ -113,7 +113,7 @@ public class ClientManager implements LineFollowerEventListener  {
 			} else
 				log("newLineFollowerEvent: Discarding unexpected event from LineFollower: " + lfe);
 		} else
-			log("newLineFollowerEvent: Ignoring LineFollowerEvent because not in FOLLOW_LINE state, event=" + lfe);
+			log("newLineFollowerEvent: Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
 	}
 	
 	/**
