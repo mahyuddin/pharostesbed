@@ -3,6 +3,7 @@ package pharoslabut.demo.autoIntersection;
 import java.net.UnknownHostException;
 import java.net.InetAddress;
 import java.util.Timer;
+import java.util.TimerTask;
 
 import pharoslabut.navigate.*;
 import pharoslabut.io.*;
@@ -18,6 +19,15 @@ import pharoslabut.logger.*;
  */
 public class RemoteIntersectionManager implements LineFollowerEventListener, MessageReceiver {
 	
+	/**
+	 * Maximum amount of time in milliseconds between entering the intersection and
+	 * exiting it.
+	 */
+	public static long MAXIMUM_INTERSECTION_DURATION = 10000;
+	
+	/**
+	 * The maximum amount of times a RequestAccessMsg will be sent to the server.
+	 */
 	public static int MAXIMUM_REQUESTS = 5;
 	
 	/**
@@ -88,11 +98,9 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	private NetworkInterface networkInterface;
 	
 	/**
-	 * The time needed to go through the intersection
+	 * A timer for detecting if EXIT event never arrives.
 	 */
-	private final long INTERSECTION_TIME = 5000;
-	
-	//private Timer exitTimer;
+	private Timer timer;
 	
 	/**
 	 * The constructor.
@@ -157,7 +165,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		// Create a RequestAccessMsg.
 		long eta = ((long)(((distToIntersection_m / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));
 		RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), 
-				eta, eta+INTERSECTION_TIME, laneSpecs);
+				eta, eta+MAXIMUM_INTERSECTION_DURATION, laneSpecs);
 		
 		// Send the RequestAccessMsg to the intersection server...
 		if (!networkInterface.sendMessage(serverIP, serverPort, ram)) {
@@ -189,7 +197,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 				// Create the RequestAccessMsg...
 				long eta = System.currentTimeMillis(); // robot is already at intersection
 				RequestAccessMsg ram = new RequestAccessMsg(robotIP, networkInterface.getLocalPort(), 
-						eta, eta+INTERSECTION_TIME, laneSpecs);
+						eta, eta+MAXIMUM_INTERSECTION_DURATION, laneSpecs);
 				
 				tryCount++;
 				
@@ -212,8 +220,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		// If access could not be obtained, abort and notify the client manager.
 		if (!accessGranted) {
 			log("doEntering: ERROR: Unable to gain access to intersection, aborting...");
-			isRunning = false;
-			clientMgr.remoteIntersectionMgrDone(false);
+			doHalt(false);
 		}
 		
 		
@@ -237,6 +244,20 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		// start robot moving once priority access received
 		log("doEntering: Starting the robot moving...");
 		lf.start();
+		
+		log("doEntering: Starting timer to detect when the EXIT event does not arrive...");
+		timer = new Timer();
+		timer.schedule(new TimerTask() {
+			public void run() {
+				
+				// Note from Liang:  I'm not sure this is the smart thing to do (assume that the robot has
+				// crossed the intersection).  But I don't want to have the demo halted because
+				// the CMUCam failed to detect the exit strip on the ground.
+				log("Timer: WARNING: Robot spent more than " +  MAXIMUM_INTERSECTION_DURATION 
+						+ "ms in intersection!  Assuming it has safely crossed the intersection.");
+				doHalt(true);
+			}
+		}, MAXIMUM_INTERSECTION_DURATION);
 	}
 	
 	/**
@@ -245,6 +266,14 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 */
 	private void doExiting() {
 		log("doExiting: Robot is exiting intersection!");
+		
+		// Stop the timer since we received a ReservationTimeMsg
+		if (timer != null) {
+			log("doExiting: Stopping timer...");
+			timer.cancel();
+			timer = null;
+		} else
+			log("doExiting: ERROR: timer was null, could not stop it!");
 		
 		// Create an ExitingMsg
 		ExitingMsg em = new ExitingMsg(robotIP, networkInterface.getLocalPort());
@@ -257,40 +286,53 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		} else
 			log("doExiting: sent ExitingMsg to server...");
 		
+		doHalt(true);
+	}
+	
+	/**
+	 * Called to terminate the RemoteIntersectionManager.  Notifies the 
+	 * ClientManager that this is done executing.
+	 * 
+	 * @param success Whether it successfully navigated across the intersection.
+	 */
+	private void doHalt(boolean success) {
 		accessGranted = false; // be sure to reset this, otherwise it will go forever
 		isRunning = false; // The remote intersection manager is done running.
 		
+		if (!success) {
+			log("doHalt: Did not succeed, halting the robot...");
+			lf.stop();
+		}
+		
 		// Notify the client manager that the RemoteIntersectionManager is done
-		log("doExiting: notifying ClientManager that RemoteIntersectionmanager is done (success = true)");
-		clientMgr.remoteIntersectionMgrDone(true);
+		log("doHalt: notifying ClientManager that RemoteIntersectionmanager is done (success = " + success + ")");
+		clientMgr.remoteIntersectionMgrDone(success);
 	}
 	
 	@Override
 	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
 		if (isRunning) {
 			switch(lfe.getType()) {
-			// The APPROACHING event is now handled by the ClientManager
-			//case APPROACHING:
-			//	doApproaching();
-			//	break;
+			// APPROACHING and ERROR events are handled by the ClientManager
 			case ENTERING:
 				doEntering();
 				break;
 			case EXITING:
 				doExiting();
 				break;
-//			This message is now handled by the ClientManager
-//			case ERROR:
-//				log("newLineFollowerEvent: Received error from line follower!  Aborting demo.", false);
-//				lf.stop(); // There was an error, stop!
-//				break;
 			default:
-				log("newLineFollowerEvent: Unexpected event from line follower (discarding): " + lfe, false);
+				log("newLineFollowerEvent: ERROR: Unexpected LineFollower event (" + lfe + "), aborting...", false);
+				doHalt(false);
 			}
 		} else
 			log("newLineFollowerEvent: Ignoring event because not running: " + lfe);
 	}
 	
+	/**
+	 * Handles ReservationTimeMsg messages from the server.
+	 * 
+	 * @param msg The ReservationTimeMsg.
+	 */
 	private void handleReservationTimeMsg(ReservationTimeMsg msg) {
 		log("handleReservationTimeMsg: Received permission to enter intersection at time " + msg.getETA());
 		this.accessGranted = true;
@@ -320,7 +362,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			//else if (msg instanceof ExitingAcknowledgedMsg)
 			//handleExitingAcknowledgedMsg( (ExitingAcknowledgedMsg) msg );
 			else
-				log("newMessage: ERROR: Unknown message " + msg, false);
+				log("newMessage: ERROR: Unknown message from server: " + msg, false);
 		} else {
 			log("newMessage: Received a message but was not running, discarding it...");
 		}
