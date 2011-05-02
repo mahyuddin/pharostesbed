@@ -22,10 +22,11 @@ public class LaneIdentifier implements CricketDataListener{
 	public void newCricketData(CricketData cd) {
 		// full cricket mote specs
 		if (cd.getConnection()) {
+			System.out.println("newCricketData: cricket mote distance is " + cd.getDistance());
 			if(cd.getDistance() < 40) {
 				currentLane.setEntryID(Integer.valueOf(cd.getSpaceID().substring(1)));
+				System.out.println("newCricketData: cricket mote " + cd.getSpaceID() + " seen!");
 			}
 		}
 	}
-
 }

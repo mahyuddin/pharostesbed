@@ -160,7 +160,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 	 * It asks the server for permission to cross intersection.
 	 */
 	private void doApproaching() {
-		log("Robot is approaching intersection!");
+		log("Robot is approaching intersection " + this.laneSpecs.getEntryID() + "!");
 		
 		// Create a RequestAccessMsg.
 		long eta = ((long)(((distToIntersection_m / LineFollower.MAX_SPEED) * 1000) + System.currentTimeMillis()));

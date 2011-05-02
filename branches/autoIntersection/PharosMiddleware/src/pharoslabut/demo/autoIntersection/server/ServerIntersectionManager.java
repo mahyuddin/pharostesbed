@@ -149,7 +149,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort(), msg.getLaneSpecs(), msg.getETA(), msg.getETC());
 			
 			//testing to make robot wait 10 secs every other loop traversal
-			if(testingFlag) {
+			/*if(testingFlag) {
 				log("Testing flag UP!");
 				nextAvailableETC = robot.getETA()+10000; // 10 seconds after intersection arrival
 				testingFlag = false;
@@ -157,7 +157,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			else {
 				testingFlag = true;
 				log("Testing flag DOWN!");
-			}
+			}*/
 			
 			if( (! robotsGrantedAccess.contains(robot))  && (! RobotsPriorityQueue.contains(robot)) ) {
 				log("enqueueing the robot: \n" + robot);
