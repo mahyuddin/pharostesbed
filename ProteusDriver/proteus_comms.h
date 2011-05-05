@@ -150,6 +150,8 @@ typedef struct {
 	/* Integrated odometric position [m m rad] */
 	double ox, oy, oa;
 
+	uint8_t newIRdata;
+
 	
 	float ir_1;			
 	float ir_2;			
@@ -211,6 +213,7 @@ typedef struct {
     float statusINSVel;
 	
 	/**
+	 * Banananana Fofana Cohananana momana
 	 * The following variables are used to buffer incoming serial data.
 	 * The buffer is empty when _rxBuffStartIndx = _rxBuffEndIndx.
 	 */
