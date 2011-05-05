@@ -535,7 +535,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
 		popRxSerialBuff(r, NULL); // pop PROTEUS IR PACKET
 		
-		// The next 12 bytes are the distance reading for 
+		// The next 18 bytes are the distance reading for 
 		// FL, FC, FR, RL, RC, RR, in that order
 		// The first two bytes are FL
 		
@@ -908,8 +908,8 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 				break;
 			case PROTEUS_IR_PACKET:
 				if (processIRPacket(r) == FAIL)
-						done = true; // no point in processing more packets from the MCU
-					numPktsProcessed++;
+						//done = true; // no point in processing more packets from the MCU
+					//numPktsProcessed++;
 					break;
 			case PROTEUS_COMPASS_PACKET:
 				printf("proteus_comms: compass packet!\n");
