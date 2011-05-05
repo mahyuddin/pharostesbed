@@ -5,6 +5,8 @@
 #include "LED.h"
 #include "command.h"
 
+static short ir[10] = {0};
+
 unsigned short IR_default_tab[256] = {	 // these values need to be modified depending on long range or short range sensors
 10651	,  //  0
 10507	,  //  1
@@ -335,35 +337,37 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
     /*Used AD0 pin 07 and AD1 pins 08-15 */
     //LED_GREEN1 = 1;
     
-	input = ADC1_In(ADC_IR_1); // IR0
+	input = ir[1] = ADC1_In(ADC_IR_1); // IR0
     IR1_Fifo_Put(input);
 
-    input = ADC1_In(ADC_IR_2); // IR1,4
+    input = ir[2] = ADC1_In(ADC_IR_2); // IR1,4
     IR2_Fifo_Put(input);
     
-    input = ADC1_In(ADC_IR_3); // IR2,6
+    input = ir[3] = ADC1_In(ADC_IR_3); // IR2,6
     IR3_Fifo_Put(input);
     
-    input = ADC1_In(ADC_IR_4); // IR3
+    input = ir[4] = ADC1_In(ADC_IR_4); // IR3
     IR4_Fifo_Put(input);
     
-    input = ADC1_In(ADC_IR_5); // IR5
+    input = ir[5] = ADC1_In(ADC_IR_5); // IR5
     IR5_Fifo_Put(input);
 
-	input = ADC1_In(ADC_IR_6); // IR5
+	input = ir[6] = ADC1_In(ADC_IR_6); // IR5
     IR6_Fifo_Put(input);
     
-	input = ADC1_In(ADC_IR_7); // IR7
+	input = ir[7] = ADC1_In(ADC_IR_7); // IR7
     IR7_Fifo_Put(input);
 	
-	input = ADC1_In(ADC_IR_8); // IR8
+	input = ir[8] = ADC1_In(ADC_IR_8); // IR8
     IR8_Fifo_Put(input);
 	
-	input = ADC0_In(ADC_IR_9); // IR8
-    IR9_Fifo_Put(input);	
+	input = ir[9] = ADC0_In(ADC_IR_9); // IR8
+    IR9_Fifo_Put(input);
+    
+    Command_sendIRPacket();	
   }
   
-  short ir[10] = {0};
+  
   // Foreground thread:
   // todo translate values into positions around the vehicle
   // separate out combined sensor readings
@@ -403,7 +407,6 @@ unsigned short IR_default_tab[256] = {	 // these values need to be modified depe
       
     }else{ ir[9] = -1;}
     
-    Command_sendIRPacket();
    
    return ir;    
   }
