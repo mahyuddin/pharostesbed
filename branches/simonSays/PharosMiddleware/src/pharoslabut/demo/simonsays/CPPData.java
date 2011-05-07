@@ -11,7 +11,7 @@ import javax.swing.table.*;
  */
 public class CPPData extends AbstractTableModel {
 	
-	private final String[] columnNames = {"Instruction", "Logical Distance", "Physical Distance"};
+	private final String[] columnNames = {"Instruction", "Logical Parameter", "Physical Parameter"};
 	
 	private Vector<CPP> cppValues = new Vector<CPP>();
 	
