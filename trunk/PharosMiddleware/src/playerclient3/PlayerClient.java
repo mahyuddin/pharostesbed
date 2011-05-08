@@ -1346,6 +1346,8 @@ public class PlayerClient extends Thread implements PlayerConstants {
                 break;
             }
             case PLAYER_OPAQUE_CODE: {              // plugin interface
+            	// Added by Chien-Liang Fok
+            	newpd = new pharoslabut.sensors.ProteusOpaqueInterface(this);
                 break;
             }
             case PLAYER_POSITION1D_CODE: {          // 1-D position
