@@ -43,8 +43,8 @@
 
 #include "config.h"
 
-#include <player-2.1/libplayercore/playerconfig.h>
-#include <player-2.1/libplayercore/error.h>
+#include <player-3.0/playerconfig.h>
+#include <player-3.0/libplayercommon/error.h>
 #include "replace.h"
 //#include <sys/poll.h>
 
