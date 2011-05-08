@@ -1,13 +1,13 @@
 package pharoslabut.validation;
 
 import pharoslabut.MotionArbiter;
-import pharoslabut.logger.CompassLoggerEvent;
+import pharoslabut.logger.CompassLogger;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.structures.PlayerConstants;
 
 /**
  * Moves the robot in circles while logging the compass data.
@@ -22,7 +22,8 @@ public class CompassCircleTest {
 	private PlayerClient client = null;
 	
 	public CompassCircleTest(String serverIP, int serverPort, int time, 
-			String fileName, boolean showGUI, double speed, double turnAngle, boolean getStatusMsgs) {
+			String fileName, boolean showGUI, double speed, double turnAngle, boolean getStatusMsgs) 
+	{
 		
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -45,15 +46,15 @@ public class CompassCircleTest {
 //			System.exit(1);
 //		}
 		
-		MotionArbiter motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motorInterface);
+		MotionArbiter motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_TRAXXAS, motorInterface);
 		
 		// First start the robot moving in circles
 		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
 		motionArbiter.submitTask(circleTask);
 		
 		//CompassLogger compassLogger = new CompassLogger(compass, showGUI);
-		CompassLoggerEvent compassLogger = new CompassLoggerEvent(serverIP, serverPort, 1 /* device index */, showGUI, getStatusMsgs);
-		if (compassLogger.start(COMPASS_LOG_PERIOD, fileName)) {
+		CompassLogger compassLogger = new CompassLogger(serverIP, serverPort, 1 /* device index */, fileName, showGUI, getStatusMsgs);
+		if (compassLogger.start(COMPASS_LOG_PERIOD)) {
 			synchronized(this) {
 				try {
 					if (time > 0) {

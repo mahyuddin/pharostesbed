@@ -1,7 +1,6 @@
 package pharoslabut.logger.analyzer;
 
 import java.util.*;
-
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.logger.FileLogger;
 

@@ -3,6 +3,11 @@ package pharoslabut.experiment;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+/**
+ * Contains the details of a specific robot used in an experiment.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class RobotExpSettings {
 	private String robotName;
 	private String scriptFileName;

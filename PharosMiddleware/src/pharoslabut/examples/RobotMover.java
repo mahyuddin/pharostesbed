@@ -4,10 +4,10 @@ import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.Priority;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.logger.*;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.structures.PlayerConstants;
 
 public class RobotMover {
 	private PlayerClient client = null;
@@ -36,7 +36,7 @@ public class RobotMover {
 		// Create a motion arbiter...
 		MotionArbiter motionArbiter = null;
 		if (robotType.equals("traxxas"))
-			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motors);
+			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_TRAXXAS, motors);
 		else if (robotType.equals("create"))
 			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 		else
@@ -58,7 +58,7 @@ public class RobotMover {
 		pause(duration);
 		
 		
-		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		

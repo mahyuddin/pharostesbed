@@ -1,6 +1,6 @@
 package pharoslabut.io;
 
-import pharoslabut.ExpType;
+import pharoslabut.experiment.ExpType;
 
 public class StartExpMsg implements Message {
 

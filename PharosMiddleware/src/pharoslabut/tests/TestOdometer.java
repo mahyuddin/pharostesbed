@@ -1,10 +1,14 @@
 package pharoslabut.tests;
 
-import playerclient.*;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.position2d.PlayerPosition2dData;
+import playerclient3.*;
+import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.position2d.PlayerPosition2dData;
+
 import pharoslabut.logger.*;
-import pharoslabut.navigate.CompassDataBuffer;
+import pharoslabut.exceptions.*;
+import pharoslabut.sensors.Position2DBuffer;
+import pharoslabut.sensors.Position2DListener;
+import pharoslabut.sensors.CompassDataBuffer;
 
 /**
  * Tests the odometer on the Proteus robot.
@@ -15,7 +19,7 @@ import pharoslabut.navigate.CompassDataBuffer;
  * 
  * @author Chien-Liang Fok
  */
-public class TestOdometer implements Position2DListener{
+public class TestOdometer implements Position2DListener {
 	
 	public static final int COMPASS_MEDIAN_FILTER_LENGTH = 3;
 	public static final double MAX_HEADING_DIVERGENCE = Math.PI / 6;
@@ -76,7 +80,9 @@ public class TestOdometer implements Position2DListener{
 		motors.resetOdometry();
 		
 		log("Listening for position2D events...");
-		motors.addPos2DListener(this);
+		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
+		p2dBuff.addPos2DListener(this);
+		p2dBuff.start();
 		
 		if (useCompass)
 //			moveCompass(speed, dist);

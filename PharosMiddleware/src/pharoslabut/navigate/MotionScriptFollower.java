@@ -115,19 +115,13 @@ public class MotionScriptFollower implements Runnable {
 	private boolean handleMove(Move moveInstr) {
 		boolean result = true;
 		
-		try {
-			log("Going to " + moveInstr.getDest() + " at " + moveInstr.getSpeed() + "m/s");
-			
-			// The following is a blocking operation.  It does not return until the robot is at the destination.
-			if (navigator.go(moveInstr.getDest(), moveInstr.getSpeed())) { 
-				log("Destination Reached!");
-			} else {
-				log("Destination not reached!");
-			}
-			
-		} catch (SensorException e) {
-			log("Error accessing sensor: " + e.getMessage());
-			e.printStackTrace();
+		log("Going to " + moveInstr.getDest() + " at " + moveInstr.getSpeed() + "m/s");
+
+		// The following is a blocking operation.  It does not return until the robot is at the destination.
+		if (navigator.go(moveInstr.getDest(), moveInstr.getSpeed())) { 
+			log("Destination Reached!");
+		} else {
+			log("Destination not reached!");
 			result = false;
 		}
 		

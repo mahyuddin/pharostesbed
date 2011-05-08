@@ -3,10 +3,10 @@ package pharoslabut.tests;
 import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.structures.PlayerConstants;
 
 /**
  * Tests the semantics of the heading in a MotionTask.  It shows that
@@ -60,7 +60,7 @@ public class TestHeadingDirection {
 			e.printStackTrace();
 		}
 		
-		MotionTask mt2 = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		MotionTask mt2 = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 		motionArbiter.submitTask(mt2);
 		System.exit(0);
 	}

@@ -1,11 +1,11 @@
 package pharoslabut.tests;
 
+import pharoslabut.*;
 import pharoslabut.logger.*;
 import pharoslabut.sensors.*;
-import playerclient.*;
-import playerclient.structures.*;
-import playerclient.structures.ir.PlayerIrData;
-import playerclient.structures.opaque.PlayerOpaqueData;
+import playerclient3.*;
+import playerclient3.structures.*;
+import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
  * Tests the IR interface.  Subscribes to the IR interface and prints all of the IR
@@ -26,12 +26,12 @@ import playerclient.structures.opaque.PlayerOpaqueData;
  * 
  * @author Chien-Liang Fok
  */
-public class TestIRInterface implements IRListener, OpaqueListener {
+public class TestRangerInterface implements RangerListener, ProteusOpaqueListener {
 	private PlayerClient client = null;
 	private FileLogger flogger = null;
-	private IRVisualizer irVisualizer;
+	private RangerVisualizer irVisualizer;
 	
-	public TestIRInterface(String serverIP, int serverPort, String logFileName) {
+	public TestRangerInterface(String serverIP, int serverPort, String logFileName) {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
@@ -43,22 +43,24 @@ public class TestIRInterface implements IRListener, OpaqueListener {
 		if (logFileName != null)
 			flogger = new FileLogger(logFileName);
 		
-		irVisualizer = new IRVisualizer();
+		irVisualizer = new RangerVisualizer();
 		irVisualizer.show();
 		
-		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		oi.addOpaqueListener(this);
 		
-		IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
-		ir.addIRListener(this);
+		RangerInterface ri = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
+		RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
+		rangerBuffer.addRangeListener(this);
+		rangerBuffer.start();
 	}
 	
 
 	@Override
-	public void newPlayerIRData(PlayerIrData data) {
+	public void newRangerData(PlayerRangerData data) {
 		//System.out.println("Opaque data: " + opaqueData);
 		irVisualizer.updateDistances(data);
-		float[] ranges = data.getRanges();
+		double[] ranges = data.getRanges();
 		String s = "";
 		for (int i=0; i < ranges.length; i++) {
 			s += ranges[i];
@@ -69,7 +71,7 @@ public class TestIRInterface implements IRListener, OpaqueListener {
 	}
 	
 	@Override
-	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		String s = new String(opaqueData.getData());
 		log(s);
 	}
@@ -123,6 +125,6 @@ public class TestIRInterface implements IRListener, OpaqueListener {
 		log("Server port: " + serverPort, null);
 		log("File: " + fileName, null);
 		
-		new TestIRInterface(serverIP, serverPort, fileName);
+		new TestRangerInterface(serverIP, serverPort, fileName);
 	}
 }

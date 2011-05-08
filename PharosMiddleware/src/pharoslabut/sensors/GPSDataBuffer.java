@@ -1,9 +1,13 @@
-package pharoslabut.navigate;
+package pharoslabut.sensors;
 
 import java.util.*;
-import pharoslabut.logger.*;
-import playerclient.*;
-import playerclient.structures.gps.*;
+
+import pharoslabut.exceptions.NoNewDataException;
+import pharoslabut.logger.FileLogger;
+import pharoslabut.navigate.Location;
+
+import playerclient3.*;
+import playerclient3.structures.gps.PlayerGpsData;
 
 /**
  * Buffers incoming GPS data.  Implements a thread that cleans up "old" GPS readings, which are readings older
@@ -11,7 +15,12 @@ import playerclient.structures.gps.*;
  * 
  * @author Chien-Liang Fok
  */
-public class GPSDataBuffer implements Runnable, GPSListener {
+public class GPSDataBuffer implements Runnable {
+	
+	/**
+	 * The period in milliseconds at which to check for expired compass data.
+	 */
+	public static final int GPS_BUFFER_REFRESH_PERIOD = 200;
 	
 	/**
 	 * The maximum age of GPS readings stored in this buffer, in milliseconds.
@@ -19,14 +28,20 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 	public static final int GPS_MAX_AGE = 5000;
 	
 	/**
-	 * The period in milliseconds at which to check for expired GPS data.
+	 * A proxy to the GPS sensor.
 	 */
-	public static final int GPS_BUFFER_SWEEP_PERIOD = 1500;
-	
 	private GPSInterface gps;
-	private Vector<GPSDataWrapper> buff = new Vector<GPSDataWrapper>();;
+	
+	/**
+	 * A buffer for storing GPS data.
+	 */
+	private Vector<GPSDataWrapper> buff = new Vector<GPSDataWrapper>();
+	
 	private boolean running = false;
+	
 	private FileLogger flogger;
+	
+	private Vector<GPSListener> gpsListeners = new Vector<GPSListener>();
 	
 	/**
 	 * The constructor.
@@ -35,14 +50,58 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 	 */
 	public GPSDataBuffer(GPSInterface gps) {
 		this.gps = gps;
-		start();
 	}
 	
+    /**
+     * Adds a listener for GPS data.  All listeners are notified whenever
+     * a new GPS data arrives.
+     * 
+     * @param gpsl  The listener to add.
+     */
+    public void addGPSListener(GPSListener gpsl) {
+    	gpsListeners.add(gpsl);
+    }
+    
+    /**
+     * Removes a listener from this object.
+     * 
+     * @param gpsl  The listener to remove.
+     */
+    public void removeGPSListener(GPSListener gpsl) {
+    	gpsListeners.remove(gpsl);
+    }
+    
+    /**
+     * Notifies each of the registered GPSListener objects that a new PlayerGpsData is available.
+     * 
+     * @param pgdata The new PlayerGpsData that is available.
+     */
+    private void notifyGPSListeners(final PlayerGpsData pgdata) {
+    	if (gpsListeners.size() > 0) {
+    		new Thread(new Runnable() {
+    			public void run() {
+    				Enumeration<GPSListener> e = gpsListeners.elements();
+    	    		while (e.hasMoreElements()) {
+    	    			e.nextElement().newGPSData(pgdata);
+    	    		}
+    			}
+    		}).start();
+    	}
+    }
+	
+    /**
+     * Determines whether the specified location is valid.  For now, it is hard-coded that valid
+     * locations have the following format:  
+     * The longitude must be -97.xxx degrees, and the latitude to be 30.xxx degrees.
+     * 
+     * @param loc The location to check
+     * @return True if the location is valid.
+     */
 	public static boolean isValid(Location loc) {
 		if (loc == null) return false; // a null location is inherently invalid
-		// For now, let's constrain the longitude to be -97.xxx degrees, and the latitude to be 30.xxx degrees
+		
+		// For now, constrain the longitude to be -97.xxx degrees, and the latitude to be 30.xxx degrees...
 		if (((int)loc.longitude()) != -97 || ((int)loc.latitude()) != 30) {
-			//log("isValid(...): Invalid loc: " + loc);
 			return false;
 		} else
 			return true;
@@ -63,7 +122,6 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 	 */
 	public synchronized void start() {
 		if (!running) {
-			gps.addGPSListener(this);
 			running = true;
 			new Thread(this).start();
 		}
@@ -74,7 +132,6 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 	 */
 	public synchronized void stop() {
 		if (running) {
-			gps.removeGPSListener(this);
 			buff.clear();
 			running = false;
 		}
@@ -112,36 +169,49 @@ public class GPSDataBuffer implements Runnable, GPSListener {
 	 * Removes expired GPS readings.
 	 */
 	public void run() {
+		
+		log("run: thread starting...");
+		
 		while(running) {
+			
+			// Grab any new GPS data...
+			if (gps.isDataReady()) {
+				PlayerGpsData newData = gps.getData();
+				buff.add(0, new GPSDataWrapper(newData)); // add new data to the front of the buffer
+				log("run: New GPS Data: " + newData + ", buffer size=" + buff.size());
+				
+				// Estimate the robot's speed
+				if (buff.size() > 1) {
+					Location currLoc = new Location(buff.get(0).getGpsData());
+					Location prevLoc = new Location(buff.get(1).getGpsData());
+					
+					Double dist = currLoc.distanceTo(prevLoc);
+					double time = (buff.get(0).getTimeStamp() - buff.get(1).getTimeStamp()) / 1000.0;
+					log("run: Speed (m/s): " + dist/time);
+				}
+				
+				// Notify the listeners of the new GPS data
+				notifyGPSListeners(newData);
+			}
+			
 			removeExpiredElements();
+			
 			try {
 				synchronized(this) {
-					wait(GPS_BUFFER_SWEEP_PERIOD);
+					wait(GPS_BUFFER_REFRESH_PERIOD);
 				}
 			} catch(InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	@Override
-	public void newGPSData(PlayerGpsData gpsData) {
-		buff.add(0, new GPSDataWrapper(gpsData)); // add new data to the front of the buffer
-		log("New GPS Data: " + gpsData + ", buffer size=" + buff.size());
-		if (buff.size() > 1) {
-			Location currLoc = new Location(buff.get(0).getGpsData());
-			Location prevLoc = new Location(buff.get(1).getGpsData());
-			
-			Double dist = currLoc.distanceTo(prevLoc);
-			double time = (buff.get(0).getTimeStamp() - buff.get(1).getTimeStamp()) / 1000.0;
-			log("Speed (m/s): " + dist/time);
-		}
+		
+		log("run: thread terminating...");
 	}
 	
 	private void log(String msg) {
 		String result = "GPSDataBuffer: " + msg;
-//		if (System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
 		if (flogger != null) 
 			flogger.log(result);
 	}

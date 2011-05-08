@@ -9,7 +9,7 @@ package pharoslabut.tasks;
  */
 public class MotionTask extends Task {
 	private static final long serialVersionUID = -1005883794694320611L;
-	public static final double STOP_VELOCITY = 0;
+	public static final double STOP_SPEED = 0;
 	public static final double STOP_HEADING = 0;
 	
 	private double velocity;
@@ -30,7 +30,7 @@ public class MotionTask extends Task {
 	}
 	
 	public boolean isStop() {
-		return velocity == STOP_VELOCITY && heading == STOP_HEADING;
+		return velocity == STOP_SPEED && heading == STOP_HEADING;
 	}
 	
 	public boolean equals(Object o) {

@@ -12,7 +12,7 @@ import pharoslabut.logger.*;
  * 
  * @author Chien-Liang Fok
  * @see pharoslabut.navigate.NavigateCompassGPS
- * @see pharoslabut.navigate.CompassDataBuffer
+ * @see pharoslabut.sensors.CompassDataBuffer
  */
 public class M10ExpResultsHeadingAnalyzer {
 

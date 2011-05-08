@@ -3,15 +3,20 @@ package pharoslabut;
 import java.net.*;
 
 import pharoslabut.beacon.*;
+import pharoslabut.experiment.ExpType;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.*;
 import pharoslabut.navigate.motionscript.MotionScript;
 import pharoslabut.radioMeter.cc2420.*;
+import pharoslabut.sensors.CompassDataBuffer;
+import pharoslabut.sensors.GPSDataBuffer;
+import pharoslabut.sensors.ProteusOpaqueData;
+import pharoslabut.sensors.ProteusOpaqueInterface;
+import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.io.*;
 
-import playerclient.*;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.opaque.PlayerOpaqueData;
+import playerclient3.*;
+import playerclient3.structures.PlayerConstants;
 
 /**
  * The PharosServer operates on each robot.  It acts as an adapter that sits between the PlayerServer and PharosClient.
@@ -20,7 +25,7 @@ import playerclient.structures.opaque.PlayerOpaqueData;
  * @see PharosClient
  * @author Chien-Liang Fok
  */
-public class PharosServer implements MessageReceiver, WiFiBeaconListener, OpaqueListener, MotionScriptFollowerDoneListener {
+public class PharosServer implements MessageReceiver, WiFiBeaconListener, ProteusOpaqueListener, MotionScriptFollowerDoneListener {
 	
 	private String playerServerIP;
 	private int playerServerPort;
@@ -115,7 +120,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
-		OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
 		if (motors == null) {
 			log("ERROR: motors is null");
@@ -241,20 +246,26 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 		// Start the file logger
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		flogger = new FileLogger(fileName);
-		motionArbiter.setFileLogger(flogger);
-		gpsDataBuffer.setFileLogger(flogger);
-		compassDataBuffer.setFileLogger(flogger);
-		beaconBroadcaster.setFileLogger(flogger);
-		beaconReceiver.setFileLogger(flogger);
-		if (telosRadioSignalMeter != null) telosRadioSignalMeter.setFileLogger(flogger);
 		
-		flogger.log("PharosServer: Starting experiment at time: " + System.currentTimeMillis());
-
+		log("startExp: Starting the file logger...");
+		if (motionArbiter != null)				motionArbiter.setFileLogger(flogger);
+		if (gpsDataBuffer != null)				gpsDataBuffer.setFileLogger(flogger);
+		if (compassDataBuffer!= null) 			compassDataBuffer.setFileLogger(flogger);
+		if (beaconBroadcaster != null)			beaconBroadcaster.setFileLogger(flogger);
+		if (beaconReceiver != null) 			beaconReceiver.setFileLogger(flogger);
+		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
+		
+		log("startExp: Starting experiment at time " + System.currentTimeMillis() + "...");
+		
+		// Start the individual components
+		if (compassDataBuffer != null)			compassDataBuffer.start();
+		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
+		
 		// This is temporary code for mission 14...
 		//flogger.log("PharosServer: Starting UDPRxTx:");
 		//udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
 		
-		flogger.log("PharosServer: Pausing " + delay + "ms before starting motion script.");
+		log("startExp: Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
 				try {
@@ -265,10 +276,10 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 			}
 		}
 		
-		flogger.log("PharosServer: Starting motion script.");
+		
 		switch(expType) {
 			case FOLLOW_GPS_MOTION_SCRIPT:
-				log("Following GPS-based motion script...");
+				log("startExp: Starting GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
 				Scooter scooter = new Scooter(motionArbiter, flogger);
@@ -277,7 +288,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 				wpFollower.start(gpsMotionScript, this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
-				log("Following a relative motion script...");
+				log("startExp: Starting relative motion script...");
 				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript, flogger);
 				navigatorRel.start();
 				break;
@@ -293,7 +304,8 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 	
 	private void stopExp() {
 		flogger.log("PharosServer: Stopping the file logger.");
-		motionArbiter.setFileLogger(null);
+		
+		if (motionArbiter != null)					motionArbiter.setFileLogger(null);
 		beaconBroadcaster.setFileLogger(null);
 		beaconReceiver.setFileLogger(null);
 		gpsDataBuffer.setFileLogger(null);
@@ -318,7 +330,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Opaque
 	}
 	
 	@Override
-	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		if (opaqueData.getDataCount() > 0) {
 			String s = new String(opaqueData.getData());
 			log("MCU Message: " + s);
