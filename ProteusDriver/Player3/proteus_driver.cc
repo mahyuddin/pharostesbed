@@ -116,14 +116,14 @@ class Proteus : public ThreadedDriver {
 		Proteus(ConfigFile* cf, int section);
 		
 		// Must implement the following methods.
-		int Setup();
-		int Shutdown();
-		//int MainSetup();
-		//void MainQuit();
+		//int Setup();
+		//int Shutdown();
+		virtual int MainSetup();
+		virtual void MainQuit();
 		//void DummyMainQuit(void*);
 		
 		// This method will be invoked on each incoming message
-		int ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void * data);
+		virtual int ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void * data);
 		
 	private:
 		// Main function for device thread.
@@ -315,16 +315,18 @@ result_t Proteus::closeSerialConnection() {
  * Initialize the driver.  This function is called when the first client subscribes.
  * See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/classDriver.html#032a5853e3099f7613de6074941527d9
  */
-int Proteus::Setup() {
+int Proteus::MainSetup() {
 	this->proteus_dev = proteus_create(this->serial_port);
 	
 	// Even if this failed, the main method will retry later.
 	gettimeofday(&_currTime, NULL);
-	printf("%ld.%.6ld proteus_driver: setup: opening serial connection to MCU on %s...\n", _currTime.tv_sec, _currTime.tv_usec, this->serial_port);
+	printf("%ld.%.6ld proteus_driver: setup: opening serial connection to MCU on %s...\n", 
+		_currTime.tv_sec, _currTime.tv_usec, this->serial_port);
 	
 	if (proteus_open(this->proteus_dev) == FAIL) {
 		gettimeofday(&_currTime, NULL);
-		printf("%ld.%.6ld proteus_driver: setup: ERROR: failed to open %s to MCU, will try again later...\n", _currTime.tv_sec, _currTime.tv_usec, this->serial_port);
+		printf("%ld.%.6ld proteus_driver: setup: ERROR: failed to open %s to MCU, will try again later...\n", 
+			_currTime.tv_sec, _currTime.tv_usec, this->serial_port);
 	}
 	
 	//if(b_sonar_interface && !this->ir_as_sonar){  //start sampling sonar sensors
@@ -341,7 +343,7 @@ int Proteus::Setup() {
  * Terminates the driver.  This method is called when the last client disconnects.
  * See: http://playerstage.sourceforge.net/doc/Player-2.1.0/player/classDriver.html#925c5c4806495d699eb9719ebdd1a03a
  */
-int Proteus::Shutdown() {
+void Proteus::MainQuit() {
 	gettimeofday(&_currTime, NULL);
 	printf("%ld.%.6ld proteus_driver: shutdown: shutting down...\n", _currTime.tv_sec, _currTime.tv_usec);
 	
@@ -362,7 +364,7 @@ int Proteus::Shutdown() {
 	proteus_destroy(this->proteus_dev);
 	this->proteus_dev = NULL;
 	
-	return 0;
+	//return 0;
 }
 
 /**
@@ -545,22 +547,13 @@ void Proteus::Main() {
 		 * In this case, it processes all messages that are currently buffered and no more.
 		 * For each message, Proteus::ProcessMessage(...) is called, which is defined below.
 		 */
-		//printf("proteus_driver: main: processing messages from player server...\n");
+		printf("proteus_driver: main: processing messages from player server...\n");
 		this->ProcessMessages(); // should we only process one message at a time by passing a '1' in as a parameter?
 		
-		/*
-		 * I'M NOT SURE THIS POLLING IS NECESSARY.  WHY NOT JUST HAVE THE MICRO-CONTROLLER AUTOMATICALLY
-		 * SEND THE LATEST READINGS TO THE X86?
-		 */
-		/*if (this->getNewData() == -1) {
-			proteus_close(this->proteus_dev); // I'm not sure this is the right thing to do...perhaps disconnect and then re-connect?
-			return;
-		}*/
-		
-		//printf("proteus_driver: main: receiving serial data...\n");
+		printf("proteus_driver: main: receiving serial data...\n");
 		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
 		
-		//printf("proteus_driver: main: processing serial data...\n");
+		printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
 				//printf("proteus_driver: main: checking for new data to publish...\n");
@@ -600,7 +593,8 @@ void Proteus::Main() {
 			}
 		} else {
 			gettimeofday(&_currTime, NULL);
-			printf("%ld.%.6ld proteus_driver: main: COMM FAILURE: closing and then re-opening the serial link\n", _currTime.tv_sec, _currTime.tv_usec);
+			printf("%ld.%.6ld proteus_driver: main: COMM FAILURE: closing and then re-opening the serial link\n", 
+				_currTime.tv_sec, _currTime.tv_usec);
 			proteus_close(this->proteus_dev);
 			proteus_open(this->proteus_dev);
 		}
@@ -655,7 +649,8 @@ int Proteus::ProcessMessage(QueuePointer & resp_queue, player_msghdr * hdr, void
 		
 		memcpy(&position_car_cmd, data, sizeof position_car_cmd); // Save the message
 		
-		printf("proteus_driver: ProcessMessage: Sending car command velocity=%f, angle=%f.\n", position_car_cmd.velocity, position_car_cmd.angle);
+		printf("proteus_driver: ProcessMessage: Sending car command velocity=%f, angle=%f.\n", 
+			position_car_cmd.velocity, position_car_cmd.angle);
 		
 		if(proteus_set_speeds(this->proteus_dev, position_car_cmd.velocity, position_car_cmd.angle) < 0) {
 			PLAYER_ERROR("proteus_driver.cc: Failed to set speeds to proteus");
