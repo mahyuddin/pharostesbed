@@ -111,7 +111,7 @@ requires Player to be restarted
 #define PI 3.14159265
 #endif
 
-class Proteus : public Driver {
+class Proteus : public ThreadedDriver {
 	public:
 		Proteus(ConfigFile* cf, int section);
 		
@@ -214,7 +214,8 @@ void proteus_Register(DriverTable* table) {
  *
  * Since this is a multi-interface driver, each interface is added using AddInterface(...).
  */
-Proteus::Proteus(ConfigFile* cf, int section): Driver(cf, section, true /* new commands overwrite old commands*/, PLAYER_MSGQUEUE_DEFAULT_MAXLEN) {
+Proteus::Proteus(ConfigFile* cf, int section)
+: ThreadedDriver(cf, section, true /* new commands overwrite old commands*/, PLAYER_MSGQUEUE_DEFAULT_MAXLEN) {
 	
 	gettimeofday(&_currTime, NULL);
 	printf("%ld.%.6ld proteus_driver: constructor called\n", _currTime.tv_sec, _currTime.tv_usec);
@@ -332,7 +333,7 @@ int Proteus::Setup() {
 	
 	// Each driver has its own thread, which is started by the function below.
 	// The thread starts executing in the Proteus::Main(void) method, which is defined below.
-	StartThread();
+	//StartThread();
 	return 0;
 }
 
