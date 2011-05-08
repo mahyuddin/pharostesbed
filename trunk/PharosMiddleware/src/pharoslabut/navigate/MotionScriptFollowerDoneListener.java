@@ -1,7 +1,7 @@
 package pharoslabut.navigate;
 
 /**
- * This is implemented by any component that wants to know when the 
+ * This is implemented by components that want to know when the 
  * robot is done navigating the waypoints within a motion script.
  * 
  * @author Chien-Liang Fok

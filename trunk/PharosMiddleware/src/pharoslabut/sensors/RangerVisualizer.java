@@ -1,7 +1,8 @@
 package pharoslabut.sensors;
 
 import pharoslabut.logger.FileLogger;
-import playerclient.structures.ir.*;
+import playerclient3.structures.ranger.*;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -15,7 +16,7 @@ import java.text.*;
  * 
  * @author Chien-Liang Fok
  */
-public class IRVisualizer {	
+public class RangerVisualizer {	
 	private JFrame window;
 	private IRPanel irPanel;
 	private boolean isClosed = false;
@@ -28,11 +29,11 @@ public class IRVisualizer {
 	private double distRR = 0;
 	private double distRL = 0;
 	
-	public IRVisualizer() {
+	public RangerVisualizer() {
 		this(null);
 	}
 	
-	public IRVisualizer(FileLogger flogger) {
+	public RangerVisualizer(FileLogger flogger) {
 		this.flogger = flogger;
 		
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -94,10 +95,10 @@ public class IRVisualizer {
         window.setLocationRelativeTo(null); // center frame
     }
     
-    public void updateDistances(PlayerIrData irData) {
-    	int numSensors = irData.getRanges_count();
+    public void updateDistances(PlayerRangerData rangeData) {
+    	int numSensors = rangeData.getRanges_count();
     	if (numSensors == 6) {
-    		float[] data = irData.getRanges();
+    		double[] data = rangeData.getRanges();
     		distFL = data[0];
     		distFC = data[1];
     		distFR = data[2];

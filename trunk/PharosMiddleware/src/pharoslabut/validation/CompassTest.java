@@ -1,20 +1,21 @@
 package pharoslabut.validation;
 
+import pharoslabut.logger.*;
+import pharoslabut.sensors.*;
 import pharoslabut.logger.CompassLogger;
-import playerclient.OpaqueInterface;
-import playerclient.OpaqueListener;
-import playerclient.PlayerClient;
-import playerclient.PlayerException;
-import playerclient.Position2DInterface;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.opaque.PlayerOpaqueData;
+
+import playerclient3.OpaqueInterface;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.structures.PlayerConstants;
 
 /**
  * Logs the compass data.  Does not move the robot.
  * 
  * @author Chien-Liang Fok
  */
-public class CompassTest implements OpaqueListener {
+public class CompassTest implements ProteusOpaqueListener {
 	public static final double ROBOT_CIRCLE_VELOCITY = 0.6;
 	public static final double ROBOT_CIRCLE_ANGLE = -20;
 	public static final int ROBOT_REFRESH_PERIOD = 500; // interval of sending commands to robot in ms
@@ -41,12 +42,17 @@ public class CompassTest implements OpaqueListener {
 		}
 		
 		if (getStatusMsgs) {
-			OpaqueInterface oi = client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+			ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 			oi.addOpaqueListener(this);
 		}
 		
 		CompassLogger compassLogger = new CompassLogger(compass, showGUI);
-		if (compassLogger.start(COMPASS_LOG_PERIOD, fileName)) {
+		
+		if (fileName != null) {
+			compassLogger.setFileLogger(new FileLogger(fileName));
+		}
+		
+		if (compassLogger.start(COMPASS_LOG_PERIOD)) {
 			synchronized(this) {
 				try {
 					if (time > 0) {
@@ -63,7 +69,7 @@ public class CompassTest implements OpaqueListener {
 	}
 	
 	@Override
-	public void newOpaqueData(PlayerOpaqueData opaqueData) {
+	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		//System.out.println("Opaque data: " + opaqueData);
 		String s = new String(opaqueData.getData());
 		log(s);

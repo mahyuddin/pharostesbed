@@ -1,8 +1,8 @@
 package pharoslabut.tests;
 
-import playerclient.*;
-import playerclient.structures.*;
-import playerclient.structures.opaque.PlayerOpaqueData;
+import playerclient2.*;
+import playerclient2.structures.*;
+import playerclient2.structures.opaque.PlayerOpaqueData;
 
 /**
  * Subscribes to the OpaqueInterface to determine whether it works.

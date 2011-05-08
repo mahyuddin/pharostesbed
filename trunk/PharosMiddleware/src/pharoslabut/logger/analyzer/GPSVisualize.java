@@ -3,7 +3,7 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
-import pharoslabut.logger.*;
+import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
 
 /**

@@ -1,12 +1,14 @@
 package pharoslabut.validation;
 
+import pharoslabut.sensors.*;
 import pharoslabut.MotionArbiter;
 import pharoslabut.tasks.Priority;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.logger.*;
-import playerclient.*;
-import playerclient.structures.*;
-import playerclient.structures.position2d.PlayerPosition2dData;
+
+import playerclient3.*;
+import playerclient3.structures.*;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 
 /**
  * Stresses out the motor of the Proteus robot by sending it a velocity step function.
@@ -31,13 +33,15 @@ public class MotorStressTest implements Position2DListener {
 		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
-		} else
-			motors.addPos2DListener(this);
-		
+		} else {
+			Position2DBuffer p2db = new Position2DBuffer(motors);
+			p2db.addPos2DListener(this);
+			p2db.start();
+		}
 		MotionArbiter motionArbiter = null;
 		
 		if (useCarLike)
-			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_CAR_LIKE, motors);
+			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_TRAXXAS, motors);
 		else
 			motionArbiter = new MotionArbiter(MotionArbiter.MotionType.MOTION_IROBOT_CREATE, motors);
 		
@@ -66,7 +70,7 @@ public class MotorStressTest implements Position2DListener {
 		motionArbiter.submitTask(currTask);
 		pause(duration);
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
@@ -79,7 +83,7 @@ public class MotorStressTest implements Position2DListener {
 		
 		pause(duration);
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
@@ -99,7 +103,7 @@ public class MotorStressTest implements Position2DListener {
 	
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		PlayerPose pp = data.getPos();
+		PlayerPose2d pp = data.getPos();
 		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
 	}
 	

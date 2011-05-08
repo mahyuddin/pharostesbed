@@ -1,21 +1,26 @@
 package pharoslabut.tests;
 
-import playerclient.*;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.position2d.PlayerPosition2dData;
+import playerclient3.*;
+import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.position2d.PlayerPosition2dData;
+
 import pharoslabut.MotionArbiter;
 import pharoslabut.logger.*;
 import pharoslabut.navigate.*;
+import pharoslabut.sensors.Position2DBuffer;
+import pharoslabut.sensors.Position2DListener;
+import pharoslabut.sensors.CompassDataBuffer;
+import pharoslabut.sensors.GPSDataBuffer;
 
 /**
  * Navigates a robot to a specific position.
  * 
  * @author Chien-Liang Fok
  */
-public class TestNavigateCompassGPS implements Position2DListener{
+public class TestNavigateCompassGPS implements Position2DListener {
 	
 	private Position2DInterface motors;
-	private PlayerPosition2dData pos2dData = null;
+	//private PlayerPosition2dData pos2dData = null;
 	
 	private Position2DInterface compass;
 	private CompassDataBuffer compassDataBuffer;
@@ -69,7 +74,9 @@ public class TestNavigateCompassGPS implements Position2DListener{
 		motors.resetOdometry();
 		
 		log("Listening for position2D events...");
-		motors.addPos2DListener(this);
+		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
+		p2dBuff.addPos2DListener(this);
+		p2dBuff.start();
 		
 		motionArbiter.setFileLogger(flogger);
 		gpsDataBuffer.setFileLogger(flogger);
@@ -88,29 +95,27 @@ public class TestNavigateCompassGPS implements Position2DListener{
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 				gpsDataBuffer, flogger);
 		
-		try {
-			navigatorGPS.go(destLoc, velocity);
-		} catch (SensorException e) {
-			log("ERROR: " + e.toString());
-			e.printStackTrace();
-		}
+		
+		if (!navigatorGPS.go(destLoc, velocity)) {
+			log("ERROR: Unable to reach " + destLoc);
+		} 
 	}
 
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		log(data.toString());
-		this.pos2dData = data;
+		//this.pos2dData = data;
 	}
 	
-	private void pause(long duration) {
-		synchronized(this) {
-			try {
-				this.wait(duration);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	private void pause(long duration) {
+//		synchronized(this) {
+//			try {
+//				this.wait(duration);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 	
 	private void log(String msg) {
 		String result = "TestNavigateCompassGPS: " + msg;

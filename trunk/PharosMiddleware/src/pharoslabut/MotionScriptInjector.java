@@ -4,6 +4,7 @@ import java.net.InetAddress;
 //import java.net.UnknownHostException;
 //import java.util.*;
 
+import pharoslabut.experiment.ExpType;
 import pharoslabut.io.*;
 //import pharoslabut.tasks.*;
 //import pharoslabut.beacon.*;

@@ -1,7 +1,7 @@
 package pharoslabut.logger.analyzer;
 
-import java.util.*;
-
+import java.util.Vector;
+import java.util.Enumeration;
 import pharoslabut.logger.FileLogger;
 
 public class ConnectivityVsTime {

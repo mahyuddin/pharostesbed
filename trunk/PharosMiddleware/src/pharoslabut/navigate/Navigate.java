@@ -128,13 +128,11 @@ public abstract class Navigate {
 		String result = "Navigate:" + msg;
 		
 		// Only print text out if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
-		}
 		
 		// Always print the log text to a file if the FileLogger exists
-		if (flogger != null) {
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 }

@@ -10,7 +10,6 @@ import java.util.Calendar;
  * Logs text to a file.
  * 
  * @author Chien-Liang Fok
- *
  */
 public class FileLogger {
 	
@@ -52,6 +51,9 @@ public class FileLogger {
 		}
 	}
 	
+	/**
+	 * @return A unique string that can be appended to a file name to ensure uniqueness.
+	 */
 	public static String getUniqueNameExtension() {
 		Calendar cal = Calendar.getInstance();
 		int sec = cal.get(Calendar.SECOND);
@@ -79,6 +81,11 @@ public class FileLogger {
 		return year + "" + monthStr + "" + dayStr + "" + hrStr + "" + minStr + "" + secStr; 
 	}
 	
+	/**
+	 * Saves a String to a file.
+	 * 
+	 * @param msg The string to log.
+	 */
 	public void log(String msg) {
 		if (pw != null) {
 			if (printTimeStamp)

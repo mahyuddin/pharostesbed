@@ -1,9 +1,9 @@
 package pharoslabut.logger.analyzer;
 
 import java.util.Vector;
-
+import java.util.Enumeration;
 import pharoslabut.logger.FileLogger;
-import java.util.*;
+
 
 /**
  * Extracts the RSSI data from a robot's log file.

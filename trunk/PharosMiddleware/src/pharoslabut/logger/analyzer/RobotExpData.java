@@ -3,10 +3,10 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
-import pharoslabut.logger.*;
+import pharoslabut.logger.FileLogger;
 import pharoslabut.RobotIPAssignments;
-import pharoslabut.navigate.*;
-import playerclient.structures.gps.PlayerGpsData;
+import pharoslabut.navigate.Location;
+import playerclient3.structures.gps.PlayerGpsData;
 
 /**
  * Encapsulates the data recorded by a robot during an experiment.
@@ -387,7 +387,7 @@ public class RobotExpData {
 				// Only add the GPSLocation if it is valid.  It is valid if the 
 				// latitude is 
 				Location l = new Location(currLoc);
-				if (pharoslabut.navigate.GPSDataBuffer.isValid(l)) {
+				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {
 					locations.add(new GPSLocationState(timeStamp, currLoc));
 					if (currEdge != null) {
 						if (!currEdge.hasStartLoc())
