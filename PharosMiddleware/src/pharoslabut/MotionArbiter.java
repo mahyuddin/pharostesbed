@@ -234,7 +234,9 @@ public class MotionArbiter implements Runnable {
 			}
 
 			try {
-				wait(CYCLE_TIME);
+				synchronized(this) {
+					wait(CYCLE_TIME);
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
