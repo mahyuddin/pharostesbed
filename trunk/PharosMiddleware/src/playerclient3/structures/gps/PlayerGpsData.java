@@ -259,4 +259,11 @@ public class PlayerGpsData implements PlayerConstants {
     public synchronized void setErr_vert (double newErr_vert) {
         this.err_vert = newErr_vert;
     }
+    
+    public String toString() { 
+        return "(PlayerGpsData time_sec=" + time_sec + " time_usec=" + time_usec + " latitude=" + latitude
+        		+ " longitude=" + longitude + " altitude=" + altitude + " utm_e=" + utm_e
+        		+ " utm_n=" + utm_n + " quality=" + quality + " num_sats=" + num_sats + " hdop=" + hdop 
+        		+ " vdop=" + vdop + " err_horiz=" + err_horz + " err_vert=" + err_vert + ")";
+    }
 }
