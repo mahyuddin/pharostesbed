@@ -15,7 +15,7 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 	
 	private PlayerClient client = null;
 	private FileLogger flogger;
-	ProteusOpaqueInterface poi;
+	private ProteusOpaqueInterface poi;
 	
 	/**
 	 * The constructor.

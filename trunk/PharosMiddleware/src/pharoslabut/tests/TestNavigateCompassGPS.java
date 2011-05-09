@@ -116,6 +116,8 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			log("ERROR: Unable to reach " + destLoc); 
 		else
 			log("SUCCESS!");
+		
+		System.exit(0);
 	}
 
 	@Override
@@ -140,6 +142,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		System.err.println("\t-latitude <latitude>: The latitude of the destination location (default 30.385645)");
 		System.err.println("\t-longitude <longitude>: The longitude of the destination location (default -97.7251983)");
 		System.err.println("\t-velocity <speed>: The velocity at which the robot should travel towards the destination (default 1.5)");
+		System.err.println("\t-d: Enable debug mode");
 	}
 	
 	public static final void main(String[] args) {
@@ -190,6 +193,9 @@ public class TestNavigateCompassGPS implements Position2DListener {
 				}
 				else if (args[i].equals("-velocity")) {
 					velocity = Double.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-d") || args[i].equals("-debug")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
 				}
 				else {
 					usage();
