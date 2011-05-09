@@ -29,7 +29,7 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 		if (logFileName != null)
 			flogger = new FileLogger(logFileName);
 		
-		log("Connecting to the player server on " + serverIP + ":" + serverPort + "...");
+		log("Connecting to the player server " + serverIP + ":" + serverPort + "...");
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
