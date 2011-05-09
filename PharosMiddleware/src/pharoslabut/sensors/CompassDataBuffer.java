@@ -30,7 +30,7 @@ public class CompassDataBuffer implements Runnable {
 	/**
 	 * The maximum age in milliseconds of compass readings stored in this buffer.
 	 */
-	public static final long COMPASS_MAX_AGE = 500;
+	public static final long COMPASS_MAX_AGE = 800;
 	
 	/**
 	 * The time at which the last sensor reading was received.
@@ -133,6 +133,7 @@ public class CompassDataBuffer implements Runnable {
      */
     private void notifyP2DListeners(final PlayerPosition2dData pp2ddata) {
     	if (pos2dListeners.size() > 0) {
+    		//log("notifyP2DListeners: Notifying listeners of new compass data...");
     		new Thread(new Runnable() {
     			public void run() {
     				Enumeration<Position2DListener> e = pos2dListeners.elements();
@@ -142,7 +143,8 @@ public class CompassDataBuffer implements Runnable {
     			}
 
     		}).start();
-    	}
+    	} else
+    		log("notifyP2DListeners: No listeners present...");
     }
 	
 	/**
@@ -185,7 +187,7 @@ public class CompassDataBuffer implements Runnable {
 			// Create a temporary array storing the data...
 			Double[] data = new Double[headingBufferSize];
 			for (int i=0; i < headingBufferSize; i++) {
-				data[i] = headingBuffer[headingBufferSize];
+				data[i] = headingBuffer[i];
 			}
 			
 			Arrays.sort(data);
@@ -227,7 +229,7 @@ public class CompassDataBuffer implements Runnable {
 			
 			// Check if we've exceeded the max age
 			long age = System.currentTimeMillis() - lastTimeStamp;
-			if (age > COMPASS_MAX_AGE) {
+			if (headingBufferSize > 0 && age > COMPASS_MAX_AGE) {
 				log("run: ERROR: max sensor age reached, flushing buffer!");
 				clearHeadingBuffer();
 			}
