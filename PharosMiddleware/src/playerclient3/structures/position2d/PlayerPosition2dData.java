@@ -85,4 +85,14 @@ public class PlayerPosition2dData implements PlayerConstants {
     public synchronized void setStall (byte newStall) {
         this.stall = newStall;
     }
+    
+    /**
+     * Returns a string representation of this class.
+     */
+    public String toString() {
+    	StringBuffer result = new StringBuffer("(PlayerPosition2dData");
+    	result.append("\n\tPosition: x=" + pos.getPx() + "m, y=" + pos.getPy() + "m, yaw=" + pos.getPa() + "rad");
+    	result.append("\n\tVelocity: x=" + vel.getPx() + "m/s, y= " + vel.getPy() + "m/s, yaw=" + vel.getPa() + "rad/s)");
+    	return result.toString();
+    }
 }
