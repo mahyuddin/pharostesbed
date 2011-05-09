@@ -19,9 +19,35 @@ import playerclient3.structures.PlayerConstants;
  */
 public class TestHeadingDirection {
 
+	private static void usage() {
+		System.err.println("Usage: pharoslabut.tests.TestHeadingDirection <options>\n");
+		System.err.println("Where <options> include:");
+		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
+		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
+	}
+	
 	public static final void main(String[] args) {
-		String serverIP = "192.168.1.120";
+		String serverIP = "10.11.12.1";
 		int serverPort = 6665;
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-server")) {
+					serverIP = args[++i];
+				} 
+				else if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				} 
+				else {
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			usage();
+			System.exit(1);
+		}
 
 		System.setProperty ("PlayerClient.debug", "true");
 		System.out.println("Launching TestHeadingDirection...");
