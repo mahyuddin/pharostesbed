@@ -62,8 +62,6 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 	
 	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
-//	private String expName;
-	
 	/**
 	 * The constructor.  Immediately starts the server running.
 	 * 
@@ -74,7 +72,6 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 	public PharosServer(String playerServerIP, int playerServerPort, int pharosServerPort, 
 			String mCastAddress, int mCastPort) 
 	{
-		
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
 		this.pharosServerPort = pharosServerPort;
@@ -82,13 +79,13 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
-		if (!initServer()) {
-			log("ERROR: Failed to initialize the server!");
+		if (!initPharosServer()) {
+			log("ERROR: Failed to initialize the Pharos server!");
 			System.exit(1);
 		}
 		
 		if (!createPlayerClient()) {
-			log("ERROR: Failed to connect to player server!");
+			log("ERROR: Failed to connect to Player server!");
 			//System.exit(1); // fatal error
 		}
 		
@@ -118,7 +115,7 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 		}
 		
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
+		Position2DInterface compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
@@ -146,10 +143,17 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 		gpsDataBuffer = new GPSDataBuffer(gps);
 		motionArbiter = new MotionArbiter(motors);
 		oi.addOpaqueListener(this);
+		
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);
+		
 		return true;
 	}
 	
-	private boolean initServer() {
+	private boolean initPharosServer() {
 		//TCPMessageReceiver msgRcvr = 
 		new TCPMessageReceiver(this, pharosServerPort);
 		return true;
@@ -302,26 +306,44 @@ public class PharosServer implements MessageReceiver, WiFiBeaconListener, Proteu
 			stopExp();
 	}
 	
+	/**
+	 * Stops the experiment.
+	 */
 	private void stopExp() {
 		flogger.log("PharosServer: Stopping the file logger.");
 		
-		if (motionArbiter != null)					motionArbiter.setFileLogger(null);
-		beaconBroadcaster.setFileLogger(null);
-		beaconReceiver.setFileLogger(null);
-		gpsDataBuffer.setFileLogger(null);
-		compassDataBuffer.setFileLogger(null);
+		if (motionArbiter != null) {
+			motionArbiter.setFileLogger(null);
+		}
 		
-		flogger.log("PharosServer: Stopping the TelosB broadcaster.");
+		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+		if (beaconBroadcaster != null) {
+			beaconBroadcaster.setFileLogger(null);
+			beaconBroadcaster.stop();
+		}
+		
+		flogger.log("PharosServer: Stopping the WiFi beacon receiver.");
+		if (beaconReceiver != null) {
+			beaconReceiver.setFileLogger(null);
+		}
+		
+		flogger.log("PharosServer: Stopping the GPS data buffer.");
+		if (gpsDataBuffer != null)	{
+			gpsDataBuffer.setFileLogger(null);
+			gpsDataBuffer.stop();
+		}
+		
+		flogger.log("PharosServer: Stopping the compass data buffer.");
+		if (compassDataBuffer != null) {
+			compassDataBuffer.setFileLogger(null);
+			compassDataBuffer.stop();
+		}
+		
+		flogger.log("PharosServer: Stopping the TelosB signal meter.");
 		if (telosRadioSignalMeter != null) {
 			telosRadioSignalMeter.setFileLogger(null);
 			telosRadioSignalMeter.stop();
 		}
-		
-		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
-		beaconBroadcaster.stop();
-		
-		
-		
 		
 		//flogger.log("PharosServer: Stopping the UDP tester.");
 		//udpTest.stop();
