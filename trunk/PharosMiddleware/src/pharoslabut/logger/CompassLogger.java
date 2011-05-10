@@ -1,13 +1,14 @@
 package pharoslabut.logger;
 
-import java.net.*;
 import org.jfree.ui.RefineryUtilities;
 
+import pharoslabut.sensors.*;
 import pharoslabut.CompassLoggerGUI;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 
 
 /**
@@ -18,14 +19,15 @@ import playerclient3.structures.PlayerConstants;
  * @see CompassLoggerEvent
  * @author Chien-Liang Fok
  */
-public class CompassLogger implements Runnable {
+public class CompassLogger implements Position2DListener, ProteusOpaqueListener {
 	
 	//private String serverIP = null;
 	private Position2DInterface compass = null;
+	private ProteusOpaqueInterface poi;
 	private CompassLoggerGUI gui;
 	private FileLogger flogger;
-	private long period;
 	private boolean logging = false;
+	private long startTime;
 	
 	/**
 	 * A constructor that creates a new PlayerClient to connect to the compass.
@@ -33,16 +35,16 @@ public class CompassLogger implements Runnable {
 	 * @param serverIP The IP address of the server
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the compass device
-	 * @param fileName The name of the file in which to save the log.
+	 * @param flogger The name of the file in which to save the log.
 	 * @param showGUI Whether to display the compass logger's GUI
 	 * @param getStatusMsgs Whether to get status messages.
 	 */
-	public CompassLogger(String serverIP, int serverPort, int deviceIndex, String fileName, 
+	public CompassLogger(String serverIP, int serverPort, int deviceIndex, FileLogger flogger, 
 			boolean showGUI, boolean getStatusMsgs) 
 	{
 		PlayerClient client = null;
-		
-		this.flogger = new FileLogger(fileName, false);
+	
+		this.flogger = flogger;
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
@@ -74,12 +76,29 @@ public class CompassLogger implements Runnable {
 			}
 		}
 		
+		log("Creating CompassDataBuffer...");
+		CompassDataBuffer cdb = new CompassDataBuffer(compass);
+		
+		log("Registering self as listener to CompassDataBuffer events...");
+		cdb.addPos2DListener(this);
+		cdb.start();
+		
 		if (getStatusMsgs) {
-			//TODO use opaque interface to get status messages.
+			log("Connecting to ProteusOpaqueInterface...");
+			poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+			
+			log("Registering self as listener to Opaque data...");
+			poi.addOpaqueListener(this);
 		}
 		
 		if (showGUI)
 			initGUI();
+		
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);
 	}
 	
 	/**
@@ -127,13 +146,16 @@ public class CompassLogger implements Runnable {
 	 * @param period The period in which to access the compass.
 	 * @return true if the start was successful. false if it was already started.
 	 */
-	public boolean start(long period) {
+	public boolean start() {
 		if (!logging) {
 			logging = true;
 			
-			this.period = period;
+			// Print a header to the table...
+			log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)");
 			
-			new Thread(this).start();
+			// Record the starting time...
+			startTime = System.currentTimeMillis();
+			
 			return true;
 		} else
 			return false;
@@ -145,39 +167,28 @@ public class CompassLogger implements Runnable {
 	public void stop() {
 		logging = false;
 	}
-		
+	
+	/**
+	 * This should be called whenever new compass data arrives.
+	 */
 	@Override
-	public void run() {
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		long endTime = System.currentTimeMillis();
+		double deltaTimeMS = (endTime - startTime);
+		double deltaTimeS = deltaTimeMS/1000;
+
 		
-		// Print a header to the table...
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)");
+		double heading = data.getPos().getPa();
+		log(endTime + "\t" + deltaTimeMS + "\t" + deltaTimeS + "\t" + heading);
 
-		// Record the starting time...
-		long startTime = System.currentTimeMillis();
-
-		// Sit in a loop logging compass data...
-		while(logging) {
-			long endTime = System.currentTimeMillis();
-			double deltaTimeMS = (endTime - startTime);
-			double deltaTimeS = deltaTimeMS/1000;
-			
-			if (compass.isDataReady()) {
-				double heading = compass.getYaw();
-				log(endTime + "\t" + deltaTimeMS + "\t" + deltaTimeS + "\t" + heading);
-				
-				if (gui != null)
-					gui.addData(deltaTimeS, heading);
-			} else 
-				log("No new compass data available...");
-
-			try {
-				synchronized(this) {
-					wait(period);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		if (gui != null)
+			gui.addData(deltaTimeS, heading);
+	}
+	
+	@Override
+	public void newOpaqueData(ProteusOpaqueData opaqueData) {
+		String s = new String(opaqueData.getData());
+		log(s);
 	}
 	
 	private void log(String msg) {
@@ -193,8 +204,7 @@ public class CompassLogger implements Runnable {
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-index <index>: the index of the compass device (default 1)");
-		System.err.println("\t-file <file name>: The name of the file into which the compass data is logged (default log.txt)");
-		System.err.println("\t-period <period>: The period of sampling in milliseconds (default 100)");
+		System.err.println("\t-log <file name>: The name of the file into which the compass data is logged (default null)");
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
 		System.err.println("\t-nostatus: Do not subscribe to opaque interface to get status messages");
 		System.err.println("\t-d: enable debug output");
@@ -204,8 +214,7 @@ public class CompassLogger implements Runnable {
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		int index = 1;
-		String fileName = "log.txt";
-		long period = 100; // period between sampling in milliseconds
+		String fileName = null;
 		boolean showGUI = false;
 		int time = 0;
 		boolean getStatusMsgs = true;
@@ -220,11 +229,8 @@ public class CompassLogger implements Runnable {
 			else if (args[i].equals("-index")) {
 				index = Integer.valueOf(args[++i]);
 			} 
-			else if (args[i].equals("-file")) {
+			else if (args[i].equals("-log")) {
 				fileName = args[++i];
-			}
-			else if (args[i].equals("-period")) {
-				period = Long.valueOf(args[++i]);
 			}
 			else if (args[i].equals("-debug") || args[i].equals("-d")) {
 				System.setProperty ("PharosMiddleware.debug", "true");
@@ -248,14 +254,17 @@ public class CompassLogger implements Runnable {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("Compass sensor index: " + index);
 		System.out.println("File name: " + fileName);
-		System.out.println("Sampling period: " + period);
 		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
 		System.out.println("Show GUI: " + showGUI);
 		System.out.println("Log time: " + time + "s");
 		System.out.println("Get status messages: " + getStatusMsgs);
 		
-		CompassLogger cl = new CompassLogger(serverIP, serverPort, index, fileName, showGUI, getStatusMsgs);
-		cl.start(period);
+		FileLogger flogger = null;
+		if (fileName != null)
+			flogger = new FileLogger(fileName, false);
+		
+		CompassLogger cl = new CompassLogger(serverIP, serverPort, index, flogger, showGUI, getStatusMsgs);
+		cl.start();
 		
 		if (time > 0) {
 			try {
