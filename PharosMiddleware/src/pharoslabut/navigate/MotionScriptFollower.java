@@ -96,10 +96,16 @@ public class MotionScriptFollower implements Runnable {
 		return result;
 	}
 	
+	/**
+	 * @return true if this MotionScriptFollower is running.
+	 */
 	public boolean isRunning() {
 		return running;
 	}
 	
+	/**
+	 * Stops this MotionScriptFollower.
+	 */
 	public void stop() {
 		running = false;
 		doneListener = null;
