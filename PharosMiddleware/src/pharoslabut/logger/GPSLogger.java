@@ -1,5 +1,7 @@
 package pharoslabut.logger;
 
+import pharoslabut.sensors.*;
+
 import playerclient3.GPSInterface;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
@@ -11,11 +13,11 @@ import playerclient3.structures.gps.PlayerGpsData;
  * 
  * @author Chien-Liang Fok
  */
-public class GPSLogger implements Runnable {
+public class GPSLogger implements GPSListener {
 	
 	private GPSInterface gps = null;
 	private boolean logging;
-	private long period;
+	private long startTime;
 	private FileLogger flogger;
 	
 	/**
@@ -24,13 +26,13 @@ public class GPSLogger implements Runnable {
 	 * @param serverIP The IP address of the server
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the GPS device
-	 * @param fileName The name of the log file.
+	 * @param flogger The FileLogger to use to save debug messages.
 	 */
-	public GPSLogger(String serverIP, int serverPort, int deviceIndex, String fileName) {
+	public GPSLogger(String serverIP, int serverPort, int deviceIndex, FileLogger flogger) {
 		
 		PlayerClient client = null;
 		
-		flogger = new FileLogger(fileName, false);
+		this.flogger = flogger;
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
@@ -48,7 +50,7 @@ public class GPSLogger implements Runnable {
 				if (gps != null)
 					log("Subscribed to GPS service...");
 				else {
-					log("ERROR: GPS service was null...");
+					log("ERROR: GPS service was null, waiting 1s then retrying...");
 					synchronized(this) {
 						try {
 							wait(1000);
@@ -61,6 +63,19 @@ public class GPSLogger implements Runnable {
 				System.err.println("Error: " + pe.getMessage());
 			}
 		}
+		
+		// The runThreaded and change of data delivery mode can be done in reverse order.
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);
+		
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Creating GPSDataBuffer...");
+		GPSDataBuffer gdb = new GPSDataBuffer(gps);
+		gdb.setFileLogger(flogger);
+		gdb.addGPSListener(this);
+		gdb.start();
 	}
 	
 	/**
@@ -75,14 +90,16 @@ public class GPSLogger implements Runnable {
 	/**
 	 * Starts the logging process.
 	 * 
-	 * @param period The period in which to access the GPS sensor.
 	 * @return true if the start was successful. false if it was already started.
 	 */
-	public boolean start(long period) {
+	public boolean start() {
 		if (!logging) {
 			logging = true;
-			this.period = period;
-			new Thread(this).start();
+			
+			log("Time (ms)\tDelta Time (ms)\tGPS Quality\tLatitude\tLongitude\tAltitude\tGPS Time (s)\tGPS Time(us)\tGPS Error Vertical\tGPS Error Horizontal");
+			
+			startTime = System.currentTimeMillis();
+			
 			return true;
 		} else
 			return false;
@@ -95,33 +112,17 @@ public class GPSLogger implements Runnable {
 		logging = false;
 	}
 	
-	public void run() {
-		log("Time (ms)\tDelta Time (ms)\tGPS Quality\tLatitude\tLongitude\tAltitude\tGPS Time (s)\tGPS Time(us)\tGPS Error Vertical\tGPS Error Horizontal");
+	@Override
+	public void newGPSData(PlayerGpsData gpsData) {
+		long endTime = System.currentTimeMillis();
 		
-		long startTime = System.currentTimeMillis();
-
-		while(logging) {
-			if (gps.isDataReady()) {
-				long endTime = System.currentTimeMillis();
-				PlayerGpsData currLocGPS = gps.getData();
-				
-				String result = endTime + "\t" + (endTime - startTime) + "\t";
-				result += currLocGPS.getQuality()  + "\t" + (currLocGPS.getLatitude()/1e7) + "\t" 
-					+ (currLocGPS.getLongitude()/1e7) + "\t" + currLocGPS.getAltitude() + "\t"
-					+ currLocGPS.getTime_sec() + "\t" + currLocGPS.getTime_usec() + "\t"
-					+ currLocGPS.getErr_vert() + "\t" + currLocGPS.getErr_horz();	
-				log(result);
-			} else 
-				log("No new GPS data...");
-			
-			try {
-				synchronized(this) {
-					wait(period);
-				}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
+		String result = endTime + "\t" + (endTime - startTime) + "\t";
+		result += gpsData.getQuality()  + "\t" + (gpsData.getLatitude()/1e7) + "\t" 
+			+ (gpsData.getLongitude()/1e7) + "\t" + gpsData.getAltitude() + "\t"
+			+ gpsData.getTime_sec() + "\t" + gpsData.getTime_usec() + "\t"
+			+ gpsData.getErr_vert() + "\t" + gpsData.getErr_horz();
+		
+		log(result);
 	}
 	
 	private void log(String msg) {
@@ -132,13 +133,12 @@ public class GPSLogger implements Runnable {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.GPSLogger <options>\n");
+		System.err.println("Usage: pharoslabut.logger.GPSLogger <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-index <index>: the index of the GPS device (default 0)");
-		System.err.println("\t-file <file name>: The name of the file into which the compass data is logged (default log.txt)");
-		System.err.println("\t-period <period>: The period of sampling in milliseconds (default 1000)");
+		System.err.println("\t-log <file name>: The name of the file into which the compass data is logged (default log.txt)");
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
 		System.err.println("\t-d: enable debug output");
 	}
@@ -147,7 +147,7 @@ public class GPSLogger implements Runnable {
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		int index = 0;
-		String fileName = "log.txt";
+		String fileName = null;
 		long period = 1500; // period between sampling in milliseconds
 		int time = 0;
 		
@@ -161,11 +161,15 @@ public class GPSLogger implements Runnable {
 			else if (args[i].equals("-index")) {
 				index = Integer.valueOf(args[++i]);
 			} 
-			else if (args[i].equals("-file")) {
+			else if (args[i].equals("-log")) {
 				fileName = args[++i];
 			}
 			else if (args[i].equals("-period")) {
 				period = Long.valueOf(args[++i]);
+				if (period < 1000) {
+					System.err.println("ERROR: minimum period is 1000");
+					System.exit(1);
+				}
 			}
 			else if (args[i].equals("-d") || args[i].equals("-debug")) {
 				System.setProperty ("PharosMiddleware.debug", "true");
@@ -182,23 +186,27 @@ public class GPSLogger implements Runnable {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("GPS sensor index: " + index);
-		System.out.println("File name: " + fileName);
+		System.out.println("Loge: " + fileName);
 		System.out.println("Sampling period: " + period);
 		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
 		System.out.println("Log time: " + time + "s");
 		
-		GPSLogger cl = new GPSLogger(serverIP, serverPort, index, fileName);
-		cl.start(period);
+		FileLogger flogger = null;
+		if (fileName != null)
+			flogger = new FileLogger(fileName, false);
+		
+		GPSLogger gl = new GPSLogger(serverIP, serverPort, index, flogger);
+		gl.start();
 		
 		if (time > 0) {
 			try {
-				synchronized(cl) {
-					cl.wait(time*1000);
+				synchronized(gl) {
+					gl.wait(time*1000);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			cl.stop();
+			gl.stop();
 			System.exit(0);
 		}
 	}
