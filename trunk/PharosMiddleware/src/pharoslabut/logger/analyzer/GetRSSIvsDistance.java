@@ -65,15 +65,17 @@ public class GetRSSIvsDistance {
 	}
 	
 	private void logErr(String msg) {
-		System.err.println(msg);
+		String result = "GetRSSIvsDistance: ERROR: " + msg;
+		System.err.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
-		System.out.println(msg);
+		String result = "GetRSSIvsDistance: " + msg;
+		System.out.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
 	}
 	
 	private static void print(String msg) {

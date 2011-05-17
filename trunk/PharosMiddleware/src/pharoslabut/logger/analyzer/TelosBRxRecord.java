@@ -1,6 +1,7 @@
 package pharoslabut.logger.analyzer;
 
 import pharoslabut.RobotIPAssignments;
+import pharoslabut.exceptions.PharosException;
 
 /**
  * Contains all of the information collected when a TelosB 802.15.4 wireless
@@ -84,7 +85,6 @@ public class TelosBRxRecord implements Comparable<TelosBRxRecord>{
 		this.seqno = seqno;
 		this.rssi = rssi;
 		this.lqi = lqi;
-		this.moteTimestamp = moteTimestamp;
 	}
 	
 	
@@ -134,9 +134,26 @@ public class TelosBRxRecord implements Comparable<TelosBRxRecord>{
 	}
 	
 	public String toString() {
+		
+		String sndrName = null;
+		try {
+			sndrName = RobotIPAssignments.getRobotName(sndrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get sender's name: " + sndrID);
+			e1.printStackTrace();
+		}
+		
+		String rcvrName = null;
+		try {
+			rcvrName = RobotIPAssignments.getRobotName(rcvrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get receiver's name: " + rcvrID);
+			e1.printStackTrace();
+		}
+		
 		return timestamp + "\t" 
-			+ sndrID + " (" + RobotIPAssignments.getRobotName(sndrID) + ")\t" 
-			+ rcvrID + " (" + RobotIPAssignments.getRobotName(rcvrID) + ")\t" 
+			+ sndrID + " (" + sndrName + ")\t" 
+			+ rcvrID + " (" + rcvrName + ")\t" 
 			+ seqno + "\t" + rssi + "\t" + lqi + "\t" + moteTimestamp;
 	}
 
@@ -150,4 +167,10 @@ public class TelosBRxRecord implements Comparable<TelosBRxRecord>{
 			return -1;
 	}
 	
+	private void logErr(String msg) {
+		String result = "TelosBRxRecord: ERROR: " + msg;
+		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+	}
 }
