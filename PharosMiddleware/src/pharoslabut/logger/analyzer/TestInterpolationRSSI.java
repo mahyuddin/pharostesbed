@@ -32,7 +32,7 @@ public class TestInterpolationRSSI {
 		
 		String sndrName = null;
 		try {
-			sndrName = RobotIPAssignments.getRobotName(sndrID);
+			sndrName = RobotIPAssignments.getName(sndrID);
 		} catch (PharosException e1) {
 			logErr("Unable to get sender's name: " + sndrID);
 			e1.printStackTrace();
@@ -40,7 +40,7 @@ public class TestInterpolationRSSI {
 		
 		String rcvrName = null;
 		try {
-			rcvrName = RobotIPAssignments.getRobotName(rcvrID);
+			rcvrName = RobotIPAssignments.getName(rcvrID);
 		} catch (PharosException e1) {
 			logErr("Unable to get receiver's name: " + rcvrID);
 			e1.printStackTrace();

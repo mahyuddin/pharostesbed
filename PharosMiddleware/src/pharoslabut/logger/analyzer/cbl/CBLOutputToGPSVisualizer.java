@@ -189,7 +189,7 @@ public class CBLOutputToGPSVisualizer {
 				
 				String robotName = null;
 				try {
-					robotName = RobotIPAssignments.getRobotName(currRobot.robotID);
+					robotName = RobotIPAssignments.getName(currRobot.robotID);
 				} catch (PharosException e1) {
 					logErr("Unable to get robot's name: " + currRobot.robotID);
 					e1.printStackTrace();
@@ -209,7 +209,7 @@ public class CBLOutputToGPSVisualizer {
 				
 				String robotName = null;
 				try {
-					robotName = RobotIPAssignments.getRobotName(currRobot.robotID);
+					robotName = RobotIPAssignments.getName(currRobot.robotID);
 				} catch (PharosException e1) {
 					logErr("Unable to get robot's name: " + currRobot.robotID);
 					e1.printStackTrace();

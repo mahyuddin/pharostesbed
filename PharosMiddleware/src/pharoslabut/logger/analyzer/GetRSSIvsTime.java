@@ -26,7 +26,7 @@ public class GetRSSIvsTime {
 		
 		String robot1Name = null;
 		try {
-			robot1Name = RobotIPAssignments.getRobotName(robot1);
+			robot1Name = RobotIPAssignments.getName(robot1);
 		} catch (PharosException e1) {
 			logErr("Unable to get robot 1's name: " + robot1);
 			e1.printStackTrace();
@@ -34,7 +34,7 @@ public class GetRSSIvsTime {
 		
 		String robot2Name = null;
 		try {
-			robot2Name = RobotIPAssignments.getRobotName(robot2);
+			robot2Name = RobotIPAssignments.getName(robot2);
 		} catch (PharosException e1) {
 			logErr("Unable to get receiver's name: " + robot2);
 			e1.printStackTrace();

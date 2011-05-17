@@ -44,7 +44,7 @@ public class TelosBTxRecord {
 	public String toString() {
 		String sndrName = null;
 		try {
-			sndrName = RobotIPAssignments.getRobotName(sndrID);
+			sndrName = RobotIPAssignments.getName(sndrID);
 		} catch (PharosException e1) {
 			logErr("Unable to get sender's name: " + sndrID);
 			e1.printStackTrace();
