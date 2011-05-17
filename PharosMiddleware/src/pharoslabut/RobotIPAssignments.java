@@ -63,7 +63,7 @@ public class RobotIPAssignments implements java.io.Serializable {
 	 * @return the last octal of the robot's IP address
 	 * @throws PharosException if the robot's ID cannot be found
 	 */
-	public static int getRobotID(String name) throws PharosException {
+	public static int getID(String name) throws PharosException {
 		Field[] fields;
 		try {
 			fields = Class.forName("pharoslabut.RobotIPAssignments").getDeclaredFields();
@@ -101,7 +101,7 @@ public class RobotIPAssignments implements java.io.Serializable {
 	 * @return the name of the robot
 	 * @throws PharosException if the robot's name cannot be found
 	 */
-	public static String getRobotName(int id) throws PharosException {
+	public static String getName(int id) throws PharosException {
 		Field[] fields;
 		try {
 			fields = Class.forName("pharoslabut.RobotIPAssignments").getDeclaredFields();
@@ -184,4 +184,11 @@ public class RobotIPAssignments implements java.io.Serializable {
 		return addr;
 	}
 	
+	/**
+	 * @return The name of the local robot.
+	 * @throws PharosException If the name of the local robot is unknown.
+	 */
+	public static String getName() throws PharosException {
+		return getName(getID());
+	}
 }
