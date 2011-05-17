@@ -114,7 +114,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 				gpsDataBuffer, flogger);
 		
 		Location destLoc = new Location(latitude, longitude);
-		log("Going to: " + destLoc);
+		log("Going to: " + destLoc + " at " + velocity);
 		
 		if (!navigatorGPS.go(destLoc, velocity))
 			logErr("Unable to reach " + destLoc); 
