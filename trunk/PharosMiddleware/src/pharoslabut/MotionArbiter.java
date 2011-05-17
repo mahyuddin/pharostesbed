@@ -35,7 +35,7 @@ public class MotionArbiter implements Runnable {
 	 * the stop period is 2 seconds (0.5Hz refresh rate minimum).  
 	 * On the Segway RMP 50, it is 400ms (2.5Hz refresh rate minimum).
 	 */
-	public static final int CYCLE_TIME = 250;
+	public static final int CYCLE_TIME = 100; //250;
 	
 	/**
 	 * Whether the robot moves in a car-like fashion or a ball-like fashion.
@@ -84,6 +84,8 @@ public class MotionArbiter implements Runnable {
 	public MotionArbiter(MotionType motionType, Position2DInterface motors) {
 		this.motionType = motionType;
 		this.motors = motors;
+		
+		motors.setMotorPower(1); // Turn the motors on.  This is needed by the Segway RMP 50s
 		new Thread(this).start(); // The MotionArbiter has its own thread that processes MotionTasks
 	}
 	
