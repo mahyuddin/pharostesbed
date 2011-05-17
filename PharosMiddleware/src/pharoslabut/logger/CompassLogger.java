@@ -3,7 +3,6 @@ package pharoslabut.logger;
 import org.jfree.ui.RefineryUtilities;
 
 import pharoslabut.sensors.*;
-import pharoslabut.CompassLoggerGUI;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;

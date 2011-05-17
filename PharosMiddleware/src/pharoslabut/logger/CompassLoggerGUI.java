@@ -1,4 +1,4 @@
-package pharoslabut;
+package pharoslabut.logger;
 /* ===========================================================
  * JFreeChart : a free chart library for the Java(tm) platform
  * ===========================================================
