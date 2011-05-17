@@ -49,6 +49,12 @@ public class RobotIPAssignments implements java.io.Serializable {
 	public static final int XUEHUA = 32;
 	public static final int ZIEGEN = 18;
 	
+	public static final int TEST_ROBOT5 = 5;
+	public static final int TEST_ROBOT4 = 4;
+	public static final int TEST_ROBOT3 = 3;
+	public static final int TEST_ROBOT2 = 2;
+	public static final int TEST_ROBOT1 = 1;
+	
 	
 	/**
 	 * Returns the robot's ID, which is the last octal of the robot's IP address, given its name.
