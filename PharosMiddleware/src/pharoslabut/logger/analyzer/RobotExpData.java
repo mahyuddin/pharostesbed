@@ -3,6 +3,7 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.navigate.Location;
@@ -321,8 +322,15 @@ public class RobotExpData {
 	 * @return the last octal of the robot's IP address, or -1 if IP address is unknown.
 	 */
 	public int getRobotID() {
-		int id = RobotIPAssignments.getRobotID(getRobotName());
-		if (id == -1) System.exit(1); 
+		int id = -1;
+		
+		try {
+			id = RobotIPAssignments.getRobotID(getRobotName());
+		} catch (PharosException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
 		return id;
 	}
 	

@@ -2,8 +2,8 @@ package pharoslabut.logger.analyzer;
 
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.navigate.Location;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
-//import java.util.*;
 
 /**
  * Retrieves the RSSI values received by one robot from another robot.
@@ -16,19 +16,37 @@ import pharoslabut.logger.FileLogger;
  */
 public class GetRSSIvsTime {
 
+	private FileLogger flogger;
 	
-	public GetRSSIvsTime(int robot1, int robot2, String expDir, long timeStepSize, FileLogger flogger) {
+	public GetRSSIvsTime(int robot1, int robot2, String expDir, long timeStepSize) {
+		
 		ExpData expData = new ExpData(expDir);
 		RobotExpData robot1Data = expData.getRobotByID(robot1);
 		RobotExpData robot2Data = expData.getRobotByID(robot2);
 		
+		String robot1Name = null;
+		try {
+			robot1Name = RobotIPAssignments.getRobotName(robot1);
+		} catch (PharosException e1) {
+			logErr("Unable to get robot 1's name: " + robot1);
+			e1.printStackTrace();
+		}
+		
+		String robot2Name = null;
+		try {
+			robot2Name = RobotIPAssignments.getRobotName(robot2);
+		} catch (PharosException e1) {
+			logErr("Unable to get receiver's name: " + robot2);
+			e1.printStackTrace();
+		}
+		
+		this.flogger = new FileLogger("RSSIvsTime-" + robot1Name + "-" + robot2Name + ".txt", false);
+		
 		log("Timestamp (ms)\t Delta Time (s) \t -1*RSSI of " 
-				+ RobotIPAssignments.getRobotName(robot2) 
-				+ " on " + RobotIPAssignments.getRobotName(robot1) 
+				+ robot2Name + " on " + robot1Name
 				+ "\t -1*RSSI of " 
-				+ RobotIPAssignments.getRobotName(robot1) 
-				+ " on " + RobotIPAssignments.getRobotName(robot2) 
-				+ " \t Dist", flogger);
+				+ robot1Name + " on " + robot2Name
+				+ " \t Dist");
 		
 		for (long timestamp = expData.getExpStartTime(); timestamp < expData.getExpStopTime(); timestamp += timeStepSize) {
 			double rssi1 = robot1Data.getTelosBRSSIto(robot2, timestamp, timeStepSize);
@@ -43,15 +61,22 @@ public class GetRSSIvsTime {
 			
 			long deltaTimeS = (timestamp - expData.getExpStartTime()) / 1000;
 			log(timestamp + "\t" + deltaTimeS + "\t" + (rssi1 != 1 ? rssi1 :"") 
-					+ "\t" + (rssi2 != 1 ? rssi2 : "") + "\t" + robot1loc.distanceTo(robot2loc),
-					flogger);
+					+ "\t" + (rssi2 != 1 ? rssi2 : "") + "\t" + robot1loc.distanceTo(robot2loc));
 		}
 	}
 	
-	private void log(String msg, FileLogger flogger) {
-		System.out.println(msg);
+	private void logErr(String msg) {
+		String result = "GetRSSIvsTime: ERROR: " + msg;
+		System.err.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
+	}
+	
+	private void log(String msg) {
+		String result = "GetRSSIvsTime: " + msg;
+		System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private static void print(String msg) {
@@ -105,9 +130,7 @@ public class GetRSSIvsTime {
 			System.exit(1);
 		}
 		
-		FileLogger flogger = new FileLogger("RSSIvsTime-" + RobotIPAssignments.getRobotName(robot1ID) 
-				+ "-" + RobotIPAssignments.getRobotName(robot2ID) + ".txt", false);
-		new GetRSSIvsTime(robot1ID, robot2ID, expDir, timeStepSize, flogger);
+		new GetRSSIvsTime(robot1ID, robot2ID, expDir, timeStepSize);
 	}
 	
 }
