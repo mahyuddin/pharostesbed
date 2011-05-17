@@ -18,7 +18,7 @@ public class GPSMotionScriptInjector {
     /**
      * The connection to the Pharos Server.
      */
-    private TCPMessageSender sender;
+    private TCPMessageSender sender = new TCPMessageSender();
     
     /**
      * The constructor.
@@ -29,12 +29,9 @@ public class GPSMotionScriptInjector {
      * @param scriptFileName The name of the file containing the motion script.
      */
 	public GPSMotionScriptInjector(String address, int port, String expName, String scriptFileName) {
-		
 		try {
 			InetAddress ipAddr = InetAddress.getByName(address);
-
-			sender = new TCPMessageSender();
-
+			
 			log("Reading the motion script...");
 			MotionScript script = MotionScriptReader.readTraceFile(scriptFileName);
 			
@@ -42,17 +39,21 @@ public class GPSMotionScriptInjector {
 			MotionScriptMsg gpsMsg = new MotionScriptMsg(script);
 			sender.sendMessage(ipAddr, port, gpsMsg);
 
-			
+			log("Pausing 2s to prevent out-of-order messages...");
 			synchronized(this) {
-				wait(2000); // to prevent out-of-order messages...
+				wait(2000);
 			}
 			
-			log("Sending the experiment start message to server " + ipAddr + ":" + port + "...");
+			log("Starting the GPS-based motion script following experiment...");
 			sender.sendMessage(ipAddr, port, new StartExpMsg(expName, ExpType.FOLLOW_GPS_MOTION_SCRIPT));
-
 		} catch(Exception e) {
+			logErr("ERROR: " + e.getMessage());
 			e.printStackTrace();
 		}
+	}
+	
+	private void logErr(String msg) {
+		System.err.println("GPSMotionScriptInjector: " + msg);
 	}
 	
 	private void log(String msg) {
