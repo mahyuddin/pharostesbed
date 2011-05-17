@@ -4,7 +4,6 @@ import playerclient3.*;
 import playerclient3.structures.PlayerConstants;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.logger.*;
 import pharoslabut.navigate.*;
 import pharoslabut.sensors.Position2DBuffer;
@@ -40,9 +39,6 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	public TestNavigateCompassGPS(String serverIP, int serverPort, MotionArbiter.MotionType mobilityPlane, 
 			double latitude, double longitude, double velocity, String fileName) 
 	{
-		
-		System.setProperty ("PharosMiddleware.debug", "true");
-		
 		if (fileName != null)
 			flogger = new FileLogger(fileName);
 
@@ -51,19 +47,19 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			System.err.println("Error connecting to Player: ");
-			System.err.println("    [ " + e.toString() + " ]");
+			logErr("could not connect to player server: ");
+			logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 
 		log("Subscribing to motor interface...");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			System.err.println("motors is null");
+			logErr("motors is null");
 			System.exit(1);
 		}
 		
-		// The Traxxas and Segway mobility planes' compass is on Position2D index 1,
+		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
 		// while the Segway RMP 50's compass is on index 2.
 		log("Subscribing to compass interface...");
 		Position2DInterface compass;
@@ -74,14 +70,14 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		}
 		if (compass == null) {
-			System.err.println("compass is null");
+			logErr("compass is null");
 			System.exit(1);
 		}
 		
 		log("Subscribing to GPS interface...");
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (gps == null) {
-			System.err.println("gps is null");
+			logErr("gps is null");
 			System.exit(1);
 		}
 		
@@ -92,7 +88,6 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		client.runThreaded(-1, -1);
 		
 		log("Creating MotionArbiter of type " + mobilityPlane + "...");
-		motors.setMotorPower(1); // Turn the motor on
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		motionArbiter.setFileLogger(flogger);
 		
@@ -122,7 +117,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		log("Going to: " + destLoc);
 		
 		if (!navigatorGPS.go(destLoc, velocity))
-			log("ERROR: Unable to reach " + destLoc); 
+			logErr("Unable to reach " + destLoc); 
 		else
 			log("SUCCESS!");
 		
@@ -132,6 +127,13 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		log(data.toString());
+	}
+
+	private void logErr(String msg) {
+		String result = "TestNavigateCompassGPS: ERROR: " + msg;
+		System.err.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
@@ -150,7 +152,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
 		System.err.println("\t-latitude <latitude>: The latitude of the destination location (default 30.385645)");
 		System.err.println("\t-longitude <longitude>: The longitude of the destination location (default -97.7251983)");
-		System.err.println("\t-velocity <speed>: The velocity at which the robot should travel towards the destination (default 1.5)");
+		System.err.println("\t-velocity <speed>: The velocity in m/s that the robot should move (default 1.5)");
 		System.err.println("\t-d: Enable debug mode");
 	}
 	
