@@ -1,8 +1,8 @@
 package pharoslabut.tests;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.logger.CompassLogger;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
 import playerclient3.PlayerClient;
@@ -23,13 +23,26 @@ public class CompassCircleTest {
 	private PlayerClient client = null;
 	private FileLogger flogger;
 	
+	/**
+	 * The constructor. 
+	 * 
+	 * @param serverIP The IP address of the robot.
+	 * @param serverPort The port on which the robot is listening.
+	 * @param time The duration in milliseconds that the robot should move in circles.
+	 * @param logFileName The log file in which to save results.
+	 * @param showGUI Whether to show the GUI.
+	 * @param mobilityPlane The type of mobility plane being used.
+	 * @param speed The speed in m/s at which to move.
+	 * @param turnAngle The heading in which to turn in degrees.
+	 * @param getStatusMsgs Whether to subscribe to status messages sent from the Proteus MCU.
+	 */
 	public CompassCircleTest(String serverIP, int serverPort, int time, 
-			String fileName, boolean showGUI, MotionArbiter.MotionType mobilityPlane, 
+			String logFileName, boolean showGUI, MotionArbiter.MotionType mobilityPlane, 
 			double speed, double turnAngle, boolean getStatusMsgs) 
 	{
 		
-		if (fileName != null)
-			this.flogger = new FileLogger(fileName, false);
+		if (logFileName != null)
+			this.flogger = new FileLogger(logFileName, false);
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
@@ -40,24 +53,31 @@ public class CompassCircleTest {
 			System.exit (1);
 		}
 		
-		log("Subscribing to motor interface...");
-		Position2DInterface motorInterface = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		
-		if (motorInterface == null) {
+		log("Subscribing to motor interface and creating motion arbiter");
+		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (motors == null) {
 			log("motors is null");
 			System.exit(1);
 		}
+		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		
-		log("Creating motion arbiter...");
-		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motorInterface);
-		
-		log("Moving the robot in circles...");
+		log("Start the robot moving in circles...");
 		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
-		motionArbiter.submitTask(circleTask);
+		if (motionArbiter.submitTask(circleTask))
+			log("Circular motion task accepted...");
 		
+		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
+		// while the Segway RMP 50's compass is on index 2.
 		log("Creating a CompassLogger...");
-		CompassLogger compassLogger = new CompassLogger(serverIP, serverPort, 1 /* device index */, 
-				flogger, showGUI, getStatusMsgs);
+		CompassLogger compassLogger;
+		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
+				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
+			compassLogger = new CompassLogger(serverIP, serverPort, 1 /* device index */, 
+					flogger, showGUI, getStatusMsgs);
+		} else {
+			compassLogger = new CompassLogger(serverIP, serverPort, 2 /* device index */, 
+						flogger, showGUI, getStatusMsgs);
+		}
 		
 		log("Starting to log compass readings...");
 		if (compassLogger.start()) {
@@ -72,10 +92,22 @@ public class CompassCircleTest {
 					e.printStackTrace();
 				}
 			}
+			log("Stopping to log compass readings...");
 			compassLogger.stop();
-		}
+		} else 
+			logErr("ERROR: Failed to start logging compass data...");
+		
+		log("Stopping the robot...");
 		motionArbiter.revokeTask(circleTask); // stop moving in circles
+		
 		log("Done!");
+	}
+
+	private void logErr(String msg) {
+		String result = "CompassCircleTest: " + msg;
+		System.err.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
@@ -149,7 +181,9 @@ public class CompassCircleTest {
 				}
 				else if (args[i].equals("-getStatusMsgs")) {
 					getStatusMsgs = true;
-				}
+				} 
+				else if (args[i].equals("-debug") || args[i].equals("-d"))
+					System.setProperty ("PharosMiddleware.debug", "true");
 				else {
 					usage();
 					System.exit(1);
