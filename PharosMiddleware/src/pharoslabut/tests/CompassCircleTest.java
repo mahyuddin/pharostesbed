@@ -48,15 +48,15 @@ public class CompassCircleTest {
 			log("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
+			logErr("ERROR: could not connect to player server: ");
+			logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
 		log("Subscribing to motor interface and creating motion arbiter");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			log("motors is null");
+			logErr("ERROR: motors is null");
 			System.exit(1);
 		}
 		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
