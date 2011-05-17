@@ -325,7 +325,7 @@ public class RobotExpData {
 		int id = -1;
 		
 		try {
-			id = RobotIPAssignments.getRobotID(getRobotName());
+			id = RobotIPAssignments.getID(getRobotName());
 		} catch (PharosException e) {
 			e.printStackTrace();
 			System.exit(1);

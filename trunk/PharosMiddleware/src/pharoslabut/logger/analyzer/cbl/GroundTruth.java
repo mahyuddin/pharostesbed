@@ -202,7 +202,7 @@ public class GroundTruth {
 		public String getRobotName() {
 			String robotName = null;
 			try {
-				robotName = RobotIPAssignments.getRobotName(robotID);
+				robotName = RobotIPAssignments.getName(robotID);
 			} catch (PharosException e1) {
 				System.err.println("Unable to get robot name: " + robotID);
 				e1.printStackTrace();
