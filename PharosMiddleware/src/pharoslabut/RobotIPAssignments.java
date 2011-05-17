@@ -54,9 +54,10 @@ public class RobotIPAssignments implements java.io.Serializable {
 	 * Returns the robot's ID, which is the last octal of the robot's IP address, given its name.
 	 * 
 	 * @param name The name of the robot
-	 * @return the last octal of the robot's IP address, or -1 if IP address is unknown.
+	 * @return the last octal of the robot's IP address
+	 * @throws PharosException if the robot's ID cannot be found
 	 */
-	public static int getRobotID(String name) {
+	public static int getRobotID(String name) throws PharosException {
 		Field[] fields;
 		try {
 			fields = Class.forName("pharoslabut.RobotIPAssignments").getDeclaredFields();
@@ -84,18 +85,17 @@ public class RobotIPAssignments implements java.io.Serializable {
 			e.printStackTrace();
 		}
 		
-		System.err.println("ERROR: RobotIPAssignments.getRobotIP: Unable to find ID for robot " + name);
-		new Exception().printStackTrace();
-		return -1;
+		throw new PharosException("ERROR: RobotIPAssignments.getRobotIP: Unable to find ID for robot " + name);
 	}
 	
 	/**
 	 * Returns the robot's name given its ID.
 	 * 
 	 * @param id The id of the robot, which is the last octal of the robot's IP address
-	 * @return the name of the robot, or null if unknown.
+	 * @return the name of the robot
+	 * @throws PharosException if the robot's name cannot be found
 	 */
-	public static String getRobotName(int id) {
+	public static String getRobotName(int id) throws PharosException {
 		Field[] fields;
 		try {
 			fields = Class.forName("pharoslabut.RobotIPAssignments").getDeclaredFields();
@@ -118,9 +118,7 @@ public class RobotIPAssignments implements java.io.Serializable {
 			e.printStackTrace();
 		}
 		
-		System.err.println("ERROR: Unable to find name of robot with ID " + id);
-		new Exception().printStackTrace();
-		return null;
+		throw new PharosException("ERROR: Unable to find name of robot with ID " + id);
 	}
 	
 	/**
