@@ -1,15 +1,11 @@
 package pharoslabut.navigate;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.exceptions.NoNewDataException;
-
-//import playerclient3.*;
-//import playerclient3.structures.PlayerConstants;
 
 /**
  * Navigates a car to a specified destination.  It calculates which direction
