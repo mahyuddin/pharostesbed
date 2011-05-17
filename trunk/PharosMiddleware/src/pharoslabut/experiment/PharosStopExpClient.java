@@ -1,5 +1,6 @@
 package pharoslabut.experiment;
 
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 
 /**
@@ -27,13 +28,22 @@ public class PharosStopExpClient {
 		for (int i=0; i < expConfig.numRobots(); i++) {
 			RobotExpSettings currRobot = expConfig.getRobot(i);
 			log("Sending StopExpMsg to robot " + currRobot.getName());
-			sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), stopMsg);
+			try {
+				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), stopMsg);
+			} catch (PharosException e) {
+				logErr("Failed to send stop message to robot: " + currRobot.getName());
+				e.printStackTrace();
+			}
 		}
+	}
+	
+	private void logErr(String msg) {
+		System.err.println("PharosStopExpClient: " + msg);
 	}
 	
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println("StopExpClient: " + msg);
+			System.out.println("PharosStopExpClient: " + msg);
 	}
 	
 	private static void printErr(String msg) {
