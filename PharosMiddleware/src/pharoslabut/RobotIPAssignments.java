@@ -1,12 +1,19 @@
 package pharoslabut;
 
 import java.lang.reflect.Field;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.util.Enumeration;
+
+import pharoslabut.exceptions.PharosException;
+import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 
 /**
  * Defines the last octal of each robot's wireless ad hoc IP address.
+ * Provides methods for getting the robot's ID and name.
  * 
  * @author Chien-Liang Fok
- *
  */
 public class RobotIPAssignments implements java.io.Serializable {
 
@@ -114,6 +121,63 @@ public class RobotIPAssignments implements java.io.Serializable {
 		System.err.println("ERROR: Unable to find name of robot with ID " + id);
 		new Exception().printStackTrace();
 		return null;
+	}
+	
+	/**
+	 * Returns the wireless ad hoc IP address of this robot.  This IP address
+	 * is of the form 10.11.12.*.
+	 * 
+	 * @return The wireless ad hoc IP address of the robot.
+	 * @throws PharosException if the IP address is unknown
+	 */
+    public static String getAdHocIP() throws PharosException {
+
+    	Enumeration<NetworkInterface> ifEnum;
+		try {
+			ifEnum = NetworkInterface.getNetworkInterfaces();
+			while (ifEnum.hasMoreElements()) {
+				NetworkInterface ni = ifEnum.nextElement();
+				//System.out.println("network interface name = \"" + ni.getName() + "\"");
+				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
+				while (ipEnum.hasMoreElements()) {
+					InetAddress addr = ipEnum.nextElement();
+					//System.out.println("\tip address=" + addr.getHostAddress());
+					if (addr.getHostAddress().contains("10.11.12")) {
+						String result = addr.getHostAddress();
+						//System.out.println("Found! Network interface \"" + result + "\"");
+						return result;
+					}
+					
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		throw new PharosException("Could not find ad hoc IP address!");
+    }
+	
+	/**
+	 * Determines the ID of this robot.  The ID is the last octal in
+	 * the wireless ad hoc network IP address.  The form of this IP is 
+	 * 10.11.12.xx where "xx" is the ID.
+	 * 
+	 * @return The mote ID.
+	 * @throws TelosBeaconException When the ID could not be determined.
+	 */
+	public static int getID() throws PharosException {
+		int addr = 0;
+		String ipAddr = getAdHocIP();
+		
+		//System.out.println("ipAddr = " + ipAddr);
+		String[] addrTokens = ipAddr.split("\\.");
+		if (addrTokens.length == 4)
+			addr = Integer.valueOf(addrTokens[3]);
+		else {
+			String eMsg = "Unable to determine ID (addrTokens.length = " + addrTokens.length + ").";
+			throw new PharosException(eMsg);
+		}
+		
+		return addr;
 	}
 	
 }
