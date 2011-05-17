@@ -67,7 +67,8 @@ public class MotionArbiter implements Runnable {
 	//private AccelerationControl accelControl = new AccelerationControl();
 	
 	/**
-	 * Creates a MotionArbiter with the default motion type (MOTION_CAR_LIKE).
+	 * Creates a MotionArbiter with the default motion type (MotionType.MOTION_TRAXXAS)
+	 * and no file logger.
 	 * 
 	 * @param motors The player proxy for accessing the movement motors.
 	 */
@@ -76,14 +77,26 @@ public class MotionArbiter implements Runnable {
 	}
 	
 	/**
-	 * Creates a MotionArbiter with the specified motion type.
+	 * Creates a MotionArbiter with the specified motion type and no file logger.
 	 * 
 	 * @param motionType The motion type of the robot being controlled.
 	 * @param motors The player proxy for accessing the movement motors.
 	 */
 	public MotionArbiter(MotionType motionType, Position2DInterface motors) {
+		this(motionType, motors, null);
+	}
+	
+	/**
+	 * Creates a MotionArbiter with the specified motion type and file logger.
+	 * 
+	 * @param motionType The motion type of the robot being controlled.
+	 * @param motors The player proxy for accessing the movement motors.
+	 * @param flogger The file logger to use.
+	 */
+	public MotionArbiter(MotionType motionType, Position2DInterface motors, FileLogger flogger) {
 		this.motionType = motionType;
 		this.motors = motors;
+		this.flogger = flogger;
 		
 		motors.setMotorPower(1); // Turn the motors on.  This is needed by the Segway RMP 50s
 		new Thread(this).start(); // The MotionArbiter has its own thread that processes MotionTasks
@@ -112,13 +125,17 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null) {
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
+				log("Accepting task " + currTask);
 				notifyAll();
 				result = true;
-			} // else discard task since higher priority task is running			
+			} else {
+				log("Discarding task (" + mt + ") since higher priority task (" + currTask + ") is running.");
+			}
 		} else {
 			
-			// Always except the task if there is no current task being executed.
+			// Always accept the task if there is no current task being executed.
 			currTask = mt;
+			log("Accepting task " + currTask);
 			notifyAll();
 			result = true;
 		}
@@ -186,12 +203,17 @@ public class MotionArbiter implements Runnable {
 	private void log(String msg) {
 		String result = "MotionArbiter: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.err.println(result);
+			System.out.println(result);
 		
 		if (flogger != null)
 			flogger.log(result);
 	}
 	
+	/**
+	 * Sits in a loop periodically sending movement commands to the robot.
+	 * It is necessary to continuously send movement commands because otherwise
+	 * the robot will stop moving.
+	 */
 	public void run() {
 		MotionTask motionTask = null;
 		
@@ -207,7 +229,7 @@ public class MotionArbiter implements Runnable {
 				sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
 
 				// No point in repeatedly sending a stop motion command
-				// (The robot will by default stop moving when no command is received)
+				// (The robot will by default stop when no command is received)
 				if (motionTask.isStop()) {
 					log("MotionTask is stop, resorting to initial state");
 					currTask = null;
