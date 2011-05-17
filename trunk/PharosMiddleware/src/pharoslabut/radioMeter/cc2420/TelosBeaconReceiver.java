@@ -1,6 +1,8 @@
 package pharoslabut.radioMeter.cc2420;
 
+import pharoslabut.RobotIPAssignments;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.exceptions.*;
 import net.tinyos.message.*;
 
 /**
@@ -23,10 +25,9 @@ public class TelosBeaconReceiver implements MessageListener{
 	
 	public TelosBeaconReceiver(MoteIF moteIF) {
 		try {
-			// Get the local node ID
-			moteID = TelosBeaconBroadcaster.getMoteID();
+			moteID = RobotIPAssignments.getID(); // Get the local node ID
 			log("Mote ID = " + moteID);
-		} catch(TelosBeaconException e) {
+		} catch(PharosException e) {
 			log("Unable to get moteID, assuming it is zero");
 			moteID = 0;
 		}
