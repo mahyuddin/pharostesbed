@@ -63,8 +63,16 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			System.exit(1);
 		}
 		
+		// The Traxxas and Segway mobility planes' compass is on Position2D index 1,
+		// while the Segway RMP 50's compass is on index 2.
 		log("Subscribing to compass interface...");
-		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
+		Position2DInterface compass;
+		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
+				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
+			compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
+		} else {
+			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
+		}
 		if (compass == null) {
 			System.err.println("compass is null");
 			System.exit(1);
@@ -84,6 +92,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		client.runThreaded(-1, -1);
 		
 		log("Creating MotionArbiter of type " + mobilityPlane + "...");
+		motors.setMotorPower(1); // Turn the motor on
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		motionArbiter.setFileLogger(flogger);
 		
