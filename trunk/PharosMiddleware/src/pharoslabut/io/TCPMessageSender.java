@@ -2,6 +2,7 @@ package pharoslabut.io;
 
 import java.io.*;
 import java.net.*;
+import pharoslabut.exceptions.*;
 
 /**
  * Sends messages to other LimeLiteServers using TCP.
@@ -36,33 +37,30 @@ public class TCPMessageSender implements MessageSender {
      * Sends a message via a TCP socket.
      *
      * @param msg the message to be sent.
+     * @throws PharosException whenever an error occurs.
      */
-    public void sendMessage(InetAddress address, int port, Message msg) {
+    public void sendMessage(InetAddress address, int port, Message msg) throws PharosException {
+    	
+    	try {
+    		log("Opening TCP socket to " + address + ":" + port);
+    		Socket socket = new Socket(address, port);
+    		socket.setTcpNoDelay(true);
 
-            
-            // open a TCP socket to the destination host
-            try {
-				log("Opening TCP socket to " + address + ":" + port);
-                Socket socket = new Socket(address, port);
-                socket.setTcpNoDelay(true);
-                
-                OutputStream os = socket.getOutputStream();
-//                InputStream is = socket.getInputStream();
-                
-                ObjectOutputStream oos = new ObjectOutputStream(os);
-//                ObjectInputStream ois = new ObjectInputStream(is);
-                
-				log("Sending the object to the destination.");
-                oos.writeObject(msg);
-                oos.flush();
-                os.flush();
-                
-				log("Closing the socket to the destination host.");
-                socket.close();
-                
-            } catch(Exception e) {
-                e.printStackTrace();
-            }
+    		OutputStream os = socket.getOutputStream();
+    		ObjectOutputStream oos = new ObjectOutputStream(os);
+
+    		log("Sending the object to the destination.");
+    		oos.writeObject(msg);
+    		oos.flush();
+    		os.flush();
+
+    		log("Closing the socket to the destination host.");
+    		socket.close();
+
+    	} catch(Exception e) {
+    		e.printStackTrace();
+    		throw new PharosException(e.getMessage());
+    	}
     }
 	
 	void log(String msg) {
