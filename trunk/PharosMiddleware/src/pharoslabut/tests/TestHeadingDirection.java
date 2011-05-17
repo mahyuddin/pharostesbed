@@ -1,7 +1,7 @@
 package pharoslabut.tests;
 
-import pharoslabut.MotionArbiter;
-import pharoslabut.MotionArbiter.MotionType;
+import pharoslabut.navigate.MotionArbiter;
+import pharoslabut.navigate.MotionArbiter.MotionType;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
 import playerclient3.PlayerClient;
@@ -54,7 +54,7 @@ public class TestHeadingDirection {
 		
 		PlayerClient client = null;
 		
-		System.out.println("Connecting to the player server " + serverIP + ":" + serverPort + "...");
+		System.out.println("Connecting to player server " + serverIP + ":" + serverPort + "...");
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
