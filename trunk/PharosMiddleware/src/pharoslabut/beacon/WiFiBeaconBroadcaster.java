@@ -1,10 +1,7 @@
 package pharoslabut.beacon;
 
 import java.net.*;
-import java.util.Enumeration;
 import java.io.*;
-
-//import pharoslabut.logger.FileLogger;
 
 /**
  * Periodically broadcasts WiFi beacons.  It is used in conjunction
@@ -114,31 +111,31 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 	 * such network is found, null is returned.
 	 */
 	// ad hoc network.  
-    public static String getPharosIP() {
-
-    	Enumeration<NetworkInterface> ifEnum;
-		try {
-			ifEnum = NetworkInterface.getNetworkInterfaces();
-			while (ifEnum.hasMoreElements()) {
-				NetworkInterface ni = ifEnum.nextElement();
-				//System.out.println("network interface name = \"" + ni.getName() + "\"");
-				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
-				while (ipEnum.hasMoreElements()) {
-					InetAddress addr = ipEnum.nextElement();
-					//System.out.println("\tip address=" + addr.getHostAddress());
-					if (addr.getHostAddress().contains("10.11.12")) {
-						String result = addr.getHostAddress();
-						//System.out.println("Found! Network interface \"" + result + "\"");
-						return result;
-					}
-					
-				}
-			}
-		} catch (SocketException e) {
-			e.printStackTrace();
-		}
-		return null;
-    }
+//    public static String getPharosIP() {
+//
+//    	Enumeration<NetworkInterface> ifEnum;
+//		try {
+//			ifEnum = NetworkInterface.getNetworkInterfaces();
+//			while (ifEnum.hasMoreElements()) {
+//				NetworkInterface ni = ifEnum.nextElement();
+//				//System.out.println("network interface name = \"" + ni.getName() + "\"");
+//				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
+//				while (ipEnum.hasMoreElements()) {
+//					InetAddress addr = ipEnum.nextElement();
+//					//System.out.println("\tip address=" + addr.getHostAddress());
+//					if (addr.getHostAddress().contains("10.11.12")) {
+//						String result = addr.getHostAddress();
+//						//System.out.println("Found! Network interface \"" + result + "\"");
+//						return result;
+//					}
+//					
+//				}
+//			}
+//		} catch (SocketException e) {
+//			e.printStackTrace();
+//		}
+//		return null;
+//    }
     
     protected void log(String msg) {
     	String result = "WiFiBeaconBroadcaster: " + msg;
