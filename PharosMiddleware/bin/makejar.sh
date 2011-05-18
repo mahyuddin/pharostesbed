@@ -1,1 +1,1 @@
-jar -cf PharosMiddleware.jar pharoslabut/* playerclient/*
+jar -cf PharosMiddleware.jar pharoslabut/* playerclient3/*
