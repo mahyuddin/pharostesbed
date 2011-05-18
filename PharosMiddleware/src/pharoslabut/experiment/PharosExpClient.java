@@ -29,10 +29,19 @@ public class PharosExpClient {
 		ExpConfig expConfig = ExpConfigReader.readExpConfig(expConfigFileName);
 		try {
 			
-			// Send each of the robots their motion script.
+			log("Setting local time on each robot...");
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
-				log("Sending motion script to robot " + currRobot.getName());
+				log("\tSending SetTimeMsg to " + currRobot.getName());
+				
+				SetTimeMsg msg = new SetTimeMsg();
+				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
+			}
+			
+			log("Sending each robot their motion scripts...");
+			for (int i=0; i < expConfig.numRobots(); i++) {
+				RobotExpSettings currRobot = expConfig.getRobot(i);
+				log("\tSending motion script to robot " + currRobot.getName());
 				
 				MotionScript script = MotionScriptReader.readTraceFile(currRobot.getMotionScript());
 				MotionScriptMsg msg = new MotionScriptMsg(script);

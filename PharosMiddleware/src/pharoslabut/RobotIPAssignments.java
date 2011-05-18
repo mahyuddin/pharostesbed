@@ -103,15 +103,22 @@ public class RobotIPAssignments implements java.io.Serializable {
 	 */
 	public static String getName(int id) throws PharosException {
 		Field[] fields;
+		
+		//System.out.println("RobotIPAssignments: getName: getting name of robot with id " + id);
+		
 		try {
 			fields = Class.forName("pharoslabut.RobotIPAssignments").getDeclaredFields();
 			
 			// For each field in the robot IP assignment table...
 			for (int i = 0; i < fields.length; i++) {
 				Field currField = fields[i];
-				if (id == currField.getInt(null)) {
-					return currField.getName();
-				}
+				//System.out.println("RobotIPAssignments: getName: checking: " + currField + ", type: " + currField.getType());
+				if (currField.getType().equals(int.class)) {
+					if (id == currField.getInt(null))
+						return currField.getName();
+				} //else
+					//System.out.println("RobotIPAssignments: getName: field not integer type...");
+					
 			}
 				
 		} catch (SecurityException e) {
@@ -158,6 +165,41 @@ public class RobotIPAssignments implements java.io.Serializable {
 			e.printStackTrace();
 		}
 		throw new PharosException("Could not find ad hoc IP address!");
+    }
+    
+	/**
+	 * Find the local network interface that is connected to the Pharos wireless
+	 * ad hoc network.  It assumes that the IP address takes the form of 10.11.12.*.
+	 * 
+	 * @return The name of the local network interface with an IP address of the form
+	 * 10.11.12.*.  This is assumed to be the Pharos wireless ad hoc network.  If no
+	 * such network is found, null is returned.
+	 */
+	// ad hoc network.  
+    public static String getAdHocNetworkInterface() throws PharosException {
+
+    	Enumeration<NetworkInterface> ifEnum;
+		try {
+			ifEnum = NetworkInterface.getNetworkInterfaces();
+			while (ifEnum.hasMoreElements()) {
+				NetworkInterface ni = ifEnum.nextElement();
+				//System.out.println("network interface name = \"" + ni.getName() + "\"");
+				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
+				while (ipEnum.hasMoreElements()) {
+					InetAddress addr = ipEnum.nextElement();
+					//System.out.println("\tip address=" + addr.getHostAddress());
+					if (addr.getHostAddress().contains("10.11.12")) {
+						String result = ni.getName();
+						//System.out.println("Found! Network interface \"" + result + "\"");
+						return result;
+					}
+					
+				}
+			}
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
+		throw new PharosException("Could not find ad hoc network interface!");
     }
 	
 	/**
