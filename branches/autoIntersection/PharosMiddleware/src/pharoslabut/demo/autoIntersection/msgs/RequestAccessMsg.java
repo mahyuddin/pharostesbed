@@ -84,8 +84,9 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
     }
 	
 	public String toString() {
-		return "RequestAccessMsg- " + "robotIP:" + getRobotIP().getHostAddress()
-				+ " robotPort:" + getRobotPort() + " ETA:" + getETA()
-				+ " ETC:" + getETC() + " laneSpecs:" + getLaneSpecs();
+		return "RequestAccessMsg- " + "robotIP:" + getRobotIP().getHostAddress() + " robotPort:" + getRobotPort() + "\n"
+				+ "\t ETA:" + getETA() + "\n"
+				+ "\t ETC:" + getETC() + "\n"
+				+ "\t laneSpecs:" + getLaneSpecs();
 	}
 }

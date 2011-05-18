@@ -85,7 +85,7 @@ public class RobotsPriorityQueue
         while(iterator.hasNext())
         {
             Robot robot = iterator.next();
-            output += robot.getIP() + ":" + robot.getPort();
+            output += "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort();
             output += " - ";
         }
         return output;

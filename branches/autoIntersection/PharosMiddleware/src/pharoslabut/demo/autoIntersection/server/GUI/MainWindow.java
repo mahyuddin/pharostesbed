@@ -1,14 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
-/*
- * MainWindow.java
- *
- * Created on Mar 10, 2011, 3:27:46 PM
- */
-
 package pharoslabut.demo.autoIntersection.server.GUI;
 
 import java.awt.Desktop;
@@ -19,7 +8,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author ut
+ * @author Maykel Hanna
  */
 public class MainWindow extends javax.swing.JFrame {
 

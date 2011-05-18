@@ -108,7 +108,7 @@ public class Robot implements java.io.Serializable {
         String output = "\t Address : " + ipAddress + "\t" + "Port: " + port + "\n";
         output += "\t laneSpecs : " + laneSpecs + "\n";
         output += "\t ETA : " + ETA + "\n";
-        output += "\t ETC : " + ETC + "\n";
+        output += "\t ETC : " + ETC;
         return output;
     }
     

@@ -1,10 +1,14 @@
 package pharoslabut.demo.autoIntersection.server;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Iterator;
 import java.util.LinkedList;
 
 import pharoslabut.demo.autoIntersection.*;
 import pharoslabut.demo.autoIntersection.msgs.*;
+import pharoslabut.demo.autoIntersection.server.GUI.IntersectionPanel;
+import pharoslabut.demo.autoIntersection.server.GUI.LogPanel;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 
@@ -25,6 +29,11 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 	 */
 	private FileLogger flogger;
 	
+	private static int nWays;
+	private static int nLanes;
+	private static int intersectionWidth;
+		
+	
 	//for testing of robot's ability to wait for 10 secs every other traversal
 	private boolean testingFlag = false;
 	
@@ -35,14 +44,27 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
     public ServerIntersectionManager(int serverPort, FileLogger flogger)
     {
     	this.flogger = flogger;
+    	
     	log("Starting intersection manager on port " + serverPort + "...");
         nextAvailableETC = -1;
         robotsGrantedAccess = new LinkedList<Robot>();
    
         // Create the network interface and register this object as a listener for
         // incoming messages.
-        networkInterface = new TCPNetworkInterface(serverPort); //UDPNetworkInterface(serverPort);
+        networkInterface = new TCPNetworkInterface(serverPort, flogger); //UDPNetworkInterface(serverPort);
         networkInterface.registerMsgListener(this);
+    }
+    
+    public static int getNWays() {
+    	return nWays;
+    }
+    
+    public static int getNLanes() {
+    	return nLanes;
+    }
+    
+    public static int getIntersectionWidth() {
+    	return intersectionWidth;
     }
 
     /**
@@ -88,22 +110,22 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
                 if(! RobotsPriorityQueue.isEmpty())
                 {
                     Robot robot = RobotsPriorityQueue.top();
-                    log("This robot is on top of the queue: \n" + robot);
+                    log("This robot is on top of the queue: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                     if(isAllowedAccess(robot) )
                     {
-                    	log("This robot is allowed to go through the intersection:\n" + robot);
+                    	log("This robot is allowed to go through the intersection:" + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                     	robotsGrantedAccess.add(robot);
                         this.nextAvailableETC = robot.getETC(); 	// don't modify the robot ETA, keep it as is
                         RobotsPriorityQueue.dequeue(robot);
                         
                         // Create a ReservationTimeMsg...
                         ReservationTimeMsg rtm = new ReservationTimeMsg(robot.getIP(), robot.getPort(), robot.getETA());
-                        log("RUN: Sending the ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                        log("RUN: Sending the ReservationTimeMsg to client: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                         
                         if (! networkInterface.sendMessage(robot.getIP(), robot.getPort(), rtm)) {
-                			log("WARNING: failed to send ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                			log("WARNING: failed to send ReservationTimeMsg to client: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                 		} else {
-                			log("RUN: Sent ReservationTimeMsg to client: " + robot.getIP() + ":" + robot.getPort());
+                			log("RUN: Sent ReservationTimeMsg to client: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                 		}                    
                     }
                     /**
@@ -113,7 +135,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
                      */
                     else
                     {
-                        log("This robot is not allowed to go through the intersection: \n" + robot);
+                        log("This robot is not allowed to go through the intersection: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
                         long timeDifference = robot.getETC() - robot.getETA();
                         robot.setETA(nextAvailableETC);
                         robot.setETC(nextAvailableETC + timeDifference);
@@ -160,12 +182,13 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			}*/
 			
 			if( (! robotsGrantedAccess.contains(robot))  && (! RobotsPriorityQueue.contains(robot)) ) {
-				log("enqueueing the robot: \n" + robot);
+				log("enqueueing the robot: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
 				RobotsPriorityQueue.enqueue(robot);
 				log("RobotsPriorityQueue: " + RobotsPriorityQueue.print() );
 			} else {
-				log("This robot was already granted access: \n" + robot);
+				log("This robot was already granted access: " + "robotIP:" + robot.getIP().getHostAddress() + " robotPort:" + robot.getPort());
 			}
+			IntersectionPanel.approachingCar(msg.getRobotIP(), msg.getLaneSpecs());
 		}
 		else
 		{
@@ -180,6 +203,8 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			Robot robot = new Robot(msg.getRobotIP(), msg.getRobotPort());
 			robotsGrantedAccess.remove(robot);
 			log("Robot exiting! Removing robot from the list.");
+			
+			IntersectionPanel.exitingCar(msg.getRobotIP());
 			
 			//uncomment line below if using UDP
             //networkInterface.sendMessage(msg.getRobotIP(), msg.getRobotPort(), msg);	
@@ -203,6 +228,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 	 */
 	private void log(String msg, boolean isDebugMsg) {
 		String result = "ServerIntersectionManager: " + msg;
+		LogPanel.appendLog(result);
 		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
@@ -234,9 +260,9 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
     public static void main(String [] args) {
 		int serverPort = 6665;
 		String logFileName = "ServerIntersectionManager.log";
-		int nWays = 4;
-		int nLanes = 2;
-		int intersectionWidth = 150;
+		nWays = 4;
+		nLanes = 2;
+		intersectionWidth = 150;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -268,19 +294,15 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 		if( nWays == 4  &&  nLanes == 2 ) {
 			TwoLaneFourWayIntersectionSpecs is = new TwoLaneFourWayIntersectionSpecs(intersectionWidth);
 		}
-		
-//       RobotsPriorityQueue.test();
-    	
+		    	
         Thread sim = new ServerIntersectionManager(serverPort, flogger);
-        
         sim.start();
 
-/*
         java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new pharoslabut.demo.autoIntersection.server.GUI.MainWindow().setVisible(true);
+            @SuppressWarnings("static-access")
+			public void run() {
+                new pharoslabut.demo.autoIntersection.server.GUI.IntersectionGUI().createAndShowGUI();
             }
         });   
-        */ 
     }
 }

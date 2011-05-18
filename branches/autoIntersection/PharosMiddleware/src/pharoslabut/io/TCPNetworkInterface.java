@@ -3,6 +3,8 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.logger.FileLogger;
+
 public class TCPNetworkInterface extends NetworkInterface {
 	
 	private TCPReceiver rcvr;
@@ -22,6 +24,18 @@ public class TCPNetworkInterface extends NetworkInterface {
      */
 	public TCPNetworkInterface() {
 		this(-1);
+	}
+	
+	/**
+     * Creates a UDPNetworkInterface that listens on a specific port.
+     * 
+     * @param port The port on which to listen.
+     * @param flogger the file logger.
+     */
+	public TCPNetworkInterface(int port, FileLogger flogger) {
+		setLogger(flogger);
+		this.port = port;
+		openSocket();
 	}
 	
 	/**
