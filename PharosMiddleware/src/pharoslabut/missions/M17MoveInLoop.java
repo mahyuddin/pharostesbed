@@ -93,7 +93,6 @@ public class M17MoveInLoop implements Position2DListener {
 		log("Creating GPSDataBuffer...");
 		gpsDataBuffer = new GPSDataBuffer(gps);
 		gpsDataBuffer.setFileLogger(flogger);
-		gpsDataBuffer.start();
 		
 		log("Resetting the odometer...");
 		motors.resetOdometry();
