@@ -165,6 +165,10 @@ public class CompassDataBuffer implements Runnable {
 	 * @throws NoNewDataException If no compass data was received.
 	 */
 	public synchronized double getMedian(int filterLength) throws NoNewDataException {
+		
+		// Just in case there's new data...
+		getNewData();
+		
 		if (headingBufferSize == 0)
 			throw new NoNewDataException();
 		
@@ -198,34 +202,43 @@ public class CompassDataBuffer implements Runnable {
 	}
 	
 	/**
+	 * Checks whether the compass proxy object has new compass data and grabs the data if it does.
+	 */
+	private synchronized void getNewData() {
+		// If new compass data is available, get it!
+		if (compass.isDataReady()) {
+			PlayerPosition2dData newData = compass.getData();
+			double newHeading = newData.getPos().getPa();
+			
+			headingBuffer[headingBufferIndx] = newHeading;
+			
+			// Update the headingBufferIndx
+			headingBufferIndx++;
+			headingBufferIndx %= COMPASS_BUFFER_SIZE;
+			
+			// Update the number of elements in the compass buffer
+			headingBufferSize++;
+			if (headingBufferSize > COMPASS_BUFFER_SIZE) 
+				headingBufferSize = COMPASS_BUFFER_SIZE;
+			
+			// Update the last time stamp and add a log statement
+			lastTimeStamp = System.currentTimeMillis();
+			log("getNewData: New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
+			
+			// Notify the listeners
+			notifyP2DListeners(newData);
+		}
+	}
+	
+	/**
 	 * Removes expired compass readings.
 	 */
 	public void run() {
 		while(running) {
 			
-			// If new compass data is available, get it!
-			if (compass.isDataReady()) {
-				PlayerPosition2dData newData = compass.getData();
-				double newHeading = newData.getPos().getPa();
-				
-				headingBuffer[headingBufferIndx] = newHeading;
-				
-				// Update the headingBufferIndx
-				headingBufferIndx++;
-				headingBufferIndx %= COMPASS_BUFFER_SIZE;
-				
-				// Update the number of elements in the compass buffer
-				headingBufferSize++;
-				if (headingBufferSize > COMPASS_BUFFER_SIZE) 
-					headingBufferSize = COMPASS_BUFFER_SIZE;
-				
-				// Update the last time stamp and add a log statement
-				lastTimeStamp = System.currentTimeMillis();
-				log("run: New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
-				
-				// Notify the listeners
-				notifyP2DListeners(newData);
-			}
+			// Proactively grab new compass data before 
+			// cleaning up the old data.
+			getNewData();
 			
 			// Check if we've exceeded the max age
 			long age = System.currentTimeMillis() - lastTimeStamp;
