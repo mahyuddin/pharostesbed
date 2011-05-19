@@ -336,7 +336,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		
 		// Start the individual components
 		if (compassDataBuffer != null)			compassDataBuffer.start();
-		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
+//		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
 		
 		// This is temporary code for mission 14...
 		//flogger.log("PharosServer: Starting UDPRxTx:");
@@ -403,7 +403,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		flogger.log("PharosServer: Stopping the GPS data buffer.");
 		if (gpsDataBuffer != null)	{
 			gpsDataBuffer.setFileLogger(null);
-			gpsDataBuffer.stop();
+//			gpsDataBuffer.stop();
 		}
 		
 		flogger.log("PharosServer: Stopping the compass data buffer.");
