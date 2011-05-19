@@ -63,7 +63,7 @@ public class MotionScriptFollower implements Runnable {
 		this.wifiBroadcaster = wifiBroadcaster;
 		
 		// Only save the TelosB components if the TelosB is not disabled...
-		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
 			this.telosBeaconBroadcaster = telosBeaconBroadcaster;
 			this.telosBeaconReceiver = telosBeaconBroadcaster.getReceiver();
 		}
@@ -163,13 +163,13 @@ public class MotionScriptFollower implements Runnable {
 	 * @return true if successful, false otherwise.
 	 */
 	private boolean handleStartBcastTelosB(StartBcastTelosB instr) {
-		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
 			// Start the TelosB cc2420 radio signal meter
-			flogger.log("Starting TelosB beacon broadcaster, minPeriod = " 
+			log("handleStartBcastTelosB: Starting TelosB beacon broadcaster, minPeriod = " 
 					+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
 			return telosBeaconBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 		} else {
-			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			logErr("handleStartBcastTelosB: Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
@@ -187,24 +187,24 @@ public class MotionScriptFollower implements Runnable {
 	 * @return true if successful, false otherwise.
 	 */
 	private boolean handleStopBcastTelosB(StopBcastTelosB instr) {
-		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
-			flogger.log("Stopping TelosB beacon broadcaster.");
+		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
+			log("handleStopBcastTelosB: Stopping TelosB beacon broadcaster.");
 			telosBeaconBroadcaster.stop();
 			return true;
 		} else {
-			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			logErr("handleStopBcastTelosB: Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
 	
 	private boolean handleStopBcastWiFi(StopBcastWifi msg) {
-		flogger.log("Stopping WiFi beacon broadcaster.");
+		log("handleStopBcastWiFi: Stopping WiFi beacon broadcaster.");
 		wifiBroadcaster.stop();
 		return true;
 	}
 	
 	private boolean handleScoot(Scoot msg) {
-		flogger.log("Scooting the robot " + msg.getAmount());
+		log("handleScoot: Scooting the robot " + msg.getAmount());
 		scooter.scoot(msg.getAmount());
 		return true;
 	}
@@ -216,11 +216,11 @@ public class MotionScriptFollower implements Runnable {
 	 * @return true if successful, false otherwise.
 	 */
 	private boolean handleRcvTelosbBeacons(RcvTelosbBeacons instr) {
-		if (System.getProperty ("PharosMiddleware.disableTelosB") == null) {
+		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
 			telosBeaconReceiver.rcvBeacons(instr.getNumBeacons());
 			return true;
 		} else {
-			log("ERROR: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			logErr("handleRcvTelosbBeacons: Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
@@ -285,6 +285,16 @@ public class MotionScriptFollower implements Runnable {
 			doneListener.motionScriptDone(success, instrIndex, continueRunning);
 		
 		stop();
+	}
+	
+	private void logErr(String msg) {
+		String result = "MotionScriptFollower: ERROR: " + msg;
+		
+		System.err.println(result);
+		
+		// always log text to file if a FileLogger is present
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
