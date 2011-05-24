@@ -6,6 +6,7 @@ import pharoslabut.navigate.LineFollowerEvent;
 import pharoslabut.navigate.LineFollowerEventListener;
 
 import playerclient.*;
+import playerclient.structures.PlayerConstants;
 import playerclient.structures.ir.PlayerIrData;
 
 /**
@@ -74,18 +75,19 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 		this.lf = lf;
 		this.clientMgr = clientMgr;
 		this.flogger = flogger;
+		this.isRunning = true; 
 		
 		// Connect to the IR sensors...
 		PlayerClient client = lf.getPlayerClient();
 		
 		// Uncomment these lines when ready to enable IR sensors.
-//		try{
-//			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
-//			ir.addIRListener(this);
-//		} catch (PlayerException e) { 
-//			log("Error, could not connect to IR proxy.", false);
-//			System.exit(1);
-//		}
+		try{
+			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+			ir.addIRListener(this);
+		} catch (PlayerException e) { 
+			log("Error, could not connect to IR proxy.", false);
+			System.exit(1);
+		}
 	}
 	
 	/**
@@ -96,10 +98,10 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 	 * approaching from and which lane it would like to exit the intersection from.
 	 */
 	public void start(LaneSpecs laneSpecs) {
+		this.isRunning = true; 
 		if (isRunning) {
 			this.laneSpecs = laneSpecs;
 			this.reachedExit = false;
-			this.isRunning = true;
 			new Thread(this).start();
 		} else {
 			log("start: ERROR: Trying to start twice!", false);
@@ -111,23 +113,23 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 		if (isRunning) {
 			switch(lfe.getType()) {
 			// The APPROACHING event is now handled by the ClientManager
-			//case APPROACHING:
-			//	doApproaching();
-			//	break;
+			case APPROACHING:
+//				doApproaching();
+				break;
 			
 //			By the time this method is called, the robot should already be at the entrance 
 //			to the intersection
-//			case ENTERING:
+			case ENTERING:
 //			doEntering();
-//				break;
+				break;
 			case EXITING:
 				reachedExit = true;
 				break;
 				
 //			This message is now handled by the ClientManager
-//			case ERROR:
-//				log("newLineFollowerEvent: Received error from line follower!  Aborting demo.", false);
-//				lf.stop(); // There was an error, stop!
+			case ERROR:
+				log("newLineFollowerEvent: Received error from line follower!  Aborting demo.", false);
+				lf.stop(); // There was an error, stop!
 //				break;
 			default:
 				log("newLineFollowerEvent: Unexpected event from line follower (discarding): " + lfe, false);
@@ -151,6 +153,16 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			// If IR sensors detect obstacle, call lf.stop()
 			// If all clear, call lf.go()
 			// Make use of member variables "irData" and "irDataTimeStamp"
+			float ranges[] = (irData.getRanges());
+			log("ranges are: " + ranges[0] + " " + ranges[1] + " " + ranges[2]);
+			
+			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {	
+				lf.stop();
+			}
+			else {
+				reachedExit = true; 
+				lf.start();
+			}
 		}
 		
 		// After it is done...
