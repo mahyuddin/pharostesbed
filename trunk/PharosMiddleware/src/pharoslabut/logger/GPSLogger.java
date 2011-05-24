@@ -218,7 +218,6 @@ public class GPSLogger implements Runnable {
 		int serverPort = 6665;
 		int index = 0;
 		String fileName = null;
-		long period = 1500; // period between sampling in milliseconds
 		int time = 0;
 		
 		for (int i=0; i < args.length; i++) {
@@ -233,13 +232,6 @@ public class GPSLogger implements Runnable {
 			} 
 			else if (args[i].equals("-log")) {
 				fileName = args[++i];
-			}
-			else if (args[i].equals("-period")) {
-				period = Long.valueOf(args[++i]);
-				if (period < 1000) {
-					System.err.println("ERROR: minimum period is 1000");
-					System.exit(1);
-				}
 			}
 			else if (args[i].equals("-d") || args[i].equals("-debug")) {
 				System.setProperty ("PharosMiddleware.debug", "true");
@@ -257,7 +249,6 @@ public class GPSLogger implements Runnable {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("GPS sensor index: " + index);
 		System.out.println("Loge: " + fileName);
-		System.out.println("Sampling period: " + period);
 		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
 		System.out.println("Log time: " + time + "s");
 		
