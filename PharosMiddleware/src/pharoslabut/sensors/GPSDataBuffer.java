@@ -160,9 +160,11 @@ public class GPSDataBuffer {
 //	}
 	
 	/**
-	 * Returns the current location.
+	 * Returns the current location.  It first checks whether new GPS data
+	 * is available.  If it is, it returns the new GPS data.  Otherwise, it returns
+	 * the previous GPS data that has not expired.
 	 * 
-	 * @throws NoNewDataException If no GPS data exists in the buffer.
+	 * @throws NoNewDataException If no GPS data exists.
 	 */
 	public synchronized PlayerGpsData getCurrLoc() throws NoNewDataException {
 		// Grab any new GPS data...
