@@ -163,10 +163,8 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
-		// This location is in the Pickle Research Center
-		// See: http://maps.google.com/maps?f=q&source=s_q&hl=en&geocode=&q=30.385645,+-97.7251983&aq=&sll=37.0625,-95.677068&sspn=58.816238,95.009766&ie=UTF8&ll=30.385759,-97.724333&spn=0.005615,0.005799&t=h&z=18
-		double latitude = 30.385645;  
-		double longitude = -97.7251983;
+		double latitude = Double.MAX_VALUE;  
+		double longitude = Double.MAX_VALUE;
 		
 		double velocity = 1.5;
 
@@ -181,7 +179,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 				else if (args[i].equals("-log")) {
 					fileName = args[++i];
 				}
-				else if (args[i].equals("-mobilityPlane")) {
+				else if (args[i].equals("-mobilityPlane") || args[i].equals("-mp")) {
 					String mp = args[++i].toLowerCase();
 					if (mp.equals("traxxas"))
 						mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
@@ -215,6 +213,16 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		} catch(Exception e) {
 			e.printStackTrace();
 			usage();
+			System.exit(1);
+		}
+		
+		if (latitude == Double.MAX_VALUE) {
+			System.err.println("Latitude not specified.");
+			System.exit(1);
+		}
+		
+		if (longitude == Double.MAX_VALUE) {
+			System.err.println("Longitude not specified.");
 			System.exit(1);
 		}
 		
