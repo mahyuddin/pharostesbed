@@ -5,6 +5,7 @@
     <property name="build.dir"   value="bin"/>
     <property name="classes.dir" value="${build.dir}"/>
     <property name="jar.dir"     value="jars"/>
+    <property name="doc.dir"     value="doc"/>
     <property name="lib.dir"     value="${jar.dir}"/>
     <property name="main-class"  value="pharoslabut.experiment.PharosExpServer"/>
 
@@ -15,7 +16,9 @@
     <target name="clean">
         <delete includeemptydirs="true">
             <fileset dir="${build.dir}" includes="**/*"/>
+            <fileset dir="${doc.dir}" includes="**/*"/>
         </delete>
+        <delete file="${jar.dir}/${ant.project.name}.jar"/>
     </target>
 
     <target name="compile">
@@ -43,7 +46,23 @@
 
     <target name="clean-build" depends="clean,jar"/>
 
-    <target name="main" depends="clean,compile"/>
+    <target name="main" depends="clean,jar"/>
 
+    <target name="javadoc" description="Create Javadocs for the Pharos Middleware">
+        <javadoc packagenames="pharoslabut.*"
+                sourcepath="src"
+                destdir="${doc.dir}"
+                author="true"
+                version="true"
+                use="true"
+                windowtitle="Pharos Middleware API"
+                classpathref="classpath">
+            <doctitle><![CDATA[<h1>Pharos Middleware</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; 2000 Pharos lab. All Rights Reserved.</i>]]></bottom>
+            <tag name="todo" scope="all" description="To do:"/>
+            <link offline="true" href="http://download.oracle.com/javase/6/docs/api/" packagelistLoc="C:\tmp"/>
+            <link href="http://developer.java.sun.com/developer/products/xml/docs/api/"/>
+        </javadoc>
+    </target>
 </project>
 
