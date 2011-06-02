@@ -66,9 +66,9 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	/**
 	 * The constructor.  Starts the server running.
 	 * 
-	 * @param playerServerIP The IP address of the player server with which to connect
-	 * @param playerServerPort The port that the player server is listening on.
-	 * @param pharosServerPort The port on which this Pharos Server should listen on.
+	 * @param playerServerIP The player server's IP address.
+	 * @param playerServerPort The player server's port.
+	 * @param pharosServerPort This server's port.
 	 * @param mCastAddress The multicast address over which to broadcast WiFi beacons.
 	 * @param mCastPort the multicast port over which to broadcast WiFi beacons.
 	 * @param mobilityPlane The type of mobility plane being used.
