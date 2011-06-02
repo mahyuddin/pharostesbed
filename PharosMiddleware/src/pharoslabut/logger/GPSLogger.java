@@ -75,9 +75,6 @@ public class GPSLogger implements Runnable {
 		
 		logDbg("Creating GPSDataBuffer...");
 		gpsdb = new GPSDataBuffer(gps, flogger);
-		
-//		gdb.addGPSListener(this);
-//		gdb.start();
 	}
 	
 	/**
@@ -116,7 +113,7 @@ public class GPSLogger implements Runnable {
 		logging = false;
 	}
 	
-	@Override
+//	@Override
 //	public void newGPSData(PlayerGpsData gpsData) {
 //		long endTime = System.currentTimeMillis();
 //		
@@ -129,6 +126,10 @@ public class GPSLogger implements Runnable {
 //		log(result);
 //	}
 	
+	PlayerGpsData oldData = null;
+	/**
+	 * This method sits in a loop polling for GPS data.
+	 */
 	public void run() {
 		PlayerGpsData gpsData;
 
@@ -136,16 +137,25 @@ public class GPSLogger implements Runnable {
 
 		while(logging) {
 			try {
-				gpsData = gpsdb.getCurrLoc();
-				long endTime = System.currentTimeMillis();
-
-				String result = endTime + "\t" + (endTime - startTime) + "\t";
-				result += gpsData.getQuality()  + "\t" + (gpsData.getLatitude()/1e7) + "\t" 
-				+ (gpsData.getLongitude()/1e7) + "\t" + gpsData.getAltitude() + "\t"
-				+ gpsData.getTime_sec() + "\t" + gpsData.getTime_usec() + "\t"
-				+ gpsData.getErr_vert() + "\t" + gpsData.getErr_horz();
 				
-				log(result);
+				gpsData = gpsdb.getCurrLoc();
+				
+				if (oldData != null && !oldData.equals(gpsData)) {
+
+					long endTime = System.currentTimeMillis();
+
+
+					String result = endTime + "\t" + (endTime - startTime) + "\t";
+					result += gpsData.getQuality()  + "\t" + (gpsData.getLatitude()/1e7) + "\t" 
+					+ (gpsData.getLongitude()/1e7) + "\t" + gpsData.getAltitude() + "\t"
+					+ gpsData.getTime_sec() + "\t" + gpsData.getTime_usec() + "\t"
+					+ gpsData.getErr_vert() + "\t" + gpsData.getErr_horz();
+
+					log(result);
+				}
+				
+				oldData = gpsData;
+				
 			} catch (NoNewDataException e1) {
 				logDbg("run: No new data...");
 			}
