@@ -20,8 +20,8 @@ import playerclient3.*;
 import playerclient3.structures.PlayerConstants;
 
 /**
- * The PharosServer runs on each robot.  It sits between the PlayerServer and PharosClient.
- * The PharosClient is used by the application to perform application-specific tasks.
+ * This should run on each robot.  It sits between the PlayerServer and PharosExpClient.
+ * The PharosExpClient is used to coordinate the execution of experiments.
  * 
  * @see PharosExpClient
  * @author Chien-Liang Fok
