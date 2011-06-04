@@ -11,6 +11,10 @@ import java.net.*;
  */
 public interface AckableMessage extends Message {
 
+	public void setReplyAddr(InetAddress address);
+	
+	public void setPort(int port);
+	
 	/**
 	 * @return The reply address to which the acknowledgement should be sent.
 	 */
