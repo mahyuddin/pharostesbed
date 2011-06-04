@@ -2,6 +2,7 @@ package pharoslabut.io;
 
 import java.io.*;
 import java.net.*;
+import pharoslabut.logger.FileLogger;
 import pharoslabut.exceptions.*;
 
 /**
@@ -15,10 +16,19 @@ import pharoslabut.exceptions.*;
  */
 public class TCPMessageSender implements MessageSender {
     
+	private FileLogger flogger = null;
+	
     /**
      * Creates a TCPMessageSender.
      */
     public TCPMessageSender() {
+    }
+    
+    /**
+     * Creates a TCPMessageSender with a file logger.
+     */
+    public TCPMessageSender(FileLogger flogger) {
+    	this.flogger = flogger;
     }
     
     /**
@@ -64,7 +74,10 @@ public class TCPMessageSender implements MessageSender {
     }
 	
 	void log(String msg) {
+		String result = "TCPMessageSender: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("TCPMessageSender: " + msg);
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 }
