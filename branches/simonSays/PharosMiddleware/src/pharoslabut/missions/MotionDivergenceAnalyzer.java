@@ -222,7 +222,7 @@ public class MotionDivergenceAnalyzer {
 		
 		for (int i=0; i < pathHistory.size(); i++) {
 			log(flogger, "Absolute analysis of path to way point " + (i+1) + " ...");
-			ResultEdge edgeResult = analyzeEdgeAbsoluteDivergence(pathHistory.get(i));
+			ResultEdge edgeResult = analyzeEdgeAbsoluteDivergence(expData, pathHistory.get(i));
 			log(flogger, edgeResult.toString());
 			results.resultAbsoluteDivergence.add(edgeResult);
 		}
@@ -230,7 +230,7 @@ public class MotionDivergenceAnalyzer {
 		flogger = new FileLogger(prefix + "-MotionDivergenceRelative.txt", false /* print time stamp */);
 		for (int i=0; i < pathHistory.size(); i++) {
 			log(flogger, "Relative analysis of path to way point " + (i+1) + "...");
-			ResultEdge edgeResult = analyzeEdgeRelativeDivergence(pathHistory.get(i));
+			ResultEdge edgeResult = analyzeEdgeRelativeDivergence(expData, pathHistory.get(i));
 			log(flogger, edgeResult.toString());
 			results.resultRelativeDivergence.add(edgeResult);
 		}
@@ -238,7 +238,7 @@ public class MotionDivergenceAnalyzer {
 		flogger = new FileLogger(prefix + "-MotionDivergenceRelativeSpeed.txt", false /* print time stamp */);
 		for (int i=0; i < pathHistory.size(); i++) {
 			log(flogger, "Relative+Speed analysis of path to way point " + (i+1) + "...");
-			ResultEdge edgeResult = analyzeEdgeRelativeDivergenceSpeed(pathHistory.get(i));
+			ResultEdge edgeResult = analyzeEdgeRelativeDivergenceSpeed(expData, pathHistory.get(i));
 			log(flogger, edgeResult.toString());
 			results.resultRelativeSpeedDivergence.add(edgeResult);
 		}
@@ -252,10 +252,11 @@ public class MotionDivergenceAnalyzer {
 	 * from the point of intersection with the ideal line to the current location
 	 * of the robot.
 	 * 
+	 * @param expData The experiment data
 	 * @param edge The edge to analyze.
 	 * @param flogger The FileLogger with which to log the results of the analysis.
 	 */
-	private ResultEdge analyzeEdgeAbsoluteDivergence(PathEdge edge) {
+	private ResultEdge analyzeEdgeAbsoluteDivergence(RobotExpData expData, PathEdge edge) {
 		Location startLoc = edge.getStartLoc();
 		
 		if (startLoc == null) {
@@ -263,14 +264,10 @@ public class MotionDivergenceAnalyzer {
 			System.exit(-1);
 		}
 		
-		// First create the line connecting the start location and end location.
-		// This is the most ideal path the robot should travel.
-		Line perfectRoute = new Line(startLoc, edge.getDest());
+		// First create the ideal path along which the robot should travel, which
+		// is the line connecting the start location to the end location.
+		Line perfectRoute = new Line(startLoc, edge.getEndLocation());
 		
-		/*
-		 * Calculate
-		 */
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
 		
 		// Some debug tests...
 //		System.out.println("Equation of Perfect Route: " + perfectRoute);
@@ -280,14 +277,25 @@ public class MotionDivergenceAnalyzer {
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Absolute)");
 	
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.getNumLocations(); i++) {
-			GPSLocationState currGpsLoc = edge.getLocation(i);
-			Location currLoc = new Location(currGpsLoc.getLoc());
+		
+		int i = 0;
+		// For each second in the edge...
+		for (long currTime = edge.getStartTime(); currTime < edge.getEndTime(); currTime += 1000) {
+//		for (int i = 0; i < edge.getNumLocations(); i++) {
+			
+			// Get the location of the robot at that time...
+			Location currLoc = expData.getLocation(currTime);
+			
+//			GPSLocationState currGpsLoc = edge.getLocation(i);
+//			Location currLoc = new Location(currGpsLoc.getLoc());
+			
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
-			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
+			
+			long time = (currTime - edge.getStartTime());
+			double pctComplete = (((double)time / (double)edge.getDuration()) * 100.0);
+			
 			//System.out.println("time=" + time + ", edgeEndTime=" + edgeEndTime);
-			result.add(new ResultDatumEdge(i+1, time, pctComplete, distToOptimal));
+			result.add(new ResultDatumEdge(++i, time, pctComplete, distToOptimal));
 			
 			//log(flogger, (i+1) + "\t" + time + "\t" + pctComplete + "\t" + distToOptimal);
 		}
@@ -299,27 +307,37 @@ public class MotionDivergenceAnalyzer {
 	 * straight line from where it's previously known location was to the destination.
 	 * Note that the perfect route is updated each time a new GPS datapoint arrives.
 	 * 
+	 * @param expData The experiment data
 	 * @param edge The edge to analyze.
 	 */
-	private ResultEdge analyzeEdgeRelativeDivergence(PathEdge edge) {
+	private ResultEdge analyzeEdgeRelativeDivergence(RobotExpData expData, PathEdge edge) {
 		Location startLoc = edge.getStartLoc();
 		
 		/*
 		 * The initial perfect route is the straight line from the start position
 		 * to the final destination.
 		 */
-		Line perfectRoute = new Line(startLoc, edge.getDest());
+		Line perfectRoute = new Line(startLoc, edge.getEndLocation());
 		
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
+//		long edgeEndTime =  / 1000;
 		
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Relative)");
 		
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.getNumLocations(); i++) {
-			GPSLocationState currGpsLoc = edge.getLocation(i);
-			Location currLoc = new Location(currGpsLoc.getLoc());
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
-			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
+		
+		int i = 0;
+		
+		// for each second in the edge...
+		for (long currTime = edge.getStartTime(); currTime < edge.getEndTime(); currTime += 1000) {
+//		for (int i = 0; i < edge.getNumLocations(); i++) {
+//			GPSLocationState currGpsLoc = edge.getLocation(i);
+//			Location currLoc = new Location(currGpsLoc.getLoc());
+			
+			// Get the location of the robot at that time...
+			Location currLoc = expData.getLocation(currTime);
+			
+			long time = (currTime - edge.getStartTime());
+			double pctComplete = (((double)time / (double)edge.getDuration()) * 100.0);
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
 			
 			System.out.println("analyzeEdgeRelativeDivergence: Adding result: " + pctComplete + " " + distToOptimal);
@@ -328,7 +346,7 @@ public class MotionDivergenceAnalyzer {
 				System.exit(0);
 			}
 			
-			result.add(new ResultDatumEdge(i+1 /* GPS Measurement Count */, time, pctComplete, distToOptimal));
+			result.add(new ResultDatumEdge(++i, time, pctComplete, distToOptimal));
 			
 			/*
 			 * For the relative-divergence analysis, the perfect route is updated to be the
@@ -337,7 +355,7 @@ public class MotionDivergenceAnalyzer {
 			 * from is present location and not necessarily follow the straight line from the
 			 * edge's start location to final location.
 			 */
-			perfectRoute = new Line(currLoc, edge.getDest());
+			perfectRoute = new Line(currLoc, edge.getEndLocation());
 			
 			// Some debug output
 //			System.out.println("currLoc: " + currLoc);
@@ -354,28 +372,38 @@ public class MotionDivergenceAnalyzer {
 	 * The perfect route is updated each time a new GPS data point arrives, and the
 	 * speed is calculated as the average speed between GPS data points.
 	 * 
+	 * @param expData The experiment data
 	 * @param edge The edge to analyze.
 	 */
-	private ResultEdge analyzeEdgeRelativeDivergenceSpeed(PathEdge edge) {
+	private ResultEdge analyzeEdgeRelativeDivergenceSpeed(RobotExpData expData, PathEdge edge) {
 		Location startLoc = edge.getStartLoc();
 		//long prevTime = edge.getAbsoluteStartTime();
-		long edgeEndTime = edge.getNormalizedEndTime() / 1000;
+//		long edgeEndTime = edge.getDuration() / 1000;
 		
 		/*
 		 * The initial perfect route is the straight line from the start position
 		 * to the final destination.
 		 */
-		Line perfectRoute = new Line(startLoc, edge.getDest());
+		Line perfectRoute = new Line(startLoc, edge.getEndLocation());
 		
 		//log(flogger, "GPS Measurement\tTime(s)\tPcnt Complete\tDivergence (Relative)");
 		Vector<ResultDatumEdge> result = new Vector<ResultDatumEdge>();
-		for (int i = 0; i < edge.getNumLocations(); i++) {
-			GPSLocationState currGpsLoc = edge.getLocation(i);
-			Location currLoc = new Location(currGpsLoc.getLoc());
+		
+		int i = 0;
+		
+		// for each second in the edge...
+		for (long currTime = edge.getStartTime(); currTime < edge.getEndTime(); currTime += 1000) {
 			
-			long time = (currGpsLoc.getTimeStamp() - edge.getAbsoluteStartTime())/1000;
+//		for (int i = 0; i < edge.getNumLocations(); i++) {
+//			GPSLocationState currGpsLoc = edge.getLocation(i);
+//			Location currLoc = new Location(currGpsLoc.getLoc());
 			
-			double pctComplete = (((double)time / (double)edgeEndTime) * 100.0);
+			// Get the location of the robot at that time...
+			Location currLoc = expData.getLocation(currTime);
+			
+			long time = currTime - edge.getStartTime();
+			
+			double pctComplete = (((double)time / (double)edge.getDuration()) * 100.0);
 			
 			/*
 			 * Calculate the distance between the previous GPS coordinate to the current one.
@@ -386,7 +414,7 @@ public class MotionDivergenceAnalyzer {
 			
 			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc, deltaDist);
 			
-			result.add(new ResultDatumEdge(i+1, time, pctComplete, distToOptimal));
+			result.add(new ResultDatumEdge(++i, time, pctComplete, distToOptimal));
 			//log(flogger, (i+1) + "\t" + time + "\t" + pctComplete + "\t" + distToOptimal);
 			
 			/*
@@ -396,7 +424,7 @@ public class MotionDivergenceAnalyzer {
 			 * from is present location and not necessarily follow the straight line from the
 			 * edge's start location to final location.
 			 */
-			perfectRoute = new Line(currLoc, edge.getDest());
+			perfectRoute = new Line(currLoc, edge.getEndLocation());
 			//prevTime = currGpsLoc.getTimeStamp();
 			
 			// Some debug output

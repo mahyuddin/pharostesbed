@@ -1,13 +1,11 @@
 package pharoslabut.navigate;
 
-
-import pharoslabut.MotionArbiter;
+import pharoslabut.sensors.CompassDataBuffer;
+import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
-
 import pharoslabut.logger.FileLogger;
-import playerclient.*;
-import playerclient.structures.PlayerConstants;
+import pharoslabut.exceptions.NoNewDataException;
 
 /**
  * Navigates a car to a specified destination.  It calculates which direction
@@ -237,7 +235,7 @@ public class NavigateCompassGPS extends Navigate {
 				motionArbiter.revokeTask(prevTask);
 				prevTask = null;
 			}
-			MotionTask mt = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+			MotionTask mt = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 			motionArbiter.submitTask(mt);
 			prevTask = mt;
 			
@@ -284,7 +282,7 @@ public class NavigateCompassGPS extends Navigate {
 	 * @param velocity The speed in meters per second that the robot should travel at.
 	 * @return true if the robot successfully reached the destination
 	 */
-	public boolean go(Location dest, double velocity) throws SensorException {
+	public boolean go(Location dest, double velocity) {
 		boolean done = false;
 		boolean success = false;
 		
@@ -292,20 +290,21 @@ public class NavigateCompassGPS extends Navigate {
 			Location currLoc = null;
 			
 			try {
-				currLoc = gpsDataBuffer.getCurrLoc();
-				if (isValid(currLoc)) {
+				currLoc = new Location(gpsDataBuffer.getCurrLoc());
+				if (GPSDataBuffer.isValid(currLoc)) {
 					double currHeading = compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
 					done = doNextMotionTask(currLoc, currHeading, dest, velocity);
 					if (done) success = true;
+					//dprevLoc = currLoc;
 				} else {
-					log("Invalid current location " + currLoc + ", halting robot...");
+					logErr("go: Invalid current location " + currLoc + ", halting robot...");
 					stopRobot();
 				}
-			} catch(playerclient.NoNewDataException nnde) {
-				if (currLoc == null) 
-					log("Unable to get current location, halting robot...");
-				else
-					log("Unable to get current heading, halting robot...");
+			} catch(NoNewDataException nnde) {
+				if (currLoc == null) {
+					logErr("go: Unable to get the current location, halting robot...");
+				} else
+					logErr("go: Unable to get the current heading, halting robot...");
 				stopRobot();
 			}
 			
@@ -319,90 +318,86 @@ public class NavigateCompassGPS extends Navigate {
 				}
 			}
 		}
+		log("go: Done going to " + dest + ", success=" + success);
 		return success;
 	}
 	
-	private boolean isValid(Location loc) {
-		if (loc == null) return false; // a null location is inherently invalid
-		// For now, let's constrain the longitude to be -97.xxx degrees, and the latitude to be 30.xxx degrees
-		if (((int)loc.longitude()) != -97 || ((int)loc.latitude()) != 30) {
-			log("isValid(...): Invalid loc: " + loc);
-			return false;
-		} else
-			return true;
+	private void logErr(String msg) {
+		String result = "NavigateCompassGPS: ERROR: " + msg;
+		
+		System.err.println(result);
+		
+		// always log text to file if a FileLogger is present
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private void log(String msg) {
 		String result = "NavigateCompassGPS: " + msg;
 		
 		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
+		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
-		}
 		
 		// always log text to file if a FileLogger is present
-		if (flogger != null) {
+		if (flogger != null)
 			flogger.log(result);
-		}
 	}
 	
-	public static final void main(String[] args) {
-		String serverIP = "10.11.12.20";
-		int serverPort = 6665;
-		
-		// Enable debug output
-		System.setProperty ("PharosMiddleware.debug", "true"); 
-		
-		PlayerClient client = null;
-		try {
-			client = new PlayerClient(serverIP, serverPort);
-		} catch(PlayerException e) {
-			System.err.println("Error connecting to Player: ");
-			System.err.println("    [ " + e.toString() + " ]");
-			System.exit (1);
-		}
-		
-		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
-		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
-		
-		if (motors == null) {
-			System.err.println("motors is null");
-			System.exit(1);
-		}
-		
-		if (compass == null) {
-			System.err.println("compass is null");
-			System.exit(1);
-		}
-		
-		if (gps == null) {
-			System.err.println("gps is null");
-			System.exit(1);
-		}
-		
-		CompassDataBuffer compassDataBuffer = new CompassDataBuffer(compass);
-		GPSDataBuffer gpsDataBuffer = new GPSDataBuffer(gps);
-		MotionArbiter motionArbiter = new MotionArbiter(motors);
-		
-		String fileName = "NavigateCompassGPS_" + FileLogger.getUniqueNameExtension() + ".log"; 
-		FileLogger flogger = new FileLogger(fileName);
-		
-		NavigateCompassGPS navigator = new NavigateCompassGPS(motionArbiter, compassDataBuffer, gpsDataBuffer, flogger);
-		
-		// TEST CODE:  See if the robot is able to move to a specific destination
-		//Location destLoc = new Location(30.2655183,	-97.7690083); // barton springs point A
-		//Location destLoc = new Location(30.2657367,	-97.7684767); // barton springs point B
-		Location destLoc = new Location(30.2657533,	-97.7680267); // barton springs point C  
-			
-		
-		//double velocity = 0.4; // go relatively slowly
-		double velocity = 1; // go relatively briskly
-		try {
-			navigator.go(destLoc, velocity);
-		} catch (SensorException e) {
-			System.err.println("ERROR: " + e.getMessage());
-			e.printStackTrace();
-		}
-	}
+//	public static final void main(String[] args) {
+//		String serverIP = "10.11.12.20";
+//		int serverPort = 6665;
+//		
+//		// Enable debug output
+//		System.setProperty ("PharosMiddleware.debug", "true"); 
+//		
+//		PlayerClient client = null;
+//		try {
+//			client = new PlayerClient(serverIP, serverPort);
+//		} catch(PlayerException e) {
+//			System.err.println("Error connecting to Player: ");
+//			System.err.println("    [ " + e.toString() + " ]");
+//			System.exit (1);
+//		}
+//		
+//		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+//		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
+//		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
+//		
+//		if (motors == null) {
+//			System.err.println("motors is null");
+//			System.exit(1);
+//		}
+//		
+//		if (compass == null) {
+//			System.err.println("compass is null");
+//			System.exit(1);
+//		}
+//		
+//		if (gps == null) {
+//			System.err.println("gps is null");
+//			System.exit(1);
+//		}
+//		
+//		CompassDataBuffer compassDataBuffer = new CompassDataBuffer(compass);
+//		GPSDataBuffer gpsDataBuffer = new GPSDataBuffer(gps);
+//		MotionArbiter motionArbiter = new MotionArbiter(motors);
+//		
+//		String fileName = "NavigateCompassGPS_" + FileLogger.getUniqueNameExtension() + ".log"; 
+//		FileLogger flogger = new FileLogger(fileName);
+//		
+//		NavigateCompassGPS navigator = new NavigateCompassGPS(motionArbiter, compassDataBuffer, gpsDataBuffer, flogger);
+//		
+//		// TEST CODE:  See if the robot is able to move to a specific destination
+//		//Location destLoc = new Location(30.2655183,	-97.7690083); // barton springs point A
+//		//Location destLoc = new Location(30.2657367,	-97.7684767); // barton springs point B
+//		Location destLoc = new Location(30.2657533,	-97.7680267); // barton springs point C  
+//			
+//		
+//		//double velocity = 0.4; // go relatively slowly
+//		double velocity = 1; // go relatively briskly
+//		if (!navigator.go(destLoc, velocity)) {
+//			flogger.log("Failed to reach to destination.");
+//		}
+//	}
 }

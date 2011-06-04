@@ -1,5 +1,8 @@
 package pharoslabut.io;
 
+import java.net.*;
+import pharoslabut.exceptions.*;
+
 /**
  * Defines the interface of all MessageSenders.
  *
@@ -16,7 +19,7 @@ public interface MessageSender {
 	 * @param msg the message to be sent.
 	 * @return Whether the send was successful.
 	 */
-	public boolean sendMessage(Message msg);
+	public void sendMessage(InetAddress address, int port, Message msg) throws PharosException;
 	
 	/**
 	 * Returns the singlecast protocol type of this MessageSender.

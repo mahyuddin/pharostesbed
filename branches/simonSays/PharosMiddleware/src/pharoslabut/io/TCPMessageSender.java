@@ -2,6 +2,7 @@ package pharoslabut.io;
 
 import java.io.*;
 import java.net.*;
+import pharoslabut.exceptions.*;
 
 import pharoslabut.logger.FileLogger;
 
@@ -72,37 +73,29 @@ public class TCPMessageSender implements MessageSender {
      * Sends a message via a TCP socket.
      *
      * @param msg the message to be sent.
-     * @return Whether the send was successful.
+     * @throws PharosException whenever an error occurs.
      */
-    public boolean sendMessage( Message msg) {
+    public void sendMessage(InetAddress address, int port, Message msg) throws PharosException {
     	
-    	// If a connection to the server was not established, establish it.
-    	while (socket == null) {
-    		try {
-				connect();
-			} catch (IOException e) {
-				log("Unable to connect to server.  Pausing 1 second and then trying again...");
-				//e.printStackTrace();
-				synchronized(this) {
-					try {
-						wait(1000);
-					} catch (InterruptedException e1) {
-						e1.printStackTrace();
-					}
-				}
-			}
-    	}
-    	
-    	try {                
+    	try {
+    		log("Opening TCP socket to " + address + ":" + port);
+    		Socket socket = new Socket(address, port);
+    		socket.setTcpNoDelay(true);
+
+    		OutputStream os = socket.getOutputStream();
+    		ObjectOutputStream oos = new ObjectOutputStream(os);
+
     		log("Sending the object to the destination.");
     		oos.writeObject(msg);
     		oos.flush();
     		os.flush();
-    		return true;
+
+    		log("Closing the socket to the destination host.");
+    		socket.close();
+
     	} catch(Exception e) {
-    		kill();
     		e.printStackTrace();
-    		return false;
+    		throw new PharosException(e.getMessage());
     	}
     }
     

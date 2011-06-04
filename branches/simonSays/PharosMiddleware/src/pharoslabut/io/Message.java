@@ -9,7 +9,7 @@ package pharoslabut.io;
  */
 public abstract class Message implements java.io.Serializable {
     public static enum MsgType {RESET, STARTEXP, STOPEXP, LOAD_GPS_MOTION_SCRIPT,
-    	LOAD_RELATIVE_MOTION_SCRIPT, CUSTOM};
+    	LOAD_RELATIVE_MOTION_SCRIPT, SET_TIME};
     
     private ClientHandler ch;
     

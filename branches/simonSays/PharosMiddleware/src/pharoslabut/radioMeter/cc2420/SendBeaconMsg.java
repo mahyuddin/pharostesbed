@@ -9,12 +9,12 @@ package pharoslabut.radioMeter.cc2420;
 public class SendBeaconMsg extends net.tinyos.message.Message {
 
     /** The default size of this message type in bytes. */
-    public static final int DEFAULT_MESSAGE_SIZE = 4;
+    public static final int DEFAULT_MESSAGE_SIZE = 7;
 
     /** The Active Message type associated with this message. */
     public static final int AM_TYPE = 3;
 
-    /** Create a new SendBeaconMsg of size 4. */
+    /** Create a new SendBeaconMsg of size 7. */
     public SendBeaconMsg() {
         super(DEFAULT_MESSAGE_SIZE);
         amTypeSet(AM_TYPE);
@@ -87,6 +87,12 @@ public class SendBeaconMsg extends net.tinyos.message.Message {
     public String toString() {
       String s = "Message <SendBeaconMsg> \n";
       try {
+        s += "  [txPwr=0x"+Long.toHexString(get_txPwr())+"]\n";
+      } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
+      try {
+        s += "  [sndrID=0x"+Long.toHexString(get_sndrID())+"]\n";
+      } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
+      try {
         s += "  [seqno=0x"+Long.toHexString(get_seqno())+"]\n";
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       return s;
@@ -95,9 +101,135 @@ public class SendBeaconMsg extends net.tinyos.message.Message {
     // Message-type-specific access methods appear below.
 
     /////////////////////////////////////////////////////////
+    // Accessor methods for field: txPwr
+    //   Field type: short, unsigned
+    //   Offset (bits): 0
+    //   Size (bits): 8
+    /////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the field 'txPwr' is signed (false).
+     */
+    public static boolean isSigned_txPwr() {
+        return false;
+    }
+
+    /**
+     * Return whether the field 'txPwr' is an array (false).
+     */
+    public static boolean isArray_txPwr() {
+        return false;
+    }
+
+    /**
+     * Return the offset (in bytes) of the field 'txPwr'
+     */
+    public static int offset_txPwr() {
+        return (0 / 8);
+    }
+
+    /**
+     * Return the offset (in bits) of the field 'txPwr'
+     */
+    public static int offsetBits_txPwr() {
+        return 0;
+    }
+
+    /**
+     * Return the value (as a short) of the field 'txPwr'
+     */
+    public short get_txPwr() {
+        return (short)getUIntBEElement(offsetBits_txPwr(), 8);
+    }
+
+    /**
+     * Set the value of the field 'txPwr'
+     */
+    public void set_txPwr(short value) {
+        setUIntBEElement(offsetBits_txPwr(), 8, value);
+    }
+
+    /**
+     * Return the size, in bytes, of the field 'txPwr'
+     */
+    public static int size_txPwr() {
+        return (8 / 8);
+    }
+
+    /**
+     * Return the size, in bits, of the field 'txPwr'
+     */
+    public static int sizeBits_txPwr() {
+        return 8;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Accessor methods for field: sndrID
+    //   Field type: int, unsigned
+    //   Offset (bits): 8
+    //   Size (bits): 16
+    /////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the field 'sndrID' is signed (false).
+     */
+    public static boolean isSigned_sndrID() {
+        return false;
+    }
+
+    /**
+     * Return whether the field 'sndrID' is an array (false).
+     */
+    public static boolean isArray_sndrID() {
+        return false;
+    }
+
+    /**
+     * Return the offset (in bytes) of the field 'sndrID'
+     */
+    public static int offset_sndrID() {
+        return (8 / 8);
+    }
+
+    /**
+     * Return the offset (in bits) of the field 'sndrID'
+     */
+    public static int offsetBits_sndrID() {
+        return 8;
+    }
+
+    /**
+     * Return the value (as a int) of the field 'sndrID'
+     */
+    public int get_sndrID() {
+        return (int)getUIntBEElement(offsetBits_sndrID(), 16);
+    }
+
+    /**
+     * Set the value of the field 'sndrID'
+     */
+    public void set_sndrID(int value) {
+        setUIntBEElement(offsetBits_sndrID(), 16, value);
+    }
+
+    /**
+     * Return the size, in bytes, of the field 'sndrID'
+     */
+    public static int size_sndrID() {
+        return (16 / 8);
+    }
+
+    /**
+     * Return the size, in bits, of the field 'sndrID'
+     */
+    public static int sizeBits_sndrID() {
+        return 16;
+    }
+
+    /////////////////////////////////////////////////////////
     // Accessor methods for field: seqno
     //   Field type: long, unsigned
-    //   Offset (bits): 0
+    //   Offset (bits): 24
     //   Size (bits): 32
     /////////////////////////////////////////////////////////
 
@@ -119,14 +251,14 @@ public class SendBeaconMsg extends net.tinyos.message.Message {
      * Return the offset (in bytes) of the field 'seqno'
      */
     public static int offset_seqno() {
-        return (0 / 8);
+        return (24 / 8);
     }
 
     /**
      * Return the offset (in bits) of the field 'seqno'
      */
     public static int offsetBits_seqno() {
-        return 0;
+        return 24;
     }
 
     /**

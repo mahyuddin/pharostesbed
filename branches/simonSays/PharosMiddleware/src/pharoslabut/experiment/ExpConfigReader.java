@@ -3,10 +3,10 @@ package pharoslabut.experiment;
 import java.io.*;
 
 /**
- * Reads the configuration of an experiment.
+ * Reads the configuration of an experiment.  This is done by the base station
+ * when it launches an experiment.
  * 
  * @author Chien-Liang Fok
- *
  */
 public class ExpConfigReader {
 
@@ -25,7 +25,7 @@ public class ExpConfigReader {
 			String line = null;
 			int lineno = 1;
 			while (( line = input.readLine()) != null) {
-				if (!line.equals("")) {
+				if (!line.equals("") && !line.startsWith("//")) {
 					if (line.contains("START_INTERVAL")) {
 						String[] elem = line.split("[\\s]+");
 						try {
