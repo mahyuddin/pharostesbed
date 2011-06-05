@@ -9,8 +9,9 @@ import pharoslabut.io.TCPMessageSender;
 
 public class TestSetTime {
 
+	
 	public static void main(String[] args) {
-		TCPMessageSender sender = new TCPMessageSender();
+	   TCPMessageSender sender = TCPMessageSender.getSender();
 		
 		InetAddress addr;
 		try {
