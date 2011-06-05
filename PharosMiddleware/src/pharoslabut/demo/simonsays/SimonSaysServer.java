@@ -3,18 +3,11 @@ package pharoslabut.demo.simonsays;
 import java.awt.Image;
 import java.io.IOException;
 
-import pharoslabut.demo.simonsays.io.CameraPanMsg;
-import pharoslabut.demo.simonsays.io.CameraSnapshotMsg;
-import pharoslabut.demo.simonsays.io.CameraTakeSnapshotMsg;
-import pharoslabut.demo.simonsays.io.CameraTiltMsg;
-import pharoslabut.demo.simonsays.io.CmdDoneMsg;
-import pharoslabut.demo.simonsays.io.PlayerControlCmd;
-import pharoslabut.demo.simonsays.io.PlayerControlMsg;
-import pharoslabut.demo.simonsays.io.RobotMoveMsg;
-import pharoslabut.demo.simonsays.io.RobotTurnMsg;
+import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.sensors.camera.axis.*;
 
 /**
@@ -56,16 +49,19 @@ public class SimonSaysServer implements MessageReceiver {
 	 * @param pServerPort The port of the server.
 	 * @param port The port on which to listen for demo client messages.
 	 * @param cameraIP The IP address of the camera.
-	 * @param fileName The log file name for recording execution state.
+	 * @param logFile The log file name for recording execution state.
+	 * @param mobilityPlane The type of mobility plane to use.
 	 */
-	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP, String fileName) {
+	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP, String logFile,
+			MotionArbiter.MotionType mobilityPlane) {
 		
 		// Create the file logger if necessary...
-		if (fileName != null) {
-			flogger = new FileLogger(fileName);
+		if (logFile != null) {
+			flogger = new FileLogger(logFile);
+			sender.setFileLogger(flogger);
 		}
 		
-		ri = new RobotInterface(pServerIP, pServerPort, flogger);
+		ri = new RobotInterface(pServerIP, pServerPort, mobilityPlane, flogger);
 		
 		// Create the MCU interface...
 		mcu = new MCUInterface(mcuPort, flogger);
@@ -159,6 +155,11 @@ public class SimonSaysServer implements MessageReceiver {
 		}
 	}
 	
+	/**
+	 * Performs the actions that should be taken when a RobotMoveMsg is received.
+	 * 
+	 * @param moveMsg The move message.
+	 */
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
 		log("Moving robot " + dist + " meters...");
@@ -167,6 +168,11 @@ public class SimonSaysServer implements MessageReceiver {
 		sendAck(result, moveMsg); // success
 	}
 	
+	/**
+	 * Performs the actions that should be taken when a RobotTurnMsg is received.
+	 * 
+	 * @param moveMsg The turn message.
+	 */
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
 		double angle = turnMsg.getAngle() / 180 * Math.PI;
 		log("Turning robot " + turnMsg.getAngle() + " degrees...");
@@ -175,6 +181,12 @@ public class SimonSaysServer implements MessageReceiver {
 		sendAck(result, turnMsg); // success
 	}
 	
+	/**
+	 * Sends an ack back to the client.
+	 * 
+	 * @param success Whether the operation was successful.
+	 * @param am The message to ack.
+	 */
 	private void sendAck(boolean success, AckableMessage am) {
 		CmdDoneMsg cdm = new CmdDoneMsg(success);
 		try {
@@ -201,19 +213,19 @@ public class SimonSaysServer implements MessageReceiver {
 	}
 	
 	private static void print(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("DemoServer: " + msg);
+		System.out.println("DemoServer: " + msg);
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.irobotcam.DemoServer <options>\n");
+		print("Usage: pharoslabut.demo.simonsays.SimonSaysServer <options>\n");
 		print("Where <options> include:");
 		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
 		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
 		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
-		print("\t-file <file name>: name of file in which to save results (default DemoServer.log)");
+		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
+		print("\t-log <file name>: name of file in which to save results (default DemoServer.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -221,9 +233,10 @@ public class SimonSaysServer implements MessageReceiver {
 		int port = 8887;
 		String pServerIP = "localhost";
 		int pServerPort = 6665;
-		String fileName = "DemoServer.log";
+		String logFile = "DemoServer.log";
 		String mcuPort = "/dev/ttyS0";
 		String cameraIP = "192.168.0.20";
+		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -236,8 +249,8 @@ public class SimonSaysServer implements MessageReceiver {
 				else if (args[i].equals("-port")) {
 					port = Integer.valueOf(args[++i]);
 				}
-				else if (args[i].equals("-file")) {
-					fileName = args[++i];
+				else if (args[i].equals("-log")) {
+					logFile = args[++i];
 				}
 				else if (args[i].equals("-mcuPort")) {
 					mcuPort = args[++i];
@@ -248,8 +261,21 @@ public class SimonSaysServer implements MessageReceiver {
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
+				else if (args[i].equals("-mobilityPlane")) {
+					String mp = args[++i].toLowerCase();
+					if (mp.equals("traxxas"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
+					else if (mp.equals("segway"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_SEGWAY_RMP50;
+					else if (mp.equals("create"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_IROBOT_CREATE;
+					else {
+						System.err.println("Unknown mobility plane " + mp);
+						usage();
+						System.exit(1);
+					}
+				}
 				else {
-					System.setProperty ("PharosMiddleware.debug", "true");
 					usage();
 					System.exit(1);
 				}
@@ -260,9 +286,6 @@ public class SimonSaysServer implements MessageReceiver {
 			System.exit(1);
 		}
 		
-		print("Demo Server port: " + port);
-		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
-		
-		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, fileName);
+		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, logFile, mobilityPlane);
 	}
 }
