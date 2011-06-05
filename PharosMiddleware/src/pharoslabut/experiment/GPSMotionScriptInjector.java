@@ -16,9 +16,9 @@ import pharoslabut.navigate.motionscript.MotionScriptReader;
  */
 public class GPSMotionScriptInjector {
     /**
-     * The connection to the Pharos Server.
+     * The connection to the PharosExpServer.
      */
-    private TCPMessageSender sender = new TCPMessageSender();
+    private TCPMessageSender sender = TCPMessageSender.getSender();
     
     /**
      * The constructor.
