@@ -6,10 +6,7 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.exceptions.*;
 
 /**
- * Sends messages to other LimeLiteServers using TCP.
- * A TCP connection to another host is kept alive until a
- * disconnect occurs <i>and</i> a message is sent to the
- * disconnected agent.
+ * Sends messages to using TCP.
  *
  * @author Chien-Liang Fok
  * @version 3/17/2003
@@ -18,16 +15,27 @@ public class TCPMessageSender implements MessageSender {
     
 	private FileLogger flogger = null;
 	
+	private static TCPMessageSender tcpMsgSndr = new TCPMessageSender();
+	
     /**
      * Creates a TCPMessageSender.
      */
-    public TCPMessageSender() {
+    private TCPMessageSender() {
     }
     
     /**
-     * Creates a TCPMessageSender with a file logger.
+     * Provides access to the TCPMessageSender singleton.
+     * 
+     * @return The TCPMessageSender.
      */
-    public TCPMessageSender(FileLogger flogger) {
+    public static TCPMessageSender getSender() {
+    	return tcpMsgSndr;
+    }
+    
+    /**
+     * Sets the file logger.
+     */
+    public void setFileLogger(FileLogger flogger) {
     	this.flogger = flogger;
     }
     
