@@ -3,6 +3,7 @@ package pharoslabut.demo.simonsays;
 import java.io.*;
 
 import pharoslabut.logger.*;
+import pharoslabut.navigate.MotionArbiter;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
@@ -39,6 +40,7 @@ public class RobotInterface {
 	private int playerPort;
 	
 	private PlayerClient pclient = null;
+	
 	/**
 	 * The interface to control the motors that move the robot.
 	 */
@@ -49,12 +51,15 @@ public class RobotInterface {
 	 * 
 	 * @param playerIP The IP address of the player server that is controlling the iRobot Create.
 	 * @param playerPort The TCP port on which the player server is listening.
+	 * @param mobilityPlane The type of mobility plane being used.
 	 * @param flogger The file logger for logging debug messages.
 	 */
-	public RobotInterface(String playerIP, int playerPort, FileLogger flogger) {
+	public RobotInterface(String playerIP, int playerPort, MotionArbiter.MotionType mobilityPlane, FileLogger flogger) {
 		this.flogger = flogger;
 		this.playerIP = playerIP;
 		this.playerPort = playerPort;
+		
+		// TODO Add support for multiple types of mobility planes.
 		
 		//connect();
 		stopPlayer();
@@ -93,7 +98,7 @@ public class RobotInterface {
 		// Start the player server if it is not running...
 		if (!isPlayerRunning()) {
 			if (!startPlayer()) {
-				log("connect: ERROR: Unable to start player server...");
+				logErr("connect: ERROR: Unable to start player server...");
 				return false;
 			} else
 				log("connect: Player server started...");
@@ -114,6 +119,12 @@ public class RobotInterface {
 			logErr("connect: ERROR: motors is null");
 			return false;
 		}
+		
+		log("connect: Changing Player server mode to PUSH...");
+		pclient.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("connect: Setting Player Client to run in continuous threaded mode...");
+		pclient.runThreaded(-1, -1);
 		
 		return true;
 	}
@@ -282,7 +293,9 @@ public class RobotInterface {
 	}
 	
 	/**
-	 * Starts the player server.
+	 * Starts the player server.  First tries to detect on which port the iRobot Create is connected.
+	 * It then creates a configuration file for connecting to the robot, and launches the player
+	 * server.
 	 * 
 	 * @return true if successful.
 	 */
@@ -330,7 +343,6 @@ public class RobotInterface {
 			
 		} catch(Exception e) {
 			String eMsg = "isPlayerRunning: Unable find iRobot Create port : " + e.toString();
-			System.err.println(eMsg);
 			logErr(eMsg);
 			return false;
 		}
@@ -360,7 +372,6 @@ public class RobotInterface {
 			log("startPlayer: Robot config file saved to " + PLAYER_CONFIG_FILE);
 		} else {
 			String eMsg = "isPlayerRunning: ERROR: iRobot Create's port is null";
-			System.err.println(eMsg);
 			logErr(eMsg);
 			return false;
 		}
@@ -381,7 +392,6 @@ public class RobotInterface {
 			return true;
 		} catch(Exception e) {
 			String eMsg = "startPlayer: ERROR: Unable launch player server: " + e.toString();
-			System.err.println(eMsg);
 			logErr(eMsg);
 			return false;
 		}
@@ -451,6 +461,7 @@ public class RobotInterface {
 		print("\t-file <file name>: name of file in which to save results (default null)");
 		print("\t-move <distance>: Move the robot forward or backwards.");
 		print("\t-turn <angle>: Turn the robot side to side.");
+		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -468,6 +479,7 @@ public class RobotInterface {
 		boolean doTurn = false;
 		double moveDist = 0;
 		double turnAngle = 0;
+		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -490,6 +502,20 @@ public class RobotInterface {
 				else if (args[i].equals("-turn")) {
 					doTurn = true;
 					turnAngle = Double.valueOf(args[++i]).doubleValue();
+				}
+				else if (args[i].equals("-mobilityPlane")) {
+					String mp = args[++i].toLowerCase();
+					if (mp.equals("traxxas"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
+					else if (mp.equals("segway"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_SEGWAY_RMP50;
+					else if (mp.equals("create"))
+						mobilityPlane = MotionArbiter.MotionType.MOTION_IROBOT_CREATE;
+					else {
+						System.err.println("Unknown mobility plane " + mp);
+						usage();
+						System.exit(1);
+					}
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -514,7 +540,7 @@ public class RobotInterface {
 		if (fileName != null) 
 			flogger = new FileLogger(fileName);
 		
-		RobotInterface ri = new RobotInterface(pServerIP, pServerPort, flogger);
+		RobotInterface ri = new RobotInterface(pServerIP, pServerPort, mobilityPlane, flogger);
 		ri.startPlayer();
 		
 		if (doMove) {
