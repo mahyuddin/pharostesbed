@@ -12,6 +12,11 @@ import pharoslabut.io.*;
  */
 public class PharosStopExpClient {
 	
+	/**
+     * The connection to the PharosExpServer.
+     */
+    private TCPMessageSender sender = TCPMessageSender.getSender();
+    
     /**
      * The constructor.
      * 
@@ -19,7 +24,6 @@ public class PharosStopExpClient {
      * @see pharoslabut.experiment.ExpConfig
      */
 	public PharosStopExpClient(String expConfigFileName) {
-		TCPMessageSender sender = new TCPMessageSender();
 		ExpConfig expConfig = ExpConfigReader.readExpConfig(expConfigFileName);
 		
 		StopExpMsg stopMsg = new StopExpMsg();

@@ -12,7 +12,10 @@ import pharoslabut.navigate.motionscript.MotionScriptReader;
  */
 public class PharosExpClient {
 	
-	private TCPMessageSender sender = new TCPMessageSender();
+	/**
+     * The connection to the PharosExpServer.
+     */
+    private TCPMessageSender sender = TCPMessageSender.getSender();
     
     /**
      * The constructor.
