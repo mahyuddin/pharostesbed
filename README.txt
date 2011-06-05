@@ -4,6 +4,8 @@ following directories:
 
  - MCU: This is the code that runs on the 9S12 micro-controller. This is 
    written in C.
+ 
+ - MCU-SimonSays: This is the 9S12 MCU code for the Simon Says demo.
 
  - ProteusDriver: This is the Player Driver that allows the Player
    middleware to communicate with the robot's MCU.  The Player middleware
