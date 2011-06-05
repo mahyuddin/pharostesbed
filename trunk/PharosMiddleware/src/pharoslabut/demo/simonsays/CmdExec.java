@@ -50,6 +50,7 @@ public class CmdExec implements MessageReceiver {
 		try {
 			localAddrStr = pharoslabut.RobotIPAssignments.getAdHocIP();
 			localAddress = InetAddress.getByName(localAddrStr);
+			localPort = tcpReceiver.getPort();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 			logErr("Failed to get InetAddress from ad hoc IP address: " + localAddrStr);
