@@ -266,7 +266,7 @@ Proteus::Proteus(ConfigFile* cf, int section)
 	}*/
 	
 	// Do we create an IR interface?
-	if(cf->ReadDeviceAddr(&(this->ir_addr), section, "provides", PLAYER_IR_CODE, -1, NULL) == 0) {
+	if(cf->ReadDeviceAddr(&(this->ir_addr), section, "provides", PLAYER_RANGER_CODE, -1, NULL) == 0) {
 		if(this->AddInterface(this->ir_addr) != 0) {
 			this->SetError(-1);
 			return;
@@ -428,19 +428,24 @@ void Proteus::updateCompass() {
  * Take the new IR data and publish it.
  */
 void Proteus::updateIR() {
-	player_ir_data_t irdata;
+	//player_ir_data_t irdata;
+	player_ranger_data_range_t irdata;
+
 	memset(&irdata,0,sizeof(irdata)); // clear the irdata struct
 	
 	irdata.ranges_count = 6;
-	irdata.ranges = new float [irdata.ranges_count];
+	irdata.ranges = new double [irdata.ranges_count];
 	irdata.ranges[0] = this->proteus_dev->ir_fl;
 	irdata.ranges[1] = this->proteus_dev->ir_fc;
 	irdata.ranges[2] = this->proteus_dev->ir_fr;
 	irdata.ranges[3] = this->proteus_dev->ir_rl;
 	irdata.ranges[4] = this->proteus_dev->ir_rc;
 	irdata.ranges[5] = this->proteus_dev->ir_rr;
+
+	//printf("Publishing IR data: %f, %f, %f, %f, %f, %f\n", irdata.ranges[0], irdata.ranges[1],
+	//	irdata.ranges[2], irdata.ranges[3], irdata.ranges[4], irdata.ranges[5]);
 	
-	this->Publish(this->ir_addr, PLAYER_MSGTYPE_DATA, PLAYER_IR_DATA_RANGES, (void*)&irdata);
+	this->Publish(this->ir_addr, PLAYER_MSGTYPE_DATA, PLAYER_RANGER_DATA_RANGE, (void*)&irdata);
 	delete [] irdata.ranges;
 }
 
@@ -570,6 +575,7 @@ void Proteus::Main() {
 				}
 				
 				if (this->proteus_dev->newIRdata) {
+					printf("proteus_driver: main: Publishing new IR data!\n");
 					this->updateIR();
 					this->proteus_dev->newIRdata = false;
 				}
