@@ -19,7 +19,7 @@ import playerclient3.structures.ranger.PlayerRangerData;
  * driver (
  *   name "proteus"
  *   plugin "/usr/local/share/player/modules/libproteusdriver.so"
- *   provides ["opaque:0" "ir:0"]
+ *   provides ["opaque:0" "ranger:0"]
  *   port "/dev/ttyS0"
  *   safe 1
  * )
@@ -53,15 +53,20 @@ public class TestRangerInterface implements RangerListener, ProteusOpaqueListene
 		RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
 		rangerBuffer.addRangeListener(this);
 		rangerBuffer.start();
+		
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);
 	}
 	
 
 	@Override
 	public void newRangerData(PlayerRangerData data) {
-		//System.out.println("Opaque data: " + opaqueData);
 		irVisualizer.updateDistances(data);
 		double[] ranges = data.getRanges();
-		String s = "";
+		String s = "Range data: ";
 		for (int i=0; i < ranges.length; i++) {
 			s += ranges[i];
 			if (i < ranges.length-1) 
