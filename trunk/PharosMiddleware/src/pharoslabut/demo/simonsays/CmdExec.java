@@ -1,6 +1,6 @@
 package pharoslabut.demo.simonsays;
 
-import java.awt.*;
+//import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
 import java.net.*;
@@ -12,13 +12,13 @@ import pharoslabut.logger.*;
 
 /**
  * This runs on the SimonSaysClient and provides the API for 
- * controlling the robot and its camera. 
+ * controlling the robot's movements and its camera. 
  * 
  * @author Chien-Liang Fok
  * @see SimonSaysClient
  */
 public class CmdExec implements MessageReceiver {
-	public static final long MAX_ACK_LATENCY = 5000; // in milliseconds
+	//public static final long MAX_ACK_LATENCY = 5000; // in milliseconds
 	
 	private TCPMessageSender tcpSender = TCPMessageSender.getSender();
 	private TCPMessageReceiver tcpReceiver = new TCPMessageReceiver(this);
@@ -72,7 +72,6 @@ public class CmdExec implements MessageReceiver {
 	
 	/**
 	 * Sends a message to the server and waits for an acknowledgment.
-	 * The acknowledgment is a CmdDoneMsg.
 	 * 
 	 * @return The success value within the acknowledgment.
 	 */
@@ -99,7 +98,9 @@ public class CmdExec implements MessageReceiver {
 			if (rcvMsg == null) {
 				log("sendMsg: Waiting for acknowledgment...");
 				try {
-					wait(MAX_ACK_LATENCY);
+					//wait(MAX_ACK_LATENCY);
+					// TODO: abort this wait if network connectivity to robot is broken.
+					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -236,6 +237,10 @@ public class CmdExec implements MessageReceiver {
 		// Create the message
 		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
 		
+		// Set the reply address and port so an acknowledgment can be returned.
+		takeSnapshotMsg.setReplyAddr(localAddress);
+		takeSnapshotMsg.setPort(localPort);
+		
 		// Send the message
 		try {
 			rcvMsg = null;
@@ -253,7 +258,10 @@ public class CmdExec implements MessageReceiver {
 			if (rcvMsg == null) {
 				log("takeSnapshot: Waiting for CameraSnapshotMsg...");
 				try {
-					wait(MAX_ACK_LATENCY);
+					//wait(MAX_ACK_LATENCY);
+					
+					// TODO: abort this wait if network connectivity to robot is broken.
+					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}

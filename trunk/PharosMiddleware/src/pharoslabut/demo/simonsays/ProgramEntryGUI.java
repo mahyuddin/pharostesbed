@@ -231,7 +231,7 @@ public class ProgramEntryGUI implements ActionListener {
 			
 			try {
 				while ((line = reader.readLine()) != null) {
-					if (!line.matches("[\\s+]"))
+					if (!line.equals("") && !line.matches("[\\s+]"))
 						program.add(parseLine(linecount++, line));
 				}
 			} catch (IOException e) {
@@ -255,10 +255,10 @@ public class ProgramEntryGUI implements ActionListener {
 						Command currCmd = e.nextElement();
 						AckableMessage currMsg = currCmd.getMessage();
 						
-						// Update the GUI on which line is being executed.
+						// Update the GUI to note which line is being executed.
 						textArea.setExecutionLine(currCmd.getLine());
 						
-						// If there is a breakpoint set, pause the program execution
+						// If the current line has a breakpoint, pause the program
 						if (breakpoints.contains(new Integer(currCmd.getLine()))) {
 							JOptionPane.showMessageDialog(frame, "Breakpoint on line " + currCmd.getLine() + "!");
 						}
