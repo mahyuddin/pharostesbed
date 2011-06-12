@@ -30,7 +30,7 @@ public class SimonSaysServer implements MessageReceiver {
 	/**
 	 * This is for controlling the movements of the robot.
 	 */
-	private RobotInterface ri;
+	private CreateRobotInterface ri;
 	
 	/**
 	 * This is for controlling the movements of the camera.
@@ -61,7 +61,8 @@ public class SimonSaysServer implements MessageReceiver {
 			sender.setFileLogger(flogger);
 		}
 		
-		ri = new RobotInterface(pServerIP, pServerPort, mobilityPlane, flogger);
+		// TODO: Support multiple types of robots.
+		ri = new CreateRobotInterface(pServerIP, pServerPort, flogger);
 		
 		// Create the MCU interface...
 		mcu = new MCUInterface(mcuPort, flogger);

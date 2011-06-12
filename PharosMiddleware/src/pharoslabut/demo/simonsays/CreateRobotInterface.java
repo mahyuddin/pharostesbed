@@ -3,7 +3,7 @@ package pharoslabut.demo.simonsays;
 import java.io.*;
 
 import pharoslabut.logger.*;
-import pharoslabut.navigate.MotionArbiter;
+//import pharoslabut.navigate.MotionArbiter;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
@@ -13,11 +13,12 @@ import playerclient3.structures.PlayerConstants;
  * This provides the hooks for controlling the iRobot Create.
  * 
  * @author Chien-Liang Fok
- *
  */
-public class RobotInterface {
+public class CreateRobotInterface {
 	public static final String PLAYER_SERVER = "/usr/local/bin/player";
 	public static final String PLAYER_CONFIG_FILE = "/usr/local/share/player/config/proteus-roomba.cfg";
+	public static final boolean CALIBRATE_DISTANCE = true;
+	public static final boolean CALIBRATE_TURN = true;
 	
 	/**
 	 * The adjustment need to ensure robot rotates at desired rate.
@@ -51,28 +52,26 @@ public class RobotInterface {
 	 * 
 	 * @param playerIP The IP address of the player server that is controlling the iRobot Create.
 	 * @param playerPort The TCP port on which the player server is listening.
-	 * @param mobilityPlane The type of mobility plane being used.
 	 * @param flogger The file logger for logging debug messages.
 	 */
-	public RobotInterface(String playerIP, int playerPort, MotionArbiter.MotionType mobilityPlane, FileLogger flogger) {
+	public CreateRobotInterface(String playerIP, int playerPort, FileLogger flogger) {
 		this.flogger = flogger;
 		this.playerIP = playerIP;
 		this.playerPort = playerPort;
-		
-		// TODO Add support for multiple types of mobility planes.
 		
 		//connect();
 		stopPlayer();
 	}
 	
 	/**
-	 * Connects to the Player server.  If an error occurs, it pauses for a second and 
-	 * then tries again.  It repeatedly tries until a connection is successfully established.
+	 * Connect to the Player server running on the robot.  If an error occurs, pause 
+	 * for a second and then try again.  Repeat this process until a connection is 
+	 * successfully established.
 	 */
 	private void connect() {
 		while (!createConnection()) {
 			synchronized(this) {
-				log("Unable to connect to Player server.  Pausing 1s then trying again...");
+				log("Unable to connect to Player.  Pausing 1s then trying again...");
 				try {
 					wait(1000);
 				} catch (InterruptedException e) {
@@ -98,32 +97,33 @@ public class RobotInterface {
 		// Start the player server if it is not running...
 		if (!isPlayerRunning()) {
 			if (!startPlayer()) {
-				logErr("connect: ERROR: Unable to start player server...");
+				logErr("createConnection: ERROR: Unable to start player server...");
 				return false;
 			} else
-				log("connect: Player server started...");
+				log("createConnection: Player server started...");
 		} else
-			log("connect: Player server is running...");
+			log("createConnection: Player server is running...");
 		
 		// Connect to the Player server...
 		try {
 			pclient = new PlayerClient(playerIP, playerPort);
 		} catch(PlayerException e) {
-			logErr("connect: ERROR: unable to conect to player sever at " + playerIP + ":" + playerPort + ", Player running = " + isPlayerRunning() + ", Error message: " + e.toString());
+			logErr("createConnection: ERROR: unable to conect to player sever at " + playerIP + ":" 
+					+ playerPort + ", Player running = " + isPlayerRunning() + ", Error message: " + e.toString());
 			return false;
 		}
 		
 		// Get the Position2D interface for controlling the robot's movements...
 		motors = pclient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("connect: ERROR: motors is null");
+			logErr("createConnection: ERROR: motors is null");
 			return false;
 		}
 		
-		log("connect: Changing Player server mode to PUSH...");
+		log("createConnection: Changing Player server mode to PUSH...");
 		pclient.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("connect: Setting Player Client to run in continuous threaded mode...");
+		log("createConnection: Setting Player Client to run in continuous threaded mode...");
 		pclient.runThreaded(-1, -1);
 		
 		return true;
@@ -147,38 +147,40 @@ public class RobotInterface {
 		}
 		
 		// Calibrate the distance
-		double calibratedDist = (dist + 0.0755) / 0.933;
-		log("Move: Desired distance = " + dist + ", Calibrated distance = " + calibratedDist);
+		double calibratedDist;
+		
+		if (CALIBRATE_DISTANCE) { 
+			calibratedDist = (dist + 0.0755) / 0.933;
+			log("Move: Desired distance = " + dist + ", Calibrated distance = " + calibratedDist);	
+		} else
+			calibratedDist = dist;
 		
 		dist = calibratedDist;
 		
 		int direction = dist < 0 ? -1 : 1;
-		
 		int duration = (int)(Math.abs(dist) / ROBOT_SPEED * 1000); // in milliseconds
 		int heading = 0;
 		
 		motors.isDataReady(); // clears the readyPp2ddata flag
 		
-		//MotionTask currTask = new MotionTask(Priority.SECOND, direction * ROBOT_SPEED, heading);
-		//log("Move: Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-		log("Move: Start move: " + (direction * ROBOT_SPEED) + ", " + heading);
+		log("Move: Start speed=" + (direction * ROBOT_SPEED) + ", heading=" + heading);
 		motors.setSpeed(direction * ROBOT_SPEED, heading);
 		
-		log("Move: Pausing for " + duration);
+		log("Move: Pause for " + duration + " milliseconds");
 		pause(duration);
 		
-		//currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		//log("Move: Submitting: " + currTask);
-		//motionArbiter.submitTask(currTask);
-		log("Move: Stopping move");
+		log("Move: Stop");
 		motors.setSpeed(0, 0);
 		
-		if (!motors.isDataReady()) {
-			logErr("Move: ERROR: robot did not move!");
-			return false;
-		} else
-			return true;
+		return true;
+		
+		// The following doesn't work because the robot does not report data very fast,
+		// meaning data may not be ready by the time the movement is done.
+//		if (!motors.isDataReady()) {
+//			logErr("Move: ERROR: robot did not move!");
+//			return false;
+//		} else
+//			return true;
 	}
 	
 	/**
@@ -202,11 +204,15 @@ public class RobotInterface {
 		
 		// Calibrate the the turn
 		//double calibratedAngle = (angle + 0.0636) / 1.1741;
-		double calibratedAngle = (Math.abs(angle) + 0.2611) / 1.9504;
-		log("Turn: Desired angle = " + angle + ", Calibrated angle = " + 
+		double calibratedAngle;
+		if (CALIBRATE_TURN) {
+			calibratedAngle = (Math.abs(angle) + 0.2611) / 1.9504;
+			log("Turn: Desired angle = " + angle + ", Calibrated angle = " + 
 				(angle < 0 ? -1 * calibratedAngle : calibratedAngle));
-		angle = calibratedAngle;
+		} else
+			calibratedAngle = angle;
 		
+		angle = calibratedAngle;
 		
 		double speed = 0;
 		
@@ -223,11 +229,15 @@ public class RobotInterface {
 		log("Turn: Stopping turn...");
 		motors.setSpeed(0, 0);
 		
-		if (!motors.isDataReady()) {
-			logErr("Turn: ERROR: robot did not turn!");
-			return false;
-		} else
-			return true;
+		return true;
+		
+		// The following doesn't work because the robot does not report data very fast,
+		// meaning data may not be ready by the time the movement is done.
+//		if (!motors.isDataReady()) {
+//			logErr("Turn: ERROR: robot did not turn!");
+//			return false;
+//		} else
+//			return true;
 	}
 	
 	/**
@@ -439,7 +449,7 @@ public class RobotInterface {
 	}
 	
 	private void log(String msg) {
-		String result = "RobotInterface: " + msg;
+		String result = "CreateRobotInterface: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
@@ -461,7 +471,6 @@ public class RobotInterface {
 		print("\t-file <file name>: name of file in which to save results (default null)");
 		print("\t-move <distance>: Move the robot forward or backwards.");
 		print("\t-turn <angle>: Turn the robot side to side.");
-		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -479,7 +488,6 @@ public class RobotInterface {
 		boolean doTurn = false;
 		double moveDist = 0;
 		double turnAngle = 0;
-		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -502,20 +510,6 @@ public class RobotInterface {
 				else if (args[i].equals("-turn")) {
 					doTurn = true;
 					turnAngle = Double.valueOf(args[++i]).doubleValue();
-				}
-				else if (args[i].equals("-mobilityPlane")) {
-					String mp = args[++i].toLowerCase();
-					if (mp.equals("traxxas"))
-						mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
-					else if (mp.equals("segway"))
-						mobilityPlane = MotionArbiter.MotionType.MOTION_SEGWAY_RMP50;
-					else if (mp.equals("create"))
-						mobilityPlane = MotionArbiter.MotionType.MOTION_IROBOT_CREATE;
-					else {
-						System.err.println("Unknown mobility plane " + mp);
-						usage();
-						System.exit(1);
-					}
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -540,7 +534,7 @@ public class RobotInterface {
 		if (fileName != null) 
 			flogger = new FileLogger(fileName);
 		
-		RobotInterface ri = new RobotInterface(pServerIP, pServerPort, mobilityPlane, flogger);
+		CreateRobotInterface ri = new CreateRobotInterface(pServerIP, pServerPort, flogger);
 		ri.startPlayer();
 		
 		if (doMove) {
