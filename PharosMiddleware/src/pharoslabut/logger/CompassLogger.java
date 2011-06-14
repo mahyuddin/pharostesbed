@@ -77,6 +77,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 		
 		log("Creating CompassDataBuffer...");
 		CompassDataBuffer cdb = new CompassDataBuffer(compass);
+		cdb.setFileLogger(flogger);
 		
 		log("Registering self as listener to CompassDataBuffer events...");
 		cdb.addPos2DListener(this);
