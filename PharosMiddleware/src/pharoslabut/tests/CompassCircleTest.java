@@ -42,7 +42,7 @@ public class CompassCircleTest {
 	{
 		
 		if (logFileName != null)
-			this.flogger = new FileLogger(logFileName, false);
+			flogger = new FileLogger(logFileName, false);
 		
 		try {
 			log("Connecting to server " + serverIP + ":" + serverPort);
@@ -60,6 +60,7 @@ public class CompassCircleTest {
 			System.exit(1);
 		}
 		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
+		motionArbiter.setFileLogger(flogger);
 		
 		log("Start the robot moving in circles...");
 		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
