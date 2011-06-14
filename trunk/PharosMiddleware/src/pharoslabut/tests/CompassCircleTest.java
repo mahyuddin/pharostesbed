@@ -84,6 +84,7 @@ public class CompassCircleTest {
 			synchronized(this) {
 				try {
 					if (time > 0) {
+						log("logging for " + time + " seconds...");
 						wait(time*1000);
 					} else {
 						wait(); // wait forever
@@ -185,6 +186,7 @@ public class CompassCircleTest {
 				else if (args[i].equals("-debug") || args[i].equals("-d"))
 					System.setProperty ("PharosMiddleware.debug", "true");
 				else {
+					System.err.println("ERROR: Unknown option " + args[i]);
 					usage();
 					System.exit(1);
 				}
