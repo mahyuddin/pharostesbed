@@ -2,6 +2,12 @@ package pharoslabut.experiment;
 
 import java.util.*;
 
+/**
+ * Defines the experiment configuration, which includes the experiment name, details of
+ * each robot, and the start interval of the robots.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class ExpConfig {
 	
 	/**
@@ -19,6 +25,9 @@ public class ExpConfig {
 	 */
 	private String expName = "Exp";
 	
+	/**
+	 * The constructor.
+	 */
 	public ExpConfig() {}
 	
 	public void addRobot(RobotExpSettings robot) {

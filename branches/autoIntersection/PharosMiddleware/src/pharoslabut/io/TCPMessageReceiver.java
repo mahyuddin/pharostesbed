@@ -30,9 +30,19 @@ public class TCPMessageReceiver implements Runnable {
 	 */
 	private int port;
     
+	/**
+	 * A constructor for creating a TCPMessageReceiver that listens to any free port.
+	 *
+	 * @param receiver The message receiver two which received messages should be sent.
+	 * @param port the port on which to listen for connections
+	 */
+    public TCPMessageReceiver(MessageReceiver receiver){
+    	this(receiver, 0);
+    	port = ss.getLocalPort();
+    }
+	
     /**
-	 * This message receiver listens for TCP connections
-	 * and reads in commands from them.
+	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
 	 *
 	 * @param receiver The message receiver two which received messages should be sent.
 	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.  
@@ -66,10 +76,10 @@ public class TCPMessageReceiver implements Runnable {
     }
     
     /**
-     * @return The port that this receiver is listening to.
+     * @return The port on which this receiver is listening.
      */
-    public int getLocalPort() {
-    	return ss.getLocalPort();
+    public int getPort() {
+    	return port;
     }
     
     /**

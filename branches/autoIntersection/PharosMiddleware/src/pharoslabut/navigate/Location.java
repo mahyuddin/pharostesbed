@@ -1,6 +1,6 @@
 package pharoslabut.navigate;
 
-import playerclient.structures.gps.PlayerGpsData;
+import playerclient3.structures.gps.PlayerGpsData;
 
 public class Location implements java.io.Serializable {
 	private static final long serialVersionUID = -2689555631414682934L;

@@ -1,23 +1,33 @@
 package pharoslabut.tests;
 
-import playerclient.*;
-import playerclient.structures.blobfinder.*;
-import playerclient.structures.*;
+import pharoslabut.logger.*;
+import playerclient3.*;
+import playerclient3.structures.blobfinder.*;
+import playerclient3.structures.*;
 
 /**
- * A small test of the blob finder. Connects to the blobfinder device, registers itself as a listener,
- * then prints all of the blob data received.
+ * A small test of the BlobFinder service. Connects to the BlobFinderInterface, and periodically
+ * polls it for data.  It prints all of the blob data received to the screen.
  * 
  * @author Chien-Liang Fok
  */
-public class TestBlobFinder implements BlobfinderListener {
+public class TestBlobFinder {
+	private FileLogger flogger = null;
 	private PlayerClient client = null;	
-	
 	private BlobfinderInterface bfi = null;
-	private PlayerBlobfinderData blobData = null;
-	private long blobDataTimestamp;
 		
-	public TestBlobFinder(String serverIP, int serverPort) {
+	/**
+	 * The constructor.
+	 * 
+	 * @param serverIP The IP address of the robot.
+	 * @param serverPort The port on which the robot is listening.
+	 * @param logFileName The log file in which to save results.
+	 */
+	public TestBlobFinder(String serverIP, int serverPort, String logFileName) {
+		
+		if (logFileName != null)
+			flogger = new FileLogger(logFileName);
+		
 		// connect to player server
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -28,48 +38,23 @@ public class TestBlobFinder implements BlobfinderListener {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
 		
-		bfi.addListener(this);
-		
 		long prevTimeStamp = -1;
 		
 		while(true) {
-			synchronized(this) {
-				try {
-					wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+			if (bfi.isDataReady()) {
+				PlayerBlobfinderData blobData = bfi.getData();
+				if (blobData != null)
+					log(blobData.toString());
 			}
-					
-			if (blobData != null) {
-				double age = (System.currentTimeMillis() - blobDataTimestamp);
-				log("New blob data (age = " + age + "ms): " + blobData.toString());
-			}
+			pause(100);
 		} // end while(true)
-	}
-	
-	/**
-	 * This is called whenever new blob data is available.
-	 * 
-	 * @param blobData The new blob data available.
-	 * @param timestamp The timestamp of the data.  This can be compared to System.currentTimeMillis() to determine the age of the blob data.
-	 */
-	public void newPlayerBlobfinderData(PlayerBlobfinderData blobData, long timestamp) {
-		synchronized(this) {
-			this.blobData = blobData;
-			this.blobDataTimestamp = timestamp;
-			notifyAll();
-		}
 	}
 	
 	private void log(String msg) {
 		System.out.println(msg);
+		if (flogger != null) 
+			flogger.log(msg);
 	}
-//
-//	private double dtor(double degrees) {
-//		double radians = degrees * (Math.PI / 180);
-//		return radians;
-//	}
 
 	private void pause(int duration) {
 		synchronized(this) {
@@ -81,8 +66,16 @@ public class TestBlobFinder implements BlobfinderListener {
 		}
 	}
 	
-	public static void main(String[] args)
-	{
+	private static void usage() {
+		System.err.println("Usage: pharoslabut.tests.TestBlobFinder <options>\n");
+		System.err.println("Where <options> include:");
+		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
+		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
+		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
+	}
+	
+	public static void main(String[] args) {
+		String logFileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		
@@ -91,6 +84,19 @@ public class TestBlobFinder implements BlobfinderListener {
 				if (args[i].equals("-server")) {
 					serverIP = args[++i];
 				} 
+				else if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-log")) {
+					logFileName = args[++i];
+				} else if (args[i].equals("-h")) {
+					usage();
+					System.exit(0);
+				} else {
+					System.err.println("Unknown option: " + args[i]);
+					usage();
+					System.exit(1);
+				}
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -99,7 +105,8 @@ public class TestBlobFinder implements BlobfinderListener {
  
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
+		System.out.println("Log: " + logFileName);
 		
-		new TestBlobFinder(serverIP, serverPort);
+		new TestBlobFinder(serverIP, serverPort, logFileName);
 	}
 }

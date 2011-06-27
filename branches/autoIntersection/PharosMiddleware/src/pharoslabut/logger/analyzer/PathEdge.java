@@ -1,6 +1,5 @@
 package pharoslabut.logger.analyzer;
 
-//import java.util.*;
 import pharoslabut.navigate.Location;
 
 /**

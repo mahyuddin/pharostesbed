@@ -1,8 +1,8 @@
 package pharoslabut.navigate;
 
-import playerclient.*;
-import playerclient.structures.blobfinder.*;
-import playerclient.structures.*;
+import playerclient3.*;
+import playerclient3.structures.blobfinder.*;
+import playerclient3.structures.*;
 import pharoslabut.logger.*;
 import pharoslabut.navigate.LineFollowerEvent.LineFollowerEventType;
 
@@ -14,7 +14,7 @@ import java.util.*;
  * @author Seth Gee
  * @author Chien-Liang Fok
  */
-public class LineFollower implements BlobfinderListener, Runnable {
+public class LineFollower implements Runnable {
 	
 	/**
 	 * This is the cycle period of the LineFollower thread.
@@ -99,7 +99,6 @@ public class LineFollower implements BlobfinderListener, Runnable {
 		} catch (PlayerException e) { log("Error, could not connect to position 2d proxy.", false); System.exit(1);}
 		log("Created Position2dProxy.");
 		
-		bfi.addListener(this);
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
 	}
 	

@@ -1,8 +1,7 @@
 package pharoslabut.logger.analyzer;
 
-import playerclient.structures.gps.PlayerGpsData;
-
-import pharoslabut.navigate.*;
+import playerclient3.structures.gps.PlayerGpsData;
+import pharoslabut.navigate.Location;
 
 /**
  * A pairing between a PlayerGpsData provider by Player and the timestamp at which it was received.

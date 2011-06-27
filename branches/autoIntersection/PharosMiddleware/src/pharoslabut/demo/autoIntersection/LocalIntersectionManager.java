@@ -5,9 +5,9 @@ import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.LineFollowerEvent;
 import pharoslabut.navigate.LineFollowerEventListener;
 
-import playerclient.*;
-import playerclient.structures.PlayerConstants;
-import playerclient.structures.ir.PlayerIrData;
+import playerclient3.*;
+import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.ir.PlayerIrData;
 
 /**
  * Handles the protocol for navigating through an intersection
@@ -15,7 +15,7 @@ import playerclient.structures.ir.PlayerIrData;
  * 
  * @author Seth Gee
  */
-public class LocalIntersectionManager implements LineFollowerEventListener, Runnable, IRListener {
+public class LocalIntersectionManager implements LineFollowerEventListener, Runnable {
 
 	/**
 	 * This component is responsible for making the robot follow the line,
@@ -82,8 +82,9 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 		
 		// Uncomment these lines when ready to enable IR sensors.
 		try{
+			// TODO replace with ranger interface
 			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
-			ir.addIRListener(this);
+			//ir.addIRListener(this);
 		} catch (PlayerException e) { 
 			log("Error, could not connect to IR proxy.", false);
 			System.exit(1);
@@ -138,11 +139,11 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			log("newLineFollowerEvent: Ignoring event because not running: " + lfe);
 	}
 	
-	@Override
-	public void newPlayerIRData(PlayerIrData data) {
-		this.irData = data;
-		this.irDataTimeStamp = System.currentTimeMillis();
-	}
+//	@Override
+//	public void newPlayerIRData(PlayerIrData data) {
+//		this.irData = data;
+//		this.irDataTimeStamp = System.currentTimeMillis();
+//	}
 	
 	public void run() {
 		log("run: Thread starting...");

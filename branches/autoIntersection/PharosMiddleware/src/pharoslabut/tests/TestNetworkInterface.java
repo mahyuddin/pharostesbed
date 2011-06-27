@@ -3,7 +3,6 @@ package pharoslabut.tests;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import pharoslabut.ExpType;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
 import pharoslabut.demo.autoIntersection.*;

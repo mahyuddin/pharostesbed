@@ -8,6 +8,7 @@ import java.util.TimerTask;
 import pharoslabut.navigate.*;
 import pharoslabut.io.*;
 import pharoslabut.demo.autoIntersection.msgs.*;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.*;
 
 /**
@@ -129,8 +130,8 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		this.flogger = flogger;
 		
 		try {
-			robotIP = InetAddress.getByName(pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP());
-		} catch (UnknownHostException e) {
+			robotIP = InetAddress.getByName(pharoslabut.RobotIPAssignments.getAdHocIP());
+		} catch (Exception e) {
 			log("ERROR: Unable to get robot's IP address.");
 			e.printStackTrace();
 			System.exit(1); // fatal error

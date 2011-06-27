@@ -1,8 +1,8 @@
 package pharoslabut;
 
-import playerclient.*;
-import playerclient.structures.blobfinder.*;
-import playerclient.structures.*;
+import playerclient3.*;
+import playerclient3.structures.blobfinder.*;
+import playerclient3.structures.*;
 
 public class CMUcam
 {
@@ -13,7 +13,7 @@ public class CMUcam
 	PlayerBlobfinderBlob primaryBlob = null;
 	PlayerBlobfinderBlob secondaryBlob = null;
 	PlayerBlobfinderBlob[] blobList = null;
-	playerclient.Position2DInterface p2di = null;
+	Position2DInterface p2di = null;
 	
 	double angle = 0.0;
 	int width = 0;

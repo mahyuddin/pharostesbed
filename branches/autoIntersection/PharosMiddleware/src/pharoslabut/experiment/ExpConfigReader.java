@@ -3,10 +3,10 @@ package pharoslabut.experiment;
 import java.io.*;
 
 /**
- * Reads the configuration of an experiment.
+ * Reads the configuration of an experiment.  This is done by the base station
+ * when it launches an experiment.
  * 
  * @author Chien-Liang Fok
- *
  */
 public class ExpConfigReader {
 

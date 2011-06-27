@@ -42,7 +42,7 @@ public class TimeCalibrator {
 	 */
 	private int findClosestTimestamp(long timestamp, int leftIndx, int rightIndx) {
 		
-		//System.out.println("findClosestTimestamp: " + timestamp + ", " + leftIndx + ", " + rightIndx);
+		System.out.println("findClosestTimestamp: " + timestamp + ", " + leftIndx + ", " + rightIndx);
 		
 		// base cases
 		if (leftIndx == rightIndx)
@@ -73,10 +73,14 @@ public class TimeCalibrator {
 	 * @return The calibrated timestamp.
 	 */
 	public long getCalibratedTime(long timestamp) {
-		// find the calibration point that is closest to the timestamp
-		int closestIndx = findClosestTimestamp(timestamp, 0, calibrationPoints.size() - 1);
-		double offset = offsets.get(closestIndx);
-		return Math.round(timestamp - offset);
+		if (calibrationPoints.size() == 0) {
+			return timestamp;
+		} else {
+			// find the calibration point that is closest to the timestamp
+			int closestIndx = findClosestTimestamp(timestamp, 0, calibrationPoints.size() - 1);
+			double offset = offsets.get(closestIndx);
+			return Math.round(timestamp - offset);
+		}
 	}
 	
 }

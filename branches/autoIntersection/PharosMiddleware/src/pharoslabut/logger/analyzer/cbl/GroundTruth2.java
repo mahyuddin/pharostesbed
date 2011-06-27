@@ -4,6 +4,8 @@ import java.util.*;
 
 //import org.netlib.util.intW;
 
+import pharoslabut.RobotIPAssignments;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.analyzer.cbl.rssidist.*;
 import pharoslabut.logger.analyzer.ExpData;
 import pharoslabut.logger.analyzer.RobotExpData;
@@ -203,7 +205,15 @@ public class GroundTruth2 {
 		}
 		
 		public String getRobotName() {
-			return pharoslabut.RobotIPAssignments.getRobotName(robotID);
+			String robotName = null;
+			try {
+				robotName = RobotIPAssignments.getName(robotID);
+			} catch (PharosException e1) {
+				System.err.println("Unable to get robot name: " + robotID);
+				e1.printStackTrace();
+			}
+			
+			return robotName;
 		}
 		
 		public int getRobotID() {
