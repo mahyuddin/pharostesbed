@@ -69,7 +69,11 @@ public class LineFollower implements Runnable {
 	
 	private FileLogger flogger = null;
 	
-	private Thread thread;
+	/**
+	 * A reference to the thread performing the line following task.  It is null initially, but
+	 * is assigned a value when start() is called.
+	 */
+	private Thread thread = null;
 	
 	/**
 	 * The constructor.
@@ -145,9 +149,9 @@ public class LineFollower implements Runnable {
 	}
 	
 	/**
-	 * Starts the robot following the line.
+	 * Starts the line following process.
 	 */
-	public void start() {
+	public synchronized void start() {
 		if (thread == null) {
 			done = false;
 			thread = new Thread(this);
@@ -158,9 +162,9 @@ public class LineFollower implements Runnable {
 	}
 	
 	/**
-	 * Stops the robot.
+	 * Stops the line following process.
 	 */
-	public void stop() {
+	public synchronized void stop() {
 		if (thread != null) {
 			log("Stop: setting done = true");
 			done = true;
@@ -180,7 +184,7 @@ public class LineFollower implements Runnable {
 	
 	/**
 	 * The maximum turn angle should be throttled based on the 
-	 * divergence.  A large divergence indicates the
+	 * divergence of the blob from the center.  A large divergence indicates the
 	 * need for a large turn angle and vice-versa.
 	 * Since the robot is programmed to move faster when the
 	 * divergence is lower, this effectively dampens the robot's 
@@ -287,20 +291,13 @@ public class LineFollower implements Runnable {
 				log("handleSecondaryBlob: Supressing duplicate EXITING Intersection event");
 		}
 	}
-//	
-//	public void setSecondaryBlobFlag(boolean secondaryBlobFlag) {
-//		this.secondaryBlobFlag = secondaryBlobFlag;
-//	}
-//
-//	public boolean isSecondaryBlobFlag() {
-//		return secondaryBlobFlag;
-//	}
 
 	/**
-	 * Performs the calculations that determine the turn angle and speed to ensure
-	 * the robot follows the line.  It sets variables speed and angle.
+	 * Processes the blobs being reported by the CMUCam2.  There are two blobs.  The first one
+	 * is a black blob that guides the robot so it stays on the lane.  The second blob is
+	 * a blue one that indicates when the robot is appraching, entering and exiting the intersection.
 	 */
-	private void doLineFollow() {
+	private void processBlobs() {
 		// Check to make sure we have valid data...
 		if (blobFinderData != null) {
 			
@@ -313,6 +310,8 @@ public class LineFollower implements Runnable {
 				if(numBlobs > 0) {	
 					PlayerBlobfinderBlob[] blobList = blobFinderData.getBlobs();
 
+					// All of the following checks should not be necessary.  They were added
+					// to counter a null pointer exception being occasionally thrown.
 					if(blobList != null && blobList.length > 0 && blobList[0] != null)
 						adjustHeadingAndSpeed(blobList[0]);
 					else {
@@ -356,9 +355,9 @@ public class LineFollower implements Runnable {
 	public void run() {
 		
 		while(!done) {
-			doLineFollow();
+			processBlobs();
 			
-			log("Sending Robot Command, speed=" + speed + ", angle=" + angle);
+			log("run: Sending Command, speed=" + speed + ", angle=" + angle);
 			p2di.setSpeed(speed, dtor(angle));
 			
 			pause(CYCLE_PERIOD); 
