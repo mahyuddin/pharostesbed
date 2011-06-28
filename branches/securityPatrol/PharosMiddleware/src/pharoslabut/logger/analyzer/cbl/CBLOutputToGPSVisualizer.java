@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.util.Stats;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.analyzer.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.*;
@@ -185,9 +186,18 @@ public class CBLOutputToGPSVisualizer {
 			for (int j=0; j < currRobot.locs.size(); j++) {
 				RobotLocEntry rle = currRobot.locs.get(j);
 				Location currLoc = rle.locTrue;
+				
+				String robotName = null;
+				try {
+					robotName = RobotIPAssignments.getName(currRobot.robotID);
+				} catch (PharosException e1) {
+					logErr("Unable to get robot's name: " + currRobot.robotID);
+					e1.printStackTrace();
+				}
+				
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
 				if (j == 0)
-					line += "," + RobotIPAssignments.getRobotName(currRobot.robotID) + " Actual, " + GPSVisualize.COLORS[colorIndx++];
+					line += "," + robotName + " Actual, " + GPSVisualize.COLORS[colorIndx++];
 				outputFlogger.log(line);
 			}
 			
@@ -196,9 +206,18 @@ public class CBLOutputToGPSVisualizer {
 			for (int j=0; j < currRobot.locs.size(); j++) {
 				RobotLocEntry rle = currRobot.locs.get(j);
 				Location currLoc = rle.locEst;
+				
+				String robotName = null;
+				try {
+					robotName = RobotIPAssignments.getName(currRobot.robotID);
+				} catch (PharosException e1) {
+					logErr("Unable to get robot's name: " + currRobot.robotID);
+					e1.printStackTrace();
+				}
+				
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
 				if (j == 0)
-					line += ", " + RobotIPAssignments.getRobotName(currRobot.robotID) + " Est., " + GPSVisualize.COLORS[colorIndx++];
+					line += ", " + robotName + " Est., " + GPSVisualize.COLORS[colorIndx++];
 				outputFlogger.log(line);
 				
 				// Keep a running total of the error in the robot's location estimation

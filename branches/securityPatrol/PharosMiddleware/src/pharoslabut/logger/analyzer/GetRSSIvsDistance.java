@@ -4,20 +4,38 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import pharoslabut.RobotIPAssignments;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
 
 public class GetRSSIvsDistance {
 
+	private FileLogger flogger;
 	
 	public GetRSSIvsDistance(int rcvrID, int sndrID, String expDir, FileLogger flogger) {
+		this.flogger = flogger;
+		
 		ExpData expData = new ExpData(expDir);
 		RobotExpData rcvrData = expData.getRobotByID(rcvrID);
 		RobotExpData sndrData = expData.getRobotByID(sndrID);
 		
-		log("Timestamp (ms)\t Delta Time (s) \t Distance (m) \t RSSI of " 
-				+ RobotIPAssignments.getRobotName(sndrID) 
-				+ " on " + RobotIPAssignments.getRobotName(rcvrID), flogger);
+		String sndrName = null;
+		try {
+			sndrName = RobotIPAssignments.getName(sndrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get sender's name: " + sndrID);
+			e1.printStackTrace();
+		}
+		
+		String rcvrName = null;
+		try {
+			rcvrName = RobotIPAssignments.getName(rcvrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get receiver's name: " + rcvrID);
+			e1.printStackTrace();
+		}
+		
+		log("Timestamp (ms)\t Delta Time (s) \t Distance (m) \t RSSI of " + sndrName + " on " + rcvrName);
 		
 		// For each TelosB beacon received...
 		Vector<TelosBRxRecord> rxHist = rcvrData.getTelosBRxHist();
@@ -35,21 +53,29 @@ public class GetRSSIvsDistance {
 			double dist = rcvrLoc.distanceTo(sndrLoc);
 			
 			// Save the results
-			log(timestamp + "\t" + deltaTimeS + "\t" +  dist + "\t" + currRxRecord.getRSSI(), flogger);
+			log(timestamp + "\t" + deltaTimeS + "\t" +  dist + "\t" + currRxRecord.getRSSI());
 		}
 		
 		// add information about the way points
-		log("Waypoint Info:", flogger);
+		log("Waypoint Info:");
 		for (int i=0; i < rcvrData.getNumWaypoints(); i++) {
 			PathEdge pe = rcvrData.getPathEdge(i);
-			log("Time of arrival at waypoint " + i  + ": " + pe.getEndTime() + " (" + (pe.getEndTime() - expData.getExpStartTime()) + ")", flogger);
+			log("Time of arrival at waypoint " + i  + ": " + pe.getEndTime() + " (" + (pe.getEndTime() - expData.getExpStartTime()) + ")");
 		}
 	}
 	
-	private void log(String msg, FileLogger flogger) {
-		System.out.println(msg);
+	private void logErr(String msg) {
+		String result = "GetRSSIvsDistance: ERROR: " + msg;
+		System.err.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
+	}
+	
+	private void log(String msg) {
+		String result = "GetRSSIvsDistance: " + msg;
+		System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private static void print(String msg) {

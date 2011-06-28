@@ -1,13 +1,12 @@
 package pharoslabut.navigate;
 
 import pharoslabut.tasks.*;
-import pharoslabut.MotionArbiter;
 import pharoslabut.logger.FileLogger;
 
 /**
  * Scoots the robot a small distance forward or backward.  This is to induce small
  * changes in distance between the wireless transmitter and receiver, which will
- * hopefully impact RSSI by removing noise due to multipath effects.
+ * hopefully impact RSSI by removing noise due to multi-path effects.
  * 
  * @author Chien-Liang Fok
  */
@@ -46,7 +45,7 @@ public class Scooter implements Runnable {
 		
 			pause(1500);
 			
-			currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
+			currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
 			log("Submitting: " + currTask);
 			motionArbiter.submitTask(currTask);
 			

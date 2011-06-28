@@ -7,8 +7,9 @@ import net.tinyos.util.*;
 //import java.util.*;
 import java.io.*;
 
+import pharoslabut.RobotIPAssignments;
 import pharoslabut.beacon.*;
-//import pharoslabut.logger.*;
+import pharoslabut.exceptions.*;
 import pharoslabut.logger.FileLogger;
 
 /**
@@ -50,9 +51,9 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 	public TelosBeaconBroadcaster() throws TelosBeaconException {
 		try {
 			// Get the local node ID
-			moteID = getMoteID();
+			moteID = RobotIPAssignments.getID();
 			log("Mote ID = " + moteID);
-		} catch(TelosBeaconException e) {
+		} catch(PharosException e) {
 			log("Unable to get moteID, assuming it is zero");
 			moteID = 0;
 		}
@@ -86,39 +87,39 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 //		receiver.setFileLogger(flogger);
 //	}
 	
-	/**
-	 * Determines the ID of the Mote.  The ID is assumed to be the last octal in
-	 * the wireless ad hoc network IP address.  The form of this IP is 
-	 * 10.11.12.xx where "xx" is the mote ID.
-	 * 
-	 * @return The mote ID.
-	 * @throws TelosBeaconException When the ID could not be determined.
-	 */
-	public static int getMoteID() throws TelosBeaconException {
-		int addr = 0;
-		String ipAddr = pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP();
-		if (ipAddr != null) {
-			//System.out.println("ipAddr = " + ipAddr);
-			String[] addrTokens = ipAddr.split("\\.");
-			if (addrTokens.length == 4)
-				addr = Integer.valueOf(addrTokens[3]);
-			else {
-				String eMsg = "Unable to determine mote ID (addrTokens.length = " 
-					+ addrTokens.length + ").";
-				System.err.println(eMsg);
-				throw new TelosBeaconException(eMsg);
-			}
-//			for (int i=0; i < addrStr.length; i++) {
-//        		System.out.println(i + ": " + addrStr[i]);
-//        	}
-		} else {
-			String eMsg = "Unable to determine mote ID (ipAddr is null).";
-			System.err.println(eMsg);
-			throw new TelosBeaconException(eMsg);
-		}
-		return addr;
-	}
-	
+//	/**
+//	 * Determines the ID of the Mote.  The ID is the last octal in
+//	 * the wireless ad hoc network IP address.  The form of this IP is 
+//	 * 10.11.12.xx where "xx" is the mote ID.
+//	 * 
+//	 * @return The mote ID.
+//	 * @throws TelosBeaconException When the ID could not be determined.
+//	 */
+//	public static int getMoteID() throws TelosBeaconException {
+//		int addr = 0;
+//		String ipAddr = pharoslabut.beacon.WiFiBeaconBroadcaster.getPharosIP();
+//		if (ipAddr != null) {
+//			//System.out.println("ipAddr = " + ipAddr);
+//			String[] addrTokens = ipAddr.split("\\.");
+//			if (addrTokens.length == 4)
+//				addr = Integer.valueOf(addrTokens[3]);
+//			else {
+//				String eMsg = "Unable to determine mote ID (addrTokens.length = " 
+//					+ addrTokens.length + ").";
+//				System.err.println(eMsg);
+//				throw new TelosBeaconException(eMsg);
+//			}
+////			for (int i=0; i < addrStr.length; i++) {
+////        		System.out.println(i + ": " + addrStr[i]);
+////        	}
+//		} else {
+//			String eMsg = "Unable to determine mote ID (ipAddr is null).";
+//			System.err.println(eMsg);
+//			throw new TelosBeaconException(eMsg);
+//		}
+//		return addr;
+//	}
+//	
 	/**
 	 * Determines which port connects to the TelosB mote.  It does this by analyzing
 	 * output of program "motelist" and finding an entry for the TelosB mote.

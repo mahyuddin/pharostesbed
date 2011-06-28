@@ -5,6 +5,7 @@ import java.io.*;
 import java.util.*;
 import java.nio.ByteBuffer;
 import pharoslabut.*;
+import pharoslabut.exceptions.*;
 import pharoslabut.logger.*;
 import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 
@@ -238,8 +239,8 @@ public class UDPRxTx implements Runnable {
 		
 		public DataGenerator() {
 			try {
-				myID = pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster.getMoteID();
-			} catch (TelosBeaconException e) {
+				myID =  pharoslabut.RobotIPAssignments.getID();
+			} catch (PharosException e) {
 				e.printStackTrace();
 			}
 			new Thread(this).start();
@@ -288,8 +289,8 @@ public class UDPRxTx implements Runnable {
 			this.expName = expName;
 			
 			try {
-				myID = pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster.getMoteID();
-			} catch (TelosBeaconException e) {
+				myID = pharoslabut.RobotIPAssignments.getID();
+			} catch (PharosException e) {
 				e.printStackTrace();
 			}
 			new Thread(this).start();

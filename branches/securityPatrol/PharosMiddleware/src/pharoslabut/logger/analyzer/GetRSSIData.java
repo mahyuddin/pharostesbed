@@ -1,9 +1,9 @@
 package pharoslabut.logger.analyzer;
 
 import java.util.Vector;
-
+import java.util.Enumeration;
 import pharoslabut.logger.FileLogger;
-import java.util.*;
+
 
 /**
  * Extracts the RSSI data from a robot's log file.
@@ -13,19 +13,48 @@ import java.util.*;
  */
 public class GetRSSIData {
 
-	public GetRSSIData(String robotExpDataFile) {
+	/**
+	 * The constructor. 
+	 * 
+	 * @param robotExpDataFile The robot's log file.
+	 * @param numReceptions The number of beacon receptions.
+	 */
+	public GetRSSIData(String robotExpDataFile, int numReceptions) {
 		RobotExpData robotData = new RobotExpData(robotExpDataFile);
 		
 		String destFile = robotExpDataFile.substring(0, robotExpDataFile.indexOf(".")) + ".rssi";
-		FileLogger flogger = new FileLogger(destFile);
+		FileLogger flogger = new FileLogger(destFile, false);
 		
 		Vector<TelosBRxRecord> rxHist = robotData.getTelosBRxHist();
+		
+		log("File name:\t" + destFile, flogger);
+		log("Sample size:\t" + rxHist.size(), flogger);
+		log("Number of Lost Beacons:\t" + countLostBeacons(rxHist.elements(), numReceptions), flogger);
+		log("Timestamp\tSender\tReceiver\tSeqno\tRSSI\tLQI\tMote Timestamp", flogger);
+		
 		Enumeration<TelosBRxRecord> e = rxHist.elements();
 		while (e.hasMoreElements()) {
 			TelosBRxRecord rec = e.nextElement();
 			log(rec.toString(), flogger);
 		}
 		
+	}
+	
+	private int countLostBeacons(Enumeration<TelosBRxRecord> e, int numBeacons) {
+		int count = 0;
+		int nxtExpectedSeqNo = 0;
+		int numMissing = 0;
+		
+		while (e.hasMoreElements() && count++ < numBeacons) {
+			TelosBRxRecord rec = e.nextElement();
+			if (rec.getSeqNo() != nxtExpectedSeqNo) {
+				numMissing += rec.getSeqNo() - nxtExpectedSeqNo;
+				nxtExpectedSeqNo = rec.getSeqNo() + 1;
+			} else
+				nxtExpectedSeqNo++;
+		}
+		
+		return numMissing;
 	}
 	
 	private void log(String msg, FileLogger flogger) {
@@ -44,17 +73,21 @@ public class GetRSSIData {
 		print("Usage: pharoslabut.logger.analyzer.GetRSSIData <options>\n");
 		print("Where <options> include:");
 		print("\t-robotFile <name of file containing robot data>: (required)");
+		print("\t-numReceptions <number of receptions>: The number of beacons to receive in the experiment (default 500)");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String expDir = null;
+		int numReceptions = 500;
 		
 		// Process the command line arguments...
 		try {
 			for (int i=0; i < args.length; i++) {
 				if (args[i].equals("-robotFile"))
 					expDir = args[++i];
+				else if (args[i].equals("-numReceptions"))
+					numReceptions = Integer.valueOf(args[i]);
 				else if (args[i].equals("-debug") || args[i].equals("-d"))
 					System.setProperty ("PharosMiddleware.debug", "true");
 				else {
@@ -73,6 +106,6 @@ public class GetRSSIData {
 			System.exit(1);
 		}
 	
-		new GetRSSIData(expDir);
+		new GetRSSIData(expDir, numReceptions);
 	}
 }

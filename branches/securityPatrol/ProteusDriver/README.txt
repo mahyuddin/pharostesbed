@@ -1,13 +1,6 @@
-This is the driver for the Pharos Robot used by Player Server.
-It runs on the Proteus mother plane's x86 processor.
-Compile it by typing 'make'.  
+This directory contains the Player driver for the Proteus robot.  Two different versions of Player are supported.
 
-After compiling the program, there will be a file called libproteusdriver.so.  
-Copy this to the following directory on the mother plane's x86 computer:
+  - Player2/ - contains the drivers for Player 2.x.x
+  - Player3/ - contains the drivers for Player 3.x.x
 
-/usr/local/share/player/modules/
-
-For example, here is how to copy it onto the robot using scp:
-
-$ scp libproteusdriver.so ut@[robot ip address]:/usr/local/share/player/modules/
 

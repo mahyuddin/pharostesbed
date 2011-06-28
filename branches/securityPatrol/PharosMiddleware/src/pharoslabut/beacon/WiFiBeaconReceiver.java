@@ -3,6 +3,8 @@ package pharoslabut.beacon;
 import java.util.*;
 import java.io.*;
 import java.net.*;
+
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.*;
 
 /**
@@ -213,50 +215,55 @@ public class WiFiBeaconReceiver implements Runnable {
         }
     }
 
-	/**
-	 * Find the local network interface that is connected to the Pharos wireless
-	 * ad hoc network.  It assumes that the IP address takes the form of 10.11.12.*.
-	 * 
-	 * @return The name of the local network interface with an IP address of the form
-	 * 10.11.12.*.  This is assumed to be the Pharos wireless ad hoc network.  If no
-	 * such network is found, null is returned.
-	 */
-	// ad hoc network.  
-    public static String getPharosNetworkInterface() {
-
-    	Enumeration<NetworkInterface> ifEnum;
-		try {
-			ifEnum = NetworkInterface.getNetworkInterfaces();
-			while (ifEnum.hasMoreElements()) {
-				NetworkInterface ni = ifEnum.nextElement();
-				//System.out.println("network interface name = \"" + ni.getName() + "\"");
-				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
-				while (ipEnum.hasMoreElements()) {
-					InetAddress addr = ipEnum.nextElement();
-					//System.out.println("\tip address=" + addr.getHostAddress());
-					if (addr.getHostAddress().contains("10.11.12")) {
-						String result = ni.getName();
-						//System.out.println("Found! Network interface \"" + result + "\"");
-						return result;
-					}
-					
-				}
-			}
-		} catch (SocketException e) {
-			e.printStackTrace();
-		}
-		return null;
-    }
+//	/**
+//	 * Find the local network interface that is connected to the Pharos wireless
+//	 * ad hoc network.  It assumes that the IP address takes the form of 10.11.12.*.
+//	 * 
+//	 * @return The name of the local network interface with an IP address of the form
+//	 * 10.11.12.*.  This is assumed to be the Pharos wireless ad hoc network.  If no
+//	 * such network is found, null is returned.
+//	 */
+//	// ad hoc network.  
+//    public static String getPharosNetworkInterface() {
+//
+//    	Enumeration<NetworkInterface> ifEnum;
+//		try {
+//			ifEnum = NetworkInterface.getNetworkInterfaces();
+//			while (ifEnum.hasMoreElements()) {
+//				NetworkInterface ni = ifEnum.nextElement();
+//				//System.out.println("network interface name = \"" + ni.getName() + "\"");
+//				Enumeration<InetAddress> ipEnum = ni.getInetAddresses();
+//				while (ipEnum.hasMoreElements()) {
+//					InetAddress addr = ipEnum.nextElement();
+//					//System.out.println("\tip address=" + addr.getHostAddress());
+//					if (addr.getHostAddress().contains("10.11.12")) {
+//						String result = ni.getName();
+//						//System.out.println("Found! Network interface \"" + result + "\"");
+//						return result;
+//					}
+//					
+//				}
+//			}
+//		} catch (SocketException e) {
+//			e.printStackTrace();
+//		}
+//		return null;
+//    }
     
     public static void main(String[] args) {
     	String mcastAddressString = "230.1.2.3";
     	int mCastPort = 6000;
-    	String pharosNetworkInterfaceName = getPharosNetworkInterface();
-    	if (pharosNetworkInterfaceName != null) {
-    		WiFiBeaconReceiver br = new WiFiBeaconReceiver(mcastAddressString, mCastPort, pharosNetworkInterfaceName);
-    		br.start();
-    	} else {
-    		System.err.println("Unable to find pharos network interface.");
-    	}
+    	String pharosNetworkInterfaceName;
+		try {
+			pharosNetworkInterfaceName = pharoslabut.RobotIPAssignments.getAdHocNetworkInterface();
+			if (pharosNetworkInterfaceName != null) {
+	    		WiFiBeaconReceiver br = new WiFiBeaconReceiver(mcastAddressString, mCastPort, pharosNetworkInterfaceName);
+	    		br.start();
+	    	} else {
+	    		System.err.println("Unable to find pharos network interface.");
+	    	}
+		} catch (PharosException e) {
+			e.printStackTrace();
+		}
     }
 }

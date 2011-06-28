@@ -3,7 +3,7 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
-import pharoslabut.logger.*;
+import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
 
 /**
@@ -199,6 +199,7 @@ public class GPSVisualize {
 	{
 		FileLogger flogger = new FileLogger(outputFileName + ".csv", false /* print time stamp */);
 		
+		// For each log file...
 		for (int i=0; i < logFileNames.size(); i++) {
 			log("Processing " + logFileNames.get(i));
 			flogger.log("type,latitude,longitude,name,color"); 
@@ -245,8 +246,9 @@ public class GPSVisualize {
 		print("\t\t\tLOG_FILE <name of log file> <caption> <color>");
 		print("\t\t\t...");
 		print("\t\tEach LOG_FILE listed in the specification file will have its own trace in the resulting GPSVisualizer script.");
+		print("\t\tFor more details, see: http://pharos.ece.utexas.edu/wiki/index.php/How_to_Plot_a_Robot%27s_Path_on_GPSVisualizer");
 		print("\t-log <log file name>: The name of the log file that was recorded by the robot as it carried out an experiment (default null)");
-		print("\t-caption <caption name>: The caption for the trace (default null)");
+		print("\t-caption <caption name>: The caption for the trace (required)");
 		print("\t-color <color>: The color used to plot the trace (default red)");
 		print("\t-output <output file name>: The name of the output file (default GPSVisualize)");
 		print("\t\tNote: the \".csv\" extension is automatically apptended");
@@ -314,7 +316,7 @@ public class GPSVisualize {
 			// Generate a GPS visualization for a single robot.
 			if (caption == null) {
 				System.setProperty ("PharosMiddleware.debug", "true");
-				print("ERROR: Unknown caption.");
+				print("ERROR: caption not specified.");
 				usage();
 				System.exit(1);
 			}

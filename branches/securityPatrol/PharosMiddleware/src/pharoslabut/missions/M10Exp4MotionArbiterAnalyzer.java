@@ -10,7 +10,7 @@ import pharoslabut.logger.*;
  * 
  * @author Chien-Liang Fok
  * @see pharoslabut.navigate.NavigateCompassGPS
- * @see pharoslabut.navigate.GPSDataBuffer
+ * @see pharoslabut.sensors.GPSDataBuffer
  */
 public class M10Exp4MotionArbiterAnalyzer {
 

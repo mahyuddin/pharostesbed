@@ -1,6 +1,5 @@
 package pharoslabut.navigate;
 
-import pharoslabut.MotionArbiter;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.tasks.MotionTask;
 

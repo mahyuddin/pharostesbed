@@ -3,10 +3,11 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
-import pharoslabut.logger.*;
+import pharoslabut.exceptions.PharosException;
+import pharoslabut.logger.FileLogger;
 import pharoslabut.RobotIPAssignments;
-import pharoslabut.navigate.*;
-import playerclient.structures.gps.PlayerGpsData;
+import pharoslabut.navigate.Location;
+import playerclient3.structures.gps.PlayerGpsData;
 
 /**
  * Encapsulates the data recorded by a robot during an experiment.
@@ -321,8 +322,15 @@ public class RobotExpData {
 	 * @return the last octal of the robot's IP address, or -1 if IP address is unknown.
 	 */
 	public int getRobotID() {
-		int id = RobotIPAssignments.getRobotID(getRobotName());
-		if (id == -1) System.exit(1); 
+		int id = -1;
+		
+		try {
+			id = RobotIPAssignments.getID(getRobotName());
+		} catch (PharosException e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
 		return id;
 	}
 	
@@ -365,6 +373,23 @@ public class RobotExpData {
 					currEdge.setStartLoc(new Location(currLoc));
 				}
 			}
+			else if (line.contains("TestNavigateCompassGPS: Going to")) {
+				String[] tokens = line.split("[\\[\\]:=(), ]");
+//				for (int i=0; i < tokens.length; i++) {
+//					System.out.println(i + ": " + tokens[i]);
+//				}
+				long timeStamp = Long.valueOf(tokens[1]);
+				double lat = Double.valueOf(tokens[9]);
+				double lon = Double.valueOf(tokens[11]);
+				double speed = Double.valueOf(tokens[16]); 
+				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
+				
+				// Set the start location of the path edge if we know where we are.
+				if (currLoc != null)
+					currEdge.setStartLoc(new Location(currLoc));
+			}
+			
+			// This was used prior to Mission 17
 			else if (line.contains("GPSDataBuffer: New GPS Data:")) {
 				
 				String[] tokens = line.split("[:=(), ]");
@@ -387,7 +412,7 @@ public class RobotExpData {
 				// Only add the GPSLocation if it is valid.  It is valid if the 
 				// latitude is 
 				Location l = new Location(currLoc);
-				if (pharoslabut.navigate.GPSDataBuffer.isValid(l)) {
+				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {
 					locations.add(new GPSLocationState(timeStamp, currLoc));
 					if (currEdge != null) {
 						if (!currEdge.hasStartLoc())
@@ -397,6 +422,45 @@ public class RobotExpData {
 					log("Rejecting invalid location: " + currLoc);
 				}
 			}
+			
+			// This was used during Mission 17 and onwards
+			else if (line.contains("GPSDataBuffer: run: New GPS Data:")) {
+				
+				String[] tokens = line.split("[\\[\\]:=(), ]");
+//				for (int i=0; i < tokens.length; i++) {
+//					System.out.println(i + ": " + tokens[i]);
+//				}
+				
+				long timeStamp = Long.valueOf(tokens[1]);
+				currLoc = new PlayerGpsData();
+				currLoc.setAltitude(Integer.valueOf(tokens[22]));
+				currLoc.setErr_horz(Double.valueOf(tokens[36]));
+				currLoc.setErr_vert(Double.valueOf(tokens[38]));
+				currLoc.setHdop(Integer.valueOf(tokens[32]));
+				currLoc.setLatitude(Integer.valueOf(tokens[18]));
+				currLoc.setLongitude(Integer.valueOf(tokens[20]));
+				currLoc.setNum_sats(Integer.valueOf(tokens[30]));
+				currLoc.setQuality(Integer.valueOf(tokens[28]));
+				currLoc.setTime_sec(Integer.valueOf(tokens[14]));
+				currLoc.setTime_usec(Integer.valueOf(tokens[16]));
+				currLoc.setUtm_e(Double.valueOf(tokens[24]));
+				currLoc.setUtm_n(Double.valueOf(tokens[26]));
+				currLoc.setVdop(Integer.valueOf(tokens[34]));
+				
+				// Only add the GPSLocation if it is valid.  It is valid if the 
+				// latitude is 
+				Location l = new Location(currLoc);
+				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {
+					locations.add(new GPSLocationState(timeStamp, currLoc));
+					if (currEdge != null) {
+						if (!currEdge.hasStartLoc())
+							currEdge.setStartLoc(l);
+					}
+				} else {
+					log("Rejecting invalid location: " + currLoc);
+				}
+			}
+			
 			else if (line.contains("RadioSignalMeter: SEND_BCAST") 
 					|| line.contains("TelosBeaconBroadcaster: SEND_TELSOB_BCAST")) {
 				// The format of this line is:
@@ -626,19 +690,6 @@ public class RobotExpData {
 	 * @return The vector containing the entire GPS history of the robot.
 	 */
 	public Vector<GPSLocationState> getGPSHistory() {
-//		Vector<GPSLocationState> result = new Vector<GPSLocationState>();
-//		
-//		Enumeration<PathEdge> e = pathEdges.elements();
-//		
-//		while (e.hasMoreElements()) {
-//			PathEdge pe = e.nextElement();
-//			
-//			Enumeration<GPSLocationState> locEnum = pe.getLocationsEnum();
-//			while (locEnum.hasMoreElements()) {
-//				result.add(locEnum.nextElement());
-//			}
-//		}
-//		
 		return locations;
 	}
 	

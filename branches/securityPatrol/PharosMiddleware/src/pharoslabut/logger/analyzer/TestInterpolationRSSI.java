@@ -1,8 +1,8 @@
 package pharoslabut.logger.analyzer;
 
 import java.util.*;
-
 import pharoslabut.RobotIPAssignments;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
 
 /**
@@ -14,6 +14,8 @@ import pharoslabut.logger.FileLogger;
  */
 public class TestInterpolationRSSI {
 	
+	private FileLogger flogger;
+	
 	/**
 	 * The constructor.
 	 * 
@@ -23,37 +25,63 @@ public class TestInterpolationRSSI {
 	 * @param timeStepSize
 	 * @param flogger
 	 */
-	public TestInterpolationRSSI(int rcvrID, int sndrID, String expDir, long timeStepSize, FileLogger flogger) {
+	public TestInterpolationRSSI(int rcvrID, int sndrID, String expDir, long timeStepSize) {
 		ExpData expData = new ExpData(expDir);
 		RobotExpData rcvrData = expData.getRobotByID(rcvrID);
 		RobotExpData sndrData = expData.getRobotByID(sndrID);
 		
+		String sndrName = null;
+		try {
+			sndrName = RobotIPAssignments.getName(sndrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get sender's name: " + sndrID);
+			e1.printStackTrace();
+		}
+		
+		String rcvrName = null;
+		try {
+			rcvrName = RobotIPAssignments.getName(rcvrID);
+		} catch (PharosException e1) {
+			logErr("Unable to get receiver's name: " + rcvrID);
+			e1.printStackTrace();
+		}
+		
+		this.flogger = new FileLogger("TestInterpolationRSSI-" + rcvrName + "-" + sndrName + ".txt", false);
+		
 		rcvrData.setFileLogger(flogger);
 		
-		log("Actual RSSI of beacons received by " + rcvrData.getRobotName() + " from " + sndrData.getRobotName() + ":", flogger);
+		log("Actual RSSI of beacons received by " + rcvrData.getRobotName() + " from " + sndrData.getRobotName() + ":");
 
 		Vector<TelosBRxRecord> actualRx = rcvrData.getTelosBRxHist(sndrID);
 		for (int i=0; i < actualRx.size(); i++) {
 			TelosBRxRecord cr = actualRx.get(i);
 			double deltaTimeS = (cr.getTimeStamp() - expData.getExpStartTime())/1000.0;
-			log(cr.getTimeStamp() + "\t" + deltaTimeS + "\t" + cr.getRSSI(), flogger);
+			log(cr.getTimeStamp() + "\t" + deltaTimeS + "\t" + cr.getRSSI());
 		}
 		
-		log("\nInterpolated RSSI of beacons received by " + rcvrData.getRobotName() + " from " + sndrData.getRobotName() + ":", flogger);
+		log("\nInterpolated RSSI of beacons received by " + rcvrData.getRobotName() + " from " + sndrData.getRobotName() + ":");
 
 		for (long timestamp = expData.getExpStartTime(); timestamp < expData.getExpStopTime(); timestamp += timeStepSize) {
 			double rssi = rcvrData.getTelosBRSSIto(sndrID, timestamp, timeStepSize);
 			
 			double deltaTimeS = (timestamp - expData.getExpStartTime()) / 1000.0;
-			log(timestamp + "\t" + deltaTimeS + "\t" + (rssi != -1 ? rssi : ""), flogger);
+			log(timestamp + "\t" + deltaTimeS + "\t" + (rssi != -1 ? rssi : ""));
 			
 		}
 	}
 	
-	private void log(String msg, FileLogger flogger) {
-		System.out.println(msg);
+	private void logErr(String msg) {
+		String result = "TestInterpolationRSSI: ERROR: " + msg;
+		System.err.println(result);
 		if (flogger != null)
-			flogger.log(msg);
+			flogger.log(result);
+	}
+	
+	private void log(String msg) {
+		String result = "TestInterpolationRSSI: " + msg;
+		System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private static void print(String msg) {
@@ -107,8 +135,6 @@ public class TestInterpolationRSSI {
 			System.exit(1);
 		}
 		
-		FileLogger flogger = new FileLogger("TestInterpolationRSSI-" + RobotIPAssignments.getRobotName(rcvrID) 
-				+ "-" + RobotIPAssignments.getRobotName(sndrID) + ".txt", false);
-		new TestInterpolationRSSI(rcvrID, sndrID, expDir, timeStepSize, flogger);
+		new TestInterpolationRSSI(rcvrID, sndrID, expDir, timeStepSize);
 	}
 }
