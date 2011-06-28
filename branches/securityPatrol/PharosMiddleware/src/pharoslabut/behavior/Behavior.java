@@ -1,41 +1,57 @@
 package pharoslabut.behavior;
+import java.util.Vector;
 
-/**
- * This is the super class of all behaviors supported by the 
- * Pharos Middleware.
- * 
- * @author Chien-Liang Fok
- */
+import pharoslabut.behavior.management.WorldModel;
+
+
+
+
 public abstract class Behavior {
-
-	/**
-	 * Determines whether the behavior may start executing.
-	 * 
-	 * @return true if the behavior can start executing.
-	 */
-	public abstract boolean canStart();
+	protected Vector<Behavior> _nextVector;
+	protected WorldModel _wm;
 	
-	/**
-	 * Determines whether the behavior must top executing.
-	 * 
-	 * @return true if the behavior must stop.
-	 */
-	public abstract boolean mustStop();
-	
-	/**
-	 * Starts the behavior running.
-	 */
-	public abstract void start();
-	
-	/**
-	 * Stops the behavior from running.
-	 */
-	public abstract void stop();
-	
-	/**
-	 * @return A string representation of this class.
-	 */
-	public String toString() {
-		return "Behavior super class";
+	public Behavior(WorldModel wm) {
+		// TODO Auto-generated constructor stub
+		_nextVector = new Vector<Behavior>();
+		_wm = wm;
 	}
+	public abstract boolean startCondition();
+	public abstract boolean stopCondition();
+	public abstract void action();
+	/*This function will be called when behavior start condition is true and 
+	 * the robot waits to its teammates to join the behavior
+	 */
+	public void start()
+	{
+		this.getClass().getSimpleName();
+	}
+	//Adding new behavior to the next vector
+	public void addNext(Behavior beh)
+	{
+		_nextVector.add(beh);
+	}
+	/*returning the first behavior that its start condition is true.
+	 * This is simple sequential decision making. Can make more sophisticated decisions - 
+	 * then in would be wise to move the getNext() function to the behavior itself 
+	 * (making this an abstract function) 
+	 */
+	public Behavior getNext()
+	{
+		for(int i=0;i<_nextVector.size();i++)
+			if(_nextVector.get(i).startCondition())
+				return _nextVector.get(i);
+		
+		return null;
+	}
+	public void waitToTeam()
+	{
+		while(_wm.isTeamSynchronized() == false)
+			try {
+				Thread.currentThread().sleep(50);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	}
+	
 }
