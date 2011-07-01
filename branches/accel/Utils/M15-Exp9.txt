@@ -1,0 +1,11 @@
+EXP_NAME M15-Exp2
+ROBOT	Czechvar		10.11.12.14		7776	
+ROBOT	Guinness		10.11.12.20		7776
+ROBOT	Manny			10.11.12.13  	7776
+ROBOT	Shiner			10.11.12.17		7776
+ROBOT	Spaten			10.11.12.35		7776
+ROBOT	Wynkoop			10.11.12.25		7776
+ROBOT	Ziegen			10.11.12.18		7776
+
+# ROBOT	Mardesous		10.11.12.24		7776
+# ROBOT	Porterhouse		10.11.12.19		7776
