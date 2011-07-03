@@ -47,12 +47,6 @@ public class LineFollower implements Runnable {
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
 	
-	/**
-	 * This is the latest blob finder data received and the time at which it was received.
-	 */
-	private PlayerBlobfinderData blobFinderData = null;
-	private long blobFinderDataTimestamp;
-	
 	private boolean done = false;
 	
 	/**
@@ -216,11 +210,10 @@ public class LineFollower implements Runnable {
 	 * Adjusts the heading and speed of the robot based on the position of the blob.
 	 * 
 	 * @param blob The blob to use to calculate the heading of the robot.
+	 * @param midPoint The middle of the field of view.
 	 */
-	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob) {
+	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob, int midPoint) {
 		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight() + ", x=" + blob.getX());
-
-		int midPoint = blobFinderData.getWidth()/2;
 
 		int turnSign;		
 		if (blob.getX() > midPoint) {
@@ -295,56 +288,51 @@ public class LineFollower implements Runnable {
 	/**
 	 * Processes the blobs being reported by the CMUCam2.  There are two blobs.  The first one
 	 * is a black blob that guides the robot so it stays on the lane.  The second blob is
-	 * a blue one that indicates when the robot is appraching, entering and exiting the intersection.
+	 * a blue one that indicates when the robot is approaching, entering and exiting the intersection.
+	 * 
+	 * @param data The blob finder data that contains information about all of the blobs in the
+	 * current field of view.
 	 */
-	private void processBlobs() {
+	private void processBlobs(PlayerBlobfinderData data) {
 		// Check to make sure we have valid data...
-		if (blobFinderData != null) {
-			
-			// Check to ensure data is not too old...
-			long blobAge = System.currentTimeMillis() - blobFinderDataTimestamp;
-			if (blobAge < BLOB_MAX_VALID_AGE) {
-				int numBlobs = blobFinderData.getBlobs_count();
-				log("doLineFollow: There are " + numBlobs + " blobs...");
+		if (data != null) {
+			int numBlobs = data.getBlobs_count();
+			log("processBlobs: There are " + numBlobs + " blobs...");
 
-				if(numBlobs > 0) {	
-					PlayerBlobfinderBlob[] blobList = blobFinderData.getBlobs();
+			if(numBlobs > 0) {	
+				PlayerBlobfinderBlob[] blobList = data.getBlobs();
 
-					// All of the following checks should not be necessary.  They were added
-					// to counter a null pointer exception being occasionally thrown.
-					if(blobList != null && blobList.length > 0 && blobList[0] != null)
-						adjustHeadingAndSpeed(blobList[0]);
-					else {
-						log("doLineFollow: ERROR: No primary blob, stopping robot...");
-						speed = angle = 0;
-					}
-
-					// Right now only designed for detection of blue secondary blob
-					try {
-						if(blobList != null && numBlobs > 1 && blobList[1] != null) {
-							handleSecondaryBlob(blobList[0], blobList[1]);
-						} 
-						else {
-							log("doLineFollow: No secondary blob!");
-							previousEventType = null;
-						}
-					} catch(ArrayIndexOutOfBoundsException e) {
-						// TODO Figure out why this sometimes happens.
-						log("doLineFollow: got an unexpected ArrayIndexOutOfBoundsException: " + e.getMessage());
-						previousEventType = null;
-					}
-				}
-			    else {
-					log("doLineFollow: ERROR: No blobs present, stopping robot...");
+				// All of the following checks should not be necessary.  They were added
+				// to counter a null pointer exception being occasionally thrown.
+				if(blobList != null && blobList.length > 0 && blobList[0] != null) {
+					int midPoint = data.getWidth()/2;
+					adjustHeadingAndSpeed(blobList[0], midPoint);
+				} else {
+					log("processBlobs: ERROR: No primary blob, stopping robot...");
 					speed = angle = 0;
 				}
-			
-			} else {
-				log("doLineFollow: ERROR: Blob too old (" + blobAge + "ms), stopping robot...");
+
+				// Right now only designed for detection of blue secondary blob
+				try {
+					if(blobList != null && numBlobs > 1 && blobList[1] != null) {
+						handleSecondaryBlob(blobList[0], blobList[1]);
+					} 
+					else {
+						log("processBlobs: No secondary blob!");
+						previousEventType = null;
+					}
+				} catch(ArrayIndexOutOfBoundsException e) {
+					// TODO Figure out why this sometimes happens.
+					log("processBlobs: got an unexpected ArrayIndexOutOfBoundsException: " + e.getMessage());
+					previousEventType = null;
+				}
+			}
+			else {
+				log("processBlobs: ERROR: No blobs present, stopping robot...");
 				speed = angle = 0;
 			}
 		} else {
-			log("doLineFollow: ERROR: No blob data, stopping robot...");
+			log("processBlobs: ERROR: Blob data is null, stopping robot...");
 			speed = angle = 0;
 		}
 	}
@@ -353,33 +341,31 @@ public class LineFollower implements Runnable {
 	 * This contains the main loop of the LineFollower thread.
 	 */
 	public void run() {
+		long dataTimeStamp = 0;
 		
 		while(!done) {
-			processBlobs();
+			
+			// If new blob data is available, get it and process it.
+			if (bfi.isDataReady()) {
+				dataTimeStamp = System.currentTimeMillis();
+				processBlobs(bfi.getData());
+			}
+			
+			// If no blob data is received within a certain time window, stop the robot.
+			if (System.currentTimeMillis() - dataTimeStamp > BLOB_MAX_VALID_AGE) {
+				log("run: ERROR: No blob data within valid window of " + BLOB_MAX_VALID_AGE + "ms");
+				speed = angle = 0;
+			}
 			
 			log("run: Sending Command, speed=" + speed + ", angle=" + angle);
 			p2di.setSpeed(speed, dtor(angle));
 			
-			pause(CYCLE_PERIOD); 
+			pause(CYCLE_PERIOD);
 		}
 		
 		log("run: thread exiting, ensuring robot is stopped...");
 		speed = angle = 0;
 		p2di.setSpeed(speed, dtor(angle));
-	}
-
-	/**
-	 * This is called whenever new blob data is available.
-	 * 
-	 * @param blobData The new blob data available.
-	 * @param timestamp The timestamp of the data.  This can be compared to System.currentTimeMillis() to determine the age of the blob data.
-	 */
-	public void newPlayerBlobfinderData(PlayerBlobfinderData blobData, long timestamp) {
-		synchronized(this) {
-			this.blobFinderData = blobData;
-			this.blobFinderDataTimestamp = timestamp;
-			notifyAll();
-		}
 	}
 	
 	/**
