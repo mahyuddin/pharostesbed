@@ -1,6 +1,8 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.*;
+import pharoslabut.sensors.BlobFinderVisualizer;
+
 import playerclient3.*;
 import playerclient3.structures.blobfinder.*;
 import playerclient3.structures.*;
@@ -15,6 +17,7 @@ public class TestBlobFinder {
 	private FileLogger flogger = null;
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
+	private BlobFinderVisualizer visualizer;
 		
 	/**
 	 * The constructor.
@@ -38,13 +41,27 @@ public class TestBlobFinder {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
 		
-		long prevTimeStamp = -1;
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+            	visualizer = new BlobFinderVisualizer(flogger);
+            	//visualizer.show();
+            }
+        });
+		
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);
 		
 		while(true) {
 			if (bfi.isDataReady()) {
 				PlayerBlobfinderData blobData = bfi.getData();
-				if (blobData != null)
-					log(blobData.toString());
+				if (blobData != null) {
+//					log(blobData.toString());
+					if (visualizer != null)
+						visualizer.visualizeBlobs(blobData);
+				}
 			}
 			pause(100);
 		} // end while(true)
