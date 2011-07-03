@@ -44,12 +44,15 @@ public class RangerVisualizer {
         });
 	}
 	
+    /**
+     * @return whether this visualizer is closed.
+     */
 	public boolean isClosed() {
 		return isClosed;
 	}
 	
 	/**
-	 * Show the IR Visualizer.
+	 * Show this visualizer.
 	 */
 	public void show() {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -274,7 +277,7 @@ public class RangerVisualizer {
     }
     
 	private void log(String msg) {
-		String result = "IRVisualizer: " + msg;
+		String result = "RangerVisualizer: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
