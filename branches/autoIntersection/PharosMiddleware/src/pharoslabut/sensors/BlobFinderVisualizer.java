@@ -26,7 +26,6 @@ public class BlobFinderVisualizer extends JFrame {
 	
 	private FileLogger flogger;
 	private BlobPanel blobPanel;
-	private boolean isClosed = false;
 	
 	public BlobFinderVisualizer() {
 		this(null);
@@ -40,42 +39,17 @@ public class BlobFinderVisualizer extends JFrame {
 	protected void frameInit() {
 		super.frameInit();
 		setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		//setSize(300, 100);
 
 		// Create the table and add it to a scroll pane...
 		blobPanel = new BlobPanel();
 		getContentPane().add(blobPanel, BorderLayout.CENTER);
 
 
-		addWindowListener(new WindowAdapter() {
-			public void windowClosed(WindowEvent we) {
-				isClosed = true;
-			}
-		});
-
 		pack();
 		setLocationRelativeTo(null); // center frame
 		setVisible(true);
 	}
 	
-    /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event-dispatching thread.
-     */
-    private void createGUI() {
-    	
-    	//setResizable(false);
-    	//window.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-    }
-    
-    /**
-     * @return whether this visualizer is closed.
-     */
-    public boolean isClosed() {
-    	return isClosed;
-    }
-
     /**
      * Show this visualizer.
      */

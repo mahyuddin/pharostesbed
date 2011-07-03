@@ -44,7 +44,6 @@ public class TestBlobFinder {
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
             	visualizer = new BlobFinderVisualizer(flogger);
-            	//visualizer.show();
             }
         });
 		
@@ -54,17 +53,20 @@ public class TestBlobFinder {
 		log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		while(true) {
-			if (bfi.isDataReady()) {
+		boolean done = false;
+		while(!done) {
+			if (visualizer != null && !visualizer.isVisible())
+				done = true;
+			if (!done && bfi.isDataReady()) {
 				PlayerBlobfinderData blobData = bfi.getData();
 				if (blobData != null) {
-//					log(blobData.toString());
 					if (visualizer != null)
 						visualizer.visualizeBlobs(blobData);
 				}
 			}
 			pause(100);
 		} // end while(true)
+		System.exit(0);
 	}
 	
 	private void log(String msg) {
