@@ -15,6 +15,7 @@ import java.text.*;
  * Provides a visualization of the IR sensor readings.
  * 
  * @author Chien-Liang Fok
+ * @see http://pharos.ece.utexas.edu/wiki/index.php/Accessing_the_IR_sensor_plane
  */
 public class RangerVisualizer {	
 	private JFrame window;

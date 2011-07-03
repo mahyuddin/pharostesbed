@@ -77,6 +77,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 		
 		log("Creating CompassDataBuffer...");
 		CompassDataBuffer cdb = new CompassDataBuffer(compass);
+		cdb.setFileLogger(flogger);
 		
 		log("Registering self as listener to CompassDataBuffer events...");
 		cdb.addPos2DListener(this);
@@ -198,7 +199,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.CompassLogger <options>\n");
+		System.err.println("Usage: pharoslabut.logger.CompassLogger <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
