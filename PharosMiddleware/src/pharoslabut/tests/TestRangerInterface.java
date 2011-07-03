@@ -1,6 +1,5 @@
 package pharoslabut.tests;
 
-import pharoslabut.*;
 import pharoslabut.logger.*;
 import pharoslabut.sensors.*;
 import playerclient3.*;
@@ -8,7 +7,7 @@ import playerclient3.structures.*;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
- * Tests the IR interface.  Subscribes to the IR interface and prints all of the IR
+ * Tests the IR sensors.  Subscribes to the IR sensors and prints all of the IR
  * range data received.  There are six IR sensors and they are printed in the following
  * order: FL, FC, FR, RL, RC, RR.
  * 
@@ -25,6 +24,7 @@ import playerclient3.structures.ranger.PlayerRangerData;
  * )
  * 
  * @author Chien-Liang Fok
+ * @see http://pharos.ece.utexas.edu/wiki/index.php/Accessing_the_IR_sensor_plane
  */
 public class TestRangerInterface implements RangerListener, ProteusOpaqueListener {
 	private PlayerClient client = null;
