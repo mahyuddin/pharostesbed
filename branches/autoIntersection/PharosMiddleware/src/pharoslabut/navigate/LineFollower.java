@@ -300,13 +300,21 @@ public class LineFollower implements Runnable {
 			log("processBlobs: There are " + numBlobs + " blobs...");
 
 			if(numBlobs > 0) {	
-				PlayerBlobfinderBlob[] blobList = data.getBlobs();
+				PlayerBlobfinderBlob[] blobListCopy = null;
+				
+				// Create a copy of the blobList array to avoid conflicts with the array reference
+				// being changed while it is being read from.
+				synchronized(data) {
+					PlayerBlobfinderBlob[] blobList = data.getBlobs();
+					blobListCopy = new PlayerBlobfinderBlob[blobList.length];
+					System.arraycopy(blobList, 0, blobListCopy, 0, blobList.length);
+				}
 
 				// All of the following checks should not be necessary.  They were added
 				// to counter a null pointer exception being occasionally thrown.
-				if(blobList != null && blobList.length > 0 && blobList[0] != null) {
+				if(blobListCopy != null && blobListCopy.length > 0 && blobListCopy[0] != null) {
 					int midPoint = data.getWidth()/2;
-					adjustHeadingAndSpeed(blobList[0], midPoint);
+					adjustHeadingAndSpeed(blobListCopy[0], midPoint);
 				} else {
 					log("processBlobs: ERROR: No primary blob, stopping robot...");
 					speed = angle = 0;
@@ -314,8 +322,8 @@ public class LineFollower implements Runnable {
 
 				// Right now only designed for detection of blue secondary blob
 				try {
-					if(blobList != null && numBlobs > 1 && blobList[1] != null) {
-						handleSecondaryBlob(blobList[0], blobList[1]);
+					if(blobListCopy != null && numBlobs > 1 && blobListCopy[1] != null) {
+						handleSecondaryBlob(blobListCopy[0], blobListCopy[1]);
 					} 
 					else {
 						log("processBlobs: No secondary blob!");
