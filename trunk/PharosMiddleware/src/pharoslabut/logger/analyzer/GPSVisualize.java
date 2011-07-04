@@ -305,12 +305,6 @@ public class GPSVisualize {
 			System.exit(1);
 		}
 		
-		if (outputFile == null) {
-			printErr("Must specify output file.");
-			usage();
-			System.exit(1);
-		}
-		
 		if (specFileName == null && logFileName == null) {
 			System.setProperty ("PharosMiddleware.debug", "true");
 			printErr("Must set either specify specification file or log file.");
@@ -329,6 +323,13 @@ public class GPSVisualize {
 			}
 		} else {
 			// Generate a GPS visualization for a single robot.
+			
+			if (outputFile == null) {
+				printErr("ERROR: Output file not specified.");
+				usage();
+				System.exit(1);
+			}
+			
 			if (caption == null) {
 				System.setProperty ("PharosMiddleware.debug", "true");
 				printErr("ERROR: caption not specified.");
