@@ -250,7 +250,7 @@ public class GPSVisualize {
 		print("\t-log <log file name>: The name of the log file that was recorded by the robot as it carried out an experiment (default null)");
 		print("\t-caption <caption name>: The caption for the trace (required)");
 		print("\t-color <color>: The color used to plot the trace (default red)");
-		print("\t-output <output file name>: The name of the output file (default GPSVisualize)");
+		print("\t-output <output file name>: The name of the output file (default GPSVisualize).  Note that \".csv\" will be appended to it.");
 		print("\t\tNote: the \".csv\" extension is automatically apptended");
 		print("\t-debug: enable debug mode");
 	}
