@@ -236,6 +236,10 @@ public class GPSVisualize {
 			System.out.println(msg);
 	}
 	
+	private static void printErr(String msg) {
+		System.err.println(msg);
+	}
+	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.logger.analyzer.GPSVisualize <options>\n");
@@ -247,10 +251,11 @@ public class GPSVisualize {
 		print("\t\t\t...");
 		print("\t\tEach LOG_FILE listed in the specification file will have its own trace in the resulting GPSVisualizer script.");
 		print("\t\tFor more details, see: http://pharos.ece.utexas.edu/wiki/index.php/How_to_Plot_a_Robot%27s_Path_on_GPSVisualizer");
+		print("Or:");
 		print("\t-log <log file name>: The name of the log file that was recorded by the robot as it carried out an experiment (default null)");
 		print("\t-caption <caption name>: The caption for the trace (required)");
 		print("\t-color <color>: The color used to plot the trace (default red)");
-		print("\t-output <output file name>: The name of the output file (default GPSVisualize)");
+		print("\t-output <output file name>: The name of the output file (required).");
 		print("\t\tNote: the \".csv\" extension is automatically apptended");
 		print("\t-debug: enable debug mode");
 	}
@@ -261,11 +266,15 @@ public class GPSVisualize {
 		String logFileName = null;
 		String caption = null;
 		String color = "red";
-		String outputFile = "GPSVisualize";
+		String outputFile = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-spec")) {
+				if (args[i].equals("-h")) {
+					usage();
+					System.exit(1);
+				}
+				else if (args[i].equals("-spec")) {
 					specFileName = args[++i];
 				}
 				else if (args[i].equals("-log")) {
@@ -285,7 +294,7 @@ public class GPSVisualize {
 				}
 				else {
 					System.setProperty ("PharosMiddleware.debug", "true");
-					print("Unknown option: " + args[i]);
+					printErr("Unknown option: " + args[i]);
 					usage();
 					System.exit(1);
 				}
@@ -298,7 +307,7 @@ public class GPSVisualize {
 		
 		if (specFileName == null && logFileName == null) {
 			System.setProperty ("PharosMiddleware.debug", "true");
-			print("Must set either specify specification file or log file.");
+			printErr("Must set either specify specification file or log file.");
 			usage();
 			System.exit(1);
 		}
@@ -314,9 +323,16 @@ public class GPSVisualize {
 			}
 		} else {
 			// Generate a GPS visualization for a single robot.
+			
+			if (outputFile == null) {
+				printErr("ERROR: Output file not specified.");
+				usage();
+				System.exit(1);
+			}
+			
 			if (caption == null) {
 				System.setProperty ("PharosMiddleware.debug", "true");
-				print("ERROR: caption not specified.");
+				printErr("ERROR: caption not specified.");
 				usage();
 				System.exit(1);
 			}
