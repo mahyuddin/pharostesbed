@@ -45,7 +45,7 @@ public class TCPMessageReceiver implements Runnable {
 	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
 	 *
 	 * @param receiver The message receiver two which received messages should be sent.
-	 * @param port the port on which to listen for connections
+	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.  
 	 */
     public TCPMessageReceiver(MessageReceiver receiver, int port){
     	this.receiver = receiver;
@@ -54,7 +54,11 @@ public class TCPMessageReceiver implements Runnable {
 		// create the server socket
 		while (ss == null) {
 			try {
-				ss = new ServerSocket(port);
+				if (port != -1)
+					ss = new ServerSocket(port);
+				else {
+					ss = new ServerSocket(0);
+				}
 			} catch (IOException e) {
 				//e.printStackTrace();
 				log("Unable to open server socket, waiting a couple seconds before trying again...");
