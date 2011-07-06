@@ -5,6 +5,7 @@ import playerclient3.structures.gps.PlayerGpsData;
 public class Location implements java.io.Serializable {
 	private static final long serialVersionUID = -2689555631414682934L;
 	private double latitude, longitude, elevation;
+	private long time = System.currentTimeMillis(); // time of location
 	
 	/**
 	 * A constructor that extract location information from GPS sensor data.
@@ -62,6 +63,14 @@ public class Location implements java.io.Serializable {
 		return elevation;
 	}
 	
+	public long getTime() {
+		return time;
+	}
+	
+	public void setTime(long newTime) {
+		this.time = newTime;
+	}
+	
 	/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 	/*::                                                                         :*/
 	/*::  This routine calculates the distance between two points (given the     :*/
@@ -82,7 +91,7 @@ public class Location implements java.io.Serializable {
 	/*::  United States ZIP Code/ Canadian Postal Code databases with latitude & :*/
 	/*::  longitude are available at http://www.zipcodeworld.com                 :*/
 	/*::                                                                         :*/
-	/*::  For enquiries, please contact sales@zipcodeworld.com                   :*/
+	/*::  For inquiries, please contact sales@zipcodeworld.com                   :*/
 	/*::                                                                         :*/
 	/*::  Official Web site: http://www.zipcodeworld.com                         :*/
 	/*::                                                                         :*/
@@ -121,6 +130,38 @@ public class Location implements java.io.Serializable {
 	}
 
 	/**
+	 * Finds the angle formed by the line between two points in reference to the horizontal. 
+	 * The angle is adjusted to correspond to the unit circle.
+	 * 
+	 * @param lat1 latitude of first point in decimal degrees
+	 * @param lon1 longitude of first point in decimal degrees
+	 * @param lat2 latitude of second point in decimal degrees
+	 * @param lon2 longitude of second point in decimal degrees
+	 * @return the angle formed by the line between the two points (in radians), adjusted to the unit circle.
+	 */
+	private static double angle(double lat1, double lon1, double lat2, double lon2) {
+		
+		// check for special condition of exact match
+		//if ((lat1 - lat2) < 0.000001 && (lon1 - lon2) < 0.000001) return 0;
+		if (lat1 == lat2 && lon1 == lon2) return 0;
+		
+		double theta = 0; // angle between the two points
+		double yDelta = deg2rad(lat2 - lat1); // latitude is the y direction
+		double xDelta = deg2rad(lon2 - lon1); // longitude is the x direction
+		
+		theta = Math.atan(yDelta/xDelta);
+		
+		// make quadrant adjustments
+		if ( (xDelta <= 0 && yDelta >= 0) || (xDelta <= 0 && yDelta < 0) ) { // 2nd & 3rd quadrant
+			theta = Math.PI + theta;
+		} else if( xDelta > 0 && yDelta < 0 ) { // 4th quadrant
+			theta = (2*Math.PI) + theta;
+		}
+		
+		return theta;
+	}
+	
+	/**
 	 * This function converts decimal degrees to radians
 	 * 
 	 * @param deg angle measurement in decimal degree units
@@ -150,6 +191,11 @@ public class Location implements java.io.Serializable {
 		double result = distance(latitude(), longitude(), 
 				targetLoc.latitude(), targetLoc.longitude(), 'K');
 		return result * 1000; // convert to meters
+	}
+	
+	public double angleTo(Location targetLoc) {
+		double result = angle(latitude(), longitude(), targetLoc.latitude(), targetLoc.longitude());
+		return result;
 	}
 	
 	public String toString() {
