@@ -232,8 +232,7 @@ public class GPSVisualize {
 	}
 	
 	private static void print(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(msg);
+		System.out.println(msg);
 	}
 	
 	private static void printErr(String msg) {
@@ -241,7 +240,6 @@ public class GPSVisualize {
 	}
 	
 	private static void usage() {
-		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.logger.analyzer.GPSVisualize <options>\n");
 		print("Where <options> include:");
 		print("\t-spec <spec file name>: The specification file. (required)");
@@ -293,7 +291,6 @@ public class GPSVisualize {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
 				else {
-					System.setProperty ("PharosMiddleware.debug", "true");
 					printErr("Unknown option: " + args[i]);
 					usage();
 					System.exit(1);
@@ -306,8 +303,7 @@ public class GPSVisualize {
 		}
 		
 		if (specFileName == null && logFileName == null) {
-			System.setProperty ("PharosMiddleware.debug", "true");
-			printErr("Must set either specify specification file or log file.");
+			printErr("Must either specify specification file or log file.");
 			usage();
 			System.exit(1);
 		}
@@ -331,7 +327,6 @@ public class GPSVisualize {
 			}
 			
 			if (caption == null) {
-				System.setProperty ("PharosMiddleware.debug", "true");
 				printErr("ERROR: caption not specified.");
 				usage();
 				System.exit(1);
