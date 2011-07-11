@@ -56,7 +56,7 @@ public class GPSVisualize {
 							outputFileName = elem[1];
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Warning: Syntax error on line " + lineno + " of config file " + fileName + ":\n" + line);
+							System.err.println("ERROR: Syntax error on line " + lineno + " of config file " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					}
@@ -67,7 +67,7 @@ public class GPSVisualize {
 						if (elem.length > 2)
 							captionNames.add(elem[2]);  // user specified the caption name
 						else {
-							String robotName = extractRobotName(elem[1]); // use the robot name as the caption
+							String robotName = LogFileNameParser.extractRobotName(elem[1]); // use the robot name as the caption
 							captionNames.add(robotName);
 						}
 						
@@ -105,38 +105,6 @@ public class GPSVisualize {
 		}
 		
 		createGPSVisualizerFile(outputFileName, logFileNames, captionNames, traceColors, waypoints);
-	}
-	
-	/**
-	 * Extract the robot's name from it's log file.  
-	 * Assumes the log file is of form "M##-Exp##-RobotName-Pharos_##.log"
-	 * 
-	 * @param logFileName The name of the log file
-	 * @return The name of the robot.
-	 */
-	private String extractRobotName(String logFileName) {
-		String robotName = null;
-		
-		String[] pathTokens = logFileName.split("/");
-		for (int i=0; i < pathTokens.length; i++) {
-			String currToken = pathTokens[i];
-			if (currToken.endsWith(".log")) {
-				String[] fileNameTokens = currToken.split("-");
-				if (fileNameTokens.length > 3 && fileNameTokens[0].matches("M\\d+") && 
-						fileNameTokens[1].matches("Exp\\d+")) 
-				{
-					robotName = fileNameTokens[2];
-				}
-			}
-		}
-		
-		if (robotName == null) {
-			System.err.println("ERROR: Unable to determine robot name: " + logFileName);
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
-		
-		return robotName;
 	}
 	
 	/**

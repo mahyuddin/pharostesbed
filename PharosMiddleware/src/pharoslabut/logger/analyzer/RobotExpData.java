@@ -10,7 +10,7 @@ import pharoslabut.navigate.Location;
 import playerclient3.structures.gps.PlayerGpsData;
 
 /**
- * Encapsulates the data recorded by a robot during an experiment.
+ * Holds the data recorded by a robot during an experiment.
  * 
  * @author Chien-Liang Fok
  */
@@ -32,15 +32,6 @@ public class RobotExpData {
 	private Vector<PathEdge> pathEdges = new Vector<PathEdge>();
 	
 	/**
-	 * The offset in ms between the local timestamps and the GPS timestamps.
-	 * This is used to calibrate the timestamps recorded within the experiment
-	 * data.  The equation for calibrating the time is:
-	 * 
-	 * True time = Local timestamp - timeOffset.
-	 */
-	//private double timeOffset;
-	
-	/**
 	 * The locations of the robot as it traversed this edge.
 	 */
 	private Vector <GPSLocationState> locations = new Vector<GPSLocationState>();
@@ -55,6 +46,9 @@ public class RobotExpData {
 	 */
 	private Vector<TelosBTxRecord> telosBTxHist = new Vector<TelosBTxRecord>();
 	
+	/**
+	 * For logging debug messages.
+	 */
 	private FileLogger flogger = null;
 	
 	/**

@@ -1,12 +1,9 @@
 package pharoslabut.experiment;
 
 import java.net.InetAddress;
-//import java.net.UnknownHostException;
-//import java.util.*;
 
 import pharoslabut.io.*;
 import pharoslabut.navigate.motionscript.MotionScript;
-import pharoslabut.navigate.motionscript.MotionScriptReader;
 
 /**
  * Sends a motion script to a PharosExpServer.
@@ -33,7 +30,7 @@ public class GPSMotionScriptInjector {
 			InetAddress ipAddr = InetAddress.getByName(address);
 			
 			log("Reading the motion script...");
-			MotionScript script = MotionScriptReader.readTraceFile(scriptFileName);
+			MotionScript script = new MotionScript(scriptFileName);
 			
 			log("Sending the motion script to server " + ipAddr + ":" + port + "...");
 			MotionScriptMsg gpsMsg = new MotionScriptMsg(script);

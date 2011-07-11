@@ -2,7 +2,6 @@ package pharoslabut.experiment;
 
 import pharoslabut.io.*;
 import pharoslabut.navigate.motionscript.MotionScript;
-import pharoslabut.navigate.motionscript.MotionScriptReader;
 
 /**
  * Coordinates the initialization of a multi-robot GPS-based motion script experiment. 
@@ -46,7 +45,7 @@ public class PharosExpClient {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				log("\tSending motion script to robot " + currRobot.getName());
 				
-				MotionScript script = MotionScriptReader.readTraceFile(currRobot.getMotionScript());
+				MotionScript script = new MotionScript(currRobot.getMotionScript());
 				MotionScriptMsg msg = new MotionScriptMsg(script);
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
 			}
