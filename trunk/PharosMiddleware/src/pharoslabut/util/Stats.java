@@ -2,8 +2,18 @@ package pharoslabut.util;
 
 import java.util.*;
 
+/**
+ * Implements various methods that provides statistics on data sets.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class Stats {
 	
+	/**
+	 * 
+	 * @param v A vector of doubles.
+	 * @return The average value.
+	 */
 	public static double getAvg(Vector<Double> v) {
 		double total = 0;
 		Enumeration<Double> e = v.elements();
@@ -13,6 +23,11 @@ public class Stats {
 		return total / v.size();
 	}
 	
+	/**
+	 * 
+	 * @param v A vector of doubles.
+	 * @return The minimum value.
+	 */
 	public static double getMin(Vector<Double> v) {
 		double result = Double.MAX_VALUE;
 		Enumeration<Double> e = v.elements();
@@ -24,6 +39,11 @@ public class Stats {
 		return result;
 	}
 	
+	/**
+	 * 
+	 * @param v A vector of doubles.
+	 * @return The maximum value.
+	 */
 	public static double getMax(Vector<Double> v) {
 		double result = Double.MIN_VALUE;
 		Enumeration<Double> e = v.elements();
