@@ -184,7 +184,7 @@ public class MotionDivergenceGPS {
 				sb.append("\t");
 				sb.append(pctComplete);
 				sb.append("\t");
-				sb.append((wayPointIndx+1)*100 + pctComplete);
+				sb.append(wayPointIndx + (pctComplete/100));
 				
 				
 //				if (pctComplete == 0) {
