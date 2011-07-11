@@ -159,12 +159,19 @@ public class MotionDivergenceGPS {
 		FileLogger fileWriter = new FileLogger(fileName, false);
 		
 		// Create and save the table header
-		String tableHeader = "Dest. Waypoint\tPct. Complete\tIndex";
+		StringBuffer tableHeader = new StringBuffer("Dest. Waypoint\tPct. Complete\tIndex");
 		Enumeration<String> expLabelsEnum = expLabels.elements();
 		while (expLabelsEnum.hasMoreElements()) {
-			tableHeader += "\t" + expLabelsEnum.nextElement();
+			tableHeader.append("\t");
+			tableHeader.append(expLabelsEnum.nextElement());
 		}
-		log(fileWriter, tableHeader);
+		tableHeader.append("\t");
+		tableHeader.append("Average");
+		tableHeader.append("\t");
+		tableHeader.append("Std. Dev.");
+		tableHeader.append("\t");
+		tableHeader.append("95% Conf.");
+		log(fileWriter, tableHeader.toString());
 		
 		// For each way point...
 		for (int wayPointIndx = 0; wayPointIndx < motionScript.numWayPoints(); wayPointIndx++) {
@@ -185,13 +192,27 @@ public class MotionDivergenceGPS {
 //				} else
 //					sb.append("\t")
 				
+				Vector<Double> allData = new Vector<Double>();
 				
 				// For each experiment get and save the divergence...
 				for (int expIndx = 0; expIndx < divs.size(); expIndx++) {
 					double divergence = divs.get(expIndx).getDivergence(wayPointIndx, pctComplete);
 					sb.append("\t");
 					sb.append(divergence);
+					allData.add(divergence);
 				}
+				
+				// Generate some statistics about the divergence at pctComplete across all experiments.
+				double avg = pharoslabut.util.Stats.getAvg(allData);
+				double stddev = pharoslabut.util.Stats.getSampleStdDev(allData);
+				double conf95 = pharoslabut.util.Stats.getConf95(stddev, allData.size());
+				
+				sb.append("\t");
+				sb.append(avg);
+				sb.append("\t");
+				sb.append(stddev);
+				sb.append("\t");
+				sb.append(conf95);
 				
 				log(fileWriter, sb.toString());
 			}

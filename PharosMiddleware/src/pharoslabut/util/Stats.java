@@ -60,7 +60,7 @@ public class Stats {
 	 * @param v A vector of doubles.
 	 * @return The population standard deviation.
 	 */
-	public static double getStdDev(Vector<Double> v) {
+	public static double getSampleStdDev(Vector<Double> v) {
 		double avg = getAvg(v);
 		
 		double diffSqrd = 0;
@@ -70,7 +70,7 @@ public class Stats {
 			diffSqrd += Math.pow(currVal - avg, 2);
 		}
 		
-		return Math.sqrt(diffSqrd/v.size());
+		return Math.sqrt(diffSqrd/(v.size()-1));
 	}
 	
 	/**
