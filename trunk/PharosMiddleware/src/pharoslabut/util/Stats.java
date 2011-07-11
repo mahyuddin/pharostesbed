@@ -54,4 +54,33 @@ public class Stats {
 		}
 		return result;
 	}
+	
+	/**
+	 * 
+	 * @param v A vector of doubles.
+	 * @return The population standard deviation.
+	 */
+	public static double getStdDev(Vector<Double> v) {
+		double avg = getAvg(v);
+		
+		double diffSqrd = 0;
+		Enumeration<Double> e = v.elements();
+		while (e.hasMoreElements()) {
+			double currVal = e.nextElement();
+			diffSqrd += Math.pow(currVal - avg, 2);
+		}
+		
+		return Math.sqrt(diffSqrd/v.size());
+	}
+	
+	/**
+	 * Calculates the 95% confidence interval of a population.
+	 * 
+	 * @param stdev The population standard deviation.
+	 * @param popSize The population size.
+	 * @return The 95% confidence interval.
+	 */
+	public static double getConf95(double stdev, int popSize) {
+		return stdev / Math.sqrt(popSize) * 1.96;	
+	}
 }
