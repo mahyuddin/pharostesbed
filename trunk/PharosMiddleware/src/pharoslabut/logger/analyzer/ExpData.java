@@ -80,7 +80,7 @@ public class ExpData {
 		while (e.hasMoreElements()) {
 			RobotExpData currRobot = e.nextElement();
 			if (currRobot.ranExperiment()) {
-				long currStartTime = currRobot.getRobotStartTime();
+				long currStartTime = currRobot.getStartTime();
 				if (result == -1 || currStartTime < result)
 					result = currStartTime;
 			}
@@ -100,7 +100,7 @@ public class ExpData {
 		while (e.hasMoreElements()) {
 			RobotExpData currRobot = e.nextElement();
 			if (currRobot.ranExperiment()) {
-				long currStopTime = currRobot.getRobotStopTime();
+				long currStopTime = currRobot.getStopTime();
 				if (result == -1 || currStopTime > result)
 					result = currStopTime;
 			}
@@ -188,7 +188,7 @@ public class ExpData {
 		
 		for (int i=0; i < numRobots(); i++) {
 			RobotExpData currRobot = getRobot(i);
-			sb.append("Robot " + (i+1) + " started " + (currRobot.getRobotStartTime() - getExpStartTime()) + "ms after experiment start time\n");
+			sb.append("Robot " + (i+1) + " started " + (currRobot.getStartTime() - getExpStartTime()) + "ms after experiment start time\n");
 			sb.append("\t" + currRobot.toString().replaceAll("\n", "\n\t") + "\n");
 		}
 		
@@ -228,10 +228,10 @@ public class ExpData {
 		for (int i=0; i < expData.numRobots(); i++) {
 			RobotExpData robotData = expData.getRobot(i);
 			print(i + "\t" + robotData.getRobotName() + "\t" 
-					+ robotData.getRobotStartTime() + "\t"
-					+ (robotData.getRobotStartTime() - baseline.getRobotStartTime()) + "\t"
-					+ robotData.getRobotStopTime() + "\t"
-					+ (robotData.getRobotStopTime() - baseline.getRobotStopTime()) + "\t"
+					+ robotData.getStartTime() + "\t"
+					+ (robotData.getStartTime() - baseline.getStartTime()) + "\t"
+					+ robotData.getStopTime() + "\t"
+					+ (robotData.getStopTime() - baseline.getStopTime()) + "\t"
 					+ robotData.getPathEdge(0).getStartTime() + "\t"
 					+ (robotData.getPathEdge(0).getStartTime() - baseline.getPathEdge(0).getStartTime()));
 		}

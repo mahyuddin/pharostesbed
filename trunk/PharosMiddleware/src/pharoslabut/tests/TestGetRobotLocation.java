@@ -79,27 +79,29 @@ public class TestGetRobotLocation {
 			print("GPS timestamp calibration OK!");
 		}
 		
-		print("Robot start time: " + red.getRobotStartTime());
+		print("Robot start time = " + red.getStartTime() + ", stop time = " + red.getStopTime() 
+				+ ", duration (ms) = " + (red.getStopTime() - red.getStartTime()));
 		
 		// Check whether the getLocation method is OK
 		print("Evaluating RobotExpData.getLocation(long timestamp)...");
-		print("\tExperiment start time: " + red.getRobotStartTime());
+		print("\tExperiment start time: " + red.getStartTime());
 		FileLogger flogger = new FileLogger(outputFileName, false);
 
 		flogger.log("type,latitude,longitude,name,color");
-		long currTime = red.getRobotStartTime();
+		long currTime = red.getStartTime();
 		boolean firstLoc = true;
-		while (currTime < red.getRobotStopTime()) {
+		while (currTime < red.getStopTime()) {
 			Location currLoc = red.getLocation(currTime);
 			String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
 			if (firstLoc) {
-				line += ",getLocation,blue";
+				line += ",interpolated locations,blue";
 				firstLoc = false;
 			}
 			flogger.log(line);
 			currTime += 1000;
 		}
 
+		// Include the actual GPS measurements as way points
 		flogger.log("type,latitude,longitude");
 		locs = red.getGPSHistory().elements();
 		while (locs.hasMoreElements()) {
