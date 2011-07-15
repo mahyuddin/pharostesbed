@@ -12,7 +12,7 @@ import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
  * Analyzes the motion divergence exhibit by one or more mobile nodes as they follow
- * a GPS waypoint-based motion script.
+ * a motion script based on GPS way points.
  * 
  * @author Chien-Liang Fok
  */
@@ -30,7 +30,7 @@ public class MotionDivergenceGPS {
 	 */
 	public MotionDivergenceGPS(String specFile) {
 		readSpecFile(specFile); // if this fails, program will exit inside this call
-		analyzeAbsoluteDivergence();
+		calculateDivergence();
 	}
 		
 //	class AnalysisResults {
@@ -82,23 +82,33 @@ public class MotionDivergenceGPS {
 //	}
 	
 	/**
-	 * Calculates the absolute divergence of each robot as it follows the GPS-based motion script.
-	 * Creates a table containing the absolute divergence of each robot, along fixed percentages
-	 * towards each way point.
+	 * Calculates the absolute, relative, and relative-speed divergence of each robot as it follows 
+	 * the GPS-based motion script.  Creates tables containing the divergences of each robot
+	 * along fixed percentages towards each way point.
 	 */
-	private void analyzeAbsoluteDivergence() {
+	private void calculateDivergence() {
 		
-		// This data structure stores the results of all absolute divergence calculations.
+		// Stores the absolute divergence calculations.
 		Vector<DivergenceExp> absoluteDivs = new Vector<DivergenceExp>();
 		
-		// For each log file, analyze the absolute divergence.
+		// Stores the relative divergence calculations.
+		Vector<DivergenceExp> relativeDivs = new Vector<DivergenceExp>();
+		
+		// Stores the relative-speed divergence calculations.
+		Vector<DivergenceExp> relativeSpeedDivs = new Vector<DivergenceExp>();
+		
+		// For each log file analyze the absolute divergence.
 		Enumeration<RobotExpData> expEnum = robotExpData.elements();
 		while (expEnum.hasMoreElements()) {
 			RobotExpData expData = expEnum.nextElement();
-			log("analyzeAbsoluteDivergence: Analyzing robot " + expData.getRobotName() + ", log: " + expData.getFileName());
+			log("calculateAbsoluteDivergence: Analyzing robot " + expData.getRobotName() + ", log: " + expData.getFileName());
 			
-			DivergenceExp divExp = new DivergenceExp(expData);
-			absoluteDivs.add(divExp);
+			DivergenceExp absDivExp = new DivergenceExp(expData);
+			absoluteDivs.add(absDivExp);
+			DivergenceExp relDivExp = new DivergenceExp(expData);
+			relativeDivs.add(relDivExp);
+			DivergenceExp relSpeedDivExp = new DivergenceExp(expData);
+			relativeSpeedDivs.add(relSpeedDivExp);
 			
 			// For each edge in the motion script...
 			for (int edgeCount = 0; edgeCount < motionScript.numWayPoints(); edgeCount++) {
@@ -107,14 +117,17 @@ public class MotionDivergenceGPS {
 				// Get the starting location of the robot...
 				Location startLoc = currEdge.getStartLoc();
 				if (startLoc == null) {
-					logErr("analyzeAbsoluteDivergence: Unknown start location in path edge:\n" + currEdge);
+					logErr("calculateAbsoluteDivergence: Unknown start location in path edge:\n" + currEdge);
 					System.exit(-1);
 				}
 
 				// Create the ideal path along which the robot should travel.
 				// This is the line connecting the start location to the end location.
-				Line perfectRoute = new Line(startLoc, currEdge.getEndLocation());
+				Line absolutePerfectRoute = new Line(startLoc, currEdge.getEndLocation());
 
+				// Initially, the relative perfect route is the same as the absolute perfect route.
+				Line relativePerfectRoute = absolutePerfectRoute;
+				
 				// Some debug tests...
 				//		System.out.println("Equation of Perfect Route: " + perfectRoute);
 				//		System.out.println("Check getLongitude: got " + perfectRoute.getLongitude(startLoc.latitude()) + ", expected " + startLoc.longitude());
@@ -122,31 +135,74 @@ public class MotionDivergenceGPS {
 
 				// The destination way point is always the edge count + 1.  For example,
 				// if this is edge 0, the destination way point is way point 1.
-				DivergenceEdge divEdge = new DivergenceEdge(edgeCount+1, perfectRoute);
-				divExp.addEdge(divEdge);
+				DivergenceEdge absoluteDivEdge = new DivergenceEdge(edgeCount+1);
+				absDivExp.addEdge(absoluteDivEdge);
+				DivergenceEdge relativeDivEdge = new DivergenceEdge(edgeCount+1);
+				relDivExp.addEdge(relativeDivEdge);
+				DivergenceEdge relativeSpeedDivEdge = new DivergenceEdge(edgeCount+1);
+				relSpeedDivExp.addEdge(relativeSpeedDivEdge);
 				
 				// Divide the edge traversal into ten segments.  We will compute the absolute divergence at 10% intervals.
 				long totalTime = currEdge.getEndTime() - currEdge.getStartTime();
 				long deltaTime = totalTime / 10;
-				log("analyzeAbsoluteDivergence: totalTime = " + totalTime + ", deltaTime = " + deltaTime);
+				log("calculateAbsoluteDivergence: totalTime = " + totalTime + ", deltaTime = " + deltaTime);
 				
 				// For every 10% of the edge traversed...
 				for (int pctComplete = 0; pctComplete <= 100; pctComplete += 10) {
 					long currTime = currEdge.getStartTime() + (pctComplete / 10) * deltaTime;
 					
 					Location currLoc = expData.getLocation(currTime);
-					Location idealLoc = perfectRoute.getClosestLocationTo(currLoc);
-					double divergence = currLoc.distanceTo(idealLoc);
-
-					log("analyzeAbsoluteDivergence: pctEdgeComplete=" + pctComplete + ", currTime=" + currTime + ", currLoc=" + currLoc + ", idealLoc=" + idealLoc + ", divergence=" + divergence);
 					
-					Divergence div = new Divergence(currTime, pctComplete, currLoc, idealLoc, divergence);
-					divEdge.addDivergence(div);
+					// Calculate the absolute divergence...
+					Location absoluteIdealLoc = absolutePerfectRoute.getLocationClosestTo(currLoc);
+					double absoluteDivergence = currLoc.distanceTo(absoluteIdealLoc);
+					
+					// Calculate the relative divergence...
+					Location relativeIdealLoc = relativePerfectRoute.getLocationClosestTo(currLoc);
+					double relativeDivergence = currLoc.distanceTo(relativeIdealLoc);
+
+					// Calculate the relative-speed divergence...
+					/*
+					 * Calculate the distance between the previous location of the robot to the current location.
+					 * This will be used to determine where the robot would be if it had traveled
+					 * the exact same distance but along the perfect path towards the destination.
+					 */
+					double deltaDist = relativePerfectRoute.getStartLoc().distanceTo(currLoc);
+					Location relativeSpeedIdealLoc = relativePerfectRoute.getLocationRelativeSpeed(deltaDist);
+					double relativeSpeedDivergence = currLoc.distanceTo(relativeIdealLoc);
+					
+					log("calculateDivergence: pctEdgeComplete=" + pctComplete + ", currTime=" + currTime + ", currLoc=" + currLoc 
+							+ ", absoluteIdealLoc=" + absoluteIdealLoc + ", absoluteDivergence=" + absoluteDivergence
+							+ ", relativeIdealLoc=" + relativeIdealLoc + ", relativeDivergence=" + relativeDivergence
+							+ ", relativeSpeedIdealLoc=" + relativeSpeedIdealLoc + ", relativeSpeedDivergence=" + relativeSpeedDivergence);
+					
+					Divergence absoluteDiv = new Divergence(currTime, pctComplete, currLoc, absoluteIdealLoc, absoluteDivergence, absolutePerfectRoute);
+					absoluteDivEdge.addDivergence(absoluteDiv);
+					Divergence relativeDiv = new Divergence(currTime, pctComplete, currLoc, relativeIdealLoc, relativeDivergence, relativePerfectRoute);
+					relativeDivEdge.addDivergence(relativeDiv);
+					Divergence relativeSpeedDiv = new Divergence(currTime, pctComplete, currLoc, relativeSpeedIdealLoc, relativeSpeedDivergence, relativePerfectRoute);
+					relativeSpeedDivEdge.addDivergence(relativeSpeedDiv);
+					
+					/*
+					 * For relative-divergence, the perfect route is updated to be the
+					 * straight line from the robot's previous location to the final destination.
+					 * This is "fairer" since the robot is always trying to get to the final destination
+					 * from is present location and not necessarily follow the straight line from the
+					 * edge's start location to final location.
+					 */
+					relativePerfectRoute = new Line(currLoc, currEdge.getEndLocation());
+					
+					// Some debug output
+//					System.out.println("currLoc: " + currLoc);
+//					System.out.println("destLoc: " + currEdge.getEndLocation());
+//					System.out.println("Updating perfect route to be: " + perfectRoute);
 				}
 			}
 		}
 		
 		saveResults(outputFileName + "-absoluteDivergence.txt", absoluteDivs);
+		saveResults(outputFileName + "-relativeDivergence.txt", relativeDivs);
+		saveResults(outputFileName + "-relativeSpeedDivergence.txt", relativeSpeedDivs);
 	}
 	
 	/**
@@ -292,10 +348,6 @@ public class MotionDivergenceGPS {
 		 */
 		private int destWayPoint;
 		
-		/**
-		 * The ideal path along which the robot should traverse.
-		 */
-		private Line idealEdge;
 		
 		/**
 		 * The divergences from the ideal path that the robot actually traversed.
@@ -305,11 +357,10 @@ public class MotionDivergenceGPS {
 		/**
 		 * The constructor.
 		 * 
-		 * @param destWayPoint The destination waypoint.
+		 * @param destWayPoint The destination way point.
 		 */
-		public DivergenceEdge(int destWayPoint, Line idealEdge) {
+		public DivergenceEdge(int destWayPoint) {
 			this.destWayPoint = destWayPoint;
-			this.idealEdge = idealEdge;
 		}
 		
 		/**
@@ -348,13 +399,6 @@ public class MotionDivergenceGPS {
 		}
 		
 		/**
-		 * @return The ideal edge.
-		 */
-		public Line getIdealEdge() {
-			return idealEdge;
-		}
-		
-		/**
 		 * @return The divergence measurements along this edge.
 		 */
 		public Vector<Divergence> getDivergences() {
@@ -364,8 +408,6 @@ public class MotionDivergenceGPS {
 		public String toString() {
 			StringBuffer sb = new StringBuffer("Towards Way Point ");
 			sb.append(getDestWayPoint());
-			sb.append(", ideal edge: ");
-			sb.append(getIdealEdge());
 			sb.append("\n");
 			
 			for (int i=0; i < divergences.size(); i++) {
@@ -388,6 +430,11 @@ public class MotionDivergenceGPS {
 		 * The time stamp of the divergence measurement.
 		 */
 		private long timeStamp;
+		
+		/**
+		 * The ideal path along which the robot should traverse.
+		 */
+		private Line idealEdge;
 		
 		/**
 		 * The percentage of the edge that the robot has completed traversing.
@@ -419,12 +466,13 @@ public class MotionDivergenceGPS {
 		 * @param idealLoc The ideal location.
 		 * @param divergence The divergence between the robot's actual location and its ideal location.
 		 */
-		public Divergence(long timeStamp, double pctComplete, Location currLoc, Location idealLoc, double divergence) {
+		public Divergence(long timeStamp, double pctComplete, Location currLoc, Location idealLoc, double divergence, Line idealEdge) {
 			this.timeStamp = timeStamp;
 			this.pctComplete = pctComplete;
 			this.currLoc = currLoc;
 			this.idealLoc = idealLoc;
 			this.divergence = divergence;
+			this.idealEdge = idealEdge;
 		}
 		
 		/**
@@ -432,6 +480,13 @@ public class MotionDivergenceGPS {
 		 */
 		public long getTimeStamp() {
 			return timeStamp;
+		}
+		
+		/**
+		 * @return The ideal edge.
+		 */
+		public Line getIdealEdge() {
+			return idealEdge;
 		}
 		
 		/**

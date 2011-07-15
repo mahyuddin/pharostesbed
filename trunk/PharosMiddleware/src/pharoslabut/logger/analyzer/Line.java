@@ -66,7 +66,7 @@ public class Line {
 	 * @param loc The specified location
 	 * @return The closest location
 	 */
-	public Location getClosestLocationTo(Location loc) {
+	public Location getLocationClosestTo(Location loc) {
 		if (isVertical) {
 			/*
 			 * Since this line is vertical, the shortest distance is the
@@ -109,7 +109,7 @@ public class Line {
 	 * traveled from the startLoc towards the destLoc.
 	 * @return The closest location.
 	 */
-	public Location getRelativeSpeedLocation(double distanceTraveled) {
+	public Location getLocationRelativeSpeed(double distanceTraveled) {
 		
 		/*
 		 * This is the location along this line that the robot would
