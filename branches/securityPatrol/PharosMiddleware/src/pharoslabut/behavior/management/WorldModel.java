@@ -43,7 +43,10 @@ public class WorldModel {
 	public synchronized void setCount(int c){count = c;}
 	
 	public synchronized String getCurrentBehaviorName(){return wmCurrentBehavior[wmMyIndex];}
-	public synchronized void setCurrentBehaviorName(String c){wmCurrentBehavior[wmMyIndex] = c;}
+	public synchronized void setCurrentBehaviorName(String c){
+		System.out.print("Set behavior name: "+c+" in location : "+wmMyIndex+System.getProperty("line.separator"));
+		wmCurrentBehavior[wmMyIndex] = new String(c);
+	}
 	public synchronized int getMyIndex(){return wmMyIndex;}
 	
 	public synchronized void setTeamCurrentBehavior(String beh, int index){wmCurrentBehavior[index] = beh;}

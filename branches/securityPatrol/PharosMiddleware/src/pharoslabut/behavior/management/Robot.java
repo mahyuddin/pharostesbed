@@ -1,9 +1,9 @@
 package pharoslabut.behavior.management;
 
 public class Robot {
-	String _ip;
-	int _port;
-	Robot(String ip, int port)
+	private String _ip;
+	private int _port;
+	public Robot(String ip, int port)
 	{
 		_ip = ip;
 		_port = port;
@@ -14,4 +14,8 @@ public class Robot {
 	{
 		System.out.println("Robot: You should send speed command to the robot");
 	}
+	public String GetIP() {return _ip;}
+	public int GetPort(){return _port;}
+	public void SetIP(String ip){_ip = ip;}
+	public void SetPort(int port){_port = port;}
 }
