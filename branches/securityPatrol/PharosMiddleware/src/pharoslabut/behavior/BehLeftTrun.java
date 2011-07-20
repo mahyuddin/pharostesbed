@@ -4,9 +4,9 @@ import pharoslabut.behavior.management.WorldModel;
 
 public class BehLeftTrun extends Behavior{
 
-	public BehLeftTrun(WorldModel wm) {
+	public BehLeftTrun(WorldModel wm, MissionData missiondata) {
 		// TODO Auto-generated constructor stub
-		super(wm);
+		super(wm, missiondata);
 	}
 
 	@Override

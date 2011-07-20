@@ -3,17 +3,17 @@ import java.util.Vector;
 
 import pharoslabut.behavior.management.WorldModel;
 
-
-
-
 public abstract class Behavior {
 	protected Vector<Behavior> _nextVector;
 	protected WorldModel _wm;
+	protected MissionData _misssiondata;
+	protected int _behaveIndex;
 	
-	public Behavior(WorldModel wm) {
+	public Behavior(WorldModel wm, MissionData md) {
 		// TODO Auto-generated constructor stub
 		_nextVector = new Vector<Behavior>();
 		_wm = wm;
+		_misssiondata = md;
 	}
 	public abstract boolean startCondition();
 	public abstract boolean stopCondition();
@@ -21,6 +21,7 @@ public abstract class Behavior {
 	/*This function will be called when behavior start condition is true and 
 	 * the robot waits to its teammates to join the behavior
 	 */
+	
 	public void start()
 	{
 		this.getClass().getSimpleName();
@@ -53,5 +54,14 @@ public abstract class Behavior {
 				e.printStackTrace();
 			}
 	}
+	public void BehSetIndex(int myindex)
+	{
+		_behaveIndex = myindex;
+	}
+	
+	public int BehGetIndex(){
+		return _behaveIndex;
+	}
+
 	
 }
