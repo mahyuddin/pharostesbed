@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.Scanner;
 
 import pharoslabut.behavior.management.WorldModel;
+import pharoslabut.behavior.*;
 
 public class ReadWithScanner {
 
@@ -52,6 +53,54 @@ public class ReadWithScanner {
 			// TODO: handle exception
 		}
 		return null;
+	}
+	
+	public void getLatitudeLongitude(MissionData md[], int numCoord) throws FileNotFoundException{
+		String line;
+		String value;
+		double latitude;
+		double longitude;
+		double velocity;
+		Scanner scanner = new Scanner(new FileReader(fFile));
+		try {
+			// first use a Scanner to get each line
+
+			while (scanner.hasNextLine()) {
+				line = scanner.nextLine();
+				Scanner lineScanner = new Scanner(line);
+				Scanner lineScannerTmp = new Scanner(line);
+				try {
+					lineScanner.useDelimiter(";");
+					lineScannerTmp.useDelimiter(";");
+					// This loop will throw exception when the format is not as
+					// we want
+					for (int i = 0; i < 3; i++)
+						lineScannerTmp.next();
+
+					for (int i = 0; i < numCoord; i++) {
+						value = lineScanner.next().trim();
+						latitude = Double.parseDouble(value);
+						value = lineScanner.next().trim();
+						longitude = Double.parseDouble(value);
+						value = lineScanner.next().trim();
+						velocity = Double.parseDouble(value);
+						md[i] = new MissionData(latitude, longitude, velocity);
+					}
+
+				
+					System.out.println();
+
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
+		
+		
+		
 	}
 
 	public void getTeamIpPort(WorldModel wm) throws FileNotFoundException {
@@ -123,7 +172,7 @@ public class ReadWithScanner {
 	 * <tt>disposition =  "grumpy"</tt>
 	 * <tt>this is the name = this is the value</tt>
 	 */
-	protected void processLine(String aLine) {
+	void processLine(String aLine) {
 		// use a second Scanner to parse the content of each line
 		Scanner scanner = new Scanner(aLine);
 		scanner.useDelimiter("=");
