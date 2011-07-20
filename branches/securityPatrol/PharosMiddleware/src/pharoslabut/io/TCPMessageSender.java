@@ -66,8 +66,8 @@ public class TCPMessageSender implements MessageSender {
 
     		OutputStream os = socket.getOutputStream();
     		ObjectOutputStream oos = new ObjectOutputStream(os);
-
-    		log("Sending the object to the destination.");
+    		
+    		log("Sending the object "+ msg.getType()+" to the destination.");
     		oos.writeObject(msg);
     		oos.flush();
     		os.flush();
