@@ -6,6 +6,7 @@ import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.exceptions.NoNewDataException;
+import playerclient3.structures.gps.PlayerGpsData;
 
 /**
  * Navigates a car to a specified destination.  It calculates which direction
@@ -39,6 +40,7 @@ public class NavigateCompassGPS extends Navigate {
 	private CompassDataBuffer compassDataBuffer;
 	
 	private MotionTask prevTask = null;
+	
 	
 	/**
 	 * A constructor.
@@ -212,6 +214,57 @@ public class NavigateCompassGPS extends Navigate {
 
 	}
 	
+	public PlayerGpsData getLocation(){
+		try {
+			return gpsDataBuffer.getCurrLoc();
+		} catch (NoNewDataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.print("Failed to get current location\n");
+			return null;
+		}
+	}
+
+	public double getCompassHeading(){
+		try {
+			return compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
+		} catch (NoNewDataException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			logErr("Unable to get compass heading\n");
+			return -1;
+		}
+	}
+	
+	public void SubmitMotionTask(TargetDirection targetDirection, double velocity){
+		double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
+		double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
+		//headingError * MIN_VELOCITY/currVel;
+		/*
+		 * Positive heading error means the robot must turn left.
+		 * Negative heading error means the robot must turn right.
+		 */
+		//double headingError = targetDirection.getHeadingError();
+
+		// slow down if the turning rate is too fast
+		//if (Math.abs(headingError) > NAV_SLOW_TURN_ANGLE) {
+		//	currVel = NAV_SLOW_TURN_VELOCITY;
+	    //}
+		
+		//double MAX_VELOCITY = 2.0; // m/s
+		//double MIN_VELOCITY = 0.4;
+		
+		// If the heading error is greater than X and the speed is greater than X, 
+		// proportionally decrease the change in heading sent to the robot
+		//double robotHeadingInstr = headingError * MIN_VELOCITY/currVel;
+
+		MotionTask mt = new MotionTask(Priority.SECOND, currVel, robotHeadingInstr);
+		motionArbiter.submitTask(mt);
+		prevTask = mt;
+		
+		log("Current Instruction:\n\tVelocity: + " + mt.getVelocity() + "\n\tHeading: " + mt.getHeading());
+	}
+	
 	/**
 	 * Calculates the next motion task that should be submitted to the MotionArbiter.
 	 * The new motion tasks heading should ensure the robot continues to move towards the next way point.
@@ -244,32 +297,7 @@ public class NavigateCompassGPS extends Navigate {
 				log("Invalid distance: Greater than 2km (" + targetDirection.getDistance() + "), stopping robot...");
 				stopRobot();
 		} else {
-			double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
-			double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
-			//headingError * MIN_VELOCITY/currVel;
-			/*
-			 * Positive heading error means the robot must turn left.
-			 * Negative heading error means the robot must turn right.
-			 */
-			//double headingError = targetDirection.getHeadingError();
-
-			// slow down if the turning rate is too fast
-			//if (Math.abs(headingError) > NAV_SLOW_TURN_ANGLE) {
-			//	currVel = NAV_SLOW_TURN_VELOCITY;
-		    //}
-			
-			//double MAX_VELOCITY = 2.0; // m/s
-			//double MIN_VELOCITY = 0.4;
-			
-			// If the heading error is greater than X and the speed is greater than X, 
-			// proportionally decrease the change in heading sent to the robot
-			//double robotHeadingInstr = headingError * MIN_VELOCITY/currVel;
-
-			MotionTask mt = new MotionTask(Priority.SECOND, currVel, robotHeadingInstr);
-			motionArbiter.submitTask(mt);
-			prevTask = mt;
-			
-			log("Current Instruction:\n\tVelocity: + " + mt.getVelocity() + "\n\tHeading: " + mt.getHeading());
+			SubmitMotionTask(targetDirection, velocity);
 		}
 		return done;
 	}
