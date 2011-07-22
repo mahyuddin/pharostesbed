@@ -38,7 +38,7 @@ public class Server extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		_wm.setAllMyClientsConnected();
+//		_wm.setAllMyClientsConnected();
 /*		
 		while(true)
 		{
@@ -59,8 +59,9 @@ public class Server extends Thread {
 		for (i = 0; i < _teamSize; i++)
 			if (i != _wm.getMyIndex())
 			{
+				System.out.println("BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);			
 				_out[i].println(_wm.getCurrentBehaviorName());
-				System.out.println("Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
+				System.out.println("AFTER Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
 			}
 	}
 

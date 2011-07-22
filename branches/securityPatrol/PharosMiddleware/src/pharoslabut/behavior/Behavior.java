@@ -46,6 +46,7 @@ public abstract class Behavior {
 	}
 	public void waitToTeam()
 	{
+		System.out.print("Waiting for teammates\n");
 		while(_wm.isTeamSynchronized() == false)
 			try {
 				Thread.currentThread().sleep(50);

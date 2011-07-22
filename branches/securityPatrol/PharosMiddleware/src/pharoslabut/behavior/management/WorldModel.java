@@ -27,8 +27,8 @@ public class WorldModel {
 		connectToAllServers = false;
 	}
 	private int count;
-	public synchronized boolean isAllMyClientsConnected(){return allmyClientConnected;}
-	public synchronized void setAllMyClientsConnected(){allmyClientConnected = true;}
+//	public synchronized boolean isAllMyClientsConnected(){return allmyClientConnected;}
+//	public synchronized void setAllMyClientsConnected(){allmyClientConnected = true;}
 	
 	public synchronized boolean isConnectToAllServers(){return connectToAllServers;}
 	public synchronized void setConnectToAllServers(){connectToAllServers = true;}
@@ -58,8 +58,10 @@ public class WorldModel {
 	{
 		int i;
 		String behaviorName = wmCurrentBehavior[wmMyIndex];
-		if(behaviorName == null)
+		if(behaviorName == null){
+			System.out.print("current behavior NULL\n");
 			return false;
+		}
 		
 /*		if(wmTeamSize == 1)
 			return true;
@@ -74,8 +76,12 @@ public class WorldModel {
 		String teamBeh;
 		boolean isStopTeamMember;
 		for(i=0;i<wmTeamSize;i++)
-		{	if(wmCurrentBehavior[i] == null)
+		{	
+			if(wmCurrentBehavior[i] == null) {
+				System.out.print("behavior "+i+" NULL\n");
 				return false;
+			} else 
+				System.out.print("Behavior "+i+" is "+wmCurrentBehavior[i]);
 			
 		teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
 		isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");

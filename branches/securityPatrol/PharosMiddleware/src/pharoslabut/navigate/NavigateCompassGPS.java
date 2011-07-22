@@ -58,7 +58,7 @@ public class NavigateCompassGPS extends Navigate {
 		this.gpsDataBuffer = gpsDataBuffer;
 	}
 	
-	private void stopRobot() {
+	public void stopRobot() {
 		MotionTask mt = new MotionTask(Priority.SECOND, 0 /* velocity */, 0 /* heading */);
 		motionArbiter.submitTask(mt);
 	}

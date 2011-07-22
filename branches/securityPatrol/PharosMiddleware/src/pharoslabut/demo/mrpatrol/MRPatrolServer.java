@@ -12,13 +12,7 @@ import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.experiment.ExpType;
 //import pharoslabut.experiment.PharosExpServer;
-import pharoslabut.io.Message;
-import pharoslabut.io.MessageReceiver;
-import pharoslabut.io.MotionScriptMsg;
-import pharoslabut.io.RelativeMotionScriptMsg;
-import pharoslabut.io.SetTimeMsg;
-import pharoslabut.io.StartExpMsg;
-import pharoslabut.io.TCPMessageReceiver;
+import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.navigate.MotionScriptFollower;
@@ -40,6 +34,7 @@ import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
+import pharoslabut.behavior.MultiRobotBehaveMsg;
 import pharoslabut.behavior.management.*;
 
 // use pharoslabut.experiment.PharosExpServer as an example.
@@ -79,6 +74,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	private MRPConfData mrpConfdata;
 	
 	private FileLogger flogger = null;
+	
+	/**
+	 * For communicating with other MRPatrolServers...
+	 */
+	private TCPMessageSender msgSender = TCPMessageSender.getSender();
+	private TCPMessageReceiver msgRcvr;
 
 	/**
 	 * The constructor.  Starts the server running.
@@ -216,7 +217,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	}
 	
 	private boolean initPharosServer() {
-		new TCPMessageReceiver(this, pharosServerPort);
+		msgRcvr = new TCPMessageReceiver(this, pharosServerPort);
 		return true;
 	}
 	
@@ -339,6 +340,11 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			log("newMessage: Stopping experiment...");
 			stopExp();
 			break;
+		case UPDATE_BEH_MSG:
+			log("newMessage: updated behavior message...");
+			MultiRobotBehaveMsg mRmsg = (MultiRobotBehaveMsg)msg;
+			manageMRP.updateTeammates(mRmsg.GetBehaveName(), mRmsg.GetRobotID());
+			break;
 		default:
 			log("newMessage: Unknown Message: " + msg);
 		}
@@ -424,7 +430,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 				}
 				NavigateCompassGPS mynavigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
-				manageMRP =new Manager(mrpConfdata, mynavigatorGPS, flogger);
+				manageMRP =new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger);
 				manageMRP.run();
 				break;
 		}

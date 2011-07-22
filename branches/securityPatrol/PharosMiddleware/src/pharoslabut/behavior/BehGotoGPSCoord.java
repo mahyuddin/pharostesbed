@@ -95,11 +95,15 @@ public class BehGotoGPSCoord extends Behavior{
 		if( _LastcurrLoc== null){
 			logErr("BehGotoGPSCoord Stop Condition: no current location (gps is null)");
 			return true;
+		} else {
+			log("Current location: " + _LastcurrLoc);
 		}
+		
 		_LastCurrHeading = _navigatorGPS.getCompassHeading();
 		_LastTargetDirection = _navigatorGPS.locateTarget(_LastcurrLoc, _LastCurrHeading, _destLoc);
 		if (_LastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
 			log("Destination reached!");
+			_navigatorGPS.stopRobot();
 			return true;
 		}else if (_LastTargetDirection.getDistance() > 2000) {
 			log("Invalid distance: Greater than 2km (" + _LastTargetDirection.getDistance() + "), stopping robot...");
