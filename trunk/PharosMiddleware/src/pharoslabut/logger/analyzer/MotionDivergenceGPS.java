@@ -865,7 +865,7 @@ public class MotionDivergenceGPS {
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-h")) {
+				if (args[i].equals("-h") || args[i].equals("-help")) {
 					usage();
 					System.exit(0);
 				}
