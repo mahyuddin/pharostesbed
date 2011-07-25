@@ -5,6 +5,7 @@ import java.util.*;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
+import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
  * Reads log files created by robots as they follow a motion script, 
@@ -12,7 +13,6 @@ import pharoslabut.navigate.Location;
  * plot the traces on a map.  
  * 
  * @author Chien-Liang Fok
- *
  */
 public class GPSVisualize {
 	// These colors were taken from: http://www.angelfire.com/wa/rogerswhome/colorchart.html
@@ -67,8 +67,10 @@ public class GPSVisualize {
 						if (elem.length > 2)
 							captionNames.add(elem[2]);  // user specified the caption name
 						else {
+							String missionName = LogFileNameParser.extractMissionName(elem[1]);
+							String expName = LogFileNameParser.extractExpName(elem[1]);
 							String robotName = LogFileNameParser.extractRobotName(elem[1]); // use the robot name as the caption
-							captionNames.add(robotName);
+							captionNames.add(missionName + "-" + expName + "-" + robotName);
 						}
 						
 						if (elem.length > 3)
@@ -81,7 +83,7 @@ public class GPSVisualize {
 					else if (line.contains("WAYPOINT")) {
 						String[] elem = line.split("[\\s]+");
 						
-						// If specification file includes name of waypoint, use it.
+						// If specification file include a waypoint name, use it.
 						// Otherwise, give it a sequential name.
 						String name;
 						if (elem.length == 4)
@@ -95,6 +97,17 @@ public class GPSVisualize {
 							waypoints.add(new WayPoint(latlong1, latlong2, name));
 						else
 							waypoints.add(new WayPoint(latlong2, latlong1, name));
+					}
+					else if (line.contains("MOTION_SCRIPT")) {
+						String[] elem = line.split("[\\s]+");
+						
+						// Extract the waypoints from the motion script.
+						MotionScript ms = new MotionScript(elem[1]);
+						Location[] wp = ms.getWayPoints();
+						
+						for (int i=0; i < wp.length; i++) {
+							waypoints.add(new WayPoint(wp[i], "Waypoint " + (waypoints.size()+1)));
+						}
 					}
 				}
 				lineno++;
