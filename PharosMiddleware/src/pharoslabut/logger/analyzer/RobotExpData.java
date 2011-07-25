@@ -52,6 +52,16 @@ public class RobotExpData {
 	private FileLogger flogger = null;
 	
 	/**
+	 * Contains the timestamps of when GPS errors occur.
+	 */
+	private Vector<Long> gpsErrors = new Vector<Long>();
+	
+	/**
+	 * Contains the timestamps of when compass errors occur.
+	 */
+	private Vector<Long> headingErrors = new Vector<Long>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the robot's experiment log file.
@@ -290,24 +300,64 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Tokenizes the file name based on the dashes.  Removes all 
+	 * directories from the name.
+	 * 
+	 * @return The tokenized file name.
+	 */
+	private String[] tokenizeFileName() {
+		String robotFileName = fileName;
+		
+		// If the file name contains directories, remove the directories from the name first.
+		if (robotFileName.indexOf("/") != -1)
+			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
+		String[] tokens = robotFileName.split("-");
+		
+//		log("Tokenizing robotFileName = " + robotFileName);
+//		for (int i=0; i < tokens.length; i++) {
+//			log(i + ": " + tokens[i]);
+//		}
+		
+		return tokens;
+	}
+	
+	/**
 	 * Returns the robot's name.
 	 * 
 	 * @return the robot's name, or null if unknown.
 	 */
 	public String getRobotName() {
-		String robotFileName = fileName;
-		
-		// If the file name contains directories, remove the directories
-		// from the name first.
-		if (robotFileName.indexOf("/") != -1)
-			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
-		String[] tokens = robotFileName.split("-");
-		
-//		log("Getting robot name: robotFileName = " + robotFileName);
-//		for (int i=0; i < tokens.length; i++) {
-//			log(i + ": " + tokens[i]);
-//		}
-		return tokens[2];
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 2)
+			return tokens[2];
+		else
+			return null;
+	}
+	
+	/**
+	 * Returns the mission's name.
+	 * 
+	 * @return the mission's name, or null if unknown.
+	 */
+	public String getMissionName() {
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 0)
+			return tokens[0];
+		else
+			return null;
+	}
+	
+	/**
+	 * Returns the experiment's name.
+	 * 
+	 * @return the experiment's name, or null if unknown.
+	 */
+	public String getExpName() {
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 1)
+			return tokens[1];
+		else
+			return null;
 	}
 	
 	/**
@@ -466,6 +516,16 @@ public class RobotExpData {
 				pathEdges.add(currEdge);
 				currEdge = null;
 			}
+			
+			else if (line.contains("ERROR: go: Unable to get the current location")) {
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				gpsErrors.add(timeStamp);
+			}
+			
+			else if (line.contains("ERROR: go: Unable to get the current heading")) {
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				headingErrors.add(timeStamp);
+			}
 		}
 		
 		// Do some sanity checks...
@@ -491,7 +551,6 @@ public class RobotExpData {
 		
 //		pharoslabut.logger.FileLogger flogger = new pharoslabut.logger.FileLogger("CalibrateTime", false);
 		
-		//double diffSum = 0; // the sum of all the diffs
 		TimeCalibrator calibrator = new TimeCalibrator();
 		
 		// Calculate the difference between the log file and GPS timestamps
@@ -508,10 +567,9 @@ public class RobotExpData {
 			int gpsSec = locs.get(i).getLoc().getTime_sec();
 //			int gpsUSec = locs.get(i).getLoc().getTime_usec();
 			
-			// Calculate the difference between the two time stamps this is in second units
+			// Calculate the difference between the two timestamps this is in second units
 			double diff = (localTimestamp / 1000.0) - gpsSec;
 			
-			//diffSum += diff;
 			calibrator.addCalibrationPoint(localTimestamp, diff * 1000);
 			
 //			String str = localTimestamp + "\t" + gpsSec +"\t" + diff;
@@ -519,15 +577,7 @@ public class RobotExpData {
 //			flogger.log(str);
 		}
 		
-		// Calculate the average offset in milliseconds and use it to calibrate all of the local timestamps.
-		//double timeOffset = diffSum / locs.size() * 1000;
-		
-//		String str = "timeOffset: " + timeOffset;
-//		System.out.println(str);
-//		flogger.log(str);
-		
 		// Calibrate all of the timestamps...
-		//expStartTime = RobotExpData.getCalibratedTime(expStartTime, timeOffset);
 		expStartTime = calibrator.getCalibratedTime(expStartTime);
 		
 		for (int i=0; i < locations.size(); i++) {
@@ -549,17 +599,40 @@ public class RobotExpData {
 			TelosBTxRecord txRec = telosBTxHist.get(i);
 			txRec.calibrateTime(calibrator);
 		}
+		
+		for (int i=0; i < gpsErrors.size(); i++) {
+			gpsErrors.set(i, calibrator.getCalibratedTime(gpsErrors.get(i)));
+		}
+		
+		for (int i=0; i < headingErrors.size(); i++) {
+			headingErrors.set(i, calibrator.getCalibratedTime(headingErrors.get(i)));
+		}
 	}
 	
 	/**
-	 * Returns the calibrated timestamp to one second accuracy.
 	 * 
-	 * @param timestamp The recorded timestamp.  This may be inaccurate.
-	 * @return The calibrated timestamp.  This is accurate to within one second.
+	 * @return A vector containing the timestamps of when the GPS sensor failed.
 	 */
-	public static long getCalibratedTime(long timestamp, double offset) {
-		return Math.round(timestamp - offset);
+	public Vector<Long> getGPSErrors() {
+		return gpsErrors;
 	}
+	
+	/**
+	 * 
+	 * @return A vector containing the timestamps of when the heading sensor failed.
+	 */
+	public Vector<Long> getHeadingErrors() {
+		return headingErrors;
+	}
+//	/**
+//	 * Returns the calibrated timestamp to one second accuracy.
+//	 * 
+//	 * @param timestamp The recorded timestamp.  This may be inaccurate.
+//	 * @return The calibrated timestamp.  This is accurate to within one second.
+//	 */
+//	public static long getCalibratedTime(long timestamp, double offset) {
+//		return Math.round(timestamp - offset);
+//	}
 	
 	/**
 	 * Returns the TelosB wireless packet reception history.
@@ -595,6 +668,19 @@ public class RobotExpData {
 	 */
 	public Vector<TelosBTxRecord> getTelosBTxHist() {
 		return telosBTxHist;
+	}
+	
+	/**
+	 * 
+	 * @return The waypoints of the motion script.
+	 */
+	public Vector<Location> getWayPoints() {
+		Vector<Location> results = new Vector<Location>();
+		for (int i=0; i < pathEdges.size(); i++) {
+			PathEdge pe = pathEdges.get(i);
+			results.add(pe.getEndLocation());
+		}
+		return results;
 	}
 
 	/**
