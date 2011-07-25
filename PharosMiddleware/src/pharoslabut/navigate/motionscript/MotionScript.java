@@ -3,6 +3,7 @@ package pharoslabut.navigate.motionscript;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -84,6 +85,23 @@ public class MotionScript implements java.io.Serializable {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @return the waypoints within this motion script, in the order traversed by the robot.
+	 */
+	public Location[] getWayPoints() {
+		ArrayList<Location> result = new ArrayList<Location>();
+		Enumeration<Instruction> e = instructions.elements();
+		while (e.hasMoreElements()) {
+			Instruction currInst = e.nextElement();
+			if (currInst.getType().equals(InstructionType.MOVE)) {
+				Move moveInstr = (Move)currInst;
+				result.add(moveInstr.getDest());
+			}
+		}
+		return result.toArray(new Location[result.size()]);
 	}
 	
 	/**
