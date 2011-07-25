@@ -9,7 +9,7 @@ import java.util.Vector;
 import pharoslabut.navigate.Location;
 
 /**
- * This contains a list of instructions that control the movement and wireless
+ * Contains a list of instructions that control the movement and wireless
  * communication of the robot.
  * 
  * @author Chien-Liang Fok
@@ -86,6 +86,9 @@ public class MotionScript implements java.io.Serializable {
 		return result;
 	}
 	
+	/**
+	 * Reads in a motion script.  Initializes all local variables.
+	 */
 	private void readMotionScript() {
 		try {
 			BufferedReader input =  new BufferedReader(new FileReader(fileName));
@@ -162,6 +165,8 @@ public class MotionScript implements java.io.Serializable {
 		}
 		catch (IOException ex){
 			ex.printStackTrace();
+			// fatal Error
+			System.exit(1);
 		}
 	}
 	
