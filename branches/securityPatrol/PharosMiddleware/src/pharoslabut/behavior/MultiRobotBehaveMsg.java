@@ -9,22 +9,27 @@ public class MultiRobotBehaveMsg implements AckableMessage{
 		private static final long serialVersionUID = -7631305555004386678L;
 		
 		private String _behaveName;
-		int _robotID;
-		InetAddress _replyAddress;
-		int _replyPort;
-		
-		public MultiRobotBehaveMsg(String behavename, int myID, InetAddress replyAddress, int replyPort) {
+		private int _robotID; 
+		private InetAddress _replyAddress;
+		private int _replyPort;
+		private int _behaveID;
+
+		public MultiRobotBehaveMsg(String behavename, int behaveID, int myID, InetAddress replyAddress, int replyPort) {
 			_behaveName = new String(behavename);
+			_behaveID = behaveID;
 			_robotID = myID;
 			_replyAddress = replyAddress;
 			_replyPort = replyPort;
 		}
 		
-		public String GetBehaveName() {
+		public String getBehaveName() {
 			return _behaveName;
 		}
 		
-		public int GetRobotID(){
+		public int getBehaveID(){
+			return _behaveID;
+		}
+		public int getRobotID(){
 			return _robotID;
 		}
 		
