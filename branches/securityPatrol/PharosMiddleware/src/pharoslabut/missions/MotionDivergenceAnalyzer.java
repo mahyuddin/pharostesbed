@@ -289,7 +289,8 @@ public class MotionDivergenceAnalyzer {
 //			GPSLocationState currGpsLoc = edge.getLocation(i);
 //			Location currLoc = new Location(currGpsLoc.getLoc());
 			
-			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
+			Location closestLoc = perfectRoute.getLocationClosestTo(currLoc);
+			double distToOptimal = closestLoc.distanceTo(currLoc);
 			
 			long time = (currTime - edge.getStartTime());
 			double pctComplete = (((double)time / (double)edge.getDuration()) * 100.0);
@@ -338,7 +339,8 @@ public class MotionDivergenceAnalyzer {
 			
 			long time = (currTime - edge.getStartTime());
 			double pctComplete = (((double)time / (double)edge.getDuration()) * 100.0);
-			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc);
+			Location closestLoc = perfectRoute.getLocationClosestTo(currLoc);
+			double distToOptimal = closestLoc.distanceTo(currLoc);
 			
 			System.out.println("analyzeEdgeRelativeDivergence: Adding result: " + pctComplete + " " + distToOptimal);
 			if (Double.isNaN(distToOptimal)) {
@@ -412,7 +414,8 @@ public class MotionDivergenceAnalyzer {
 			 */
 			double deltaDist = perfectRoute.getStartLoc().distanceTo(currLoc);
 			
-			double distToOptimal = perfectRoute.shortestDistanceTo(currLoc, deltaDist);
+			Location closestLoc = perfectRoute.getLocationRelativeSpeed(deltaDist);
+			double distToOptimal = closestLoc.distanceTo(currLoc);
 			
 			result.add(new ResultDatumEdge(++i, time, pctComplete, distToOptimal));
 			//log(flogger, (i+1) + "\t" + time + "\t" + pctComplete + "\t" + distToOptimal);

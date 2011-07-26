@@ -54,7 +54,7 @@ public class GroundTruth {
 			RobotTrueLocData currRobotData = new RobotTrueLocData(currRobot.getRobotID());
 			robotLocs.put(currRobot.getRobotID(), currRobotData);
 			
-			long startTime = currRobot.getRobotStartTime();
+			long startTime = currRobot.getStartTime();
 			
 			// Get the actual locations of the robot at each time step and add it
 			// to the result.

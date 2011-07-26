@@ -10,7 +10,7 @@ import pharoslabut.navigate.Location;
 import playerclient3.structures.gps.PlayerGpsData;
 
 /**
- * Encapsulates the data recorded by a robot during an experiment.
+ * Holds the data recorded by a robot during an experiment.
  * 
  * @author Chien-Liang Fok
  */
@@ -32,15 +32,6 @@ public class RobotExpData {
 	private Vector<PathEdge> pathEdges = new Vector<PathEdge>();
 	
 	/**
-	 * The offset in ms between the local timestamps and the GPS timestamps.
-	 * This is used to calibrate the timestamps recorded within the experiment
-	 * data.  The equation for calibrating the time is:
-	 * 
-	 * True time = Local timestamp - timeOffset.
-	 */
-	//private double timeOffset;
-	
-	/**
 	 * The locations of the robot as it traversed this edge.
 	 */
 	private Vector <GPSLocationState> locations = new Vector<GPSLocationState>();
@@ -55,7 +46,20 @@ public class RobotExpData {
 	 */
 	private Vector<TelosBTxRecord> telosBTxHist = new Vector<TelosBTxRecord>();
 	
+	/**
+	 * For logging debug messages.
+	 */
 	private FileLogger flogger = null;
+	
+	/**
+	 * Contains the timestamps of when GPS errors occur.
+	 */
+	private Vector<Long> gpsErrors = new Vector<Long>();
+	
+	/**
+	 * Contains the timestamps of when compass errors occur.
+	 */
+	private Vector<Long> headingErrors = new Vector<Long>();
 	
 	/**
 	 * The constructor.
@@ -98,12 +102,12 @@ public class RobotExpData {
 		Vector<TelosBRxRecord> result = new Vector<TelosBRxRecord>();
 		
 		long startTime = timestamp - windowSize/2;
-		if (startTime < getRobotStartTime())
-			startTime = getRobotStartTime();
+		if (startTime < getStartTime())
+			startTime = getStartTime();
 		
 		long stopTime = timestamp + windowSize/2;
-		if (stopTime > getRobotStopTime())
-			stopTime = getRobotStopTime();
+		if (stopTime > getStopTime())
+			stopTime = getStopTime();
 		
 		Enumeration<TelosBRxRecord> e = telosBRxHist.elements();
 		while (e.hasMoreElements()) {
@@ -296,24 +300,64 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Tokenizes the file name based on the dashes.  Removes all 
+	 * directories from the name.
+	 * 
+	 * @return The tokenized file name.
+	 */
+	private String[] tokenizeFileName() {
+		String robotFileName = fileName;
+		
+		// If the file name contains directories, remove the directories from the name first.
+		if (robotFileName.indexOf("/") != -1)
+			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
+		String[] tokens = robotFileName.split("-");
+		
+//		log("Tokenizing robotFileName = " + robotFileName);
+//		for (int i=0; i < tokens.length; i++) {
+//			log(i + ": " + tokens[i]);
+//		}
+		
+		return tokens;
+	}
+	
+	/**
 	 * Returns the robot's name.
 	 * 
 	 * @return the robot's name, or null if unknown.
 	 */
 	public String getRobotName() {
-		String robotFileName = fileName;
-		
-		// If the file name contains directories, remove the directories
-		// from the name first.
-		if (robotFileName.indexOf("/") != -1)
-			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
-		String[] tokens = robotFileName.split("-");
-		
-//		log("Getting robot name: robotFileName = " + robotFileName);
-//		for (int i=0; i < tokens.length; i++) {
-//			log(i + ": " + tokens[i]);
-//		}
-		return tokens[2];
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 2)
+			return tokens[2];
+		else
+			return null;
+	}
+	
+	/**
+	 * Returns the mission's name.
+	 * 
+	 * @return the mission's name, or null if unknown.
+	 */
+	public String getMissionName() {
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 0)
+			return tokens[0];
+		else
+			return null;
+	}
+	
+	/**
+	 * Returns the experiment's name.
+	 * 
+	 * @return the experiment's name, or null if unknown.
+	 */
+	public String getExpName() {
+		String[] tokens = tokenizeFileName();
+		if (tokens.length > 1)
+			return tokens[1];
+		else
+			return null;
 	}
 	
 	/**
@@ -346,12 +390,21 @@ public class RobotExpData {
 		String line = null;
 		PathEdge currEdge = null;
 		PlayerGpsData currLoc = null;
+		boolean expStartTimeSet = false;
 		
-		while (( line = br.readLine()) != null){
+		while ((line = br.readLine()) != null){
 			if (line.contains("Starting experiment at time:")) {
 				String[] tokens = line.split("[: ]");
-				this.expStartTime = Long.valueOf(tokens[8]);
+				expStartTime = Long.valueOf(tokens[8]);
+				log("readFile: expStartTime = " + expStartTime);
+				expStartTimeSet = true;
 			}
+			else if (line.contains("Starting experiment at time")) {
+				String[] tokens = line.split("[. ]");
+				expStartTime = Long.valueOf(tokens[7]);
+				log("readFile: expStartTime = " + expStartTime);
+				expStartTimeSet = true;
+			} 
 			else if (line.contains("WayPointFollower: Going to") 
 					|| line.contains("MotionScriptFollower: Going to")) 
 			{
@@ -390,67 +443,30 @@ public class RobotExpData {
 			}
 			
 			// This was used prior to Mission 17
-			else if (line.contains("GPSDataBuffer: New GPS Data:")) {
+			else if (line.contains("New GPS Data:")) {
+				String keyStr = "New GPS Data:";
+				String gpsLine = line.substring(line.indexOf(keyStr) + keyStr.length());
 				
-				String[] tokens = line.split("[:=(), ]");
-				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
+				String[] tokens = gpsLine.split("[:=(), ]");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				currLoc = new PlayerGpsData();
-				currLoc.setAltitude(Integer.valueOf(tokens[18]));
-				currLoc.setErr_horz(Double.valueOf(tokens[32]));
-				currLoc.setErr_vert(Double.valueOf(tokens[34]));
-				currLoc.setHdop(Integer.valueOf(tokens[28]));
-				currLoc.setLatitude(Integer.valueOf(tokens[14]));
-				currLoc.setLongitude(Integer.valueOf(tokens[16]));
-				currLoc.setNum_sats(Integer.valueOf(tokens[26]));
-				currLoc.setQuality(Integer.valueOf(tokens[24]));
-				currLoc.setTime_sec(Integer.valueOf(tokens[10]));
-				currLoc.setTime_usec(Integer.valueOf(tokens[12]));
-				currLoc.setUtm_e(Double.valueOf(tokens[20]));
-				currLoc.setUtm_n(Double.valueOf(tokens[22]));
-				currLoc.setVdop(Integer.valueOf(tokens[30]));
+				currLoc.setAltitude(Integer.valueOf(tokens[12]));
+				currLoc.setErr_horz(Double.valueOf(tokens[26]));
+				currLoc.setErr_vert(Double.valueOf(tokens[28]));
+				currLoc.setHdop(Integer.valueOf(tokens[22]));
+				currLoc.setLatitude(Integer.valueOf(tokens[8]));
+				currLoc.setLongitude(Integer.valueOf(tokens[10]));
+				currLoc.setNum_sats(Integer.valueOf(tokens[20]));
+				currLoc.setQuality(Integer.valueOf(tokens[18]));
+				currLoc.setTime_sec(Integer.valueOf(tokens[4]));
+				currLoc.setTime_usec(Integer.valueOf(tokens[6]));
+				currLoc.setUtm_e(Double.valueOf(tokens[14]));
+				currLoc.setUtm_n(Double.valueOf(tokens[16]));
+				currLoc.setVdop(Integer.valueOf(tokens[24]));
 				
-				// Only add the GPSLocation if it is valid.  It is valid if the 
-				// latitude is 
 				Location l = new Location(currLoc);
-				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {
-					locations.add(new GPSLocationState(timeStamp, currLoc));
-					if (currEdge != null) {
-						if (!currEdge.hasStartLoc())
-							currEdge.setStartLoc(l);
-					}
-				} else {
-					log("Rejecting invalid location: " + currLoc);
-				}
-			}
-			
-			// This was used during Mission 17 and onwards
-			else if (line.contains("GPSDataBuffer: run: New GPS Data:")) {
-				
-				String[] tokens = line.split("[\\[\\]:=(), ]");
-//				for (int i=0; i < tokens.length; i++) {
-//					System.out.println(i + ": " + tokens[i]);
-//				}
-				
-				long timeStamp = Long.valueOf(tokens[1]);
-				currLoc = new PlayerGpsData();
-				currLoc.setAltitude(Integer.valueOf(tokens[22]));
-				currLoc.setErr_horz(Double.valueOf(tokens[36]));
-				currLoc.setErr_vert(Double.valueOf(tokens[38]));
-				currLoc.setHdop(Integer.valueOf(tokens[32]));
-				currLoc.setLatitude(Integer.valueOf(tokens[18]));
-				currLoc.setLongitude(Integer.valueOf(tokens[20]));
-				currLoc.setNum_sats(Integer.valueOf(tokens[30]));
-				currLoc.setQuality(Integer.valueOf(tokens[28]));
-				currLoc.setTime_sec(Integer.valueOf(tokens[14]));
-				currLoc.setTime_usec(Integer.valueOf(tokens[16]));
-				currLoc.setUtm_e(Double.valueOf(tokens[24]));
-				currLoc.setUtm_n(Double.valueOf(tokens[26]));
-				currLoc.setVdop(Integer.valueOf(tokens[34]));
-				
-				// Only add the GPSLocation if it is valid.  It is valid if the 
-				// latitude is 
-				Location l = new Location(currLoc);
-				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {
+				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {  // Only add the GPSLocation if it is valid.
 					locations.add(new GPSLocationState(timeStamp, currLoc));
 					if (currEdge != null) {
 						if (!currEdge.hasStartLoc())
@@ -500,6 +516,27 @@ public class RobotExpData {
 				pathEdges.add(currEdge);
 				currEdge = null;
 			}
+			
+			else if (line.contains("ERROR: go: Unable to get the current location")) {
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				gpsErrors.add(timeStamp);
+			}
+			
+			else if (line.contains("ERROR: go: Unable to get the current heading")) {
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				headingErrors.add(timeStamp);
+			}
+		}
+		
+		// Do some sanity checks...
+		if (!expStartTimeSet) {
+			logErr("readFile: ERROR: experiment start time not set!");
+			System.exit(1);
+		}
+		
+		if (locations.size() == 0) {
+			logErr("readFile: ERROR: robot has no known locations...");
+			System.exit(1);
 		}
 	}
 	
@@ -514,7 +551,6 @@ public class RobotExpData {
 		
 //		pharoslabut.logger.FileLogger flogger = new pharoslabut.logger.FileLogger("CalibrateTime", false);
 		
-		//double diffSum = 0; // the sum of all the diffs
 		TimeCalibrator calibrator = new TimeCalibrator();
 		
 		// Calculate the difference between the log file and GPS timestamps
@@ -531,10 +567,9 @@ public class RobotExpData {
 			int gpsSec = locs.get(i).getLoc().getTime_sec();
 //			int gpsUSec = locs.get(i).getLoc().getTime_usec();
 			
-			// Calculate the difference between the two time stamps this is in second units
+			// Calculate the difference between the two timestamps this is in second units
 			double diff = (localTimestamp / 1000.0) - gpsSec;
 			
-			//diffSum += diff;
 			calibrator.addCalibrationPoint(localTimestamp, diff * 1000);
 			
 //			String str = localTimestamp + "\t" + gpsSec +"\t" + diff;
@@ -542,15 +577,7 @@ public class RobotExpData {
 //			flogger.log(str);
 		}
 		
-		// Calculate the average offset in milliseconds and use it to calibrate all of the local timestamps.
-		//double timeOffset = diffSum / locs.size() * 1000;
-		
-//		String str = "timeOffset: " + timeOffset;
-//		System.out.println(str);
-//		flogger.log(str);
-		
 		// Calibrate all of the timestamps...
-		//expStartTime = RobotExpData.getCalibratedTime(expStartTime, timeOffset);
 		expStartTime = calibrator.getCalibratedTime(expStartTime);
 		
 		for (int i=0; i < locations.size(); i++) {
@@ -572,17 +599,40 @@ public class RobotExpData {
 			TelosBTxRecord txRec = telosBTxHist.get(i);
 			txRec.calibrateTime(calibrator);
 		}
+		
+		for (int i=0; i < gpsErrors.size(); i++) {
+			gpsErrors.set(i, calibrator.getCalibratedTime(gpsErrors.get(i)));
+		}
+		
+		for (int i=0; i < headingErrors.size(); i++) {
+			headingErrors.set(i, calibrator.getCalibratedTime(headingErrors.get(i)));
+		}
 	}
 	
 	/**
-	 * Returns the calibrated timestamp to one second accuracy.
 	 * 
-	 * @param timestamp The recorded timestamp.  This may be inaccurate.
-	 * @return The calibrated timestamp.  This is accurate to within one second.
+	 * @return A vector containing the timestamps of when the GPS sensor failed.
 	 */
-	public static long getCalibratedTime(long timestamp, double offset) {
-		return Math.round(timestamp - offset);
+	public Vector<Long> getGPSErrors() {
+		return gpsErrors;
 	}
+	
+	/**
+	 * 
+	 * @return A vector containing the timestamps of when the heading sensor failed.
+	 */
+	public Vector<Long> getHeadingErrors() {
+		return headingErrors;
+	}
+//	/**
+//	 * Returns the calibrated timestamp to one second accuracy.
+//	 * 
+//	 * @param timestamp The recorded timestamp.  This may be inaccurate.
+//	 * @return The calibrated timestamp.  This is accurate to within one second.
+//	 */
+//	public static long getCalibratedTime(long timestamp, double offset) {
+//		return Math.round(timestamp - offset);
+//	}
 	
 	/**
 	 * Returns the TelosB wireless packet reception history.
@@ -618,6 +668,19 @@ public class RobotExpData {
 	 */
 	public Vector<TelosBTxRecord> getTelosBTxHist() {
 		return telosBTxHist;
+	}
+	
+	/**
+	 * 
+	 * @return The waypoints of the motion script.
+	 */
+	public Vector<Location> getWayPoints() {
+		Vector<Location> results = new Vector<Location>();
+		for (int i=0; i < pathEdges.size(); i++) {
+			PathEdge pe = pathEdges.get(i);
+			results.add(pe.getEndLocation());
+		}
+		return results;
 	}
 
 	/**
@@ -699,7 +762,7 @@ public class RobotExpData {
 	 * 
 	 * @return The robot's start time.
 	 */
-	public long getRobotStartTime() {
+	public long getStartTime() {
 		return expStartTime;
 	}
 	
@@ -709,7 +772,7 @@ public class RobotExpData {
 	 * 
 	 * @return The experiment end time.
 	 */
-	public long getRobotStopTime() {
+	public long getStopTime() {
 		long result = -1;
 		
 		// Find the time when the robot finished traversing the last edge.
@@ -748,12 +811,12 @@ public class RobotExpData {
 		Vector<Integer> result = new Vector<Integer>();
 		
 		long startTime = timestamp - windowSize;
-		if (startTime < getRobotStartTime())
-			startTime = getRobotStartTime();
+		if (startTime < getStartTime())
+			startTime = getStartTime();
 		
 		long stopTime = timestamp;
-		if (stopTime > getRobotStopTime())
-			stopTime = getRobotStopTime();
+		if (stopTime > getStopTime())
+			stopTime = getStopTime();
 		
 		Enumeration<TelosBRxRecord> e = telosBRxHist.elements();
 		while (e.hasMoreElements()) {
@@ -783,7 +846,7 @@ public class RobotExpData {
 	 * 
 	 * @return the initial location of the robot when the experiment began.
 	 */
-	public Location getBeginLocation() {
+	public Location getStartLocation() {
 		return locations.get(0).getLocation();
 	}
 	
@@ -808,13 +871,13 @@ public class RobotExpData {
 	 * @return The location of the robot at the specified time.
 	 */
 	public Location getLocation(long timestamp) {
-		if (timestamp < getRobotStartTime()) {
-			log("WARNING: getLocation(timestamp): timestamp prior to robot start time. (" + timestamp + " < " + getRobotStartTime() + ")");
-			return getBeginLocation();
+		if (timestamp < getStartTime()) {
+			logErr("WARNING: getLocation: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			return getStartLocation();
 		}
 		
-		if (timestamp > getRobotStopTime()) {
-			log("WARNING: getLocation(timestamp): timestamp after robot end time. (" + getRobotStopTime() + " < " + timestamp + ")");
+		if (timestamp > getStopTime()) {
+			logErr("WARNING: getLocation: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
@@ -839,7 +902,7 @@ public class RobotExpData {
 			}
 		}
 		
-		log("getLocation(timestamp): timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		log("getLocation: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		if (beforeIndx == afterIndx)
 			return new Location(locations.get(beforeIndx).getLoc());
@@ -904,10 +967,11 @@ public class RobotExpData {
 		
 		Location result = new Location(interpLat, interpLon);
 		
-		log("RobotExpData.getInterpolatedLoc:", flogger);
-		log("\tBefore Location @" + time1 + ": (" + lat1 + ", " + lon1 + ")", flogger);
-		log("\tAfter Location @" + time2 + ": (" +  lat2 + ", " + lon2 + ")", flogger);
-		log("\tInterpolated Location @" + timestamp + ": " + result, flogger);
+		log("RobotExpData.getInterpolatedLoc:\n"
+			+ "\tBefore Location @ " + time1 + ": (" + lat1 + ", " + lon1 + ")\n"
+			+ "\tAfter Location @ " + time2 + ": (" +  lat2 + ", " + lon2 + ")\n"
+			+ "\tInterpolated Location @ " + timestamp + ": " + result, flogger);
+		
 		return result;
 	}
 	
@@ -964,13 +1028,13 @@ public class RobotExpData {
 	 * @return The relative time that has passed since the robot start time.
 	 */
 	private long getRelativeTime(long time) {
-		return (time - getRobotStartTime())/1000;
+		return (time - getStartTime())/1000;
 	}
 	
 	public String toString() {
 		String result = 
 			"File Name: " + getFileName()
-			+ "\nRobot Start Time: " + getRobotStartTime()
+			+ "\nRobot Start Time: " + getStartTime()
 			+ "\nNumber of path edges: " + pathEdges.size();
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge currEdge = pathEdges.get(i);
@@ -1014,23 +1078,23 @@ public class RobotExpData {
 			print("GPS timestamp calibration OK!");
 		}
 		
-		print("Robot start time: " + red.getRobotStartTime());
+		print("Robot start time: " + red.getStartTime());
 		
 		boolean testGetLocation = false;
 		if (testGetLocation) {
 			// Check whether the getLocation method is OK
 			print("Evaluating RobotExpData.getLocation(long timestamp)...");
-			print("\tExperiment start time: " + red.getRobotStartTime());
+			print("\tExperiment start time: " + red.getStartTime());
 			String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
 			FileLogger flogger = new FileLogger(testGetLocFileName, false);
 
 			//int pathEdgeToCheck = 15;
 
 			flogger.log("type,latitude,longitude,name,color");
-			long currTime = red.getRobotStartTime();
+			long currTime = red.getStartTime();
 			//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
 			boolean firstLoc = true;
-			while (currTime < red.getRobotStopTime()) {
+			while (currTime < red.getStopTime()) {
 				//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
 				Location currLoc = red.getLocation(currTime);
 				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();

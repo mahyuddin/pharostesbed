@@ -49,7 +49,7 @@ public class ConnectivityVsTime {
 					Enumeration<RobotExpData> e = expData.getRobotEnum();
 					while (e.hasMoreElements()) {
 						currRobot = e.nextElement();	
-						logErr(currRobot.getRobotName() + "\t" + currRobot.getRobotStartTime() + "\t" + currRobot.getRobotStopTime());
+						logErr(currRobot.getRobotName() + "\t" + currRobot.getStartTime() + "\t" + currRobot.getStopTime());
 					}
 					System.exit(1);
 				}
