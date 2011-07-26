@@ -218,9 +218,8 @@ public class NavigateCompassGPS extends Navigate {
 		try {
 			return gpsDataBuffer.getCurrLoc();
 		} catch (NoNewDataException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.print("Failed to get current location\n");
+			logErr("getLocation: Failed to get current location\n");
 			return null;
 		}
 	}
@@ -231,7 +230,7 @@ public class NavigateCompassGPS extends Navigate {
 		} catch (NoNewDataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			logErr("Unable to get compass heading\n");
+			logErr("getCompassHeading: Unable to get compass heading\n");
 			return -1;
 		}
 	}
