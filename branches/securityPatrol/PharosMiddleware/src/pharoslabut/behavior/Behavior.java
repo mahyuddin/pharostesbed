@@ -44,17 +44,7 @@ public abstract class Behavior {
 		
 		return null;
 	}
-	public void waitToTeam()
-	{
-		System.out.print("Waiting for teammates\n");
-		while(_wm.isTeamSynchronized() == false)
-			try {
-				Thread.currentThread().sleep(50);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	}
+
 	public void BehSetIndex(int myindex)
 	{
 		_behaveIndex = myindex;
