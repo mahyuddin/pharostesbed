@@ -32,7 +32,7 @@ public class Manager {
 	private TCPMessageSender _sender;
 	
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger, boolean manageDynamic){
-		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex());
+		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
@@ -40,7 +40,7 @@ public class Manager {
 		_flogger = flogger;
 		_manageDynamic = manageDynamic;
 		
-		System.out.print("Manager: number of robots:"+mrpConfdata.GetNumRobots()+" nummissions: "+mrpConfdata.GetNumMissions());
+		log("Manager: number of robots:"+mrpConfdata.GetNumRobots()+" nummissions: "+mrpConfdata.GetNumMissions());
 		for(int index = 0; index<mrpConfdata.GetNumRobots(); index++){
 			_wm.setIp(index,mrpConfdata.GetRobotData(index).GetIP());
 			_wm.setPort(index, mrpConfdata.GetRobotData(index).GetPort());
@@ -107,11 +107,12 @@ public class Manager {
 		int numberRounds = _CircularRepeats*_behVect.size();
 		while(_current != null)
 		{
-			log("running behavior "+_current.getClass().getName()+_currentIndex);
+			log("run: running behavior "+_current.getClass().getName()+_currentIndex);
 
 			//running the action loop
 			while(!_current.stopCondition())
 			{
+				log("run: stop condition false, continue to run...");
 				synchronized(this) {
 				
 					try {
@@ -121,18 +122,22 @@ public class Manager {
 						e.printStackTrace();
 					}
 				}
+				
+				log("run: calling action...");
 				_current.action();
+				
+				log("run: calling sendBehaviorToClients...");
 				// This will act as keep-alive message
 				sendBehaviorToClients();
+				
+				log("run: end of current loop...");
 			}
-			log("Manager.run(): End behavior");
+			log("run: End behavior");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
 			sendBehaviorToClients();
 			log("Sending -- stop"+_current.getClass().getName()+_currentIndex+" to my clients");
 			waitToTeam();
-			
-			
 			
 			_current = _current.getNext();
 			if(_current == null)
@@ -147,16 +152,16 @@ public class Manager {
 			if(numberRounds<=0)
 				break;
 			numberRounds--;
-
 		}
 		
-		log("Program finished");
+		log("run: Program finished");
 		System.exit(0);
 	}
 	
 	private void sendBehaviorToClients() {
 		int i;
 		MultiRobotBehaveMsg msg = null;
+		log("sendBehaviorToClients: Sending behavior to teammates: behavior name " + _wm.getCurrentBehaviorName()+ " behavior ID: "+ _wm.getCurrentBehaviorID()+" my index "+ _wm.getMyIndex()+ "my port "+ _wm.getMyPort()+"\n");
 		
 		try {
 			msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex(), InetAddress.getByName(_wm.getMyIp()), _wm.getMyPort());
@@ -168,7 +173,7 @@ public class Manager {
 		for (i = 0; i < _wm.getTeamSize(); i++)
 			if (i != _wm.getMyIndex())
 			{
-				System.out.println("BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);			
+				log("sendBehaviorToClients: BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);			
 				
 				try {
 					_sender.sendMessage(InetAddress.getByName(_wm.getIp(i)), _wm.getPort(i), msg);
@@ -181,13 +186,13 @@ public class Manager {
 				}
 				//_out[i].println(_wm.getCurrentBehaviorName());
 				
-				log("AFTER Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
+				log("sendBehaviorToClients: AFTER Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
 			}
 	}
 
 	public void waitToTeam()
 	{
-		log("Waiting for teammates\n");
+		log("waitToTeam: Waiting for teammates\n");
 		boolean continueLoop;
 		
 		if(_manageDynamic) {

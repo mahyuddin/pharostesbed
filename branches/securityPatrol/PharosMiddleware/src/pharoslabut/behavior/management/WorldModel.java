@@ -1,6 +1,7 @@
 package pharoslabut.behavior.management;
 
 import pharoslabut.behavior.fileParsing.StringParsing;
+import pharoslabut.logger.FileLogger;
 
 public class WorldModel {
 
@@ -17,13 +18,25 @@ public class WorldModel {
 	final String _outofRange = "OUT_OF_RANGE";
 	final int MAX_WAITING_PERIOD = 60000;
 	
+	private FileLogger _flogger = null;
+	
 //	private boolean connectToAllServers;
 	//The robot index in team
 	private int wmMyIndex;
-	WorldModel(int teamSize, int robotIndex)
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param teamSize The number of robots in the team.
+	 * @param robotIndex this robot's index within the team.
+	 * @param flogger The file logger for debugging (may be null).
+	 */
+	WorldModel(int teamSize, int robotIndex, FileLogger flogger)
 	{
 		wmTeamSize = teamSize;
 		wmMyIndex = robotIndex;
+		_flogger = flogger;
+		
 		wmCurrentBehavior = new String[wmTeamSize];
 		teamIp = new String[wmTeamSize];
 		teamPort = new int[wmTeamSize];
@@ -95,7 +108,7 @@ public class WorldModel {
 		String behaviorName = wmCurrentBehavior[wmMyIndex];
 		
 		if(behaviorName == null){
-			System.out.print("current behavior NULL\n");
+			log("isTeamSynchronized: current behavior NULL\n");
 			return false;
 		}
 		
@@ -114,10 +127,10 @@ public class WorldModel {
 		for(i=0;i<wmTeamSize;i++)
 		{	
 			if(wmCurrentBehavior[i] == null) {
-				System.out.print("behavior "+i+" NULL\n");
+				log("isTeamSynchronized: Behavior " + i + " is NULL\n");
 				return false;
 			} else 
-				System.out.print("Behavior "+i+" is "+wmCurrentBehavior[i]);
+				log("isTeamSynchronized: Behavior " + i + " is " + wmCurrentBehavior[i]);
 
 			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
 			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
@@ -142,6 +155,7 @@ public class WorldModel {
 		int i;
 		String behaviorName = wmCurrentBehavior[wmMyIndex];
 		
+		log("isTeamSynchronizedDynamically: entering dynamic synchronization\n");
 		if(behaviorName == null){
 			System.out.print("current behavior NULL\n");
 			return false;
@@ -162,17 +176,17 @@ public class WorldModel {
 		for(i=0;i<wmTeamSize;i++)
 		{	
 			if(wmCurrentBehavior[i] == null) {
-				System.out.print("behavior "+i+" NULL\n");
+				log("isTeamSynchronizedDynamically: behavior "+i+" NULL\n");
 				return false;
 			} else 
-				System.out.print("Behavior "+i+" is "+wmCurrentBehavior[i]);
+				log("isTeamSynchronizedDynamically: Behavior "+i+" is "+wmCurrentBehavior[i]);
 
 			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
 			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
 			
 			//If team member is out of range - disregard it
 			if(teamBeh.equals(_outofRange)){
-				System.out.println("Team memebr " + i + " behavior is marked as OUT_OF_RANGE");
+				log("isTeamSynchronizedDynamically: Team member " + i + " behavior is marked as OUT_OF_RANGE");
 				continue;
 			}
 			// If team member's behavior ID is smaller than mine - I have to wait for it. 
@@ -201,4 +215,25 @@ public class WorldModel {
 		return true;
 	}
 	
+	private void logErr(String msg) {
+		String result = "WorldModel: ERROR: " + msg;
+		
+		System.err.println(result);
+		
+		// always log text to file if a FileLogger is present
+		if (_flogger != null)
+			_flogger.log(result);
+	}
+	
+	private void log(String msg) {
+		String result = "WorldModel: " + msg;
+		
+		// only print log text to string if in debug mode
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		
+		// always log text to file if a FileLogger is present
+		if (_flogger != null)
+			_flogger.log(result);
+	}
 }

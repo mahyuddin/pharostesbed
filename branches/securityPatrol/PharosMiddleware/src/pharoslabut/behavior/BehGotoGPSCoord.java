@@ -15,6 +15,7 @@ import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 */
+import playerclient3.structures.gps.PlayerGpsData;
 
 public class BehGotoGPSCoord extends Behavior{
 	
@@ -65,10 +66,10 @@ public class BehGotoGPSCoord extends Behavior{
 		
 		if(_simulateAll)
 			return true;
-		log("\t BehGotoGPSCoord: start condition for behavior "+_behaveIndex);
+		log("startCondition: start condition for behavior "+_behaveIndex);
 		currLoc = new Location(_navigatorGPS.getLocation());
 		if( currLoc== null){
-			logErr("BehGotoGPSCoord Start condition: no current location (GPS null)");
+			logErr("startCondition: Start condition: no current location (GPS null)");
 			return false;
 		}
 			
@@ -78,38 +79,52 @@ public class BehGotoGPSCoord extends Behavior{
 
 	@Override
 	public boolean stopCondition() {
+		log("stopCondition: start method call...");
+		
+		_LastTargetDirection = null; // reset the direction command...
+		
 		// simulation mode - run each behavior 10 times
 		int mycounter = _wm.getCount();
-		if(_simulateAll){
-			_wm.setCount(mycounter+1);
-			log("Running behavior "+_behaveIndex+" for the "+mycounter+" time");
-			if (mycounter < 20)
-				return false;
-			else
-				return true;
-		}
-			
+//		if(_simulateAll){
+//			_wm.setCount(mycounter+1);
+//			log("Running behavior "+_behaveIndex+" for the "+mycounter+" time");
+//			if (mycounter < 20)
+//				return false;
+//			else
+//				return true;
+//		}
+//			
 			// If the coordinates are not close enough to the destination - continue moving.
-			
-		_LastcurrLoc = new Location(_navigatorGPS.getLocation());
+		
+		
+		PlayerGpsData pgpsd = _navigatorGPS.getLocation();
+		if (pgpsd != null)
+			_LastcurrLoc = new Location(pgpsd);
+		else
+			_LastcurrLoc = null;
+		
 		if( _LastcurrLoc== null){
-			logErr("BehGotoGPSCoord Stop Condition: no current location (gps is null)");
-			return true;
+			logErr("stopCondition: Stop Condition: no current location (gps is null)");
+			//return true;
+			
+			// No GPS data at this time, continue to execute the current behavior
+			return false;
 		} else {
-			log("Current location: " + _LastcurrLoc);
+			log("stopCondition: Current location: " + _LastcurrLoc);
 		}
 		
 		_LastCurrHeading = _navigatorGPS.getCompassHeading();
 		_LastTargetDirection = _navigatorGPS.locateTarget(_LastcurrLoc, _LastCurrHeading, _destLoc);
 		if (_LastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
-			log("Destination reached!");
+			log("stopCondition: Destination reached!");
 			_navigatorGPS.stopRobot();
 			return true;
 		}else if (_LastTargetDirection.getDistance() > 2000) {
-			log("Invalid distance: Greater than 2km (" + _LastTargetDirection.getDistance() + "), stopping robot...");
+			logErr("stopCondition: Invalid distance: Greater than 2km (" + _LastTargetDirection.getDistance() + "), stopping robot...");
+			_navigatorGPS.stopRobot();
 			return true;
 		} else{
-			log("Haven't reached destination yet, stop condition false\n");
+			log("stopCondition: Haven't reached destination yet, stop condition false\n");
 			return false;
 		}
 	}
@@ -118,8 +133,13 @@ public class BehGotoGPSCoord extends Behavior{
 	public void action() {
 		if(_simulateAll)
 			return;
-		_navigatorGPS.SubmitMotionTask(_LastTargetDirection, _md.GetVelocity());
-		log("running action()\n");
+		if (_LastTargetDirection != null) { 
+			_navigatorGPS.SubmitMotionTask(_LastTargetDirection, _md.GetVelocity());
+			log("action: Running action, _LastTargetDirection=" + _LastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
+		} else { //stop robot if we have no GPS data
+			log("action: Last target direction not set, stopping the robot...");
+			_navigatorGPS.stopRobot();
+		}
 	}
 		
 		
