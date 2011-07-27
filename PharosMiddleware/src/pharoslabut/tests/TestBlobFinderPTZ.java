@@ -9,7 +9,7 @@ import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
- * This is intended to test the servos controling the pan and tilt of the CMUCam2.
+ * This is intended to test the servos controlling the pan and tilt of the CMUCam2.
  * It is a small test of the PTZ service. It connects to the PTZ 
  * interface and pans and tilts the camera.
  * 
@@ -96,7 +96,9 @@ public class TestBlobFinderPTZ {
 //			}
 //			pause(100);
 //		} // end while(true)
-//		System.exit(0);
+		
+		log("End of test.");
+		System.exit(0);
 	}
 	
 	private void log(String msg) {
