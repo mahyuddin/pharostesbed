@@ -1,24 +1,25 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.*;
-import pharoslabut.sensors.BlobFinderVisualizer;
+//import pharoslabut.sensors.BlobFinderVisualizer;
 
 import playerclient3.*;
-import playerclient3.structures.blobfinder.*;
+//import playerclient3.structures.blobfinder.*;
 import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
- * A small test of the PTZ service. Connects to the BlobFinderInterface, and periodically
- * polls it for data.  It prints all of the blob data received to the screen.
+ * This is intended to test the servos controling the pan and tilt of the CMUCam2.
+ * It is a small test of the PTZ service. It connects to the PTZ 
+ * interface and pans and tilts the camera.
  * 
  * @author Chien-Liang Fok
  */
 public class TestBlobFinderPTZ {
 	private FileLogger flogger = null;
 	private PlayerClient client = null;	
-	private BlobfinderInterface bfi = null;
-	private BlobFinderVisualizer visualizer;
+//	private BlobfinderInterface bfi = null;
+//	private BlobFinderVisualizer visualizer;
 		
 	/**
 	 * The constructor.
@@ -38,9 +39,9 @@ public class TestBlobFinderPTZ {
 		} catch (PlayerException e) { System.out.println("Error, could not connect to server."); System.exit(1); }
 		
 		// connect to blobfinder
-		try {
-			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
+//		try {
+//			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
+//		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
 		
 		// connect to PTZ
 		PtzInterface ptz = null;
@@ -48,11 +49,11 @@ public class TestBlobFinderPTZ {
 			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}	
 		
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-            	visualizer = new BlobFinderVisualizer(flogger);
-            }
-        });
+//		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+//            public void run() {
+//            	visualizer = new BlobFinderVisualizer(flogger);
+//            }
+//        });
 		
 		log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
@@ -115,7 +116,7 @@ public class TestBlobFinderPTZ {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestBlobFinder <options>\n");
+		System.err.println("Usage: pharoslabut.tests.TestBlobFinderPTZ <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
