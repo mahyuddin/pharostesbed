@@ -9,7 +9,7 @@ import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
- * A small test of the BlobFinder service. Connects to the BlobFinderInterface, and periodically
+ * A small test of the PTZ service. Connects to the BlobFinderInterface, and periodically
  * polls it for data.  It prints all of the blob data received to the screen.
  * 
  * @author Chien-Liang Fok
