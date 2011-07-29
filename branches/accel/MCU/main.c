@@ -21,6 +21,7 @@
 #include "Tach.h"
 #include "Compass.h"
 #include "adc.h"
+#include "Lynx_Accel.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz

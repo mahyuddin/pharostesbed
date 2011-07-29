@@ -212,9 +212,9 @@ result_t proteus_open(proteus_comm_t* r) {
 	 */
 	cfmakeraw(&term); 
 	
-	// Set 57600 baud
-	cfsetispeed(&term, B57600); 
-	cfsetospeed(&term, B57600);
+	// Set 115200 baud
+	cfsetispeed(&term, B115200); 
+	cfsetospeed(&term, B115200);
 	
 	/*
 	 * Apply the changes to the serial port.
@@ -630,6 +630,73 @@ result_t processIRPacket(proteus_comm_t* r) {
 	}
 }
 
+result_t processAccelPacket(proteus_comm_t* r) {
+	timeval _currTime;
+	if (rxSerialBufferSize(r) >= PROTEUS_ACCEL_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
+		uint8_t data; // temporary variable for holding data from the serial Rx buffer.
+		uint16_t distance = 0;
+		
+		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
+		popRxSerialBuff(r, NULL); // pop PROTEUS IR PACKET
+		
+		// The next 6 bytes are the distance reading for 
+		// X_AXIS,Y_AXIS,Z_AXIS in that order
+		
+		// The first two bytes are X_AXIS
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);		
+		distance = data;
+		
+		if(distance < 1023 && distance > 0){
+			r->accel_x_axis = distance;
+			r->newACCELdata = 1;
+		}
+		
+		// The first two bytes are Y_AXIS
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);		
+		distance = data;
+		
+		if(distance < 1023 && distance > 0){
+			r->accel_y_axis = distance;
+			r->newACCELdata = 1;
+		}
+
+			// The first two bytes are Z_AXIS
+		popRxSerialBuff(r, &data);
+		distance = ((data << 8) & 0xFF00);
+		popRxSerialBuff(r, &data);
+		distance += (data & 0x00FF);		
+		distance = data;
+	
+		if(distance < 1023 && distance > 0){
+			r->accel_z_axis = distance;
+			r->newACCELdata = 1;
+		}
+	
+		popRxSerialBuff(r, NULL); // pop PROTEUS_END
+		
+		if (r->newACCELdata) {
+			// taking this out... because this massive printing lags the performance of the computer too much
+			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
+			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
+			printf("proteus_comms: processIRPacket: Front Right : %f mm\n", ((r->newIRdata)?(r->ir_fr):0));
+			printf("proteus_comms: processIRPacket: Rear Left   : %f mm\n", ((r->newIRdata)?(r->ir_rl):0));
+			printf("proteus_comms: processIRPacket: Rear Center : %f mm\n", ((r->newIRdata)?(r->ir_rc):0));
+			printf("proteus_comms: processIRPacket: Rear Right  : %f mm\n\n", ((r->newIRdata)?(r->ir_rr):0));
+			*/
+		}
+		
+		return SUCCESS;
+	} else {
+		return FAIL;  // else not enough data has arrived yet, wait till next time
+	}
+}
+
 result_t processCompassPacket(proteus_comm_t* r) {
 	timeval _currTime;
 	if (rxSerialBufferSize(r) >= PROTEUS_COMPASS_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
@@ -910,6 +977,8 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 			case PROTEUS_TEXT_MESSAGE_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
+			case PROTEUS_ACCEL_PACKET:
+				return processAccelPacket(r);
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.
