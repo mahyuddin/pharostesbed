@@ -147,6 +147,7 @@ class Proteus : public ThreadedDriver {
 		void updatePos2D();
 		void updateCompass();
 		void updateIR();
+		void updateAccel();                      ////////new for accelerometer interface
 		//void updateSonar();
 		//void updateOpaque();
 		
@@ -172,6 +173,7 @@ class Proteus : public ThreadedDriver {
 		//player_devaddr_t sonar_addr;
 		player_devaddr_t opaque_addr;
 		player_devaddr_t compass_addr;
+		player_devaddr_t accel_addr;                      ////accel interface
 		
 		
 		// The underlying proteus object
@@ -185,6 +187,7 @@ class Proteus : public ThreadedDriver {
 		player_ir_pose ir_array;
 		player_sonar_geom sonar_array;
 		player_opaque_data_t opaque_data;
+		player_accel_data accel_data;
 		
 		// Whether the interface is being used
 		uint16_t interfacesEnabled;
@@ -227,6 +230,7 @@ Proteus::Proteus(ConfigFile* cf, int section)
 	//memset(&this->sonar_addr,0,sizeof(player_devaddr_t));
 	memset(&this->opaque_addr,0,sizeof(player_devaddr_t));
 	memset(&this->compass_addr, 0, sizeof(player_devaddr_t));
+	memset(&this->accel_addr, 0, sizeof(player_devaddr_t));  ///////////////////added for accel
 	
 	// Reset the interfaces enabled...
 	interfacesEnabled = 0;
@@ -273,7 +277,19 @@ Proteus::Proteus(ConfigFile* cf, int section)
 		}
 		interfacesEnabled |= IR_INTERFACE;
 	}
-	
+
+		// Do we create an Accelerometer interface?
+	if(cf->ReadDeviceAddr(&(this->accel_addr), section, "provides", PLAYER_ACCEL_CODE, -1, NULL) == 0) {
+		if(this->AddInterface(this->accel_addr) != 0) {
+			this->SetError(-1);
+			return;
+		}
+		interfacesEnabled |= ACCEL_INTERFACE;
+	}
+
+
+
+
 	// Do we create a sonar interface?
 	/*if(cf->ReadDeviceAddr(&(this->sonar_addr), section, "provides", PLAYER_SONAR_CODE, -1, NULL) == 0) {
 		if(this->AddInterface(this->sonar_addr) != 0) {
@@ -425,6 +441,28 @@ void Proteus::updateCompass() {
 }
 
 /**
+ * Take the new Accel data and publish it.
+ */
+void Proteus::updateAccel() {
+	player_accel_data accel_data;   
+
+	memset(&accel_data,0,sizeof(accel_data)); // clear the irdata struct
+	
+	accel_data.ranges_count = 2;
+	accel_data = new float [accel_data.ranges_count];
+	accel_data[0] = this->proteus_dev->accel_x_axis;
+	accel_data[1] = this->proteus_dev->accel_y_axis;
+	accel_data[2] = this->proteus_dev->accel_z_axis;
+	
+
+	printf("Publishing Accel data: %f, %f, %f\n", accel_data[0], accel_data[1],     
+		accel_data[2]);
+	
+	this->Publish(this->accel_addr, PLAYER_MSGTYPE_DATA, player_accel_data, (void*)&accel_data);
+	delete [] accel_data.ranges;
+}
+
+/**
  * Take the new IR data and publish it.
  */
 void Proteus::updateIR() {
@@ -572,6 +610,11 @@ void Proteus::Main() {
 				if (this->proteus_dev->newCompassData) {
 					this->updateCompass();
 					this->proteus_dev->newCompassData = false;
+				}
+				if (this->proteus_dev->newACCELdata) {
+					printf("proteus_driver: main: Publishing new Accel data!\n");
+					this->updateAccel();
+					this->proteus_dev->newACCELdata = false;
 				}
 				
 				if (this->proteus_dev->newIRdata) {

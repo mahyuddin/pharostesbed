@@ -230,6 +230,26 @@ void Command_sendIRPacket(void) {
 	}
 }
 
+void Command_sendAccelPacket(void) {
+	uint8_t outToSerial[MAX_PACKET_LEN];
+	uint16_t indx = 0; // an index into the _outToSerial array
+	uint16_t i;
+	
+	outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_ACCEL_PACKET;  // Identify data as IR packet
+	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_x_axis()); // Package x
+	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_y_axis()); // Package y
+	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_z_axis()); // Package z 
+		
+	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+	
+	//i should equal PROTEUS_ACCEL_PACKET_SIZE 
+	// Send all of the ACCEL Data through the Serial Port
+	for(i=0; i<indx; i++) {
+		SerialDriver_sendByte(outToSerial[i]);
+	}
+}
+
 /**
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
@@ -336,6 +356,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 		case PROTEUS_OPCODE_SENSORS:
 			processOpcodeSensors();
 			break;*/
+	
 		default: 
 			//LED_ORANGE2 ^= 1; // Command not recognized, toggle LED_RED3
 			break; 

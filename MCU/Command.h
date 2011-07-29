@@ -31,11 +31,13 @@
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
+#define PROTEUS_OPCODE_ACCEL		0X6C
 
 #define POSITION2D_INTERFACE 0x01
 #define COMPASS_INTERFACE 0x02
 #define IR_INTERFACE 0x04
 #define OPAQUE_INTERFACE 0x08
+#define ACCEL_INTERFACE 0X10
 
 enum{
   PROTEUS_MODE_OFF,
@@ -54,7 +56,8 @@ enum {
 	PROTEUS_TACHOMETER_PACKET,
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
-	PROTEUS_TEXT_MESSAGE_PACKET
+	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ACCEL PACKET
 };
 
 /**
@@ -78,11 +81,18 @@ typedef struct ProteusCompassPacket {
 	uint16_t heading;
 } proteusCompassPkt;
 
+typedef struct ProteusAccelPacket  {
+	uint8_t pktType;
+	uint16_t x_axis;
+	uint16_t y_axis;
+	uint16_t z_axis;
+}proteusAccelPkt; 
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE      5
 #define PROTEUS_IR_PACKET_SIZE           12
 #define PROTEUS_SONAR_PACKET_SIZE        12
 #define PROTEUS_OPAQUE_PACKET_SIZE        1
+#define PROTEUS_ACCEL_PACKET_SIZE         7
 
 #define PROTEUS_PACKET_OVERHEAD           2
 #define MAX_CMD_LEN 20
@@ -114,6 +124,6 @@ void Command_sendStatus(void);
 void Command_sendIRPacket(void);
 void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
-
+void Command_sendAccelPacket(void);
 
 #endif /* _PROTEUS_COMMAND_H */

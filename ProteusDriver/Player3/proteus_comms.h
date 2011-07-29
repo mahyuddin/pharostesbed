@@ -47,6 +47,7 @@ extern "C" {
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
+#define PROTEUS_OPCODE_ACCEL		0x6C
 
 enum{
   PROTEUS_MODE_OFF,                  
@@ -67,6 +68,7 @@ enum{
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
 	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ACCEL_PACKET
 };
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE 5
@@ -78,6 +80,7 @@ enum{
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
+#define PROTEUS_ACCEL_PACKET_SIZE         7 
 
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
 
@@ -88,6 +91,8 @@ enum{
 #define COMPASS_INTERFACE 0x02
 #define IR_INTERFACE 0x04
 #define OPAQUE_INTERFACE 0x08
+#define ACCEL_INTERFACE 0x10 
+
 
 // This is used to distinguish the type of compass data
 enum {
@@ -95,13 +100,14 @@ enum {
 	PWM_DATA,
 };
 
-const int ProteusPacketInfo[6] = {
+const int ProteusPacketInfo[7] = {
 	0,
 	PROTEUS_ODOMETRY_PACKET_SIZE,
 	PROTEUS_IR_PACKET_SIZE,
 	PROTEUS_SONAR_PACKET_SIZE,
 	PROTEUS_COMPASS_PACKET_SIZE,
-	PROTEUS_OPAQUE_PACKET_SIZE
+	PROTEUS_OPAQUE_PACKET_SIZE,
+	PROTEUS_ACCEL_PACKET_SIZE
 };
 
 #define PROTEUS_FRONT_TO_REAR_AXLE     .258 //meters
@@ -164,6 +170,8 @@ typedef struct {
 	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
 	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
 	
+
+	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
 	float accelerometer_y;	//accelerometer y-axis force, read
@@ -179,6 +187,7 @@ typedef struct {
 	
 	uint8_t newMessage;
 	uint8_t messageBuffer[PROTEUS_MAX_TEXT_MESSAGE_LENGTH];
+
 	
 	/*
 	float srf_fl;			//front left SRF08 ultrasonic rangefinder distance, read
@@ -199,6 +208,7 @@ typedef struct {
 	int16_t statusMotorPower;
 	int16_t statusSteeringAngle;
 	
+	
 	/**
 	 * The following variables are used to buffer incoming serial data.
 	 * The buffer is empty when _rxBuffStartIndx = _rxBuffEndIndx.
@@ -206,6 +216,13 @@ typedef struct {
 	uint8_t serialRxBuffer[SERIAL_RX_BUFFER_SIZE];
 	uint16_t rxBuffStartIndx; // points to the next Rx byte to process
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
+
+	uint16_t newACCELdata;
+	float accel_x_axis;  //xaxis accelerometer data
+	float accel_y_axis;  //yaxis accelerometer data
+	float accel_z_axis;  //zaxis accelerometer data
+	
+
 } proteus_comm_t;
 
 proteus_comm_t* proteus_create(const char* serial_port);
