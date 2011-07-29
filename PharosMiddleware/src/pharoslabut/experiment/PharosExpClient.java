@@ -68,7 +68,9 @@ public class PharosExpClient {
 			
 			// Send each robot the start experiment command.
 			int delay = 0;
+			
 			StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
+			
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				
@@ -77,6 +79,8 @@ public class PharosExpClient {
 				
 				// Update the delay between each robot.
 				delay += expConfig.getStartInterval();
+				
+				sem.setDelay(delay);
 			}
 		} catch(Exception e) {
 			logErr("Problem while communicating with the robots...");
