@@ -62,21 +62,27 @@ public class Manager {
 		log("Manager: after _CircularRepeats\n");
 		_current = _behVect.get(0);
 		_currentIndex = 0;
-		try {
-		log("Manager: before vector print\n");
-		log("behavior number "+_behVect.get(0).BehGetIndex()+" and next is "+_behVect.get(0).getNext().BehGetIndex()+"\n");
-		log("behavior number "+_behVect.get(1).BehGetIndex()+" and next is "+_behVect.get(1).getNext().BehGetIndex()+"\n");
-		log("behavior number "+_behVect.get(2).BehGetIndex()+" and next is "+_behVect.get(2).getNext().BehGetIndex()+"\n");
-		log("behavior number "+_behVect.get(3).BehGetIndex()+" and next is "+_behVect.get(3).getNext().BehGetIndex()+"\n");
-		log("behavior number "+_behVect.get(4).BehGetIndex()+" and next is "+_behVect.get(4).getNext().BehGetIndex()+"\n");
-		log("behavior number "+_behVect.get(5).BehGetIndex()+" and next is "+_behVect.get(5).getNext().BehGetIndex()+"\n");
-		log("finished printing 6 behaviors\n");
-		} catch(Exception e) {
-			log("ERROR: " + e.getMessage());
-		}
+//		try {
+//		log("Manager: before vector print\n");
+//		log("behavior number "+_behVect.get(0).BehGetIndex()+" and next is "+_behVect.get(0).getNext().BehGetIndex()+"\n");
+//		log("behavior number "+_behVect.get(1).BehGetIndex()+" and next is "+_behVect.get(1).getNext().BehGetIndex()+"\n");
+//		log("behavior number "+_behVect.get(2).BehGetIndex()+" and next is "+_behVect.get(2).getNext().BehGetIndex()+"\n");
+//		log("behavior number "+_behVect.get(3).BehGetIndex()+" and next is "+_behVect.get(3).getNext().BehGetIndex()+"\n");
+//		log("behavior number "+_behVect.get(4).BehGetIndex()+" and next is "+_behVect.get(4).getNext().BehGetIndex()+"\n");
+//		log("behavior number "+_behVect.get(5).BehGetIndex()+" and next is "+_behVect.get(5).getNext().BehGetIndex()+"\n");
+//		log("finished printing 6 behaviors\n");
+//		} catch(Exception e) {
+//			log("ERROR: " + e.getMessage());
+//		}
+//		
 		
-		for(int kk=0;kk<_behVect.size();kk++){
-			log("behavior number "+_behVect.get(kk).BehGetIndex()+" and next is "+_behVect.get(kk).getNext().BehGetIndex()+System.getProperty("line.separator"));
+		try{
+			for(int kk=0;kk<_behVect.size();kk++){
+				log("behavior number "+_behVect.get(kk).BehGetIndex());
+				log("next is "+_behVect.get(kk).getNext().BehGetIndex());
+			}
+		}catch(Exception e){
+			log("Error: " + e.getMessage());
 		}
 		
 		
@@ -88,11 +94,13 @@ public class Manager {
 
 	
 	public void updateTeammates(String behavename, int teammateID, int behaveID){
+		log("updateTeammates: new behavior " + behavename + " for teammate " + teammateID + " behaveID " + behaveID);
 		_wm.setTeamCurrentBehavior(behavename, teammateID, behaveID);
 	}
 	
 	public void run()
 	{
+		log("run: running Manager\n");
 
 		if(_current.startCondition() == false)
 		{
@@ -173,15 +181,15 @@ public class Manager {
 		for (i = 0; i < _wm.getTeamSize(); i++)
 			if (i != _wm.getMyIndex())
 			{
-				log("sendBehaviorToClients: BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);			
+				log("sendBehaviorToClients: BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i + "on port "+ _wm.getPort(i) + " IP address" + _wm.getIp(i)+ "\n");			
 				
 				try {
 					_sender.sendMessage(InetAddress.getByName(_wm.getIp(i)), _wm.getPort(i), msg);
 				} catch (UnknownHostException e) {
-					// TODO Auto-generated catch block
+					logErr("sendBehaviorToClients: UnknownHostException: " + e.getMessage());
 					e.printStackTrace();
 				} catch (PharosException e) {
-					// TODO Auto-generated catch block
+					logErr("sendBehaviorToClients: PharosException: " + e.getMessage());
 					e.printStackTrace();
 				}
 				//_out[i].println(_wm.getCurrentBehaviorName());
@@ -192,7 +200,7 @@ public class Manager {
 
 	public void waitToTeam()
 	{
-		log("waitToTeam: Waiting for teammates\n");
+		log("waitToTeam: Waiting for teammates, dynamic = "+_manageDynamic+"\n");
 		boolean continueLoop;
 		
 		if(_manageDynamic) {
@@ -202,6 +210,8 @@ public class Manager {
 			continueLoop = _wm.isTeamSynchronized() ;
 
 		while( continueLoop == false) {
+			// send message to the teammates also while waiting for updates
+			sendBehaviorToClients();
 			try {
 				Thread.currentThread().sleep(50);
 			} catch (InterruptedException e) {

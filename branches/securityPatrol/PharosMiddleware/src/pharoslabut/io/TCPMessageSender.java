@@ -57,28 +57,34 @@ public class TCPMessageSender implements MessageSender {
      * @param msg the message to be sent.
      * @throws PharosException whenever an error occurs.
      */
-    public void sendMessage(InetAddress address, int port, Message msg) throws PharosException {
+    public void sendMessage(final InetAddress address, final int port, final Message msg) throws PharosException {
     	
-    	try {
-    		log("Opening TCP socket to " + address + ":" + port);
-    		Socket socket = new Socket(address, port);
-    		socket.setTcpNoDelay(true);
+    	new Thread() {
+    		public void run() {
 
-    		OutputStream os = socket.getOutputStream();
-    		ObjectOutputStream oos = new ObjectOutputStream(os);
-    		
-    		log("Sending the object "+ msg.getType()+" to the destination.");
-    		oos.writeObject(msg);
-    		oos.flush();
-    		os.flush();
+    			try {
+    				log("Opening TCP socket to " + address + ":" + port);
+    				Socket socket = new Socket(address, port);
+    				socket.setTcpNoDelay(true);
 
-    		log("Closing the socket to the destination host.");
-    		socket.close();
+    				OutputStream os = socket.getOutputStream();
+    				ObjectOutputStream oos = new ObjectOutputStream(os);
 
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    		throw new PharosException(e.getMessage());
-    	}
+    				log("Sending the object "+ msg.getType()+" to the destination.");
+    				oos.writeObject(msg);
+    				oos.flush();
+    				os.flush();
+
+    				log("Closing the socket to the destination host.");
+    				socket.close();
+
+    			} catch(Exception e) {
+    				e.printStackTrace();
+    				log("ERROR while sending: " + e.getMessage());
+    				//throw new PharosException(e.getMessage());
+    			}
+    		}
+    	}.start();
     }
 	
 	void log(String msg) {

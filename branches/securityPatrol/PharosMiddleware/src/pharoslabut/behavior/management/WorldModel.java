@@ -140,12 +140,17 @@ public class WorldModel {
 			
 			//Get Teammate's behavior ID
 			
-			if(isStop == false && behPureName.equals(teamBeh)==false)
+			if(isStop == false && behPureName.equals(teamBeh)==false) {
+				log("isTeamSynchronized: isstop = false; behPureName.equals(teamBeh) = false");
 				return false;
-			if((isStop == true) && (isStopTeamMember == false) && (behPureName.equals(teamBeh)))
+			}
+			if((isStop == true) && (isStopTeamMember == false) && (behPureName.equals(teamBeh))) {
+				log("isTeamSynchronized: isstop = true; isStopTeamMember = false; behPureName.equals(teamBeh) = true");
 				return false;
+			}
 			
 		}
+		log("isTeamSynchronized: team is synchronized");
 		return true;
 	}
 	

@@ -3,6 +3,8 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.logger.FileLogger;
+
 /**
  * Accepts clients connects and listens for messages of these clients.
  *
@@ -29,6 +31,8 @@ public class TCPMessageReceiver implements Runnable {
 	 * The port being listened to.
 	 */
 	private int port;
+	
+	private FileLogger flogger = null;
     
 	/**
 	 * A constructor for creating a TCPMessageReceiver that listens to any free port.
@@ -76,6 +80,13 @@ public class TCPMessageReceiver implements Runnable {
     }
     
     /**
+     * Sets the file logger.
+     */
+    public void setFileLogger(FileLogger flogger) {
+    	this.flogger = flogger;
+    }
+    
+    /**
      * @return The port on which this receiver is listening.
      */
     public int getPort() {
@@ -97,8 +108,12 @@ public class TCPMessageReceiver implements Runnable {
     }
 	
 	void log(String msg) {
+		String result = "TCPMessageReceiver: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("TCPMessageReceiver: " + msg);
+			System.out.println(result);
+		
+		if (flogger != null)
+			flogger.log(result);
 	}
     
     /**
@@ -176,6 +191,7 @@ public class TCPMessageReceiver implements Runnable {
 				
 				if (o!= null && o instanceof Message) {
 					Message msg = (Message)o;
+					log("Read in object: " + msg);
 					receiver.newMessage(msg);
 				}
 			} catch(ClassNotFoundException e) {
@@ -190,8 +206,13 @@ public class TCPMessageReceiver implements Runnable {
 		}
 		
 		void log(String msg) {
+			String result = "TCPMessageReceiver: ClientHandler: " + msg;
+			
 			if (System.getProperty ("PharosMiddleware.debug") != null)
-				System.out.println("TCPMessageReceiver: ClientHandler: " + msg);
+				System.out.println(result);
+			
+			if (flogger != null)
+				flogger.log(result);
 		}
     }
 }

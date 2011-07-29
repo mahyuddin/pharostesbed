@@ -19,6 +19,8 @@ import playerclient3.structures.gps.PlayerGpsData;
  * @author Chien-Liang Fok
  */
 public class NavigateCompassGPS extends Navigate {
+	
+	public static final double ERROR_HEADING = Double.MIN_VALUE;
 	// Define the maximum turn angle in radians.  This is for the Traxxas mobility plane.
 	// TODO: Generalize the MAX_TURN_ANGLE to work with any mobility plane
 	public static final double MAX_TURN_ANGLE = 0.35; 
@@ -231,7 +233,7 @@ public class NavigateCompassGPS extends Navigate {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			logErr("getCompassHeading: Unable to get compass heading\n");
-			return -1;
+			return ERROR_HEADING;
 		}
 	}
 	

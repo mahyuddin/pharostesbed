@@ -367,6 +367,8 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		flogger = new FileLogger(fileName);
 		
+		log("startExp: starting experiment\n");
+		
 		if(gpsDataBuffer == null){
 			System.err.print("gpsDataBuffer is null before setting logger\n");
 			System.exit(1);
@@ -378,6 +380,8 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		if (wifiBeaconBroadcaster != null)			wifiBeaconBroadcaster.setFileLogger(flogger);
 		if (wifiBeaconReceiver != null) 			wifiBeaconReceiver.setFileLogger(flogger);
 		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
+		if (msgSender != null) 					msgSender.setFileLogger(flogger);
+		if (msgRcvr != null)					msgRcvr.setFileLogger(flogger);
 		
 		log("startExp: Starting experiment at time " + System.currentTimeMillis() + "...");
 		

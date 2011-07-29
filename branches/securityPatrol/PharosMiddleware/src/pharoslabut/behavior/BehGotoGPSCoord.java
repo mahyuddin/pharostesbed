@@ -49,11 +49,12 @@ public class BehGotoGPSCoord extends Behavior{
 		_LastcurrLoc = null;
 		_md = md;
 		
-		log("Constructor behavior");
+		log("Constructor behavior; latitude = "+ _md.GetLatitude()+ "longitude = "+ _md.GetLongitude());
+
 		_navigatorGPS = navigateData;
 		
 		
-		_destLoc = new Location(md.GetLatitude(), md.GetLongitude());
+		_destLoc = new Location(_md.GetLatitude(), _md.GetLongitude());
 		_LastTargetDirection = null;
 	}
 	
@@ -133,11 +134,15 @@ public class BehGotoGPSCoord extends Behavior{
 	public void action() {
 		if(_simulateAll)
 			return;
-		if (_LastTargetDirection != null) { 
+		if (_LastTargetDirection != null && (_LastCurrHeading != NavigateCompassGPS.ERROR_HEADING)) { 
 			_navigatorGPS.SubmitMotionTask(_LastTargetDirection, _md.GetVelocity());
 			log("action: Running action, _LastTargetDirection=" + _LastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
 		} else { //stop robot if we have no GPS data
-			log("action: Last target direction not set, stopping the robot...");
+			if(_LastTargetDirection == null)
+				log("action: Last target direction not set, stopping the robot...");
+			else
+				log("action: _LastCurrHeading is not valid, stopping the robot...");
+			
 			_navigatorGPS.stopRobot();
 		}
 	}
