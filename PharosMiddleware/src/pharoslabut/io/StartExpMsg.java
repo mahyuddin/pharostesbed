@@ -67,6 +67,15 @@ public class StartExpMsg implements Message {
 	}
 	
 	/**
+	 * Sets the delay in milliseconds before the robot starts the experiment.
+	 * 
+	 * @param delay The delay in milliseconds.
+	 */
+	public void setDelay(int delay) {
+		this.delay = delay;
+	}
+	
+	/**
 	 * @return A string representation of this class.
 	 */
 	public String toString() {
