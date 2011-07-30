@@ -682,13 +682,11 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		
 		if (r->newACCELdata) {
 			// taking this out... because this massive printing lags the performance of the computer too much
-			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
-			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
-			printf("proteus_comms: processIRPacket: Front Right : %f mm\n", ((r->newIRdata)?(r->ir_fr):0));
-			printf("proteus_comms: processIRPacket: Rear Left   : %f mm\n", ((r->newIRdata)?(r->ir_rl):0));
-			printf("proteus_comms: processIRPacket: Rear Center : %f mm\n", ((r->newIRdata)?(r->ir_rc):0));
-			printf("proteus_comms: processIRPacket: Rear Right  : %f mm\n\n", ((r->newIRdata)?(r->ir_rr):0));
-			*/
+			printf("proteus_comms: processAccelPacket: accel_x_axis  : %f mm\n", ((r->newACCELdata)?(r->accel_x_axis):0));
+			printf("proteus_comms: processAccelPacket: accel_y_axis: %f mm\n", ((r->newACCELdata)?(r->accel_y_axis):0));
+			printf("proteus_comms: processAccelPacket: accel_z_axis : %f mm\n", ((r->newACCELdata)?(r->accel_z_axis):0));
+			
+			
 		}
 		
 		return SUCCESS;

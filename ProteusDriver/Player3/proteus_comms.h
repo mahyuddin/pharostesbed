@@ -47,7 +47,7 @@ extern "C" {
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
-#define PROTEUS_OPCODE_ACCEL		0x6C
+#define PROTEUS_OPCODE_ACCEL		    0x6C
 
 enum{
   PROTEUS_MODE_OFF,                  
@@ -218,6 +218,8 @@ typedef struct {
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
 
 	uint16_t newACCELdata;
+	uint16_t accel_data;
+	float accel_axis_data[2];
 	float accel_x_axis;  //xaxis accelerometer data
 	float accel_y_axis;  //yaxis accelerometer data
 	float accel_z_axis;  //zaxis accelerometer data
