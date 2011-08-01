@@ -144,6 +144,49 @@ public class StringParsing {
 		return false;	
 	}
 	
+	public MissionData GetHomePort(){
+		Scanner scanner = new Scanner(_DataBuffer);
+		String line;
+		String parameter = "HomePort";
+		String value;
+		try {
+			// first use a Scanner to get each line
+
+			while (scanner.hasNextLine()) {
+				line = scanner.nextLine();
+				Scanner lineScanner = new Scanner(line);
+				try {
+					lineScanner.useDelimiter("=");
+					if (lineScanner.hasNext()) {
+						value = lineScanner.next();
+						value = value.trim();
+						if (value.equals(parameter)) {
+							value = (lineScanner.next()).trim();
+							String Avalue;
+							Scanner datalineScanner = new Scanner(value);
+							datalineScanner.useDelimiter(";");
+							Avalue = datalineScanner.next().trim();
+							double latitude = Double.parseDouble(Avalue);
+							Avalue = datalineScanner.next().trim();
+							double longitude = Double.parseDouble(Avalue);
+							Avalue = datalineScanner.next().trim();
+							double velocity = Double.parseDouble(Avalue);
+							return new MissionData(latitude, longitude, velocity);	
+						}
+
+					}
+
+				} catch (Exception e) {
+					// TODO: handle exception
+				}
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return null;	
+
+	}
+	
 	public boolean GetRobotData(Vector<Robot> robotdata, int numrobots){
 		Scanner scanner = new Scanner(_DataBuffer);
 		String line;
@@ -209,6 +252,7 @@ public static void main(String... aArgs) throws IOException {
 	Vector<Robot> robotData = new Vector<Robot>();
 	Vector<MissionData> missionData = new Vector<MissionData>();
 	String newLine = System.getProperty("line.separator");
+	MissionData homeport;
    
     int numofrobots = Integer.parseInt((test.getParameterValue("TeamSize").trim()));
     int numbehave = Integer.parseInt((test.getParameterValue("BehSize").trim()));
@@ -236,6 +280,11 @@ public static void main(String... aArgs) throws IOException {
     	}
     	
     }
+    homeport = test.GetHomePort();
+    if(homeport!=null){
+    	System.out.println("HOMEPORT: Lat: "+homeport.GetLatitude()+ " Long: "+ homeport.GetLongitude() + "velocity: "+ homeport.GetVelocity());
+    }
+    	
     test.write();
     System.exit(1);
   }
