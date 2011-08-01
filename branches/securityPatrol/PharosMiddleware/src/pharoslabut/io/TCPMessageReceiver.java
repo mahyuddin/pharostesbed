@@ -9,7 +9,7 @@ import pharoslabut.logger.FileLogger;
  * Accepts clients connects and listens for messages of these clients.
  *
  * @author Chien-Liang Fok
- * @version 3/17/2003
+ * @version 08/01/2011
  */
 public class TCPMessageReceiver implements Runnable {
     /**
@@ -32,6 +32,9 @@ public class TCPMessageReceiver implements Runnable {
 	 */
 	private int port;
 	
+	/**
+	 * A file logger for recording debug data.
+	 */
 	private FileLogger flogger = null;
     
 	/**
@@ -64,8 +67,7 @@ public class TCPMessageReceiver implements Runnable {
 					ss = new ServerSocket(0);
 				}
 			} catch (IOException e) {
-				//e.printStackTrace();
-				log("Unable to open server socket, waiting a couple seconds before trying again...");
+				logErr("Unable to open server socket, waiting a couple seconds before trying again...");
 				try {
 					synchronized(this) { wait(1000*2); }
 				} catch (InterruptedException e1) {
@@ -90,7 +92,7 @@ public class TCPMessageReceiver implements Runnable {
      * @return The port on which this receiver is listening.
      */
     public int getPort() {
-    	return port;
+    	return ss.getLocalPort();
     }
     
     /**
@@ -106,8 +108,49 @@ public class TCPMessageReceiver implements Runnable {
 			e.printStackTrace();
 		};
     }
-	
-	void log(String msg) {
+    
+    /**
+	 * Sits in a loop waiting for clients to connect.  When a client connects,
+	 * it creates a ClientHandler for it.
+	 */
+    public void run() {
+		
+    	while(!ss.isClosed()) {
+			log("run: Waiting for a connection on port " + port);
+			
+    		try {
+    			Socket s = ss.accept();
+				if (s != null) {
+					log("run: Connection accepted, passing to client handler.");
+					s.setTcpNoDelay(true);
+					new ClientHandler(s);
+				} else {
+					logErr("run: got a null socket connection.");
+				}
+    		} catch(IOException e) {
+    			e.printStackTrace();
+    			logErr("run: IOException while accepting client connections. ServerSocket.isClosed = " + ss.isClosed());
+    		}
+    	}
+    }
+    
+//    private void pause(long interval) {
+//    	synchronized(this) {
+//			try {
+//				this.wait(interval);
+//			} catch (InterruptedException e1) {	}
+//		}
+//    }
+    
+    private void logErr(String msg) {
+		String result = "TCPMessageReceiver: ERROR: " + msg;
+		System.err.println(result);
+		
+		if (flogger != null)
+			flogger.log(result);
+	}
+    
+	private void log(String msg) {
 		String result = "TCPMessageReceiver: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
@@ -117,67 +160,34 @@ public class TCPMessageReceiver implements Runnable {
 	}
     
     /**
-	 * Sits in a loop waiting for clients to connect.  When a client connects,
-	 * it creates a ClientHandler for it.
-	 */
-    public void run() {
-		// continue to loop until an IOException is thrown
-		try {
-			while(true) {
-				Socket s = null;
-				log("Waiting for a connection on port " + port);
-				if ((s = ss.accept()) != null) {
-					log("Connection accepted, passing to client handler.");
-					s.setTcpNoDelay(true);
-					new ClientHandler(s);
-				}
-			}
-		} catch(IOException e) {
-			//if (!ss.isClosed())
-			//	e.printStackTrace();
-		} finally {
-			try {
-				ss.close();
-			} catch(Exception e){}
-		}
-    }
-    
-    /**
 	 * Handles incoming messages from a particular client.
 	 */
     private class ClientHandler implements Runnable {
 		/**
 		 * The sock et to the client.
 		 */
-		Socket socket;
+		private Socket socket;
+		
 		/**
-		 * The output streams.
+		 * The output stream.
 		 */
-//		ObjectOutputStream out;
+		private OutputStream os;
+		
 		/**
-		 * The input streams.
+		 * The object output stream.
 		 */
-		ObjectInputStream in;
+		private ObjectOutputStream oos;
+
 		/**
-		 * The thread that reads messages sent from the client.
+		 * The object input stream.
 		 */
-//		Thread chThread;
+		private ObjectInputStream in;
+
 		/**
 		 * Creates a clientHandler.
 		 */
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
-			
-			// extract the input and output streams
-			try {
-				// be sure to create the output stream before the input stream
-//				out = new ObjectOutputStream(socket.getOutputStream());
-				in = new ObjectInputStream(socket.getInputStream());
-			} catch(IOException e) {
-				e.printStackTrace();
-				return;
-			}
-			
 			new Thread(this).start();
 		}
 		
@@ -185,24 +195,71 @@ public class TCPMessageReceiver implements Runnable {
 		 * Sits in a loop listening for incoming messages.
 		 */
 		public void run() {
+			// extract the input and output streams
+			// be sure to create the output stream before the input stream
 			try {
-				log("Reading in object");
+				os = socket.getOutputStream();
+				oos = new ObjectOutputStream(os);
+				in = new ObjectInputStream(socket.getInputStream());
+			} catch(IOException e) {
+				logErr("run: IOException while extracing output and input streams.");
+				e.printStackTrace();
+				return;
+			}
+			
+			Message msg = null;
+			
+			try {
+				log("run: Awaiting message...");
 				Object o = in.readObject();
 				
-				if (o!= null && o instanceof Message) {
-					Message msg = (Message)o;
-					log("Read in object: " + msg);
-					receiver.newMessage(msg);
-				}
+				if (o != null) {
+					if (o instanceof Message) {
+				
+						msg = (Message)o;
+					} else {
+						logErr("run: received message was not a message!");
+					}
+				} else
+					logErr("run: received message was null!");		
 			} catch(ClassNotFoundException e) {
+				logErr("run: ClassNotFoundException while receiving.");
 				e.printStackTrace();
 			} catch(IOException e) {
+				logErr("run: IOException while receiving.");
 				e.printStackTrace();
-			} finally {
-				try {
-					socket.close();
-				} catch(Exception e) {}
 			}
+			
+			if (msg != null) {
+				log("run: Received message: " + msg);
+				receiver.newMessage(msg);
+			
+				try {
+					if (msg instanceof AckedMsg) {
+						log("run: message was an AckedMsg, sending ack.");
+						PharosAckMsg ackMsg = PharosAckMsg.getAckMsg();
+						oos.writeObject(ackMsg);
+						oos.flush();
+						os.flush();
+					}
+				} catch(IOException e) {
+					logErr("run: IOException while receiving.");
+					e.printStackTrace();
+				}
+			}
+			
+			
+			try {
+				socket.close();
+			} catch(Exception e) {
+			}
+		}
+		
+		void logErr(String msg) {
+			String result = "TCPMessageReceiver: ClientHandler: ERROR: " + msg;
+			System.err.println(result);
+			if (flogger != null)
+				flogger.log(result);
 		}
 		
 		void log(String msg) {
