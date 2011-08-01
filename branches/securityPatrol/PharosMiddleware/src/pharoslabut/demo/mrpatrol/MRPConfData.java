@@ -1,6 +1,5 @@
 package pharoslabut.demo.mrpatrol;
 
-//import java.io.FileNotFoundException;
 import java.util.Vector;
 
 import pharoslabut.behavior.*;
@@ -8,13 +7,10 @@ import pharoslabut.behavior.fileParsing.StringParsing;
 import pharoslabut.behavior.management.*;
 
 /**
- * A RelativeMotionScript consists of a list of <speed, direction, time> tuples that
- * control how the robots move.
+ * Contains the specifications of a multi-robot patrol experiment.
  * 
- * @author Chien-Liang Fok
+ * @author Noa Agmon
  */
-
-
 public class MRPConfData {
 	private Vector<Robot> _robotData;
 	private int _Myindex;
