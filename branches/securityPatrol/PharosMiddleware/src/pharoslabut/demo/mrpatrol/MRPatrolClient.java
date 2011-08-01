@@ -23,16 +23,14 @@ public class MRPatrolClient {
 		ExpConfig expConfig = ExpConfigReader.readExpConfig(expConfigFileName);
 		try {
 			
-			log("Setting local time on each robot...");
-			for (int i=0; i < expConfig.numRobots(); i++) {
-				RobotExpSettings currRobot = expConfig.getRobot(i);
-				log("\tSending SetTimeMsg to " + currRobot.getName());
-				
-				SetTimeMsg msg = new SetTimeMsg();
-				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
-			}
-			
-			
+//			log("Setting local time on each robot...");
+//			for (int i=0; i < expConfig.numRobots(); i++) {
+//				RobotExpSettings currRobot = expConfig.getRobot(i);
+//				log("\tSending SetTimeMsg to " + currRobot.getName());
+//				
+//				SetTimeMsg msg = new SetTimeMsg();
+//				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
+//			}
 			
 			log("Sending each robot their motion scripts...");
 			for (int i=0; i < expConfig.numRobots(); i++) {
@@ -71,9 +69,9 @@ public class MRPatrolClient {
 			
 			// Send each robot the start experiment command.
 			int delay = 0;
-			StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), ExpType.RUN_BEHAVIOR_GPS, delay);
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
+				StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), ExpType.RUN_BEHAVIOR_GPS, delay);
 				
 				log("Sending StartExpMsg to robot " + currRobot.getName() + "...");
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), sem);
@@ -88,12 +86,12 @@ public class MRPatrolClient {
 	}
 	
 	private void logErr(String msg) {
-		System.err.println("PharosExpClient: " + msg);
+		System.err.println("MrPatrolClient: " + msg);
 	}
 	
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println("PharosExpClient: " + msg);
+			System.out.println("MrPatrolClient: " + msg);
 	}
 	
 	private static void print(String msg) {
