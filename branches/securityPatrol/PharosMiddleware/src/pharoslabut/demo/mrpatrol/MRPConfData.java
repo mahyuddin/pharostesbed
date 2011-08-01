@@ -16,6 +16,7 @@ public class MRPConfData {
 	private int _Myindex;
 	private int _MRPCircularRepeats; 
 	private Vector<MissionData> _missionData;
+	private MissionData _homePort;
 
 	public MRPConfData(MRPConfigMsg behMsg){
 		_MRPCircularRepeats = 0;
@@ -26,16 +27,19 @@ public class MRPConfData {
 		parsetheconfData = new StringParsing(behMsg.GetConfigData());
 		int numofrobots = Integer.parseInt((parsetheconfData.getParameterValue("TeamSize").trim()));
 		int numbehave = Integer.parseInt((parsetheconfData.getParameterValue("BehSize").trim()));
+		
 		_Myindex = Integer.parseInt((parsetheconfData.getParameterValue("MyIndex").trim()));
 		_MRPCircularRepeats = Integer.parseInt((parsetheconfData.getParameterValue("Circular").trim()));		
 		parsetheconfData.GetMissionData(_missionData, numbehave);
 		parsetheconfData.GetRobotData(_robotData, numofrobots);
+		_homePort = parsetheconfData.GetHomePort();
 	}
 	
 	public int CircularRepeat(){return _MRPCircularRepeats;}
 	public int GetMyindex(){return _Myindex;}
 	public Robot GetRobotData(int inIndex){return _robotData.get(inIndex);}
 	public int GetNumRobots(){return _robotData.size();}
+	public MissionData GetHomePort(){return _homePort;}
 	
 	public MissionData GetMissionData(int inIndex){return _missionData.get(inIndex);}
 	public int GetNumMissions(){return _missionData.size();}
