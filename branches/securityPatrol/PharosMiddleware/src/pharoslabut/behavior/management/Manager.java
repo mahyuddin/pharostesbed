@@ -28,6 +28,7 @@ public class Manager {
 	/* need to know whether to connect the last behavior to the first, and if so - for how many repeats */
 	private int _CircularRepeats; 
 	private boolean _manageDynamic;
+	Behavior _concludeBehave;
 	
 	private TCPMessageSender _sender;
 	
@@ -84,7 +85,13 @@ public class Manager {
 		}catch(Exception e){
 			log("Error: " + e.getMessage());
 		}
-		
+
+		if(mrpConfdata.GetHomePort() !=null){
+			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData, _flogger);
+		} else {
+			_concludeBehave = null;
+		}
+
 		
 		log("_behVect: "+ _current.getClass().getName()+_currentIndex);
 		_wm.setMyCurrentBehavior((_current.getClass().getName())+_currentIndex, _currentIndex);
@@ -104,7 +111,7 @@ public class Manager {
 
 		if(!_current.startCondition())
 		{
-			log("run: Program finished");
+			log("run: Program finished (initial start condition is false)");
 			return;
 		}
 		//update that we established a connection to all servers, and are now able to continue
@@ -160,6 +167,16 @@ public class Manager {
 			if(numberRounds<=0)
 				break;
 			numberRounds--;
+		}
+
+		if(_concludeBehave!=null){
+			if(_concludeBehave.startCondition() == true){
+				log("run: Entering concluding behavior (start condition true)");
+				while(!_concludeBehave.startCondition()){
+					log("run: running conclude behavior");
+					_concludeBehave.action();
+				}
+			}
 		}
 		
 		log("run: Program finished");
