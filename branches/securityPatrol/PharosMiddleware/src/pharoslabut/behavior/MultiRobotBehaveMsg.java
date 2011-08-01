@@ -1,25 +1,25 @@
 package pharoslabut.behavior;
 
-import java.net.InetAddress;
+//import java.net.InetAddress;
 
 import pharoslabut.io.*;
 
-public class MultiRobotBehaveMsg implements AckableMessage{
+public class MultiRobotBehaveMsg implements AckedMsg {
 		
 		private static final long serialVersionUID = -7631305555004386678L;
 		
 		private String _behaveName;
 		private int _robotID; 
-		private InetAddress _replyAddress;
-		private int _replyPort;
+//		private InetAddress _replyAddress;
+//		private int _replyPort;
 		private int _behaveID;
 
-		public MultiRobotBehaveMsg(String behavename, int behaveID, int myID, InetAddress replyAddress, int replyPort) {
+		public MultiRobotBehaveMsg(String behavename, int behaveID, int myID) {
 			_behaveName = new String(behavename);
 			_behaveID = behaveID;
 			_robotID = myID;
-			_replyAddress = replyAddress;
-			_replyPort = replyPort;
+//			_replyAddress = replyAddress;
+//			_replyPort = replyPort;
 		}
 		
 		public String getBehaveName() {
@@ -29,6 +29,7 @@ public class MultiRobotBehaveMsg implements AckableMessage{
 		public int getBehaveID(){
 			return _behaveID;
 		}
+		
 		public int getRobotID(){
 			return _robotID;
 		}
@@ -37,25 +38,29 @@ public class MultiRobotBehaveMsg implements AckableMessage{
 		public MsgType getType() {
 			return MsgType.UPDATE_BEH_MSG;
 		}
-
-		@Override
-		public int getPort() {
-			return _replyPort;
+		
+		public String toString() {
+			return "MultiRobotBehaveMsg: behaveName=" + _behaveName + ", behaveID=" + _behaveID + ", myID=" + _robotID;
 		}
 
-		@Override
-		public InetAddress getReplyAddr() {
-			return _replyAddress;
-		}
-
-		@Override
-		public void setPort(int port) {
-			_replyPort = port;
-			
-		}
-
-		@Override
-		public void setReplyAddr(InetAddress address) {
-			_replyAddress = address;
-		}
+//		@Override
+//		public int getPort() {
+//			return _replyPort;
+//		}
+//
+//		@Override
+//		public InetAddress getReplyAddr() {
+//			return _replyAddress;
+//		}
+//
+//		@Override
+//		public void setPort(int port) {
+//			_replyPort = port;
+//			
+//		}
+//
+//		@Override
+//		public void setReplyAddr(InetAddress address) {
+//			_replyAddress = address;
+//		}
 }

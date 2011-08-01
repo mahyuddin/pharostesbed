@@ -52,11 +52,23 @@ public class TCPMessageReceiver implements Runnable {
 	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
 	 *
 	 * @param receiver The message receiver two which received messages should be sent.
-	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.  
+	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.
 	 */
-    public TCPMessageReceiver(MessageReceiver receiver, int port){
+    public TCPMessageReceiver(MessageReceiver receiver, int port) {
+    	this(receiver, port, null);
+    }
+    
+    /**
+	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
+	 *
+	 * @param receiver The message receiver two which received messages should be sent.
+	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.
+	 * @param flogger The file logger  
+	 */
+    public TCPMessageReceiver(MessageReceiver receiver, int port, FileLogger flogger){
     	this.receiver = receiver;
 		this.port = port;
+		this.flogger = flogger;
 		
 		// create the server socket
 		while (ss == null) {
@@ -76,7 +88,7 @@ public class TCPMessageReceiver implements Runnable {
 			}
 		}
 		
-		// start the thread that accepts connections
+		log("Starting the thread that accepts connections...");
 		acceptThread = new Thread(this);
 		acceptThread.start();
     }

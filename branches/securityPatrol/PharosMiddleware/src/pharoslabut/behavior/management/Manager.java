@@ -172,7 +172,7 @@ public class Manager {
 		log("sendBehaviorToClients: Sending behavior to teammates: behavior name " + _wm.getCurrentBehaviorName()+ " behavior ID: "+ _wm.getCurrentBehaviorID()+" my index "+ _wm.getMyIndex()+ "my port "+ _wm.getMyPort()+"\n");
 		
 		try {
-			msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex(), InetAddress.getByName(_wm.getMyIp()), _wm.getMyPort());
+			msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex()); //, InetAddress.getByName(_wm.getMyIp()), _wm.getMyPort());
 		} catch(Exception e) {
 			e.printStackTrace();
 			System.exit(1);
