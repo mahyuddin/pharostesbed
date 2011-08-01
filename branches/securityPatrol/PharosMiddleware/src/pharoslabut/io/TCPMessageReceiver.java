@@ -226,12 +226,10 @@ public class TCPMessageReceiver implements Runnable {
 				Object o = in.readObject();
 				
 				if (o != null) {
-					if (o instanceof Message) {
-				
+					if (o instanceof Message)
 						msg = (Message)o;
-					} else {
+					else
 						logErr("run: received message was not a message!");
-					}
 				} else
 					logErr("run: received message was null!");		
 			} catch(ClassNotFoundException e) {
@@ -243,9 +241,8 @@ public class TCPMessageReceiver implements Runnable {
 			}
 			
 			if (msg != null) {
-				log("run: Received message: " + msg);
-				receiver.newMessage(msg);
-			
+				
+				// First send an Ack if the message is an AckMsg.
 				try {
 					if (msg instanceof AckedMsg) {
 						log("run: message was an AckedMsg, sending ack.");
@@ -256,9 +253,12 @@ public class TCPMessageReceiver implements Runnable {
 						log("run: ack sent!");
 					}
 				} catch(IOException e) {
-					logErr("run: IOException while receiving.");
+					logErr("run: IOException while sending an Ack.");
 					e.printStackTrace();
 				}
+				
+				log("run: Received message: " + msg);
+				receiver.newMessage(msg);
 			}
 			
 			try {
