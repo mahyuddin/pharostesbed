@@ -142,6 +142,7 @@ public class TCPMessageSender implements MessageSender {
 					}
     			} else {
     				log("sendMessage: Message was not an AckedMsg, assuming transmission was successful.");
+    				success = true;
     			}
 
     			try {
