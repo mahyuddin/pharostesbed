@@ -102,9 +102,9 @@ public class Manager {
 	{
 		log("run: running Manager\n");
 
-		if(_current.startCondition() == false)
+		if(!_current.startCondition())
 		{
-			log("Program finished");
+			log("run: Program finished");
 			return;
 		}
 		//update that we established a connection to all servers, and are now able to continue
@@ -213,28 +213,38 @@ public class Manager {
 		}
 	}
 
-	public void waitToTeam()
-	{
-		log("waitToTeam: Waiting for teammates, dynamic = "+_manageDynamic+"\n");
-		boolean continueLoop;
+	/**
+	 * Waits for the team to become synchronized.
+	 * Periodically transmits MultiRobotBehaveMsg to the entire team until
+	 * the team is synchronized from this robot's perspective.
+	 */
+	public void waitToTeam() {
+		log("waitToTeam: Waiting for teammates, dynamic = " + _manageDynamic+"\n");
+		boolean isSynched;
 		
 		if(_manageDynamic) {
 			_wm.checkAliveTeam();
-			continueLoop = _wm.isTeamSynchronizedDynamically();
+			isSynched = _wm.isTeamSynchronizedDynamically();
 		}else
-			continueLoop = _wm.isTeamSynchronized() ;
+			isSynched = _wm.isTeamSynchronized() ;
 
-		while( continueLoop == false) {
+		while(!isSynched) {
+			
+			log("waitToTeam: team not yet synched, calling sendBehaviorToClients");
 			// send message to the teammates also while waiting for updates
 			sendBehaviorToClients();
+			
+			log("waitToTeam: done calling sendBehaviorToClients, pausing for 100ms before checking if team is synched");
 			try {
-				Thread.currentThread().sleep(50);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			continueLoop = _manageDynamic? _wm.isTeamSynchronizedDynamically() : _wm.isTeamSynchronized() ;
+			
+			isSynched = _manageDynamic ? _wm.isTeamSynchronizedDynamically() : _wm.isTeamSynchronized() ;
 		}
+		
+		log("waitToTeam: team is synched!");
 	}
 
 	private void logErr(String msg) {
