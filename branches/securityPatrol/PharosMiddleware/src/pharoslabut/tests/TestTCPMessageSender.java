@@ -18,18 +18,17 @@ public class TestTCPMessageSender {
 	/**
 	 * The constructor.
 	 */
-	public TestTCPMessageSender() {
+	public TestTCPMessageSender(String serverIP, int port, String logFileName) {
 		
-		flogger = new FileLogger("TestTCPMessageSender", false);
+		flogger = new FileLogger(logFileName, false);
 		
 		InetAddress address = null;
 		try {
-			address = InetAddress.getByName("192.168.1.101");
+			address = InetAddress.getByName(serverIP);
 		} catch (UnknownHostException e1) {
 			e1.printStackTrace();
 			System.exit(1); // fatal exception
 		}
-		int port = 12345;
 		
 		TCPMessageSender sndr = TCPMessageSender.getSender();
 		sndr.setFileLogger(flogger);
@@ -73,8 +72,49 @@ public class TestTCPMessageSender {
 			flogger.log(result);
 	}
 	
+	private static void usage() {
+		System.err.println("Usage: pharoslabut.tests.TestTCPMessageSender <options>\n");
+		System.err.println("Where <options> include:");
+		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
+		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
+		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
+	}
+	
 	public static void main(String[] args) {
+		String logFileName = "TestTCPMessageSender";
+		String serverIP = "localhost";
+		int serverPort = 12345;
+		
 		System.setProperty ("PharosMiddleware.debug", "true");
-		new TestTCPMessageSender();
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-server")) {
+					serverIP = args[++i];
+				} 
+				else if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-log")) {
+					logFileName = args[++i];
+				} else if (args[i].equals("-h")) {
+					usage();
+					System.exit(0);
+				} else {
+					System.err.println("Unknown option: " + args[i]);
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+ 
+		System.out.println("Server IP: " + serverIP);
+		System.out.println("Server port: " + serverPort);
+		System.out.println("Log: " + logFileName);
+		
+		new TestTCPMessageSender(serverIP, serverPort, logFileName);
 	}
 }

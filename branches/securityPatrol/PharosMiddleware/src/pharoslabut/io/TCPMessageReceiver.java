@@ -253,13 +253,13 @@ public class TCPMessageReceiver implements Runnable {
 						oos.writeObject(ackMsg);
 						oos.flush();
 						os.flush();
+						log("run: ack sent!");
 					}
 				} catch(IOException e) {
 					logErr("run: IOException while receiving.");
 					e.printStackTrace();
 				}
 			}
-			
 			
 			try {
 				socket.close();

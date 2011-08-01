@@ -15,10 +15,8 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 	/**
 	 * The constructor.
 	 */
-	public TestTCPMessageReceiver() {
-		flogger = new FileLogger("TestTCPMessageReceiver", false);
-		int port = 12345;
-		
+	public TestTCPMessageReceiver(int port, String logFileName) {
+		flogger = new FileLogger(logFileName, false);
 		new TCPMessageReceiver(this, port, flogger);
 	}
 	
@@ -27,13 +25,13 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 		log("newMessage: Message Received: " + msg);
 	}
 	
-    private void logErr(String msg) {
-		String result = "TestTCPMessageReceiver: ERROR: " + msg;
-		System.err.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
+//    private void logErr(String msg) {
+//		String result = "TestTCPMessageReceiver: ERROR: " + msg;
+//		System.err.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
     
 	private void log(String msg) {
 		String result = "TestTCPMessageReceiver: " + msg;
@@ -43,8 +41,43 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 			flogger.log(result);
 	}
 	
+	private static void usage() {
+		System.err.println("Usage: pharoslabut.tests.TestTCPMessageReceiver <options>\n");
+		System.err.println("Where <options> include:");
+		System.err.println("\t-port <port number>: The Player Server's port number (default 12345)");
+		System.err.println("\t-log <file name>: name of file in which to save results (default TestTCPMessageReceiver)");
+	}
+	
 	public static void main(String[] args) {
+		String logFileName = "TestTCPMessageReceiver";
+		int serverPort = 12345;
+		
 		System.setProperty ("PharosMiddleware.debug", "true");
-		new TestTCPMessageReceiver();
+		
+		try {
+			for (int i=0; i < args.length; i++) {
+				if (args[i].equals("-port")) {
+					serverPort = Integer.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-log")) {
+					logFileName = args[++i];
+				} else if (args[i].equals("-h")) {
+					usage();
+					System.exit(0);
+				} else {
+					System.err.println("Unknown option: " + args[i]);
+					usage();
+					System.exit(1);
+				}
+			}
+		} catch(Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+		
+		System.out.println("Server port: " + serverPort);
+		System.out.println("Log: " + logFileName);
+		
+		new TestTCPMessageReceiver(serverPort, logFileName);
 	}
 }
