@@ -10,7 +10,7 @@ import pharoslabut.io.*;
  * 
  * @author Noa Agmon
  */
-public class MRPConfigMsg implements Message {
+public class MRPConfigMsg implements AckedMsg {
 
 	private static final long serialVersionUID = -7631305555004386678L;
 
