@@ -179,22 +179,29 @@ public class Manager {
 		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex());
 		log("sendBehaviorToClients: Sending message: " + msg);
 		
+		// for each team member
 		for (int i = 0; i < _wm.getTeamSize(); i++) {
+			
+			// if the team member is not myself
 			if (i != _wm.getMyIndex()) {
+				String ip = _wm.getIp(i);
 				int port = _wm.getPort(i);
-				log("sendBehaviorToClients: BEFORE Send: Sending " + _wm.getCurrentBehaviorName() + " to Client " + i + " at " + _wm.getIp(i) + ":" + port + "\n");			
+				log("sendBehaviorToClients: Attempting to send message to " + ip + ":" + port);
 				
 				InetAddress address = null;
 				try {
-					address = InetAddress.getByName(_wm.getIp(i));
+					address = InetAddress.getByName(ip);
 				} catch (UnknownHostException e) {
-					logErr("sendBehaviorToClients: UnknownHostException when trying to get InetAddress for " + _wm.getIp(i) + ", message: " + e.getMessage());
+					logErr("sendBehaviorToClients: UnknownHostException when trying to get InetAddress for " + ip + ", error message: " + e.getMessage());
 					e.printStackTrace();
+					continue;
 				}
 				
 				if (address != null) {
 					try {
-						_sender.sendMessage(address, _wm.getPort(i), msg);
+						log("sendBehaviorToClients: BEFORE Send: Sending " + _wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
+						_sender.sendMessage(address, port, msg);
+						log("sendBehaviorToClients: AFTER Send: Sent " + _wm.getCurrentBehaviorName() + " to Client " + i);
 					} catch (PharosException e) {
 						logErr("sendBehaviorToClients: PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
 						e.printStackTrace();
@@ -202,8 +209,6 @@ public class Manager {
 				} else {
 					logErr("sendBehaviorToClients: Unable to send message because address was null!");
 				}
-				
-				log("sendBehaviorToClients: AFTER Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
 			}
 		}
 	}
