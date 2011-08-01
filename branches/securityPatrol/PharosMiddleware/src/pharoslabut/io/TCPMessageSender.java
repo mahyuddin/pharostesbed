@@ -130,7 +130,8 @@ public class TCPMessageSender implements MessageSender {
 	    				if (ack instanceof PharosAckMsg) {
 	    					log("sendMessage: ack received!");
 	    					success = true;
-	    				}
+	    				} else
+	    					logErr("sendMessage: Received object not a PharosAckMsg");
 					} catch (IOException e) {
 						errMsg = e.getMessage();
 						logErr("sendMessage: Got IOException while waiting for ack.");
