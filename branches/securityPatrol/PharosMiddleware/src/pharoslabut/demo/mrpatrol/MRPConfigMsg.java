@@ -48,10 +48,11 @@ public class MRPConfigMsg implements Message {
 
 	@Override
 	public MsgType getType() {
-		return MsgType.CUSTOM; //return MsgType.LOAD_BEHAVIORCONFIG_FILE;
+		//return MsgType.CUSTOM; 
+		return MsgType.LOAD_BEHAVIORCONFIG_FILE;
 	}
 	
 	public String toString() {
-		return "MRPConfigMsg: " + _allData;
+		return "MRPConfigMsg: \n--------------------\n" + _allData + "\n--------------------";
 	}
 }
