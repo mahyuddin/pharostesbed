@@ -101,7 +101,7 @@ public class MRPatrolClient {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.experiment.PharosExpClient <options>\n");
+		print("Usage: pharoslabut.demo.mrpatrol.MRPatrolServer <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-debug: enable debug mode");
