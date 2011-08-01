@@ -166,36 +166,46 @@ public class Manager {
 		System.exit(0);
 	}
 	
+	/**
+	 * Sends a MultiRobotBehaveMsg to each teammate.
+	 */
 	private void sendBehaviorToClients() {
-		int i;
-		MultiRobotBehaveMsg msg = null;
-		log("sendBehaviorToClients: Sending behavior to teammates: behavior name " + _wm.getCurrentBehaviorName()+ " behavior ID: "+ _wm.getCurrentBehaviorID()+" my index "+ _wm.getMyIndex()+ "my port "+ _wm.getMyPort()+"\n");
+		log("sendBehaviorToClients: Sending behavior to teammates:"
+				+ "\n\tBehavior name " + _wm.getCurrentBehaviorName() 
+				+ "\n\tBehavior ID: "+ _wm.getCurrentBehaviorID() 
+				+ "\n\tMy index "+ _wm.getMyIndex()
+				+ "\n\tMy port "+ _wm.getMyPort()+"\n");
 		
-		try {
-			msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex()); //, InetAddress.getByName(_wm.getMyIp()), _wm.getMyPort());
-		} catch(Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
+		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex());
+		log("sendBehaviorToClients: Sending message: " + msg);
 		
-		for (i = 0; i < _wm.getTeamSize(); i++)
-			if (i != _wm.getMyIndex())
-			{
-				log("sendBehaviorToClients: BEFORE Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i + "on port "+ _wm.getPort(i) + " IP address" + _wm.getIp(i)+ "\n");			
+		for (int i = 0; i < _wm.getTeamSize(); i++) {
+			if (i != _wm.getMyIndex()) {
+				int port = _wm.getPort(i);
+				log("sendBehaviorToClients: BEFORE Send: Sending " + _wm.getCurrentBehaviorName() + " to Client " + i + " at " + _wm.getIp(i) + ":" + port + "\n");			
 				
+				InetAddress address = null;
 				try {
-					_sender.sendMessage(InetAddress.getByName(_wm.getIp(i)), _wm.getPort(i), msg);
+					address = InetAddress.getByName(_wm.getIp(i));
 				} catch (UnknownHostException e) {
-					logErr("sendBehaviorToClients: UnknownHostException: " + e.getMessage());
-					e.printStackTrace();
-				} catch (PharosException e) {
-					logErr("sendBehaviorToClients: PharosException: " + e.getMessage());
+					logErr("sendBehaviorToClients: UnknownHostException when trying to get InetAddress for " + _wm.getIp(i) + ", message: " + e.getMessage());
 					e.printStackTrace();
 				}
-				//_out[i].println(_wm.getCurrentBehaviorName());
+				
+				if (address != null) {
+					try {
+						_sender.sendMessage(address, _wm.getPort(i), msg);
+					} catch (PharosException e) {
+						logErr("sendBehaviorToClients: PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
+						e.printStackTrace();
+					}
+				} else {
+					logErr("sendBehaviorToClients: Unable to send message because address was null!");
+				}
 				
 				log("sendBehaviorToClients: AFTER Send: "+_wm.getCurrentBehaviorName()+ " Sent to Client id: "+i);
 			}
+		}
 	}
 
 	public void waitToTeam()
