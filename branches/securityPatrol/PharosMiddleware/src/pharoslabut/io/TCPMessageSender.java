@@ -81,8 +81,8 @@ public class TCPMessageSender implements MessageSender {
     	
     	while (!success && numTries++ < MAX_RETRIES) {
     		log("sendMessage: Sending message, attempt " + numTries + " of " + MAX_RETRIES + "..." 
-    				+ "\tDestination: " + address  + ":" + port
-    				+ "\tMessage to send: " + msg);
+    				+ "\n\tDestination: " + address  + ":" + port
+    				+ "\n\tMessage to send: " + msg);
     		    		
     		Socket socket = null;
     		
