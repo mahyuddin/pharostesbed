@@ -1,29 +1,29 @@
 package pharoslabut.demo.mrpatrol;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeacon;
-import pharoslabut.beacon.WiFiBeaconBroadcaster;
+//import java.net.InetAddress;
+//import java.net.UnknownHostException;
+//
+//import pharoslabut.RobotIPAssignments;
+//import pharoslabut.beacon.WiFiBeacon;
+//import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.beacon.WiFiBeaconListener;
-import pharoslabut.beacon.WiFiBeaconReceiver;
+//import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.experiment.ExpType;
 //import pharoslabut.experiment.PharosExpServer;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.MotionArbiter;
-import pharoslabut.navigate.MotionScriptFollower;
+//import pharoslabut.navigate.MotionScriptFollower;
 import pharoslabut.navigate.MotionScriptFollowerDoneListener;
 import pharoslabut.navigate.NavigateCompassGPS;
-import pharoslabut.navigate.NavigateRelative;
+//import pharoslabut.navigate.NavigateRelative;
 import pharoslabut.navigate.RelativeMotionScript;
-import pharoslabut.navigate.Scooter;
+//import pharoslabut.navigate.Scooter;
 import pharoslabut.navigate.motionscript.MotionScript;
-import pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster;
-import pharoslabut.radioMeter.cc2420.TelosBeaconException;
+//import pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster;
+//import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.sensors.ProteusOpaqueData;
@@ -48,12 +48,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
     /**
 	 * The WiFi multicast group address.
 	 */
-    private String mCastAddress;
+//    private String mCastAddress;
     
     /**
 	 * The WiFi multicast port.
 	 */
-    private int mCastPort;
+//    private int mCastPort;
 	
 	private PlayerClient client = null;
 	private CompassDataBuffer compassDataBuffer;
@@ -63,14 +63,14 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 
 	
 	// Components for sending and receiving WiFi beacons
-	private WiFiBeaconBroadcaster wifiBeaconBroadcaster;
-	private WiFiBeaconReceiver wifiBeaconReceiver;
+//	private WiFiBeaconBroadcaster wifiBeaconBroadcaster;
+//	private WiFiBeaconReceiver wifiBeaconReceiver;
 	
 	// Components for sending and receiving TelosB beacons
-	private TelosBeaconBroadcaster telosRadioSignalMeter;
+//	private TelosBeaconBroadcaster telosRadioSignalMeter;
 	
-	private MotionScript gpsMotionScript;
-	private RelativeMotionScript relMotionScript;
+//	private MotionScript gpsMotionScript;
+//	private RelativeMotionScript relMotionScript;
 	private MRPConfData mrpConfdata;
 	
 	private FileLogger flogger = null;
@@ -92,15 +92,15 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	 * @param mobilityPlane The type of mobility plane being used.
 	 */
 	public MRPatrolServer(String playerServerIP, int playerServerPort, int pharosServerPort, 
-			String mCastAddress, int mCastPort, MotionArbiter.MotionType mobilityPlane) 
+			/*String mCastAddress, int mCastPort,*/ MotionArbiter.MotionType mobilityPlane) 
 	{
 		boolean SimulateAll = false;
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
 		this.pharosServerPort = pharosServerPort;
 		
-		this.mCastAddress = mCastAddress;
-		this.mCastPort = mCastPort;
+//		this.mCastAddress = mCastAddress;
+//		this.mCastPort = mCastPort;
 		
 		// create the simulation environment
 		//if(System.getProperty ("simulateBehave") != null)
@@ -126,21 +126,21 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			System.exit(1);
 		}
 		
-		if ((System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null)&& !SimulateAll) {
-			if (!initWiFiBeacons()) {
-				logErr("Failed to initialize the WiFi beaconer!");
-				System.exit(1);
-			}
-		} else
-			log("WiFi beacons disabled.");
+//		if ((System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null) && !SimulateAll) {
+//			if (!initWiFiBeacons()) {
+//				logErr("Failed to initialize the WiFi beaconer!");
+//				System.exit(1);
+//			}
+//		} else
+//			log("WiFi beacons disabled.");
 		
-		if ((System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) && !SimulateAll){
-			if (!initTelosBeacons()) {
-				logErr("Failed to initialize TelosB beaconer!");
-				System.exit(1);
-			}
-		} else
-			log("TelosB beacons disabled.");
+//		if ((System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) && !SimulateAll){
+//			if (!initTelosBeacons()) {
+//				logErr("Failed to initialize TelosB beaconer!");
+//				System.exit(1);
+//			}
+//		} else
+//			log("TelosB beacons disabled.");
 	}
 	
 	/**
@@ -216,70 +216,75 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		return true;
 	}
 	
+	/**
+	 * Initializes the Pharos server.  This consists of starting the TCPMessageReceiver.
+	 * 
+	 * @return true if successful.
+	 */
 	private boolean initPharosServer() {
 		msgRcvr = new TCPMessageReceiver(this, pharosServerPort);
 		return true;
 	}
 	
-	private boolean initWiFiBeacons() {
-    	// Obtain the multicast address		
-		InetAddress mCastGroupAddress = null;
-		try {
-			mCastGroupAddress = InetAddress.getByName(mCastAddress);
-		} catch (UnknownHostException uhe) {
-			logErr("initWiFiBeacons: Problems getting multicast address");
-			uhe.printStackTrace();
-			return false;
-		}
-		
-		String pharosIP;
-		try {
-			pharosIP = RobotIPAssignments.getAdHocIP();
-		} catch (PharosException e1) {
-			logErr("initWiFiBeacons: Unable to get ad hoc IP address: " + e1.getMessage());
-			e1.printStackTrace();
-			return false;
-		}
-		
-		String pharosNI;
-		try {
-			pharosNI = RobotIPAssignments.getAdHocNetworkInterface();
-		} catch (PharosException e1) {
-			logErr("initWiFiBeacons: Unable to get ad hoc network interface: " + e1.getMessage());
-			e1.printStackTrace();
-			return false;
-		}
-		
-		if (pharosIP == null || pharosNI == null) {
-			logErr("initWiFiBeacons: Unable to get pharos IP or pharos network interface...");
-			return false;
-		}
-		
-		try {
-			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(pharosIP), pharosServerPort);
-			wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
-			wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
-
-			// Start receiving beacons
-			wifiBeaconReceiver.start();
-			return true;
-		} catch (UnknownHostException e) {
-			logErr("initWiFiBeacons: Problem initializing WiFi beacons: " + e.getMessage());
-			e.printStackTrace();
-		}
-		return false;
-	}
-	
-	private boolean initTelosBeacons() {
-		try {
-			telosRadioSignalMeter = new pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster();
-		} catch (TelosBeaconException e) {
-			logErr("initTelosBeacons: Problem initializing TelosB beacons: " + e.getMessage());
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
+//	private boolean initWiFiBeacons() {
+//    	// Obtain the multicast address		
+//		InetAddress mCastGroupAddress = null;
+//		try {
+//			mCastGroupAddress = InetAddress.getByName(mCastAddress);
+//		} catch (UnknownHostException uhe) {
+//			logErr("initWiFiBeacons: Problems getting multicast address");
+//			uhe.printStackTrace();
+//			return false;
+//		}
+//		
+//		String pharosIP;
+//		try {
+//			pharosIP = RobotIPAssignments.getAdHocIP();
+//		} catch (PharosException e1) {
+//			logErr("initWiFiBeacons: Unable to get ad hoc IP address: " + e1.getMessage());
+//			e1.printStackTrace();
+//			return false;
+//		}
+//		
+//		String pharosNI;
+//		try {
+//			pharosNI = RobotIPAssignments.getAdHocNetworkInterface();
+//		} catch (PharosException e1) {
+//			logErr("initWiFiBeacons: Unable to get ad hoc network interface: " + e1.getMessage());
+//			e1.printStackTrace();
+//			return false;
+//		}
+//		
+//		if (pharosIP == null || pharosNI == null) {
+//			logErr("initWiFiBeacons: Unable to get pharos IP or pharos network interface...");
+//			return false;
+//		}
+//		
+//		try {
+//			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(pharosIP), pharosServerPort);
+//			wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
+//			wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
+//
+//			// Start receiving beacons
+//			wifiBeaconReceiver.start();
+//			return true;
+//		} catch (UnknownHostException e) {
+//			logErr("initWiFiBeacons: Problem initializing WiFi beacons: " + e.getMessage());
+//			e.printStackTrace();
+//		}
+//		return false;
+//	}
+//	
+//	private boolean initTelosBeacons() {
+//		try {
+//			telosRadioSignalMeter = new pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster();
+//		} catch (TelosBeaconException e) {
+//			logErr("initTelosBeacons: Problem initializing TelosB beacons: " + e.getMessage());
+//			e.printStackTrace();
+//			return false;
+//		}
+//		return true;
+//	}
 	
 	/**
 	 * Sets the local system time.
@@ -311,17 +316,19 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		case SET_TIME:
 			setSystemTime(((SetTimeMsg)msg).getTime());
 			break;
-		case LOAD_GPS_MOTION_SCRIPT:
-			log("newMessage: Loading GPS-based motion script...");
-			MotionScriptMsg gpsMSMsg = (MotionScriptMsg)msg;
-			gpsMotionScript = gpsMSMsg.getScript();
+//		case LOAD_GPS_MOTION_SCRIPT:
+//			log("newMessage: Loading GPS-based motion script...");
+//			MotionScriptMsg gpsMSMsg = (MotionScriptMsg)msg;
+//			gpsMotionScript = gpsMSMsg.getScript();
+//			break;
+//		case LOAD_RELATIVE_MOTION_SCRIPT:
+//			log("newMessage: Loading relative motion script...");
+//			RelativeMotionScriptMsg relMMsg = (RelativeMotionScriptMsg)msg;
+//			relMotionScript = relMMsg.getScript();
+//			break;
+		case LOAD_BEHAVIORCONFIG_FILE:
+			log("newMessage: Loaded behaviorConfigfile: " + msg);
 			break;
-		case LOAD_RELATIVE_MOTION_SCRIPT:
-			log("newMessage: Loading relative motion script...");
-			RelativeMotionScriptMsg relMMsg = (RelativeMotionScriptMsg)msg;
-			relMotionScript = relMMsg.getScript();
-			break;
-		///case LOAD_BEHAVIORCONFIG_FILE:
 		case CUSTOM:
 			log("newMessage: Loading behavior based configuation file...");
 			MRPConfigMsg behMsg = (MRPConfigMsg)msg; 
@@ -366,20 +373,20 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		// Start the file logger
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		flogger = new FileLogger(fileName);
-		
 		log("startExp: starting experiment\n");
 		
 		if(gpsDataBuffer == null){
-			System.err.print("gpsDataBuffer is null before setting logger\n");
+			logErr("startExp: gpsDataBuffer is null before setting logger\n");
 			System.exit(1);
 		}
+		
 		log("startExp: Starting the file logger...");
 		if (motionArbiter != null)				motionArbiter.setFileLogger(flogger);
 		if (gpsDataBuffer != null)				gpsDataBuffer.setFileLogger(flogger);
 		if (compassDataBuffer!= null) 			compassDataBuffer.setFileLogger(flogger);
-		if (wifiBeaconBroadcaster != null)			wifiBeaconBroadcaster.setFileLogger(flogger);
-		if (wifiBeaconReceiver != null) 			wifiBeaconReceiver.setFileLogger(flogger);
-		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
+//		if (wifiBeaconBroadcaster != null)		wifiBeaconBroadcaster.setFileLogger(flogger);
+//		if (wifiBeaconReceiver != null) 		wifiBeaconReceiver.setFileLogger(flogger);
+//		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
 		if (msgSender != null) 					msgSender.setFileLogger(flogger);
 		if (msgRcvr != null)					msgRcvr.setFileLogger(flogger);
 		
@@ -388,17 +395,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		// Start the individual components
 		if (compassDataBuffer != null)			compassDataBuffer.start();
 //		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
-		
-		// This is temporary code for mission 14...
-		//flogger.log("PharosServer: Starting UDPRxTx:");
-		//udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
 
 		if(gpsDataBuffer == null){
 			System.err.print("gpsDataBuffer is null after setting logger\n");
 			System.exit(1);
 		}
 
-		
 		log("startExp: Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
@@ -412,35 +414,38 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		
 		
 		switch(expType) {
-			case FOLLOW_GPS_MOTION_SCRIPT:
-				log("startExp: Starting GPS-based motion script...");
-				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-						gpsDataBuffer, flogger);
-				Scooter scooter = new Scooter(motionArbiter, flogger);
-				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
-						wifiBeaconBroadcaster, telosRadioSignalMeter, flogger);
-				wpFollower.start(gpsMotionScript, this);
-				break;
-			case FOLLOW_RELATIVE_MOTION_SCRIPT:
-				log("startExp: Starting relative motion script...");
-				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript, flogger);
-				navigatorRel.start();
-				break;
+//			case FOLLOW_GPS_MOTION_SCRIPT:
+//				log("startExp: Starting GPS-based motion script...");
+//				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
+//						gpsDataBuffer, flogger);
+//				Scooter scooter = new Scooter(motionArbiter, flogger);
+//				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
+//						wifiBeaconBroadcaster, telosRadioSignalMeter, flogger);
+//				wpFollower.start(gpsMotionScript, this);
+//				break;
+//			case FOLLOW_RELATIVE_MOTION_SCRIPT:
+//				log("startExp: Starting relative motion script...");
+//				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript, flogger);
+//				navigatorRel.start();
+//				break;
 			case RUN_BEHAVIOR_GPS:
 				log("startExp: Starting Behavior-based GPS following experiment...");
-				if ( gpsDataBuffer == null) {
-					System.err.println("MRPatrolServer: About to Create Manager: GPS Data buffer is NULL!");
+				if (gpsDataBuffer == null) {
+					logErr("startExp: About to Create Manager: GPS Data buffer is NULL!");
 					System.exit(1);
 				}
 				NavigateCompassGPS mynavigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
+				
 				boolean dynamicTeam;
 				if (System.getProperty ("MRPatrol.dynamicManagingTeam") == null) 
 					dynamicTeam = false;
 				else
 					dynamicTeam = true;
-				manageMRP =new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger, dynamicTeam);
+				
+				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger, dynamicTeam);
 				manageMRP.run();
+				log("startExp: manager created.");
 				break;
 		}
 		
@@ -462,16 +467,16 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			motionArbiter.setFileLogger(null);
 		}
 		
-		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
-		if (wifiBeaconBroadcaster != null) {
-			wifiBeaconBroadcaster.setFileLogger(null);
-			wifiBeaconBroadcaster.stop();
-		}
-		
-		flogger.log("PharosServer: Stopping the WiFi beacon receiver.");
-		if (wifiBeaconReceiver != null) {
-			wifiBeaconReceiver.setFileLogger(null);
-		}
+//		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+//		if (wifiBeaconBroadcaster != null) {
+//			wifiBeaconBroadcaster.setFileLogger(null);
+//			wifiBeaconBroadcaster.stop();
+//		}
+//		
+//		flogger.log("PharosServer: Stopping the WiFi beacon receiver.");
+//		if (wifiBeaconReceiver != null) {
+//			wifiBeaconReceiver.setFileLogger(null);
+//		}
 		
 		flogger.log("PharosServer: Stopping the GPS data buffer.");
 		if (gpsDataBuffer != null)	{
@@ -485,11 +490,11 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			compassDataBuffer.stop();
 		}
 		
-		flogger.log("PharosServer: Stopping the TelosB signal meter.");
-		if (telosRadioSignalMeter != null) {
-			telosRadioSignalMeter.setFileLogger(null);
-			telosRadioSignalMeter.stop();
-		}
+//		flogger.log("PharosServer: Stopping the TelosB signal meter.");
+//		if (telosRadioSignalMeter != null) {
+//			telosRadioSignalMeter.setFileLogger(null);
+//			telosRadioSignalMeter.stop();
+//		}
 		
 		//flogger.log("PharosServer: Stopping the UDP tester.");
 		//udpTest.stop();
@@ -531,17 +536,17 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.mrpatrol <options>\n");
+		print("Usage: pharoslabut.demo.mrpatrol.MrPatrolServer <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");
 		print("\t-pharosPort <port number>: The Pharos Server's port number (default 7776)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
-		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
-		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
+//		print("\t-mCastAddress <ip address>: The Pharos Server's multicast group address (default 230.1.2.3)");
+//		print("\t-mCastPort <port number>: The Pharos Server's multicast port number (default 6000)");
 		print("\t-simulate: Localhost simulation (no connection to player server)");
-		print("\t-noTelosBBeacons: Disable TelosB beacons (default enable TelosB beacons)");
-		print("\t-noWiFiBeacons: Disable WiFi beacons (default enable WiFi beacons)");
+//		print("\t-noTelosBBeacons: Disable TelosB beacons (default enable TelosB beacons)");
+//		print("\t-noWiFiBeacons: Disable WiFi beacons (default enable WiFi beacons)");
 		print("\t-dynamic: creating a dynamic team based on robots in contact");
 		print("\t-debug: enable debug mode");
 	}
@@ -550,8 +555,8 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		String playerIP = "localhost";
 		int playerPort = 6665;
 		int pharosPort = 7776;
-		String mCastAddress = "230.1.2.3";
-		int mCastPort = 6000;
+//		String mCastAddress = "230.1.2.3";
+//		int mCastPort = 6000;
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
 		try {
@@ -562,12 +567,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 				else if (args[i].equals("-playerPort")) {
 					playerPort = Integer.valueOf(args[++i]);
 				}
-				else if (args[i].equals("-mCastAddress")) {
-					mCastAddress = args[++i];
-				}
-				else if (args[i].equals("-mCastPort")) {
-					mCastPort = Integer.valueOf(args[++i]);
-				}
+//				else if (args[i].equals("-mCastAddress")) {
+//					mCastAddress = args[++i];
+//				}
+//				else if (args[i].equals("-mCastPort")) {
+//					mCastPort = Integer.valueOf(args[++i]);
+//				}
 				else if (args[i].equals("-mobilityPlane")) {
 					String mp = args[++i].toLowerCase();
 					if (mp.equals("traxxas"))
@@ -582,15 +587,15 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 						System.exit(1);
 					}
 				}
-				else if (args[i].equals("-noWiFiBeacons")) {
-					System.setProperty ("PharosMiddleware.disableWiFiBeacons", "true");
-				}
+//				else if (args[i].equals("-noWiFiBeacons")) {
+//					System.setProperty ("PharosMiddleware.disableWiFiBeacons", "true");
+//				}
 				else if(args[i].equals("-dynamic")){
 					System.setProperty("MRPatrol.dynamicManagingTeam", "true");
 				}
-				else if (args[i].equals("-noTelosBBeacons")) {
-					System.setProperty ("PharosMiddleware.disableTelosBBeacons", "true");
-				}
+//				else if (args[i].equals("-noTelosBBeacons")) {
+//					System.setProperty ("PharosMiddleware.disableTelosBBeacons", "true");
+//				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
@@ -615,11 +620,11 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		print("Player Server port: " + playerPort);
 		print("Pharos Server Port: " + pharosPort);
 		print("Mobility plane: " + mobilityPlane);
-		print("Multicast Address: " + mCastAddress);
-		print("Multicast Port: " + mCastPort);
+//		print("Multicast Address: " + mCastAddress);
+//		print("Multicast Port: " + mCastPort);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		print("Simulate: "+((System.getProperty ("simulateBehave") != null) ? true : false));
 		
-		new MRPatrolServer(playerIP, playerPort, pharosPort, mCastAddress, mCastPort, mobilityPlane);
+		new MRPatrolServer(playerIP, playerPort, pharosPort, /*mCastAddress, mCastPort,*/ mobilityPlane);
 	}
 }
