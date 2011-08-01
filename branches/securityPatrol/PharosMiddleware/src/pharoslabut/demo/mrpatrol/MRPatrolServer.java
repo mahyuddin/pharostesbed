@@ -19,9 +19,9 @@ import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.navigate.MotionScriptFollowerDoneListener;
 import pharoslabut.navigate.NavigateCompassGPS;
 //import pharoslabut.navigate.NavigateRelative;
-import pharoslabut.navigate.RelativeMotionScript;
+//import pharoslabut.navigate.RelativeMotionScript;
 //import pharoslabut.navigate.Scooter;
-import pharoslabut.navigate.motionscript.MotionScript;
+//import pharoslabut.navigate.motionscript.MotionScript;
 //import pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster;
 //import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 import pharoslabut.sensors.CompassDataBuffer;
@@ -94,7 +94,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	public MRPatrolServer(String playerServerIP, int playerServerPort, int pharosServerPort, 
 			/*String mCastAddress, int mCastPort,*/ MotionArbiter.MotionType mobilityPlane) 
 	{
-		boolean SimulateAll = false;
+//		boolean SimulateAll = false;
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
 		this.pharosServerPort = pharosServerPort;
@@ -121,9 +121,13 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			System.exit(1);
 		}
 		
-		if (!createPlayerClient(mobilityPlane)) {
-			logErr("Failed to connect to Player server!");
-			System.exit(1);
+		if (System.getProperty ("simulateBehave") == null) {
+			if (!createPlayerClient(mobilityPlane)) {
+				logErr("Failed to connect to Player server!");
+				System.exit(1);
+			}
+		} else {
+			log("Running in simulation mode, not connecting to player server.");
 		}
 		
 //		if ((System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null) && !SimulateAll) {
