@@ -33,7 +33,7 @@ public class Manager {
 	private TCPMessageSender _sender;
 	
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger, boolean manageDynamic){
-		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), flogger);
+		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), mrpConfdata.GetNumMissions(), flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
@@ -46,20 +46,22 @@ public class Manager {
 			_wm.setIp(index,mrpConfdata.GetRobotData(index).GetIP());
 			_wm.setPort(index, mrpConfdata.GetRobotData(index).GetPort());
 		}
-		for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){	
-			_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData, _flogger));
-			_behVect.get(index).BehSetIndex(index);
-			log(" behavior index is: "+_behVect.get(index).BehGetIndex());
-			// add the circular behavior nature
-			if(index>0){
-				_behVect.get(index-1).addNext(_behVect.get(index));
+		for(int round = 0; round < _CircularRepeats ; round ++){
+			for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){	
+				_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData, _flogger));
+				_behVect.get(_behVect.size()-1).BehSetIndex(index + round*mrpConfdata.GetNumMissions());
+				log(" behavior index is: "+_behVect.get(_behVect.size()-1).BehGetIndex());
+				// add the circular behavior nature
+				if(index !=0 || round!=0){
+					_behVect.get(_behVect.size()-2).addNext(_behVect.get(_behVect.size()-1));
+				}
 			}
 		}
 		
 		log("System circular: "+_CircularRepeats+"behavior vector size is: "+_behVect.size());
-		if( _CircularRepeats > 0){
-			_behVect.get(mrpConfdata.GetNumMissions()-1).addNext(_behVect.get(0));
-		}
+//		if( _CircularRepeats > 0){
+//			_behVect.get(mrpConfdata.GetNumMissions()-1).addNext(_behVect.get(0));
+//		}
 		log("Manager: after _CircularRepeats\n");
 		_current = _behVect.get(0);
 		_currentIndex = 0;
@@ -88,6 +90,7 @@ public class Manager {
 
 		if(mrpConfdata.GetHomePort() !=null){
 			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData, _flogger);
+			_concludeBehave.BehSetIndex(_behVect.size());
 		} else {
 			_concludeBehave = null;
 		}
@@ -119,7 +122,7 @@ public class Manager {
 		//If you want your robot to be synchronized when behavior changed, run this method.
 		waitToTeam();
 
-		int numberRounds = _CircularRepeats*_behVect.size();
+//		int numberRounds = _CircularRepeats*_behVect.size();
 		while(_current != null)
 		{
 			log("run: running behavior "+_current.getClass().getName()+_currentIndex);
@@ -155,8 +158,10 @@ public class Manager {
 			waitToTeam();
 			
 			_current = _current.getNext();
-			if(_current == null)
+			if(_current == null) {
+				log("run: Finished all behaviors - exiting");
 				break;
+			}
 
 			_currentIndex = _current.BehGetIndex();
 			
@@ -164,18 +169,20 @@ public class Manager {
 			sendBehaviorToClients();
 			waitToTeam();
 			
-			if(numberRounds<=0)
-				break;
-			numberRounds--;
+//			if(numberRounds<=0)
+//				break;
+//			numberRounds--;
 		}
 
 		if(_concludeBehave!=null){
 			if(_concludeBehave.startCondition() == true){
 				log("run: Entering concluding behavior (start condition true)");
-				while(!_concludeBehave.startCondition()){
+				while(!_concludeBehave.stopCondition()){
 					log("run: running conclude behavior");
 					_concludeBehave.action();
 				}
+			}else{
+				log("run: startCondition of concluding behavior is false");
 			}
 		}
 		
@@ -257,7 +264,8 @@ public class Manager {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			
+			if(_manageDynamic)
+				_wm.checkAliveTeam();
 			isSynched = _manageDynamic ? _wm.isTeamSynchronizedDynamically() : _wm.isTeamSynchronized() ;
 		}
 		

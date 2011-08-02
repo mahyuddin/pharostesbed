@@ -8,7 +8,7 @@ import pharoslabut.experiment.ExpType;
  * 
  * @author Chien-Liang Fok
  */
-public class StartExpMsg implements Message {
+public class StartExpMsg implements AckedMsg {
 
 	private static final long serialVersionUID = -2260269827599336883L;
 
