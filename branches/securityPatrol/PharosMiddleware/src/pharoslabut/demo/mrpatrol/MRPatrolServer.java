@@ -453,13 +453,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 				NavigateCompassGPS mynavigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 						gpsDataBuffer, flogger);
 				
-				boolean dynamicTeam;
-				if (System.getProperty ("MRPatrol.dynamicManagingTeam") == null) 
-					dynamicTeam = false;
-				else
-					dynamicTeam = true;
-				
-				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger, dynamicTeam);
+				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger);
 				manageMRP.run();
 				log("startExp: manager created.");
 				break;
@@ -563,7 +557,6 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		print("\t-simulate: Localhost simulation (no connection to player server)");
 //		print("\t-noTelosBBeacons: Disable TelosB beacons (default enable TelosB beacons)");
 //		print("\t-noWiFiBeacons: Disable WiFi beacons (default enable WiFi beacons)");
-		print("\t-dynamic: creating a dynamic team based on robots in contact");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -606,9 +599,6 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 //				else if (args[i].equals("-noWiFiBeacons")) {
 //					System.setProperty ("PharosMiddleware.disableWiFiBeacons", "true");
 //				}
-				else if(args[i].equals("-dynamic")){
-					System.setProperty("MRPatrol.dynamicManagingTeam", "true");
-				}
 //				else if (args[i].equals("-noTelosBBeacons")) {
 //					System.setProperty ("PharosMiddleware.disableTelosBBeacons", "true");
 //				}
