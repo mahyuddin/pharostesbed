@@ -135,7 +135,7 @@ public class WorldModel {
 			return true;
 		}
 		
-		if(behaviorName == null){
+		if(behaviorName == null) {
 			log("isTeamSynchronized: current behavior NULL\n");
 			return false;
 		}
@@ -278,7 +278,8 @@ public class WorldModel {
 	}
 	
 	public String toString() {
-		return "WorldModel: IP=" + getMyIp() + ", port=" + getMyPort() + ", teamSize=" + getTeamSize() + ", myIndex=" + getMyIndex() 
-		+ ", currentBehaviorID=" + getCurrentBehaviorID() + ", currentBehaviorName=" + getCurrentBehaviorName();
+		return "WorldModel: MyIP=" + getMyIp() + ", MyPort=" + getMyPort() + ", TeamSize=" + getTeamSize() 
+		+ ",\n\tMyIndex=" + getMyIndex() + ", CurrentBehaviorID=" + getCurrentBehaviorID() + ", CurrentBehaviorName=" + getCurrentBehaviorName() 
+		+ ",\n\tisTeamSynchronized=" + isTeamSynchronized() + ", isTeamSynchronizedDynamically=" + isTeamSynchronizedDynamically();
 	}
 }
