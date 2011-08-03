@@ -276,4 +276,9 @@ public class WorldModel {
 		if (_flogger != null)
 			_flogger.log(result);
 	}
+	
+	public String toString() {
+		return "WorldModel: IP=" + getMyIp() + ", port=" + getMyPort() + ", teamSize=" + getTeamSize() + ", myIndex=" + getMyIndex() 
+		+ ", currentBehaviorID=" + getCurrentBehaviorID() + ", currentBehaviorName=" + getCurrentBehaviorName();
+	}
 }
