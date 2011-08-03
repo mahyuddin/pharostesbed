@@ -4,6 +4,12 @@ package pharoslabut.behavior;
 
 import pharoslabut.io.*;
 
+/**
+ * This message notifies teammates of the current status of the sender.
+ * It specifies which behavior the sender is currently executing.
+ * 
+ * @author Noa Agmon
+ */
 public class MultiRobotBehaveMsg implements AckedMsg {
 		
 		private static final long serialVersionUID = -7631305555004386678L;
@@ -14,6 +20,13 @@ public class MultiRobotBehaveMsg implements AckedMsg {
 //		private int _replyPort;
 		private int _behaveID;
 
+		/**
+		 * The constructor.
+		 * 
+		 * @param behavename The name of the behavior being executed.
+		 * @param behaveID The ID of the behavior being executed.
+		 * @param myID The ID of the sender.
+		 */
 		public MultiRobotBehaveMsg(String behavename, int behaveID, int myID) {
 			_behaveName = new String(behavename);
 			_behaveID = behaveID;
