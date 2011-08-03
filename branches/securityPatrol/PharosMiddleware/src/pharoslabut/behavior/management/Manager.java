@@ -32,16 +32,18 @@ public class Manager {
 	
 	private TCPMessageSender _sender;
 	
-	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger, boolean manageDynamic){
+	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger){
 		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), mrpConfdata.GetNumMissions(), flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
 		_sender = sender;
 		_flogger = flogger;
-		_manageDynamic = manageDynamic;
+		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
 		
-		log("Manager: number of robots:"+mrpConfdata.GetNumRobots()+" nummissions: "+mrpConfdata.GetNumMissions());
+		log("Manager: number of robots:"+mrpConfdata.GetNumRobots()+
+					" nummissions: "+mrpConfdata.GetNumMissions() + 
+						" Dynamic (loose) coordination: "+_manageDynamic);
 		for(int index = 0; index<mrpConfdata.GetNumRobots(); index++){
 			_wm.setIp(index,mrpConfdata.GetRobotData(index).GetIP());
 			_wm.setPort(index, mrpConfdata.GetRobotData(index).GetPort());
