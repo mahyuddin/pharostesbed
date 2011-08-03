@@ -17,6 +17,8 @@ public class MRPConfData {
 	private int _MRPCircularRepeats; 
 	private Vector<MissionData> _missionData;
 	private MissionData _homePort;
+	private boolean _dynamicCoordination; 
+	
 
 	public MRPConfData(MRPConfigMsg behMsg){
 		_MRPCircularRepeats = 0;
@@ -27,6 +29,9 @@ public class MRPConfData {
 		parsetheconfData = new StringParsing(behMsg.GetConfigData());
 		int numofrobots = Integer.parseInt((parsetheconfData.getParameterValue("TeamSize").trim()));
 		int numbehave = Integer.parseInt((parsetheconfData.getParameterValue("BehSize").trim()));
+		int getDynCoord = Integer.parseInt((parsetheconfData.getParameterValue("Dynamic").trim()));
+		
+		_dynamicCoordination = (getDynCoord == 1)? true : false;
 		
 		_Myindex = Integer.parseInt((parsetheconfData.getParameterValue("MyIndex").trim()));
 		_MRPCircularRepeats = Integer.parseInt((parsetheconfData.getParameterValue("Circular").trim()));		
@@ -35,6 +40,7 @@ public class MRPConfData {
 		_homePort = parsetheconfData.GetHomePort();
 	}
 	
+	public boolean IsDynamicCoordinated(){return _dynamicCoordination;}
 	public int CircularRepeat(){return _MRPCircularRepeats;}
 	public int GetMyindex(){return _Myindex;}
 	public Robot GetRobotData(int inIndex){return _robotData.get(inIndex);}
