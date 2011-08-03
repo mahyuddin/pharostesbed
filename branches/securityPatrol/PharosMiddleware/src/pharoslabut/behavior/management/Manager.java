@@ -1,8 +1,8 @@
 package pharoslabut.behavior.management;
 
-import java.io.FileNotFoundException;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+//import java.io.FileNotFoundException;
+//import java.net.InetAddress;
+//import java.net.UnknownHostException;
 import java.util.Vector;
 
 import pharoslabut.behavior.*;
@@ -10,7 +10,7 @@ import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.*;
 import pharoslabut.demo.mrpatrol.*;
-import pharoslabut.exceptions.PharosException;
+//import pharoslabut.exceptions.PharosException;
 
 
 
@@ -22,7 +22,7 @@ public class Manager {
 	int _currentIndex;
 	//Server _server;
 	//Client _client;
-	private MissionData [] _missionData; 
+//	private MissionData [] _missionData; 
 	protected static FileLogger _flogger = null;
 	NavigateCompassGPS _NavigateData;
 	/* need to know whether to connect the last behavior to the first, and if so - for how many repeats */
@@ -30,24 +30,41 @@ public class Manager {
 	private boolean _manageDynamic;
 	Behavior _concludeBehave;
 	
-	private TCPMessageSender _sender;
+//	private TCPMessageSender _sender;
 	
+	/**
+	 * This broadcasts MultiRobotBehaveMsg messages to teammates.
+	 */
+	private BehaviorBroadcaster broadcaster;
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param mrpConfdata
+	 * @param navigationdata
+	 * @param sender
+	 * @param flogger The file logger for logging debug messages.
+	 */
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger){
 		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), mrpConfdata.GetNumMissions(), flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
-		_sender = sender;
+//		_sender = sender;
 		_flogger = flogger;
 		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
+		broadcaster = new BehaviorBroadcaster(sender, flogger);
 		
-		log("Manager: number of robots:"+mrpConfdata.GetNumRobots()+
-					" nummissions: "+mrpConfdata.GetNumMissions() + 
-						" Dynamic (loose) coordination: "+_manageDynamic);
-		for(int index = 0; index<mrpConfdata.GetNumRobots(); index++){
-			_wm.setIp(index,mrpConfdata.GetRobotData(index).GetIP());
+		log("Manager: number of robots:" + mrpConfdata.GetNumRobots() +
+					" nummissions: " + mrpConfdata.GetNumMissions() + 
+						" Dynamic (loose) coordination: " + _manageDynamic);
+		
+		// Initialize the IP and ports for all teammates
+		for(int index = 0; index < mrpConfdata.GetNumRobots(); index++) {
+			_wm.setIp(index, mrpConfdata.GetRobotData(index).GetIP());
 			_wm.setPort(index, mrpConfdata.GetRobotData(index).GetPort());
 		}
+		
 		for(int round = 0; round < _CircularRepeats ; round ++){
 			for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){	
 				_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData, _flogger));
@@ -120,7 +137,8 @@ public class Manager {
 			return;
 		}
 		//update that we established a connection to all servers, and are now able to continue
-		sendBehaviorToClients();
+		broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+		
 		//If you want your robot to be synchronized when behavior changed, run this method.
 		waitToTeam();
 
@@ -148,15 +166,15 @@ public class Manager {
 				
 				log("run: calling sendBehaviorToClients...");
 				// This will act as keep-alive message
-				sendBehaviorToClients();
+				broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
 				
 				log("run: end of current loop...");
 			}
 			log("run: End behavior");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
-			sendBehaviorToClients();
-			log("Sending -- stop"+_current.getClass().getName()+_currentIndex+" to my clients");
+			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+			log("Sending -- stop" + _current.getClass().getName() + _currentIndex + " to my clients");
 			waitToTeam();
 			
 			_current = _current.getNext();
@@ -168,7 +186,7 @@ public class Manager {
 			_currentIndex = _current.BehGetIndex();
 			
 			_wm.setMyCurrentBehavior(_current.getClass().getName()+_currentIndex, _currentIndex);
-			sendBehaviorToClients();
+			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
 			waitToTeam();
 			
 //			if(numberRounds<=0)
@@ -192,52 +210,52 @@ public class Manager {
 		System.exit(0);
 	}
 	
-	/**
-	 * Sends a MultiRobotBehaveMsg to each teammate.
-	 */
-	private void sendBehaviorToClients() {
-		log("sendBehaviorToClients: Sending behavior to teammates:"
-				+ "\n\tBehavior name " + _wm.getCurrentBehaviorName() 
-				+ "\n\tBehavior ID: "+ _wm.getCurrentBehaviorID() 
-				+ "\n\tMy index "+ _wm.getMyIndex()
-				+ "\n\tMy port "+ _wm.getMyPort()+"\n");
-		
-		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex());
-		log("sendBehaviorToClients: Sending message: " + msg);
-		
-		// for each team member
-		for (int i = 0; i < _wm.getTeamSize(); i++) {
-			
-			// if the team member is not myself
-			if (i != _wm.getMyIndex()) {
-				String ip = _wm.getIp(i);
-				int port = _wm.getPort(i);
-				log("sendBehaviorToClients: Attempting to send message to " + ip + ":" + port);
-				
-				InetAddress address = null;
-				try {
-					address = InetAddress.getByName(ip);
-				} catch (UnknownHostException e) {
-					logErr("sendBehaviorToClients: UnknownHostException when trying to get InetAddress for " + ip + ", error message: " + e.getMessage());
-					e.printStackTrace();
-					continue;
-				}
-				
-				if (address != null) {
-					try {
-						log("sendBehaviorToClients: BEFORE Send: Sending " + _wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
-						_sender.sendMessage(address, port, msg);
-						log("sendBehaviorToClients: AFTER Send: Sent " + _wm.getCurrentBehaviorName() + " to Client " + i);
-					} catch (PharosException e) {
-						logErr("sendBehaviorToClients: PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
-						e.printStackTrace();
-					}
-				} else {
-					logErr("sendBehaviorToClients: Unable to send message because address was null!");
-				}
-			}
-		}
-	}
+//	/**
+//	 * Sends a MultiRobotBehaveMsg to each teammate.
+//	 */
+//	private void sendBehaviorToClients() {
+//		log("sendBehaviorToClients: Sending behavior to teammates:"
+//				+ "\n\tBehavior name " + _wm.getCurrentBehaviorName() 
+//				+ "\n\tBehavior ID: "+ _wm.getCurrentBehaviorID() 
+//				+ "\n\tMy index "+ _wm.getMyIndex()
+//				+ "\n\tMy port "+ _wm.getMyPort()+"\n");
+//		
+//		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(_wm.getCurrentBehaviorName(), _wm.getCurrentBehaviorID(), _wm.getMyIndex());
+//		log("sendBehaviorToClients: Sending message: " + msg);
+//		
+//		// for each team member
+//		for (int i = 0; i < _wm.getTeamSize(); i++) {
+//			
+//			// if the team member is not myself
+//			if (i != _wm.getMyIndex()) {
+//				String ip = _wm.getIp(i);
+//				int port = _wm.getPort(i);
+//				log("sendBehaviorToClients: Attempting to send message to " + ip + ":" + port);
+//				
+//				InetAddress address = null;
+//				try {
+//					address = InetAddress.getByName(ip);
+//				} catch (UnknownHostException e) {
+//					logErr("sendBehaviorToClients: UnknownHostException when trying to get InetAddress for " + ip + ", error message: " + e.getMessage());
+//					e.printStackTrace();
+//					continue;
+//				}
+//				
+//				if (address != null) {
+//					try {
+//						log("sendBehaviorToClients: BEFORE Send: Sending " + _wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
+//						_sender.sendMessage(address, port, msg);
+//						log("sendBehaviorToClients: AFTER Send: Sent " + _wm.getCurrentBehaviorName() + " to Client " + i);
+//					} catch (PharosException e) {
+//						logErr("sendBehaviorToClients: PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
+//						e.printStackTrace();
+//					}
+//				} else {
+//					logErr("sendBehaviorToClients: Unable to send message because address was null!");
+//				}
+//			}
+//		}
+//	}
 
 	/**
 	 * Waits for the team to become synchronized.
@@ -258,7 +276,7 @@ public class Manager {
 			
 			log("waitToTeam: team not yet synched, calling sendBehaviorToClients");
 			// send message to the teammates also while waiting for updates
-			sendBehaviorToClients();
+			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
 			
 			log("waitToTeam: done calling sendBehaviorToClients, pausing for 100ms before checking if team is synched");
 			try {
@@ -295,6 +313,4 @@ public class Manager {
 		if (_flogger != null)
 			_flogger.log(result);
 	}
-
-
 }

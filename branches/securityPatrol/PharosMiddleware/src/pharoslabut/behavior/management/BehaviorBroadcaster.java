@@ -10,7 +10,10 @@ import pharoslabut.logger.FileLogger;
 
 /**
  * Sends MultiRobotBehaveMsg messages to each teammate.  Throttles the rate at 
- * which these broadcasts may occur to prevent flooding the network.
+ * which these broadcasts may occur to prevent flooding the network.  To keep
+ * the broadcasts going, you must continue to call sendBehaviorToClients(...).
+ * You may call this method as frequently as you want, but the broadcasts will
+ * only occur every MIN_BROADCAST_PERIOD milliseconds.
  * 
  * @see pharoslabut.behavior.MultiRobotBehaveMsg
  * @author Chien-Liang Fok
@@ -25,7 +28,8 @@ public class BehaviorBroadcaster implements Runnable {
 	public static final long MIN_BROADCAST_PERIOD = 1000;
 	
 	/**
-	 * The world model of the sending robot.
+	 * The world model of the sender.  This is neede to determine the status of the sender
+	 * and the IPs of the teammates.
 	 */
 	private WorldModel wm = null;
 	
@@ -46,17 +50,21 @@ public class BehaviorBroadcaster implements Runnable {
 	
 	/**
 	 * The constructor.
+	 * 
+	 * @param sender The component that sends the message.
 	 */
-	public BehaviorBroadcaster() {
-		this(null);
+	public BehaviorBroadcaster(TCPMessageSender sender) {
+		this(sender, null);
 	}
 	
 	/**
 	 * The constructor.
 	 * 
+	 * @param sender The component that sends the message.
 	 * @param flogger The file logger for logging debug messages.
 	 */
-	public BehaviorBroadcaster(FileLogger flogger) {
+	public BehaviorBroadcaster(TCPMessageSender sender, FileLogger flogger) {
+		this.sender = sender;
 		this.flogger = flogger;
 		new Thread(this).start(); // This has its own thread.
 	}
@@ -91,11 +99,18 @@ public class BehaviorBroadcaster implements Runnable {
 	 * Performs the actual broadcast operation.
 	 */
 	private void doBroadcast(WorldModel wm) {
+		
 		log("doBroadcast: Sending behavior to teammates:"
 				+ "\n\tBehavior name " + wm.getCurrentBehaviorName() 
 				+ "\n\tBehavior ID: "+ wm.getCurrentBehaviorID() 
 				+ "\n\tMy index "+ wm.getMyIndex()
 				+ "\n\tMy port "+ wm.getMyPort()+"\n");
+		
+		// Check for fatal error conditions.
+		if (sender == null) {
+			logErr("doBroadcaster: sender was not set, aborting.");
+			System.exit(1);
+		}
 		
 		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(wm.getCurrentBehaviorName(), wm.getCurrentBehaviorID(), wm.getMyIndex());
 		log("doBroadcast: Sending message: " + msg);
@@ -165,7 +180,7 @@ public class BehaviorBroadcaster implements Runnable {
 			}
 		}
 		
-
+		log("run: Thread terminates.");
 	}
 		
 
