@@ -22,6 +22,9 @@
 #define ADC_Y_AXIS 0x8B
 #define ADC_Z_AXIS 0x89
 
+unsigned short x_axis;
+unsigned short y_axis;
+unsigned short z_axis;
 
 
 //all return units of mm

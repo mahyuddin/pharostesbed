@@ -236,10 +236,10 @@ void Command_sendAccelPacket(void) {
 	uint16_t i;
 	
 	outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
-	outToSerial[indx++] = PROTEUS_ACCEL_PACKET;  // Identify data as IR packet
-	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_x_axis()); // Package x
-	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_y_axis()); // Package y
-	indx = saveTwoBytes(outToSerial, indx, ACCEL_get_z_axis()); // Package z 
+	outToSerial[indx++] = PROTEUS_ACCEL_PACKET;  // Identify data as ACCEL packet
+	indx = saveTwoBytes(outToSerial, indx, X_AXIS_get()); // Package x
+	indx = saveTwoBytes(outToSerial, indx, Y_AXIS_get()); // Package y
+	indx = saveTwoBytes(outToSerial, indx, Z_AXIS_get()); // Package z 
 		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
 	
@@ -258,21 +258,25 @@ void Command_sendData() {
 	//if (sprintf(message, "Command_sendData Called") > 0)
 		  //Command_sendMessagePacket(message);
 		
-	if (_heartbeatReceived) {
-		LED_GREEN2 ^= 1;
+//	if (_heartbeatReceived) {
+//		LED_GREEN2 ^= 1;
 		
-		if (_interfacesEnabled & POSITION2D_INTERFACE)
-			Command_sendOdometryPacket();
+//		if (_interfacesEnabled & POSITION2D_INTERFACE)
+//			Command_sendOdometryPacket();
 		
-		if (_interfacesEnabled & COMPASS_INTERFACE)
-			Compass_getHeading();
+//		if (_interfacesEnabled & COMPASS_INTERFACE)
+//			Compass_getHeading();
 			
-		if (_interfacesEnabled & IR_INTERFACE)
-			Command_sendIRPacket();
-	} else {
-		LED_GREEN2 = LED_OFF;
-		LED_BLUE2 = LED_OFF;
-	}
+//		if (_interfacesEnabled & IR_INTERFACE)
+//			Command_sendIRPacket();
+		
+//		if ( _interfacesEnabled & ACCEL_INTERFACE)
+			Command_sendAccelPacket();
+		
+//	} else {
+//		LED_GREEN2 = LED_OFF;
+//		LED_BLUE2 = LED_OFF;
+//	}
 }
 
 void Command_sendStatus() {
@@ -386,6 +390,7 @@ interrupt 9 void sendDataInterrupt(void) {
 	 * every 1.4s, meaning we should always receive a heartbeat so long
 	 * as the x86 is connected and alive.
 	 */
+	
 	if (_int9Count == 70) { // 20ms * 70 = 1400ms (0.71Hz)
 		if (_heartbeatTimerArmed) {
 			_heartbeatReceived = FALSE;

@@ -219,10 +219,10 @@ typedef struct {
 
 	uint16_t newACCELdata;
 	uint16_t accel_data;
-	float accel_axis_data[2];
-	float accel_x_axis;  //xaxis accelerometer data
-	float accel_y_axis;  //yaxis accelerometer data
-	float accel_z_axis;  //zaxis accelerometer data
+	float  accel_data[2];
+	float  accel_x;  //xaxis accelerometer data
+	float  accel_y;  //yaxis accelerometer data
+	float  accel_z;  //zaxis accelerometer data
 	
 
 } proteus_comm_t;
