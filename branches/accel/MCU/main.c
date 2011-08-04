@@ -37,6 +37,7 @@ void main(void) {
 	ADC0_Init(); // enable IR sensors
 	Command_init();
 	
+
 	asm cli  // Enable interrupts
 	
 	for(;;) { // Foreground loop
@@ -44,11 +45,6 @@ void main(void) {
 		 * Multiple incoming bytes may be queued up.  Handle them. 
 		 */
 		SerialDriver_processRxBytes();
-		
-		/*
-		 * Only one instance of each task can exist at a single
-		 * point in time in the TaskHandler.
-		 */
-		TaskHandler_processNextTask();
-	} 
+	  TaskHandler_processNextTask();
+		}		
 }

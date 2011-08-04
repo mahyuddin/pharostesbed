@@ -52,6 +52,8 @@
 
 #include <sys/time.h>
 
+
+
 /**
  * Allocates memory for a proteus_comm_t object.
  * This object contains the details of the serial connection to the
@@ -650,7 +652,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 		
 		if(distance < 1023 && distance > 0){
-			r->accel_x_axis = distance;
+			r->accel_x = distance;
 			r->newACCELdata = 1;
 		}
 		
@@ -662,7 +664,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 		
 		if(distance < 1023 && distance > 0){
-			r->accel_y_axis = distance;
+			r->accel_y = distance;
 			r->newACCELdata = 1;
 		}
 
@@ -674,7 +676,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 	
 		if(distance < 1023 && distance > 0){
-			r->accel_z_axis = distance;
+			r->accel_z = distance;
 			r->newACCELdata = 1;
 		}
 	
@@ -682,9 +684,9 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		
 		if (r->newACCELdata) {
 			// taking this out... because this massive printing lags the performance of the computer too much
-			printf("proteus_comms: processAccelPacket: accel_x_axis  : %f mm\n", ((r->newACCELdata)?(r->accel_x_axis):0));
-			printf("proteus_comms: processAccelPacket: accel_y_axis: %f mm\n", ((r->newACCELdata)?(r->accel_y_axis):0));
-			printf("proteus_comms: processAccelPacket: accel_z_axis : %f mm\n", ((r->newACCELdata)?(r->accel_z_axis):0));
+			printf("proteus_comms: processAccelPacket: accel_x_axis: %f mm\n", ((r->newACCELdata)?(r->accel_x):0));
+			printf("proteus_comms: processAccelPacket: accel_y_axis: %f mm\n", ((r->newACCELdata)?(r->accel_y):0));
+			printf("proteus_comms: processAccelPacket: accel_z_axis: %f mm\n", ((r->newACCELdata)?(r->accel_z):0));
 			
 			
 		}
