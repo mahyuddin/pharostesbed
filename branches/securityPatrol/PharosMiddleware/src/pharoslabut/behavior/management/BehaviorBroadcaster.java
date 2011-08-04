@@ -9,7 +9,7 @@ import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.FileLogger;
 
 /**
- * Sends MultiRobotBehaveMsg messages to each teammate.  Throttles the rate at 
+ * Sends MultiRobotBehaveMsg messages to each team member.  Throttles the rate at 
  * which these broadcasts may occur to prevent flooding the network.  To keep
  * the broadcasts going, you must continue to call sendBehaviorToClients(...).
  * You may call this method as frequently as you want, but the broadcasts will
@@ -22,21 +22,26 @@ import pharoslabut.logger.FileLogger;
 public class BehaviorBroadcaster implements Runnable {
 	
 	/**
-	 * The minimum period between broadcasting MultiRobotBehaveMsg to each teammate.
+	 * The minimum period between broadcasting MultiRobotBehaveMsg to each team member.
 	 * Its units is milliseconds.
 	 */
 	public static final long MIN_BROADCAST_PERIOD = 1000;
 	
 	/**
-	 * The world model of the sender.  This is neede to determine the status of the sender
-	 * and the IPs of the teammates.
+	 * The world model of the sender.  This is needed to determine the status of the sender
+	 * and the IPs of the team members.
 	 */
-	private WorldModel wm = null;
+	private WorldModel wm;
 	
 	/**
-	 * The component that actually sends the message.
+	 * This actually sends the message.
 	 */
 	private TCPMessageSender sender;
+	
+	/**
+	 * Whether to broadcast the MultiRobotBehaveMsg to all team members.
+	 */
+	private boolean doSend = false;
 	
 	/**
 	 * Whether this broadcaster should continue to run.
@@ -52,19 +57,22 @@ public class BehaviorBroadcaster implements Runnable {
 	 * The constructor.
 	 * 
 	 * @param sender The component that sends the message.
+	 * @param wm The world model from which the MultiRobotBehaveMsg should be created.
 	 */
-	public BehaviorBroadcaster(TCPMessageSender sender) {
-		this(sender, null);
+	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm) {
+		this(sender, wm, null);
 	}
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param sender The component that sends the message.
+	 * @param wm The world model from which the MultiRobotBehaveMsg should be created. 
 	 * @param flogger The file logger for logging debug messages.
 	 */
-	public BehaviorBroadcaster(TCPMessageSender sender, FileLogger flogger) {
+	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm, FileLogger flogger) {
 		this.sender = sender;
+		this.wm = wm;
 		this.flogger = flogger;
 		new Thread(this).start(); // This has its own thread.
 	}
@@ -81,11 +89,14 @@ public class BehaviorBroadcaster implements Runnable {
 	/**
 	 * Initializes the broadcast process.
 	 * 
-	 * @param wm The world model from which the MultiRobotBehaveMsg should be created.
+	 
 	 */
-	public synchronized void sendBehaviorToClients(WorldModel wm) {
-		log("sendBehaviorToClients: Setting WorldModel to be: " + wm);
-		this.wm = wm;
+	public synchronized void sendBehaviorToClients() {
+		if (!doSend) {
+			log("sendBehaviorToClients: Setting doSend to be true.");
+			doSend = true;
+		} else
+			log("sendBehaviorToClients: doSend already true, ignoring request.");
 	}
 	
 	/**
@@ -98,20 +109,23 @@ public class BehaviorBroadcaster implements Runnable {
 	/**
 	 * Performs the actual broadcast operation.
 	 */
-	private void doBroadcast(WorldModel wm) {
+	private void doBroadcast() {
+		// Check for fatal error conditions.
+//		if (sender == null) {
+//			logErr("doBroadcast: sender not set, aborting.");
+//			System.exit(1);
+//		}
+//		if (wm == null) {
+//			logErr("doBroadcast: wm not set, aborting.");
+//			System.exit(1);
+//		}
 		
 		log("doBroadcast: Sending behavior to teammates:"
 				+ "\n\tBehavior name " + wm.getCurrentBehaviorName() 
 				+ "\n\tBehavior ID: "+ wm.getCurrentBehaviorID() 
 				+ "\n\tMy index "+ wm.getMyIndex()
 				+ "\n\tMy port "+ wm.getMyPort()+"\n");
-		
-		// Check for fatal error conditions.
-		if (sender == null) {
-			logErr("doBroadcaster: sender was not set, aborting.");
-			System.exit(1);
-		}
-		
+				
 		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(wm.getCurrentBehaviorName(), wm.getCurrentBehaviorID(), wm.getMyIndex());
 		log("doBroadcast: Sending message: " + msg);
 		
@@ -157,22 +171,17 @@ public class BehaviorBroadcaster implements Runnable {
 		log("run: Starting broadcast loop...");
 		
 		while (!done) {
-			WorldModel currWM = null;
-			
-			synchronized(this) {
-				currWM = wm; // grab a reference to the current world model (if it exists)
-				wm = null;  // reset the original reference to determine whether a new reference was set.
-			}
-			
-			if (currWM != null) {
-				log("run: Got a WorldModel, performing broadcast to teammates!");
-				doBroadcast(currWM);  
+			if (doSend) {
+				log("run: doSend true, broadcasting to teammates!");
+				doSend = false;
+				doBroadcast();  
 			} else
-				log("run: WorldModel unavailable, not broadcasting during this cycle");
+				log("run: doSend false, not broadcasting during this cycle");
 			
 			// Pause for the specified period.
 			synchronized(this) {
 				try {
+					log("run: pausing for " + MIN_BROADCAST_PERIOD + "ms.");
 					wait(MIN_BROADCAST_PERIOD);
 				} catch (InterruptedException e) {
 					e.printStackTrace();

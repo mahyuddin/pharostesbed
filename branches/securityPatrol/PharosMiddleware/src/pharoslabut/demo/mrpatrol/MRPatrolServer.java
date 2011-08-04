@@ -454,7 +454,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 						gpsDataBuffer, flogger);
 				
 				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger);
-				manageMRP.run();
+				manageMRP.start();
 				log("startExp: manager created.");
 				break;
 		}

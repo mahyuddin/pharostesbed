@@ -14,7 +14,7 @@ import pharoslabut.demo.mrpatrol.*;
 
 
 
-public class Manager {
+public class Manager implements Runnable {
 	Robot _robot;
 	WorldModel _wm;
 	Vector<Behavior> _behVect;
@@ -29,6 +29,7 @@ public class Manager {
 	private int _CircularRepeats; 
 	private boolean _manageDynamic;
 	Behavior _concludeBehave;
+	private boolean started = false;
 	
 //	private TCPMessageSender _sender;
 	
@@ -47,17 +48,18 @@ public class Manager {
 	 */
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger){
 		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), mrpConfdata.GetNumMissions(), flogger);
+		broadcaster = new BehaviorBroadcaster(sender, _wm, flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
 //		_sender = sender;
 		_flogger = flogger;
 		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
-		broadcaster = new BehaviorBroadcaster(sender, flogger);
 		
-		log("Manager: number of robots:" + mrpConfdata.GetNumRobots() +
-					" nummissions: " + mrpConfdata.GetNumMissions() + 
-						" Dynamic (loose) coordination: " + _manageDynamic);
+		
+		log("Manager: numRobots=" + mrpConfdata.GetNumRobots() +
+					", numMissions=" + mrpConfdata.GetNumMissions() + 
+					", Dynamic (loose) coordination=" + _manageDynamic);
 		
 		// Initialize the IP and ports for all teammates
 		for(int index = 0; index < mrpConfdata.GetNumRobots(); index++) {
@@ -127,6 +129,25 @@ public class Manager {
 		_wm.setTeamCurrentBehavior(behavename, teammateID, behaveID);
 	}
 	
+	/**
+	 * Starts the manager running.  Creates a new thread for the manager so the
+	 * calling thread can immediately return.  This is needed because the calling thread
+	 * is responsible for receiving messages.
+	 * 
+	 * This is called by MRPatrolServer.
+	 */
+	public void start() {
+		if (!started) {
+			started = true;
+			log("start: starting manager.");
+			new Thread(this).start();
+		} else 
+			log("start: WARNING: trying to start manager multiple times.");
+	}
+	
+	/**
+	 * This is the main loop of the manager.
+	 */
 	public void run()
 	{
 		log("run: running Manager\n");
@@ -137,7 +158,7 @@ public class Manager {
 			return;
 		}
 		//update that we established a connection to all servers, and are now able to continue
-		broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+		broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 		
 		//If you want your robot to be synchronized when behavior changed, run this method.
 		waitToTeam();
@@ -166,14 +187,14 @@ public class Manager {
 				
 				log("run: calling sendBehaviorToClients...");
 				// This will act as keep-alive message
-				broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+				broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 				
 				log("run: end of current loop...");
 			}
 			log("run: End behavior");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
-			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 			log("Sending -- stop" + _current.getClass().getName() + _currentIndex + " to my clients");
 			waitToTeam();
 			
@@ -186,7 +207,7 @@ public class Manager {
 			_currentIndex = _current.BehGetIndex();
 			
 			_wm.setMyCurrentBehavior(_current.getClass().getName()+_currentIndex, _currentIndex);
-			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 			waitToTeam();
 			
 //			if(numberRounds<=0)
@@ -276,7 +297,7 @@ public class Manager {
 			
 			log("waitToTeam: team not yet synched, calling sendBehaviorToClients");
 			// send message to the teammates also while waiting for updates
-			broadcaster.sendBehaviorToClients(_wm); // sendBehaviorToClients();
+			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 			
 			log("waitToTeam: done calling sendBehaviorToClients, pausing for 100ms before checking if team is synched");
 			try {
