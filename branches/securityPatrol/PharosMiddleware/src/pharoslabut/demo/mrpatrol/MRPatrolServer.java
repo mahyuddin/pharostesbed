@@ -364,7 +364,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 			stopExp();
 			break;
 		case UPDATE_BEH_MSG:
-			log("newMessage: updated behavior message...");
+			log("newMessage: updated behavior message: " + msg);
 			MultiRobotBehaveMsg mRmsg = (MultiRobotBehaveMsg)msg;
 			manageMRP.updateTeammates(mRmsg.getBehaveName(), mRmsg.getRobotID(), mRmsg.getBehaveID());
 			break;

@@ -126,6 +126,7 @@ public class Manager implements Runnable {
 	
 	public void updateTeammates(String behavename, int teammateID, int behaveID){
 		log("updateTeammates: new behavior " + behavename + " for teammate " + teammateID + " behaveID " + behaveID);
+		_wm.setCurrentMsgTime(teammateID);
 		_wm.setTeamCurrentBehavior(behavename, teammateID, behaveID);
 	}
 	
@@ -171,7 +172,7 @@ public class Manager implements Runnable {
 			//running the action loop
 			while(!_current.stopCondition())
 			{
-				log("run: stop condition false, continue to run...");
+				log("run: stop condition false, continue to run behavior "+ _current.BehGetIndex() +"**********");
 				synchronized(this) {
 				
 					try {
@@ -191,7 +192,7 @@ public class Manager implements Runnable {
 				
 				log("run: end of current loop...");
 			}
-			log("run: End behavior");
+			log("run: End behavior"+ _current.BehGetIndex() +"**********");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
 			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();

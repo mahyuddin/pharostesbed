@@ -87,6 +87,9 @@ public class WorldModel {
 	{
 		boolean wasAccepted = false;
 		
+		if(wmCurrentBehavior[index].equals(_outofRange)){
+			log("setTeamCurrentBehavior : Behaior of teammate " + index + " BACK IN RANGE");
+		}
 		for(int validIndices = wmCurrentIndex[index]; validIndices <= wmCurrentIndex[index] + VALIDITY_WINDOW && !wasAccepted; validIndices++) {
 //			int currValidIndex = validIndices % _numBehaviors;
 			if (behaveID == validIndices) {
@@ -171,7 +174,7 @@ public class WorldModel {
 			//Get Teammate's behavior ID
 			
 			if(isStop == false && behPureName.equals(teamBeh)==false) {
-				log("isTeamSynchronized: isstop = false; behPureName.equals(teamBeh) = false");
+				log("isTeamSynchronized:  Team is NOT synch: isstop = false; behPureName.equals(teamBeh) = false");
 				return false;
 			}
 			if((isStop == true) // I am stopped 

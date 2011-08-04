@@ -32,7 +32,7 @@ public class MRPatrolClient {
 //				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
 //			}
 			
-			log("Sending each robot their motion scripts...");
+			log("Sending each robot their motion scripts, numrobots=" + expConfig.numRobots());
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				log("\tSending configuration data to robot " + currRobot.getName());
