@@ -2,6 +2,7 @@ package pharoslabut.navigate;
 
 import playerclient3.*;
 import playerclient3.structures.blobfinder.*;
+import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 import pharoslabut.logger.*;
 import pharoslabut.navigate.LineFollowerEvent.LineFollowerEventType;
@@ -9,7 +10,7 @@ import pharoslabut.navigate.LineFollowerEvent.LineFollowerEventType;
 import java.util.*;
 
 /**
- * Follows a line using a CMUcam2.
+ * Follows a line using a CMUcam2
  * 
  * @author Seth Gee
  * @author Chien-Liang Fok
@@ -25,27 +26,41 @@ public class LineFollower implements Runnable {
 	/**
 	 * This is the maximum valid age of the blob data.  Anything older than that is discarded.
 	 */
-	public static final long BLOB_MAX_VALID_AGE = 1000;
+	public static final long BLOB_MAX_VALID_AGE = 1500;	//modified by sushen
 	
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = .5;
+	public static final double MAX_SPEED = .65;		//modified by sushen
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
 	 */
-	public static final double MIN_SPEED = 0.35;
+	public static final double MIN_SPEED = 0.37;		//modified by sushen 
 	
 	/**
 	 * The maximum turn angle of the robot in degrees.
 	 */
 	public static final double MAX_TURN_ANGLE = 40;
+	public int turnSign;
+	
+
+	/**-------------------------------------------------------------------------------added by sushen--------
+	* The maximum pan angle of the camera (neither in degrees nor radians)
+	*/
+	public static final double MAX_PAN = 14;
+	//public static final double PAN_OFFSET = 0;		//implemented in robot driver through configuration file because 
+	//public static final double TILT_OFFSET = 50;		//each robot might need different offsets, see wiki on how to change config file and drivers.
+	//private boolean panFlag = false;
+	public int oldSign = 0;
+	public int noBlobs = 0;
+	// ------------------------------------------------------------------------------------------------------
 	
 	private Vector<LineFollowerEventListener> listeners = new Vector<LineFollowerEventListener>();
 	
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
+	private PtzInterface ptz = null;
 	
 	private boolean done = false;
 	
@@ -60,6 +75,7 @@ public class LineFollower implements Runnable {
 	
 	double angle = 0;
 	double speed = 0;
+	double pan = 0;  // ----------------------------------------------------------------added by sushen--------
 	
 	private FileLogger flogger = null;
 	
@@ -98,6 +114,19 @@ public class LineFollower implements Runnable {
 		log("Created Position2dProxy.");
 		
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
+
+		// connect to PTZ -----------------------------------------------------------added by sushen-------------------
+		try {
+			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}
+		//-------------------------------------------------------------------------------------------------------------
+
+
+		log("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		log("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);	
 	}
 	
 	/**
@@ -198,11 +227,13 @@ public class LineFollower implements Runnable {
 		if (divergencePct < .30)
 			return MAX_TURN_ANGLE * 0.3;
 		if (divergencePct < .40)
-			return MAX_TURN_ANGLE * 0.4;
+			return MAX_TURN_ANGLE * 0.45;	//modified by sushen
 		if (divergencePct < .50)
-			return MAX_TURN_ANGLE * 0.6;
+			return MAX_TURN_ANGLE * 0.6;	//modified by sushen
 		if (divergencePct < .60)
-			return MAX_TURN_ANGLE * 0.85;
+			return MAX_TURN_ANGLE * 0.75;	//modified by sushen
+		if (divergencePct < .70)
+			return MAX_TURN_ANGLE * 0.9;	//modified by sushen
 		return MAX_TURN_ANGLE;
 	}
 	
@@ -215,7 +246,7 @@ public class LineFollower implements Runnable {
 	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob, int midPoint) {
 		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight() + ", x=" + blob.getX());
 
-		int turnSign;		
+		//int turnSign;		//-------------------------------------------------------------------------------added by sushen----------
 		if (blob.getX() > midPoint) {
 			log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn right!");
 			turnSign = -1;
@@ -234,10 +265,32 @@ public class LineFollower implements Runnable {
 		
 		
 		angle = turnSign * getMaxTurnAngle(divergencePct) * divergencePct;
+			
+		/*//-----------------------------------------------------added by sushen---------------------------------
+		if(divergencePct > 0.7 && panFlag == false){ 
+			pan = turnSign * MAX_PAN * divergencePct;
+			panFlag = true;
+			oldSign = turnSign;
+		}
+		else if(panFlag == true){
+			pan = Math.abs(pan) - 1;
+			pan *= oldSign;
+		}*/
 
-		// Make the speed proportional to the degree to which the heading is off. 
+		//-----------------------------------------alternative method than above----------------------------------
+		if(divergencePct < 0.6)
+			pan = 0;
+		else {pan = turnSign * MAX_PAN * divergencePct;}
+		//--------------------------------------------------------------------------------------------------------
+
+		/*/ Make the speed proportional to the degree to which the heading is off. 
 		speed = MAX_SPEED * (1 - divergencePct);
 		if (speed < MIN_SPEED)
+			speed = MIN_SPEED;
+		*/
+		//---------------------------------------------------------------------------Alternate method added by sushen -------------
+		speed = ((MAX_SPEED - MIN_SPEED) * (1 - divergencePct)) + MIN_SPEED;
+		if(divergencePct > 0.6)
 			speed = MIN_SPEED;
 	}
 	
@@ -313,11 +366,12 @@ public class LineFollower implements Runnable {
 				// All of the following checks should not be necessary.  They were added
 				// to counter a null pointer exception being occasionally thrown.
 				if(blobListCopy != null && blobListCopy.length > 0 && blobListCopy[0] != null) {
+					noBlobs = 0; //-------------------------------------------------------------------------------added by sushen ------
 					int midPoint = data.getWidth()/2;
 					adjustHeadingAndSpeed(blobListCopy[0], midPoint);
 				} else {
 					log("processBlobs: ERROR: No primary blob, stopping robot...");
-					speed = angle = 0;
+					speed = angle = 0;					
 				}
 
 				// Right now only designed for detection of blue secondary blob
@@ -338,10 +392,16 @@ public class LineFollower implements Runnable {
 			else {
 				log("processBlobs: ERROR: No blobs present, stopping robot...");
 				speed = angle = 0;
+				noBlobs += 1;                                //----------------------------------------------------this line too added by sushen
+				if(noBlobs > 7){				// if after 7 passes or .7 second there is no blob
+					pan = 20 * turnSign;						//--------------------------added by sushen
+					log("Pan value after no blobs detected= " + pan + "\nturnSign = " + turnSign +"\n\n\n\n\n");///// added by sushen 
+				}			
 			}
 		} else {
 			log("processBlobs: ERROR: Blob data is null, stopping robot...");
 			speed = angle = 0;
+			log("something is happening 1!!!\n\n\n\n");
 		}
 	}
 	
@@ -350,8 +410,16 @@ public class LineFollower implements Runnable {
 	 */
 	public void run() {
 		long dataTimeStamp = 0;
+		// -------------------------------------------------------------added by sushen------------------------------------------------------------
+			PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
+			ptzCmd.setPan((float) 0);		//change 0 to PAN_OFFSET if not being implemented in driver and initialize variable at top
+			ptzCmd.setTilt((float) 0);		//change 0 to TILT_OFFSET if not being implemented in driver and initialize variable at top
+			ptz.setPTZ(ptzCmd);
+			pause(50);	
+		//-----------------------------------------------------------------------------------------------------------------------------------------
 		
 		while(!done) {
+			
 			
 			// If new blob data is available, get it and process it.
 			if (bfi.isDataReady()) {
@@ -359,21 +427,36 @@ public class LineFollower implements Runnable {
 				processBlobs(bfi.getData());
 			}
 			
+			
 			// If no blob data is received within a certain time window, stop the robot.
 			if (System.currentTimeMillis() - dataTimeStamp > BLOB_MAX_VALID_AGE) {
 				log("run: ERROR: No blob data within valid window of " + BLOB_MAX_VALID_AGE + "ms");
 				speed = angle = 0;
 			}
 			
-			log("run: Sending Command, speed=" + speed + ", angle=" + angle);
 			p2di.setSpeed(speed, dtor(angle));
-			
+
+			//--------------------------------------------------------------------------added by sushen-----------------------------
+			/* commented out because alternative method is being used in adjustHeadingAndSpeed
+			if(panFlag && ((oldSign == -1 && pan >= 0) || (oldSign == 1 && pan <= 0))){	//check if pan value has gone past the zero point, if so set to 0
+				pan = 0;
+				panFlag = false;
+			}*/
+
+			ptzCmd.setPan((float) (pan));			//move camera, change to pan + PAN_OFFSET if not implemented in driver
+			ptz.setPTZ(ptzCmd);
+			// ----------------------------------------------------------------------------------------------------------------------
+
+
+			log("run: Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
 			pause(CYCLE_PERIOD);
+
 		}
 		
 		log("run: thread exiting, ensuring robot is stopped...");
 		speed = angle = 0;
 		p2di.setSpeed(speed, dtor(angle));
+		
 	}
 	
 	/**
