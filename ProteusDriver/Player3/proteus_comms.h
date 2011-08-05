@@ -217,9 +217,9 @@ typedef struct {
 	uint16_t rxBuffStartIndx; // points to the next Rx byte to process
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
 
-	uint16_t newACCELdata;
-	uint16_t accel_data;
-	float  accel_data[2];
+	float newACCELdata;
+	float accel_data;
+	float  accel_axis_data[];
 	float  accel_x;  //xaxis accelerometer data
 	float  accel_y;  //yaxis accelerometer data
 	float  accel_z;  //zaxis accelerometer data
