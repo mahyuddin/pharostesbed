@@ -449,17 +449,17 @@ void Proteus::updateAccel() {
 	memset(&accel_data,0,sizeof(accel_data)); // clear the irdata struct
 	
 //	accel_data.ranges_count = 2;
-	accel_axis_data = new float [2]; // needs to be changed
+	accel_axis_data [2]; // needs to be changed
 	accel_axis_data[0] = this->proteus_dev->accel_x;
 	accel_axis_data[1] = this->proteus_dev->accel_y;
 	accel_axis_data[2] = this->proteus_dev->accel_z;
 	
 
-	printf("Publishing Accel data: %f, %f, %f\n", accel_axis_data[0], accel_axis_data[1],     
+printf("Publishing Accel data: %f, %f, %f\n", accel_axis_data[0], accel_axis_data[1],     
 		accel_axis_data[2]);
 	
 	this->Publish(this->accel_addr, PLAYER_MSGTYPE_DATA, PLAYER_IMU_DATA_CALIB, (void*)&accel_data);
-	delete [] accel_data.ranges;
+	delete [] &accel_data;
 }
 
 /**
