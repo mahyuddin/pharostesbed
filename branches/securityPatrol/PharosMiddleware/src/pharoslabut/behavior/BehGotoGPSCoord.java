@@ -125,7 +125,7 @@ public class BehGotoGPSCoord extends Behavior{
 		_LastCurrHeading = _navigatorGPS.getCompassHeading();
 		_LastTargetDirection = _navigatorGPS.locateTarget(_LastcurrLoc, _LastCurrHeading, _destLoc);
 		if (_LastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
-			log("stopCondition: Destination reached!");
+			log("stopCondition: Destination reached! "+ _behaveIndex);
 			// if we should stop at the end of the behavior (single robot case) - instruct the robot to stop!
 			if(_stopAtEndBehavior)
 				_navigatorGPS.stopRobot();
