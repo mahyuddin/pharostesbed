@@ -215,7 +215,9 @@ public class Manager implements Runnable {
 //				break;
 //			numberRounds--;
 		}
-
+		log("run: Finished all listed behaviors. Making sure the robot is stopped...");
+		_NavigateData.stopRobot();
+		
 		if(_concludeBehave!=null){
 			if(_concludeBehave.startCondition() == true){
 				log("run: Entering concluding behavior (start condition true)");
@@ -223,6 +225,7 @@ public class Manager implements Runnable {
 					log("run: running conclude behavior");
 					_concludeBehave.action();
 				}
+				_NavigateData.stopRobot();
 			}else{
 				log("run: startCondition of concluding behavior is false");
 			}
