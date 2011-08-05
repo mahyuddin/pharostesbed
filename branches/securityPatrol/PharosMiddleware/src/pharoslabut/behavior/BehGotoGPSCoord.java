@@ -27,6 +27,7 @@ public class BehGotoGPSCoord extends Behavior{
 //	private CompassDataBuffer _compassDataBuffer;
 //	private GPSDataBuffer _gpsDataBuffer;
 	private NavigateCompassGPS _navigatorGPS;
+	private boolean _stopAtEndBehavior;
 	private Location _destLoc;
 	protected static FileLogger _flogger = null;
 	public static final double GPS_TARGET_RADIUS_METERS = 3.5;
@@ -48,6 +49,13 @@ public class BehGotoGPSCoord extends Behavior{
 		
 		_LastcurrLoc = null;
 		_md = md;
+		
+		if(_wm.getTeamSize() > 1){
+			_stopAtEndBehavior = true;
+		} else {
+			log("BehGotoGPSCoord: I have no teammates; not stopping at the end of the behavior");
+			_stopAtEndBehavior = false;
+		}
 		
 		log("Constructor behavior; latitude = "+ _md.GetLatitude()+ "longitude = "+ _md.GetLongitude());
 
@@ -118,7 +126,9 @@ public class BehGotoGPSCoord extends Behavior{
 		_LastTargetDirection = _navigatorGPS.locateTarget(_LastcurrLoc, _LastCurrHeading, _destLoc);
 		if (_LastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
 			log("stopCondition: Destination reached!");
-			_navigatorGPS.stopRobot();
+			// if we should stop at the end of the behavior (single robot case) - instruct the robot to stop!
+			if(_stopAtEndBehavior)
+				_navigatorGPS.stopRobot();
 			return true;
 		}else if (_LastTargetDirection.getDistance() > 2000) {
 			logErr("stopCondition: Invalid distance: Greater than 2km (" + _LastTargetDirection.getDistance() + "), stopping robot...");
