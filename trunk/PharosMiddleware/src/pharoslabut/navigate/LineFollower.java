@@ -10,8 +10,10 @@ import pharoslabut.navigate.LineFollowerEvent.LineFollowerEventType;
 import java.util.*;
 
 /**
- * Follows a line using a CMUcam2
+ * Follows a line using a CMUcam2.  It uses BlobfinderInterface
+ * and PtzInterface to follow the line.
  * 
+ * @author Sushen Patel
  * @author Seth Gee
  * @author Chien-Liang Fok
  */
