@@ -6,10 +6,15 @@ import java.util.Scanner;
 import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.behavior.*;
 
+/**
+ * This class is currently not used!
+ * 
+ * @author Noa Agmon
+ */
 public class ReadWithScanner {
 
 	public static void main(String[] aArgs) throws FileNotFoundException {
-		ReadWithScanner parser = new ReadWithScanner("robot.cfg");
+//		ReadWithScanner parser = new ReadWithScanner("robot.cfg");
 		// System.out.println(parser.getParameterValue("teamSize"));
 		//parser.getTeamIpPort(2);
 
@@ -44,13 +49,12 @@ public class ReadWithScanner {
 						}
 
 					}
-
 				} catch (Exception e) {
-					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 		return null;
 	}
@@ -91,16 +95,12 @@ public class ReadWithScanner {
 					System.out.println();
 
 				} catch (Exception e) {
-					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
-		
-		
-		
-		
 	}
 
 	public void getTeamIpPort(WorldModel wm) throws FileNotFoundException {
@@ -201,11 +201,11 @@ public class ReadWithScanner {
 	private final File fFile;
 
 	private static void log(Object aObject) {
-		System.out.println(String.valueOf(aObject));
+		//System.out.println(String.valueOf(aObject));
+		System.out.println("ReadWithScanner: " + aObject.toString());
 	}
 
 	private String quote(String aText) {
-		String QUOTE = "'";
-		return QUOTE + aText + QUOTE;
+		return "'" + aText + "'";
 	}
 }

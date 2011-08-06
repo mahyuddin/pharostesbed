@@ -46,8 +46,10 @@ public class Manager implements Runnable {
 	 * @param sender
 	 * @param flogger The file logger for logging debug messages.
 	 */
-	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, TCPMessageSender sender, FileLogger flogger){
-		_wm = new WorldModel(mrpConfdata.GetNumRobots(), mrpConfdata.GetMyindex(), mrpConfdata.GetNumMissions(), flogger);
+	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, 
+			TCPMessageSender sender, FileLogger flogger)
+	{
+		_wm = new WorldModel(mrpConfdata, flogger);
 		broadcaster = new BehaviorBroadcaster(sender, _wm, flogger);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
@@ -174,11 +176,9 @@ public class Manager implements Runnable {
 			{
 				log("run: stop condition false, continue to run behavior "+ _current.BehGetIndex() +"**********");
 				synchronized(this) {
-				
 					try {
 						wait(100);
 					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -317,15 +317,15 @@ public class Manager implements Runnable {
 		log("waitToTeam: team is synched!");
 	}
 
-	private void logErr(String msg) {
-		String result = "Manager: ERROR: " + msg;
-		
-		System.err.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "Manager: ERROR: " + msg;
+//		
+//		System.err.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
 	
 	private void log(String msg) {
 		String result = "Manager: " + msg;

@@ -2,6 +2,7 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 
+// TODO Implement this!
 public class BehLeftTrun extends Behavior{
 
 	public BehLeftTrun(WorldModel wm, MissionData missiondata) {
@@ -31,9 +32,8 @@ public class BehLeftTrun extends Behavior{
 	{
 		while(_wm.isTeamSynchronized() == false)
 			try {
-				Thread.currentThread().sleep(50);
+				Thread.sleep(50);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}

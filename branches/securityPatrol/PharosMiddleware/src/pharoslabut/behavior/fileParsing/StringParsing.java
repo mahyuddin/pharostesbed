@@ -1,6 +1,5 @@
 package pharoslabut.behavior.fileParsing;
 
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -10,13 +9,18 @@ import java.util.Vector;
 import pharoslabut.behavior.MissionData;
 import pharoslabut.behavior.management.Robot;
 
+/**
+ * This is used by pharoslabut.demo.mrpatrol.MRPConfData
+ * 
+ * @author Noa Agmon
+ */
 public class StringParsing {
-	private String _DataBuffer;
-	private boolean _simulationmode;
+	private String _dataBuffer;
+//	private boolean _simulationmode;
 
 	public StringParsing(String databuffer){
-		_DataBuffer = new String(databuffer);
-		_simulationmode = (System.getProperty ("simulateBehave") != null) ? true : false;
+		_dataBuffer = new String(databuffer);
+//		_simulationmode = (System.getProperty ("simulateBehave") != null) ? true : false;
 	}
 	
 	public static String removePrefix(String str, String prefix)
@@ -28,7 +32,7 @@ public class StringParsing {
 	}
 	
 	public String getParameterValue(String parameter){
-		Scanner scanner = new Scanner(_DataBuffer);
+		Scanner scanner = new Scanner(_dataBuffer);
 		String line;
 		String value;
 		try {
@@ -50,11 +54,11 @@ public class StringParsing {
 					}
 
 				} catch (Exception e) {
-					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 		return null;	
 	}
@@ -75,7 +79,6 @@ public class StringParsing {
 		try {
 			scanner = new Scanner(new FileInputStream(filename));
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -91,7 +94,7 @@ public class StringParsing {
   }
 	
 	public boolean GetMissionData(Vector<MissionData> missiondata, int nummission){
-		Scanner scanner = new Scanner(_DataBuffer);
+		Scanner scanner = new Scanner(_dataBuffer);
 		String line;
 		String parameter = "MissionInformation";
 		boolean foundtheline = false;
@@ -113,7 +116,7 @@ public class StringParsing {
 					}
 				} catch (Exception e) {
 					System.out.print("\tError in reading Mission Configuration data\n");
-					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 			if(foundtheline){
@@ -145,7 +148,7 @@ public class StringParsing {
 	}
 	
 	public MissionData GetHomePort(){
-		Scanner scanner = new Scanner(_DataBuffer);
+		Scanner scanner = new Scanner(_dataBuffer);
 		String line;
 		String parameter = "HomePort";
 		String value;
@@ -177,18 +180,18 @@ public class StringParsing {
 					}
 
 				} catch (Exception e) {
-					// TODO: handle exception
+					e.printStackTrace();
 				}
 			}
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 		return null;	
 
 	}
 	
 	public boolean GetRobotData(Vector<Robot> robotdata, int numrobots){
-		Scanner scanner = new Scanner(_DataBuffer);
+		Scanner scanner = new Scanner(_dataBuffer);
 		String line;
 		String parameter = "RobotInformation";
 		boolean foundtheline = false;
@@ -241,7 +244,7 @@ public class StringParsing {
 	}
 		
 	public void write(){
-		System.out.print(_DataBuffer);
+		System.out.print(_dataBuffer);
 	}
 	
 

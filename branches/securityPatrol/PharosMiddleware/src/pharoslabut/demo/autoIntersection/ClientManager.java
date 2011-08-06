@@ -92,8 +92,10 @@ public class ClientManager implements LineFollowerEventListener  {
 		return li.getCurrentLane();
 	}
 	
-	
-	@Override
+	/**
+	 * This implements the LineFollowerEventListener interface.
+	 * It is called whenever the LineFollower generates an event.
+	 */
 	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
 		
 		// If the LineFollower fails, abort!

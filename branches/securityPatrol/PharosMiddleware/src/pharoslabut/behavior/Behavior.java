@@ -3,15 +3,25 @@ import java.util.Vector;
 
 import pharoslabut.behavior.management.WorldModel;
 
+/**
+ * A top-level super-clas for all behaviors.
+ * 
+ * @author Noa Agmon
+ */
 public abstract class Behavior {
-	protected Vector<Behavior> _nextVector;
+	
+	protected Vector<Behavior> _nextVector = new Vector<Behavior>();
 	protected WorldModel _wm;
 	protected MissionData _misssiondata;
 	protected int _behaveIndex;
 	
+	/**
+	 * The constructor.
+	 * 
+	 * @param wm The world model of this node.
+	 * @param md The mission data.
+	 */
 	public Behavior(WorldModel wm, MissionData md) {
-		// TODO Auto-generated constructor stub
-		_nextVector = new Vector<Behavior>();
 		_wm = wm;
 		_misssiondata = md;
 	}

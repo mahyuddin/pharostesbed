@@ -2,6 +2,7 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 
+// TODO Implement this!
 public class BehRightTurn extends Behavior{
 
 	public BehRightTurn(WorldModel wm, MissionData missiondata) {

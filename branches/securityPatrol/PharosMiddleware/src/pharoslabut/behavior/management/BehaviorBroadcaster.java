@@ -165,7 +165,9 @@ public class BehaviorBroadcaster implements Runnable {
 		}
 	}
 	
-	@Override
+	/**
+	 * This implements the main loop of this broadcaster.
+	 */
 	public void run() {
 		
 		log("run: Starting broadcast loop...");

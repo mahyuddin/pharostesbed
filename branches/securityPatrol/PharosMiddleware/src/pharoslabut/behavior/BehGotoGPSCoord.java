@@ -2,44 +2,30 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.navigate.Location;
-//import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.navigate.NavigateCompassGPS;
 import pharoslabut.navigate.TargetDirection;
-import pharoslabut.sensors.*;
-//import pharoslabut.tasks.*;
 import pharoslabut.logger.*;
-import pharoslabut.exceptions.NoNewDataException;
-/*import playerclient3.GPSInterface;
-import playerclient3.PlayerClient;
-import playerclient3.PlayerException;
-import playerclient3.Position2DInterface;
-import playerclient3.structures.PlayerConstants;
-*/
 import playerclient3.structures.gps.PlayerGpsData;
 
-public class BehGotoGPSCoord extends Behavior{
-	
-/*	private PlayerClient _client;
-	private Position2DInterface _motors;
-	private Position2DInterface _compass;
-	private MotionArbiter _motionArbiter;
-	private GPSInterface _gps;*/
-//	private CompassDataBuffer _compassDataBuffer;
-//	private GPSDataBuffer _gpsDataBuffer;
+/**
+ * Implements a "go to GPS coordinate" behavior.
+ * 
+ * @author Noa Agmon
+ */
+public class BehGotoGPSCoord extends Behavior {
 	private NavigateCompassGPS _navigatorGPS;
 	private boolean _stopAtEndBehavior;
 	private Location _destLoc;
 	protected static FileLogger _flogger = null;
 	public static final double GPS_TARGET_RADIUS_METERS = 3.5;
-	private TargetDirection _LastTargetDirection;
-	private double _LastCurrHeading;
+	private TargetDirection _lastTargetDirection;
+	private double _lastCurrHeading;
 	private MissionData _md;
-	private Location _LastcurrLoc;
+	private Location _lastcurrLoc;
 	private boolean _simulateAll = false;
 
 	
 	public BehGotoGPSCoord(WorldModel wm, MissionData md, NavigateCompassGPS navigateData, FileLogger flogger) {
-		// TODO Auto-generated constructor stub
 		super(wm, md);
 		
 		_flogger = flogger;
@@ -47,7 +33,7 @@ public class BehGotoGPSCoord extends Behavior{
 		if(System.getProperty ("simulateBehave") != null)
 			_simulateAll = true;
 		
-		_LastcurrLoc = null;
+		_lastcurrLoc = null;
 		_md = md;
 		
 		if(_wm.getTeamSize() > 1){
@@ -63,7 +49,7 @@ public class BehGotoGPSCoord extends Behavior{
 		
 		
 		_destLoc = new Location(_md.GetLatitude(), _md.GetLongitude());
-		_LastTargetDirection = null;
+		_lastTargetDirection = null;
 	}
 	
 
@@ -90,10 +76,10 @@ public class BehGotoGPSCoord extends Behavior{
 	public boolean stopCondition() {
 		log("stopCondition: start method call...");
 		
-		_LastTargetDirection = null; // reset the direction command...
+		_lastTargetDirection = null; // reset the direction command...
 		
 		// simulation mode - run each behavior 10 times
-		int mycounter = _wm.getCount();
+//		int mycounter = _wm.getCount();
 //		if(_simulateAll){
 //			_wm.setCount(mycounter+1);
 //			log("Running behavior "+_behaveIndex+" for the "+mycounter+" time");
@@ -108,30 +94,30 @@ public class BehGotoGPSCoord extends Behavior{
 		
 		PlayerGpsData pgpsd = _navigatorGPS.getLocation();
 		if (pgpsd != null)
-			_LastcurrLoc = new Location(pgpsd);
+			_lastcurrLoc = new Location(pgpsd);
 		else
-			_LastcurrLoc = null;
+			_lastcurrLoc = null;
 		
-		if( _LastcurrLoc== null){
+		if( _lastcurrLoc== null){
 			logErr("stopCondition: Stop Condition: no current location (gps is null)");
 			//return true;
 			
 			// No GPS data at this time, continue to execute the current behavior
 			return false;
 		} else {
-			log("stopCondition: Current location: " + _LastcurrLoc);
+			log("stopCondition: Current location: " + _lastcurrLoc);
 		}
 		
-		_LastCurrHeading = _navigatorGPS.getCompassHeading();
-		_LastTargetDirection = _navigatorGPS.locateTarget(_LastcurrLoc, _LastCurrHeading, _destLoc);
-		if (_LastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
+		_lastCurrHeading = _navigatorGPS.getCompassHeading();
+		_lastTargetDirection = _navigatorGPS.locateTarget(_lastcurrLoc, _lastCurrHeading, _destLoc);
+		if (_lastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
 			log("stopCondition: Destination reached! "+ _behaveIndex);
 			// if we should stop at the end of the behavior (single robot case) - instruct the robot to stop!
 			if(_stopAtEndBehavior)
 				_navigatorGPS.stopRobot();
 			return true;
-		}else if (_LastTargetDirection.getDistance() > 2000) {
-			logErr("stopCondition: Invalid distance: Greater than 2km (" + _LastTargetDirection.getDistance() + "), stopping robot...");
+		}else if (_lastTargetDirection.getDistance() > 2000) {
+			logErr("stopCondition: Invalid distance: Greater than 2km (" + _lastTargetDirection.getDistance() + "), stopping robot...");
 			_navigatorGPS.stopRobot();
 			return true;
 		} else{
@@ -144,11 +130,11 @@ public class BehGotoGPSCoord extends Behavior{
 	public void action() {
 		if(_simulateAll)
 			return;
-		if (_LastTargetDirection != null && (_LastCurrHeading != NavigateCompassGPS.ERROR_HEADING)) { 
-			_navigatorGPS.SubmitMotionTask(_LastTargetDirection, _md.GetVelocity());
-			log("action: Running action, _LastTargetDirection=" + _LastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
+		if (_lastTargetDirection != null && (_lastCurrHeading != NavigateCompassGPS.ERROR_HEADING)) { 
+			_navigatorGPS.SubmitMotionTask(_lastTargetDirection, _md.GetVelocity());
+			log("action: Running action, _LastTargetDirection=" + _lastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
 		} else { //stop robot if we have no GPS data
-			if(_LastTargetDirection == null)
+			if(_lastTargetDirection == null)
 				log("action: Last target direction not set, stopping the robot...");
 			else
 				log("action: _LastCurrHeading is not valid, stopping the robot...");

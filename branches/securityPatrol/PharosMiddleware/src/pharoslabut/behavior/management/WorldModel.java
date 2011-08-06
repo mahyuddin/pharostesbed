@@ -1,6 +1,7 @@
 package pharoslabut.behavior.management;
 
 import pharoslabut.behavior.fileParsing.StringParsing;
+import pharoslabut.demo.mrpatrol.MRPConfData;
 import pharoslabut.logger.FileLogger;
 
 public class WorldModel {
@@ -31,16 +32,15 @@ public class WorldModel {
 	/**
 	 * The constructor.
 	 * 
-	 * @param teamSize The number of robots in the team.
-	 * @param robotIndex this robot's index within the team.
+	 * @param mrpConfData The configuration of the multi-robot patrol experiment.
 	 * @param flogger The file logger for debugging (may be null).
 	 */
-	WorldModel(int teamSize, int robotIndex, int behaviorsize, FileLogger flogger)
+	WorldModel(MRPConfData mrpConfData, FileLogger flogger)
 	{
-		wmTeamSize = teamSize;
-		wmMyIndex = robotIndex;
+		wmTeamSize = mrpConfData.GetNumRobots(); // The number of robots in the team.
+		wmMyIndex = mrpConfData.GetMyindex(); // This robot's index within the team.
 		_flogger = flogger;
-		_numBehaviors = behaviorsize;
+		_numBehaviors = mrpConfData.GetNumMissions(); // The number of behaviors
 		
 		wmCurrentBehavior = new String[wmTeamSize];
 		teamIp = new String[wmTeamSize];
@@ -130,8 +130,8 @@ public class WorldModel {
 	{
 		int i;
 		String behaviorName = wmCurrentBehavior[wmMyIndex];
-		int teamBehID;
-		int myBeID = getTeamBehaviorID(wmMyIndex);
+//		int teamBehID;
+//		int myBeID = getTeamBehaviorID(wmMyIndex);
 		
 		if(wmTeamSize ==1) {
 			log("isTeamSynchronized : only one team member; report synchronized");
@@ -167,7 +167,7 @@ public class WorldModel {
 			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
 			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
 			
-			teamBehID = getTeamBehaviorID(i);
+//			teamBehID = getTeamBehaviorID(i);
 			// If team member's behavior ID is smaller than mine - I have to wait for it. 
 			// If teammate's behavior ID is larger than mine - I continue
 			
@@ -258,15 +258,15 @@ public class WorldModel {
 		return true;
 	}
 	
-	private void logErr(String msg) {
-		String result = "WorldModel: ERROR: " + msg;
-		
-		System.err.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "WorldModel: ERROR: " + msg;
+//		
+//		System.err.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
 	
 	private void log(String msg) {
 		String result = "WorldModel: " + msg;

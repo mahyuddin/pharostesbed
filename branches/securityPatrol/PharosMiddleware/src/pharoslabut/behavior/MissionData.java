@@ -1,39 +1,51 @@
 package pharoslabut.behavior;
 
-/*
-import pharoslabut.behavior.management.WorldModel;
-import pharoslabut.navigate.*;
-import pharoslabut.sensors.CompassDataBuffer;
-import pharoslabut.sensors.GPSDataBuffer;
-import pharoslabut.tasks.MotionTask;
-import pharoslabut.tasks.Priority;
-import pharoslabut.logger.FileLogger;
-import pharoslabut.exceptions.NoNewDataException;
-*/
-
+/**
+ * This class holds a latitude, longitude and velocity.
+ * It is used while processing the experiment configuration specifications.
+ * 
+ * @author Noa Agmon
+ * @see pharoslabut.behavior.fileParsing.ReadWithScanner
+ * @see pharoslabut.behavior.fileParsing.StringParsing
+ */
 public class MissionData {
-	double _Latitude;
-	double _Longitude;
-	double _Velocity;
 	public static final double DEFAULT_VELOCITY   = 3.0;
+	
+	private double latitude;
+	private double longitude;
+	private double velocity;
+	
 
-	public MissionData(double latitude, double longitude, double velocity){
-		_Latitude = latitude;
-		_Longitude = longitude;
-		_Velocity = velocity;
-	}
-
-	MissionData(double latitude, double longitude){
+	/**
+	 * A constructor that uses the default velocity.
+	 * 
+	 * @param latitude
+	 * @param longitude
+	 */
+	public MissionData(double latitude, double longitude){
 		this(latitude, longitude, DEFAULT_VELOCITY);
 	}
-
-	public void SetLatitude(double lat){_Latitude = lat;}
-	public void SetLongitude(double lon){_Longitude = lon;}
-	public void SetVelocity(double velocity){_Velocity = velocity;}
 	
-	public double GetLatitude(){return _Latitude;}
-	public double GetLongitude(){return _Longitude;}
-	public double GetVelocity(){return _Velocity;}
+	/**
+	 * A constructor that fully-specifies the fields in this class.
+	 * 
+	 * @param latitude
+	 * @param longitude
+	 * @param velocity
+	 */
+	public MissionData(double latitude, double longitude, double velocity){
+		this.latitude = latitude;
+		this.longitude = longitude;
+		this.velocity = velocity;
+	}
+
+	public void SetLatitude(double latitude){this.latitude = latitude;}
+	public void SetLongitude(double longitude){this.longitude = longitude;}
+	public void SetVelocity(double velocity){this.velocity = velocity;}
+	
+	public double GetLatitude(){return latitude;}
+	public double GetLongitude(){return longitude;}
+	public double GetVelocity(){return velocity;}
 	
 	
 }

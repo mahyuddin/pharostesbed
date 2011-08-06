@@ -2,6 +2,7 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 
+// TODO Implement this!
 public class BehMoveForward extends Behavior{
 	
 	public BehMoveForward(WorldModel wm, MissionData missiondata) {
