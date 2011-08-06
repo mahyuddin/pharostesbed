@@ -3,7 +3,7 @@ package pharoslabut.demo.simonsays.io;
 import java.awt.*;
 import java.awt.image.*;
 import java.io.*;
-import java.net.InetAddress;
+//import java.net.InetAddress;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;

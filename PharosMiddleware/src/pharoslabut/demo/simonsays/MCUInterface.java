@@ -310,22 +310,22 @@ public class MCUInterface implements MCUConstants {
         }   
 	}
 	
-	private String byteArrayToString(byte[] buff, int length) {
-		String result = "";
-		for (int i=0; i < length && i < buff.length; i++) {
-			String val = Integer.toHexString(buff[i]);
-			if (val.length() > 2) {
-				val = val.substring(val.length()-2);
-			}
-			if (val.length() == 1)
-				result += "0x0" + val;
-			else
-				result += "0x" + val;
-			if (i < buff.length - 1)
-				result += " ";
-		}
-		return result;
-	}
+//	private String byteArrayToString(byte[] buff, int length) {
+//		String result = "";
+//		for (int i=0; i < length && i < buff.length; i++) {
+//			String val = Integer.toHexString(buff[i]);
+//			if (val.length() > 2) {
+//				val = val.substring(val.length()-2);
+//			}
+//			if (val.length() == 1)
+//				result += "0x0" + val;
+//			else
+//				result += "0x" + val;
+//			if (i < buff.length - 1)
+//				result += " ";
+//		}
+//		return result;
+//	}
     
     @SuppressWarnings("unchecked")
     static void listPorts()
