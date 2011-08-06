@@ -1,24 +1,35 @@
 package pharoslabut.logger.analyzer;
 
 import java.util.*;
+import pharoslabut.logger.FileLogger;
 
 /**
  * This maintains a list of local times and the amount of change needed to 
- * shift it to match the GPS timestamp.
+ * shift it to match the GPS time.
  * 
  * @author Chien-Liang Fok
- *
  */
 public class TimeCalibrator {
-	Vector<Long> calibrationPoints = new Vector<Long>();
-	Vector<Double> offsets = new Vector<Double>();
+	private FileLogger flogger;
+	
+	private Vector<Long> calibrationPoints = new Vector<Long>();
+	private Vector<Double> offsets = new Vector<Double>();
 	
 	/**
 	 * The constructor.
 	 */
 	public TimeCalibrator() {
+		this(null);
 	}
 	
+	/**
+	 * The constructor.
+	 * 
+	 * @param flogger The file logger to use.
+	 */
+	public TimeCalibrator(FileLogger flogger) {
+		this.flogger = flogger;
+	}
 	/**
 	 * Adds a calibration point.
 	 * 
@@ -42,7 +53,7 @@ public class TimeCalibrator {
 	 */
 	private int findClosestTimestamp(long timestamp, int leftIndx, int rightIndx) {
 		
-		System.out.println("findClosestTimestamp: " + timestamp + ", " + leftIndx + ", " + rightIndx);
+		log("findClosestTimestamp: " + timestamp + ", " + leftIndx + ", " + rightIndx);
 		
 		// base cases
 		if (leftIndx == rightIndx)
@@ -83,4 +94,11 @@ public class TimeCalibrator {
 		}
 	}
 	
+	private void log(String msg) {
+		String result = "TimeCalibrator: " + msg; 
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null)
+			flogger.log(result);
+	}
 }

@@ -257,6 +257,17 @@ public class CompassDataBuffer implements Runnable {
 		}
 	}
 	
+	/** 
+	 * Determinds whether a heading measurement is valid.  It is valid if it
+	 * falls between -pi/2 and +pi/2.
+	 * 
+	 * @param heading The heading measurement.
+	 * @return true if the heading measurement is valid.
+	 */
+	public static final boolean isValid(double heading) {
+		return heading <= Math.PI/2 && heading >= -Math.PI/2;
+	}
+	
 	private void log(String msg) {
 		String result = "CompassDataBuffer: " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)

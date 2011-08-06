@@ -33,6 +33,12 @@ public class PathEdge {
 	private double speed;
 	
 	/**
+	 * The initial heading of the robot when it starts to traverse
+	 * this path edge.
+	 */
+	private double startHeading = Double.MIN_VALUE;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param endLoc The ideal destination location as specified by the motion script.
@@ -134,7 +140,7 @@ public class PathEdge {
 	/**
 	 * Whether the start location was set for this edge.
 	 * 
-	 * @return true if a start edge was set.
+	 * @return true if a start location was set for this edge.
 	 */
 	public boolean hasStartLoc() {
 		return startLoc != null;
@@ -149,6 +155,35 @@ public class PathEdge {
 	 */
 	public Location getStartLoc() {
 		return startLoc;
+	}
+	
+	/**
+	 * Sets the start heading of this edge.
+	 * 
+	 * @param startHeading The robot's starting heading along this edge.
+	 */
+	public void setStartHeading(double startHeading) {
+		this.startHeading = startHeading;
+	}
+	
+	/**
+	 * Whether the start heading was set for this edge.
+	 * 
+	 * @return true if a start heading was set.
+	 */
+	public boolean hasStartHeading() {
+		return startHeading != Double.MIN_VALUE;
+	}
+	
+	/**
+	 * Returns the starting heading of the robot as it traverses this edge.
+	 * This is the actual start heading, not the ideal which is directly facing
+	 * the next waypoint.
+	 * 
+	 * @return The starting heading.
+	 */
+	public double getStartHeading() {
+		return startHeading;
 	}
 	
 	/**

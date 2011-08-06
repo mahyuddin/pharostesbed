@@ -1,22 +1,28 @@
 package pharoslabut.logger.analyzer;
 
-import playerclient3.structures.gps.PlayerGpsData;
 import pharoslabut.navigate.Location;
+import playerclient3.structures.gps.PlayerGpsData;
 
 /**
- * A pairing between a PlayerGpsData object provided by Player and the 
- * time at which it was received.
+ * A pairing between a heading measurement and the 
+ * time at which it was taken.
  * 
  * @author Chien-Liang Fok
  *
  */
-public class GPSLocationState {
-	private PlayerGpsData gpsLoc;
+public class HeadingState {
+	private double heading;
 	private long timestamp;
 	
-	public GPSLocationState(long timestamp, PlayerGpsData gpsLoc) {
+	/**
+	 * The constructor.
+	 * 
+	 * @param timestamp The timestamp of the heading measurement.
+	 * @param heading The heading measurement.
+	 */
+	public HeadingState(long timestamp, double heading) {
 		this.timestamp = timestamp;
-		this.gpsLoc = gpsLoc;
+		this.heading = heading;
 	}
 	
 	/**
@@ -28,12 +34,8 @@ public class GPSLocationState {
 		timestamp = calibrator.getCalibratedTime(timestamp);
 	}
 	
-	public PlayerGpsData getLoc() {
-		return gpsLoc;
-	}
-	
-	public Location getLocation() {
-		return new Location(gpsLoc);
+	public double getHeading() {
+		return heading;
 	}
 
 	/**
@@ -47,6 +49,6 @@ public class GPSLocationState {
 	}
 	
 	public String toString() {
-		return "GPSLocationState: " + timestamp + "\t" + gpsLoc;
+		return "HeadingState: " + timestamp + "\t" + heading;
 	}
 }
