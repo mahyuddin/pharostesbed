@@ -20,7 +20,7 @@ public class TCPNetworkInterface extends NetworkInterface {
 	private int port;
 	
     /**
-     * Creates a UDPNetworkInterface that listens on a random port.
+     * Creates a TCPNetworkInterface that listens on a random port.
      */
 	public TCPNetworkInterface() {
 		this(-1);
