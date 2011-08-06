@@ -37,22 +37,24 @@ public class TestBlobFinderPTZ {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to server."); System.exit(1); }
 		
-		// connect to blobfinder
+		/*// connect to blobfinder
 		try {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
-		
+		*/
 		// connect to PTZ
 		PtzInterface ptz = null;
 		try {
 			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}	
 		
-		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-            	visualizer = new BlobFinderVisualizer(flogger);
-            }
-        });
+		/*javax.swing.SwingUtilities.invokeLater(new Runnable() {
+           		 public void run() {
+            			visualizer = new BlobFinderVisualizer(flogger);
+           		 }
+      		  }
+
+	); */
 		
 		log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
@@ -64,38 +66,62 @@ public class TestBlobFinderPTZ {
 			log("Doing quick test of PTZ...");
 			// Do a quick test of PTZ
 			PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
-			
-			for (float pan = (float)-.3; pan < .3; pan += .1) {
-				log("Setting pan = " + pan);
-				ptzCmd.setPan((float)pan);
-				ptzCmd.setTilt((float)0);
+
+			//Initialize angles
+		
+			ptzCmd.setPan((float) 0);
+			ptzCmd.setTilt((float) 0);
+			ptz.setPTZ(ptzCmd);
+			pause(1000);
+
+			//*************these test values will not work if offsets for LineFollower are implemented*****//
+//******** see http://pharos.ece.utexas.edu/wiki/index.php/How_to_Make_a_Proteus_Robot_Follow_a_Line_Using_a_CMUCam#Determine_Offset_of_Hardware_and_Change_Configuration_File
+
+		//Begin test	
+			log("Testing Pan....");			
+			for (float pan = (float)-70; pan < 82; pan += 10) {
+				log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
+				ptzCmd.setPan((float) pan);
 				ptz.setPTZ(ptzCmd);
 				pause(1000);
 			}
-			
-			for (float tilt = (float)-.3; tilt < .3; tilt += .1) {
-				log("Setting tilt = " + tilt);
-				ptzCmd.setPan((float)0);
-				ptzCmd.setTilt((float)tilt);
+
+
+			ptzCmd.setPan((float) 0);
+			ptz.setPTZ(ptzCmd);
+			pause(3000);
+		
+			log("Testing Tilt...");		
+			for (float tilt = (float)-40; tilt < 82; tilt += 10) {
+				log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
 				ptz.setPTZ(ptzCmd);
 				pause(1000);
-			}
+			} 
+
+			ptzCmd.setTilt((float) 0);
+			ptz.setPTZ(ptzCmd);
+			pause(3000);
+			log("Test Complete");
+
+
 		}
 		
-//		boolean done = false;
-//		while(!done) {
-//			if (visualizer != null && !visualizer.isVisible())
-//				done = true;
-//			if (!done && bfi.isDataReady()) {
-//				PlayerBlobfinderData blobData = bfi.getData();
-//				if (blobData != null) {
-//					if (visualizer != null)
-//						visualizer.visualizeBlobs(blobData);
-//				}
-//			}
-//			pause(100);
-//		} // end while(true)
-//		System.exit(0);
+/*		boolean done = false;
+		while(!done) {
+			if (visualizer != null && !visualizer.isVisible())
+				done = true;
+			if (!done && bfi.isDataReady()) {
+				PlayerBlobfinderData blobData = bfi.getData();
+				if (blobData != null) {
+					if (visualizer != null)
+						visualizer.visualizeBlobs(blobData);
+				}
+			}
+			pause(100);
+		} // end while(true)
+*/		System.exit(0);
+
+
 	}
 	
 	private void log(String msg) {
