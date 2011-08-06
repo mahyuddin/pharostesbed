@@ -1,24 +1,24 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.*;
-import pharoslabut.sensors.BlobFinderVisualizer;
+//import pharoslabut.sensors.BlobFinderVisualizer;
 
 import playerclient3.*;
-import playerclient3.structures.blobfinder.*;
+//import playerclient3.structures.blobfinder.*;
 import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
- * A small test of the BlobFinder service. Connects to the BlobFinderInterface, and periodically
- * polls it for data.  It prints all of the blob data received to the screen.
+ * A small test of the PtzInterface. Connects to the PtzInterface, and it pan 
+ * and tilt.
  * 
  * @author Chien-Liang Fok
  */
 public class TestBlobFinderPTZ {
 	private FileLogger flogger = null;
 	private PlayerClient client = null;	
-	private BlobfinderInterface bfi = null;
-	private BlobFinderVisualizer visualizer;
+//	private BlobfinderInterface bfi = null;
+//	private BlobFinderVisualizer visualizer;
 		
 	/**
 	 * The constructor.
