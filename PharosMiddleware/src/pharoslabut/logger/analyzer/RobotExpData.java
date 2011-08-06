@@ -34,7 +34,12 @@ public class RobotExpData {
 	/**
 	 * The locations of the robot as it traversed this edge.
 	 */
-	private Vector <GPSLocationState> locations = new Vector<GPSLocationState>();
+	private Vector<GPSLocationState> locations = new Vector<GPSLocationState>();
+	
+	/**
+	 * The heading of the robot as it executes the experiment.
+	 */
+	private Vector<HeadingState> headings = new Vector<HeadingState>();
 	
 	/**
 	 * Records when the TelosB receives a broadcasts.
@@ -393,6 +398,8 @@ public class RobotExpData {
 		boolean expStartTimeSet = false;
 		
 		while ((line = br.readLine()) != null){
+			
+			// Extract the experiment start times.
 			if (line.contains("Starting experiment at time:")) {
 				String[] tokens = line.split("[: ]");
 				expStartTime = Long.valueOf(tokens[8]);
@@ -405,6 +412,8 @@ public class RobotExpData {
 				log("readFile: expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			} 
+			
+			// Record the next waypoint.
 			else if (line.contains("WayPointFollower: Going to") 
 					|| line.contains("MotionScriptFollower: Going to")) 
 			{
@@ -442,7 +451,7 @@ public class RobotExpData {
 					currEdge.setStartLoc(new Location(currLoc));
 			}
 			
-			// This was used prior to Mission 17
+			// Extract the GPS location data.
 			else if (line.contains("New GPS Data:")) {
 				String keyStr = "New GPS Data:";
 				String gpsLine = line.substring(line.indexOf(keyStr) + keyStr.length());
@@ -473,10 +482,33 @@ public class RobotExpData {
 							currEdge.setStartLoc(l);
 					}
 				} else {
-					log("Rejecting invalid location: " + currLoc);
+					log("readFile: Rejecting invalid location: " + currLoc);
 				}
 			}
 			
+			// Extract the heading measurements of the robot
+			else if (line.contains("New heading:")) {
+				String keyStr = "New heading:";
+				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = headingLine.split("[, ]");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				double heading = Double.valueOf(tokens[0]);
+				
+				// Only add the heading measurement if it is valid.
+				if (pharoslabut.sensors.CompassDataBuffer.isValid(heading)) {
+					headings.add(new HeadingState(timeStamp, heading));
+					if (currEdge != null) {
+						if (!currEdge.hasStartHeading())
+							currEdge.setStartHeading(heading);
+					}
+				} else {
+					log("readFile: Rejecting invalid heading: " + currLoc);
+				}
+			}
+			
+			// Extract when the TelosB transmitted a broadcast.
 			else if (line.contains("RadioSignalMeter: SEND_BCAST") 
 					|| line.contains("TelosBeaconBroadcaster: SEND_TELSOB_BCAST")) {
 				// The format of this line is:
@@ -489,6 +521,8 @@ public class RobotExpData {
 				telosBTxHist.add(txRec);
 				
 			}
+			
+			// Extract when a TelosB message was received.
 			else if (line.contains("RadioSignalMeter: RADIO_CC2420_RECEIVE")
 					|| line.contains("TelosBeaconReceiver: RADIO_CC2420_RECEIVE")) {
 				// The format of this line is:
@@ -508,6 +542,7 @@ public class RobotExpData {
 				telosBRxHist.add(rxRec);
 			}
 
+			// Extract when the current waypoint was reached.
 			else if (line.contains("Arrived at destination")) {
 				// Save the end time of the experiment
 				String[] tokens = line.split("[:= ]");
@@ -517,11 +552,13 @@ public class RobotExpData {
 				currEdge = null;
 			}
 			
+			// Extract when the GPS sensor failed.
 			else if (line.contains("ERROR: go: Unable to get the current location")) {
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				gpsErrors.add(timeStamp);
 			}
 			
+			// Extract when the compass sensor failed.
 			else if (line.contains("ERROR: go: Unable to get the current heading")) {
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				headingErrors.add(timeStamp);
@@ -859,8 +896,45 @@ public class RobotExpData {
 		return locations.get(locations.size()-1).getLocation();
 	}
 	
+	/**
+	 * Returns the initial heading of the robot when the experiment began.
+	 * 
+	 * @return the initial heading of the robot when the experiment began.
+	 */
+	public double getStartHeading() {
+		return headings.get(0).getHeading();
+	}
+	
+	/**
+	 * Returns the final location of the robot after it finishes this experiment.
+	 * 
+	 * @return The final location of the robot.
+	 */
+	public double getEndHeading() {
+		return headings.get(headings.size()-1).getHeading();
+	}
+	
 	public Enumeration<GPSLocationState> getLocationsEnum() {
 		return locations.elements();
+	}
+	
+	/**
+	 * Returns the heading of the robot at the specified time.
+	 * Uses a linear interpolation of the robot's heading when necessary.
+	 * 
+	 * @param timestamp The time of interest. 
+	 * @return The heading of the robot at the specified time.
+	 */
+	public double getHeading(long timestamp) {
+		if (timestamp < getStartTime()) {
+			log("WARNING: getHeading: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			return getStartHeading();
+		}
+		
+		if (timestamp > getStopTime()) {
+			log("WARNING: getHeading: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			return getEndHeading();
+		}
 	}
 	
 	/**
@@ -872,12 +946,12 @@ public class RobotExpData {
 	 */
 	public Location getLocation(long timestamp) {
 		if (timestamp < getStartTime()) {
-			logErr("WARNING: getLocation: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			log("WARNING: getLocation: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartLocation();
 		}
 		
 		if (timestamp > getStopTime()) {
-			logErr("WARNING: getLocation: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			log("WARNING: getLocation: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
@@ -1001,8 +1075,10 @@ public class RobotExpData {
 	}
 	
 	private void logErr(String msg) {
-		//if (System.getProperty ("PharosMiddleware.debug") != null)
-		System.err.println("RobotExpData: " + msg);
+		String result = "RobotExpData: ERROR: " + msg;
+		System.err.println(result);
+		if (flogger != null)
+			flogger.log(result);
 	}
 	
 	private static void log(String msg, FileLogger flogger) {
