@@ -277,7 +277,7 @@ public class ProgramTextArea extends JPanel {
 		}
 	}
 	
-	private void log(String msg) {
-		System.out.println("ProgramTextArea: " + msg);
-	}
+//	private void log(String msg) {
+//		System.out.println("ProgramTextArea: " + msg);
+//	}
 }
