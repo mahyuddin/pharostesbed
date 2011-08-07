@@ -1,13 +1,11 @@
 package pharoslabut.logger.analyzer;
 
-//import java.util.*;
 import pharoslabut.logger.*;
-//import pharoslabut.navigate.Location;
 
 /**
  * Calculates the divergence between the robot's heading
- * and the ideal heading.  The ideal heading is towards
- * the next waypoint.
+ * and the ideal heading.  The ideal heading is the direction the robot 
+ * must face to point to the next waypoint.
  * 
  * @author Chien-Liang Fok
  */
@@ -46,10 +44,10 @@ public class HeadingDivergence {
 	 * 
 	 * @param msg The message to log.
 	 */
-	private void logDbg(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			log(msg);
-	}
+//	private void logDbg(String msg) {
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			log(msg);
+//	}
 	
 	/**
 	 * Logs a message.  This message is always printed regardless of
@@ -57,9 +55,9 @@ public class HeadingDivergence {
 	 * 
 	 * @param msg The message to log.
 	 */
-	private void log(String msg) {
-		log(msg, null);
-	}
+//	private void log(String msg) {
+//		log(msg, null);
+//	}
 	
 	private void log(String msg, FileLogger flogger) {
 		String result = "HeadingDivergence: " + msg;
@@ -68,16 +66,16 @@ public class HeadingDivergence {
 			flogger.log(msg);
 	}
 	
-	private void logErr(String msg) {
-		logErr(msg, null);
-	}
+//	private void logErr(String msg) {
+//		logErr(msg, null);
+//	}
 	
-	private void logErr(String msg, FileLogger flogger) {
-		String result = "HeadingDivergence: ERROR: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(msg);
-	}
+//	private void logErr(String msg, FileLogger flogger) {
+//		String result = "HeadingDivergence: ERROR: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(msg);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);
