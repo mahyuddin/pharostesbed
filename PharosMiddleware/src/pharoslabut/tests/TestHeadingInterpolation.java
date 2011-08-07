@@ -10,8 +10,6 @@ import pharoslabut.logger.analyzer.*;
  * @author Chien-Liang Fok
  */
 public class TestHeadingInterpolation {
-
-	private FileLogger flogger = null;
 	
 	/**
 	 * The constructor.
@@ -21,30 +19,40 @@ public class TestHeadingInterpolation {
 	 */
 	public TestHeadingInterpolation(String expFileName, String outputFileName) {
 		
-		FileLogger flogger = new FileLogger(outputFileName);
+		FileLogger flogger = new FileLogger(outputFileName, false);
 		RobotExpData robotData = new RobotExpData(expFileName);
 		
+		long startTime = robotData.getStartTime();
+		
 		// First print the actual heading measurements.
-		log("Actual headings:");
+		log("Time (ms)\tDelta Time (ms)\tActual headings:", flogger);
 		Enumeration<HeadingState> e = robotData.getHeadingEnum();
 		while (e.hasMoreElements()) {
 			HeadingState currState = e.nextElement();
-			flogger.log(currState.getTimestamp() + "\t" + currState.getHeading());
+			log(currState.getTimestamp()  
+					+ "\t" + (currState.getTimestamp() - startTime) 
+					+ "\t" + currState.getHeading(), flogger);
 		}
 		
 		// Next print the interpolated headings.
 		// Let's interpolate every 100ms.
-		log("Interpolated headings:");
-		for (long time = robotData.getStartTime(); time < robotData.getStopTime();
+		log("Time (ms)\tDelta Time (ms)\tInterpolated headings:", flogger);
+		for (long time = startTime; time < robotData.getStopTime();
 			time += 100) {
-			flogger.log(time + "\t" + robotData.getHeading(time));
+			log(time 
+					+ "\t" + (time - startTime) 
+					+ "\t" + robotData.getHeading(time), flogger);
 		}
 	}
 	
-	private void log(String msg) {
+	private void log(String msg, FileLogger flogger) {
 		System.out.println(msg);
 		if (flogger != null) 
 			flogger.log(msg);
+	}
+	
+	private void log(String msg) {
+		log(msg, null);
 	}
 
 	private void pause(int duration) {
@@ -73,7 +81,7 @@ public class TestHeadingInterpolation {
 				if (args[i].equals("-output")) {
 					outputFileName = args[++i];
 				}
-				if (args[i].equals("-log")) {
+				else if (args[i].equals("-log")) {
 					expLogFileName = args[++i];
 				} else if (args[i].equals("-h")) {
 					usage();
