@@ -494,7 +494,7 @@ public class RobotExpData {
 				String[] tokens = headingLine.split("[, ]");
 				
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
-				double heading = Double.valueOf(tokens[0]);
+				double heading = Double.valueOf(tokens[1]);
 				
 				// Only add the heading measurement if it is valid.
 				if (pharoslabut.sensors.CompassDataBuffer.isValid(heading)) {
@@ -620,6 +620,11 @@ public class RobotExpData {
 		for (int i=0; i < locations.size(); i++) {
 			GPSLocationState currLoc = locations.get(i);
 			currLoc.calibrateTime(calibrator);
+		}
+		
+		for (int i=0; i < headings.size(); i++) {
+			HeadingState currHeading = headings.get(i);
+			currHeading.calibrateTime(calibrator);
 		}
 		
 		for (int i=0; i < pathEdges.size(); i++) {
