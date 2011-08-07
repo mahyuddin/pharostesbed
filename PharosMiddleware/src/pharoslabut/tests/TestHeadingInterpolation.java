@@ -51,25 +51,16 @@ public class TestHeadingInterpolation {
 			flogger.log(msg);
 	}
 	
-	private void log(String msg) {
-		log(msg, null);
-	}
+//	private void log(String msg) {
+//		log(msg, null);
+//	}
 
-	private void pause(int duration) {
-		synchronized(this) {
-			try {
-				wait(duration);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	
 	private static void usage() {
 		System.err.println("Usage: pharoslabut.tests.TestHeadingInterpolation <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-log <file name>: name of file in which to save results (required)");
 		System.err.println("\t-output <file name>: the name of the file in which to save the interpolated heading (required)");
+		System.err.println("\t-d or -debug: enable debug mode.");
 	}
 	
 	public static void main(String[] args) {
@@ -86,7 +77,9 @@ public class TestHeadingInterpolation {
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
-				} else {
+				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
+					System.setProperty ("PharosMiddleware.debug", "true");
+				}  else {
 					System.err.println("Unknown option: " + args[i]);
 					usage();
 					System.exit(1);

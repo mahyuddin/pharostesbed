@@ -487,6 +487,7 @@ public class RobotExpData {
 			}
 			
 			// Extract the heading measurements of the robot
+			// The following is printed by the CompassDataBuffer during Mission 15
 			else if (line.contains("New heading:")) {
 				String keyStr = "New heading:";
 				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
@@ -504,7 +505,28 @@ public class RobotExpData {
 							currEdge.setStartHeading(heading);
 					}
 				} else {
-					log("readFile: Rejecting invalid heading: " + currLoc);
+					log("readFile: Rejecting invalid heading: " + heading);
+				}
+			}
+			// The following is printed by the CompassDataBuffer during Mission 25
+			else if (line.contains("New heading=")) {
+				String keyStr = "New heading=";
+				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = headingLine.split("[, ]");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				double heading = Double.valueOf(tokens[0]);
+				
+				// Only add the heading measurement if it is valid.
+				if (pharoslabut.sensors.CompassDataBuffer.isValid(heading)) {
+					headings.add(new HeadingState(timeStamp, heading));
+					if (currEdge != null) {
+						if (!currEdge.hasStartHeading())
+							currEdge.setStartHeading(heading);
+					}
+				} else {
+					log("readFile: WARNING: Rejecting invalid heading: " + heading);
 				}
 			}
 			
@@ -935,6 +957,58 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Determines the ideal heading at the specified time.
+	 * 
+	 * @param timestamp The specified time.
+	 * @return The ideal heading.
+	 */
+	public double getIdealHeading(long timestamp) {
+		
+		
+		PathEdge relevantEdge = getRelevantPathEdge(timestamp);
+		if (relevantEdge != null) {
+			Location endLoc = relevantEdge.getEndLocation();
+			Location robotLoc = getLocation(timestamp);
+			return pharoslabut.navigate.Navigate.angle(robotLoc, endLoc);
+		} else {	
+			logErr("Could not find path edge covering time " + timestamp 
+				+ " (" + (timestamp - getStartTime()) + ")");
+			printPathEdges();
+			System.exit(1);
+			return Double.MIN_VALUE;
+	
+		}
+	}
+	
+	private PathEdge getRelevantPathEdge(long timestamp) {
+		for (int i = 0;  i < pathEdges.size(); i++) {
+			if (pathEdges.get(i).getStartTime() > timestamp) {
+				// requested time is before start of first edge
+				return pathEdges.get(0);
+			}
+			if (pathEdges.get(i).getStartTime() <= timestamp &&
+				pathEdges.get(i).getEndTime() >= timestamp) 
+			{
+				return pathEdges.get(i);
+			}
+		}
+		return null;
+	}
+	
+	private void printPathEdges() {
+		log("Start Time\tDelta Start Time\tEnd Time\tDelta End Time\tStart Location\tEnd Location");
+		for (int i=0; i < pathEdges.size(); i++) {
+			PathEdge e = pathEdges.get(i);
+			log(e.getStartTime() 
+					+ "\t" + (e.getStartTime() - getStartTime())
+					+ "\t" + e.getEndTime()
+					+ "\t" + (e.getEndTime() - getStartTime())  
+					+ "\t" + e.getStartLoc() 
+					+ "\t" + e.getEndLocation());
+		}
+	}
+	
+	/**
 	 * Returns the heading of the robot at the specified time.
 	 * Uses a linear interpolation of the robot's heading when necessary.
 	 * 
@@ -1136,6 +1210,7 @@ public class RobotExpData {
 	private void logErr(String msg) {
 		String result = "RobotExpData: ERROR: " + msg;
 		System.err.println(result);
+		System.err.flush();
 		if (flogger != null)
 			flogger.log(result);
 	}

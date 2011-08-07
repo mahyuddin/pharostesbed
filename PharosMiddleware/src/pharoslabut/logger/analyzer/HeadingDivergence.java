@@ -1,12 +1,12 @@
 package pharoslabut.logger.analyzer;
 
-import java.util.*;
-
-import pharoslabut.navigate.Location;
+//import java.util.*;
+import pharoslabut.logger.*;
+//import pharoslabut.navigate.Location;
 
 /**
  * Calculates the divergence between the robot's heading
- * and the ideal heading.  The ideal heading is facing
+ * and the ideal heading.  The ideal heading is towards
  * the next waypoint.
  * 
  * @author Chien-Liang Fok
@@ -17,18 +17,26 @@ public class HeadingDivergence {
 	 * The constructor.
 	 * 
 	 * @param logFileName The experiment log file to analyze.
+	 * @param outputFileName The output file to save the results in.
 	 */
-	public HeadingDivergence(String logFileName) {
-		RobotExpData expData = new RobotExpData(logFileName);
+	public HeadingDivergence(String logFileName, String outputFileName) {
+		RobotExpData robotData = new RobotExpData(logFileName);
+		FileLogger flogger = new FileLogger(outputFileName, false);
 		
-		// For each waypoint
-		Vector<Location> wayPoints = expData.getWayPoints();
-		for (int i=0; i < wayPoints.size(); i++) {
-			log("Waypoint " + i + ": " + wayPoints.get(i));
+		long startTime = robotData.getStartTime();
+		
+		log("Time (ms)\tDelta Time (ms)\tActual Heading\tIdeal Heading\tHeading Error", flogger);
+		
+		// Calculate heading divergence every 1s
+		for (long time = startTime; time < robotData.getStopTime(); time += 1000) {
+			double currHeading = robotData.getHeading(time);
+			double idealHeading = robotData.getIdealHeading(time);
+			double headingError = pharoslabut.navigate.Navigate
+				.headingError(currHeading, idealHeading);
 			
-			
+			log(time + "\t" + (time - startTime) + "\t" + currHeading + "\t" + idealHeading 
+					+ "\t" + headingError, flogger);
 		}
-		
 		
 	}
 	
@@ -50,13 +58,25 @@ public class HeadingDivergence {
 	 * @param msg The message to log.
 	 */
 	private void log(String msg) {
+		log(msg, null);
+	}
+	
+	private void log(String msg, FileLogger flogger) {
 		String result = "HeadingDivergence: " + msg;
 		System.out.println(result);
+		if (flogger != null)
+			flogger.log(msg);
 	}
 	
 	private void logErr(String msg) {
+		logErr(msg, null);
+	}
+	
+	private void logErr(String msg, FileLogger flogger) {
 		String result = "HeadingDivergence: ERROR: " + msg;
 		System.err.println(result);
+		if (flogger != null)
+			flogger.log(msg);
 	}
 	
 	private static void print(String msg) {
@@ -71,11 +91,13 @@ public class HeadingDivergence {
 		print("Usage: pharoslabut.logger.analyzer.HeadingDivergence <options>\n");
 		print("Where <options> include:");
 		print("\t-log <log file name>: The log file generated during the experiment. (required)");
+		print("\t-output <output file>: The output file (required).");
 		print("\t-debug or -d: Enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String logFileName = null;
+		String outputFileName = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -83,9 +105,11 @@ public class HeadingDivergence {
 					usage();
 					System.exit(0);
 				}
-				
-				if (args[i].equals("-log")) {
+				else if (args[i].equals("-log")) {
 					logFileName = args[++i];
+				}
+				else if (args[i].equals("-output")) {
+					outputFileName = args[++i];
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -109,10 +133,11 @@ public class HeadingDivergence {
 		}
 		
 		print("Log file: " + logFileName);
+		print("Output file: " + outputFileName);
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new HeadingDivergence(logFileName);
+			new HeadingDivergence(logFileName, outputFileName);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
