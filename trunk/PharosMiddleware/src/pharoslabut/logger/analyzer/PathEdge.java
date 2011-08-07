@@ -345,6 +345,7 @@ public class PathEdge {
 	
 	/**
 	 * Returns the ideal final location of the edge.
+	 * This is the location as specified by the motion script.
 	 */
 	public Location getEndLocation() {
 		return endLoc;
