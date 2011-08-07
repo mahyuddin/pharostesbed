@@ -980,7 +980,13 @@ public class RobotExpData {
 		}
 	}
 	
-	private PathEdge getRelevantPathEdge(long timestamp) {
+	/**
+	 * Returns the path edge that encompasses the specified time.
+	 * 
+	 * @param timestamp The time during which the robot is traveling.
+	 * @return The edge that robot is on at the specified time.
+	 */
+	public PathEdge getRelevantPathEdge(long timestamp) {
 		for (int i = 0;  i < pathEdges.size(); i++) {
 			if (pathEdges.get(i).getStartTime() > timestamp) {
 				// requested time is before start of first edge
@@ -1208,7 +1214,7 @@ public class RobotExpData {
 	}
 	
 	private void logErr(String msg) {
-		String result = "RobotExpData: ERROR: " + msg;
+		String result = getClass().getName() + ": ERROR: " + msg;
 		System.err.println(result);
 		System.err.flush();
 		if (flogger != null)
@@ -1216,7 +1222,7 @@ public class RobotExpData {
 	}
 	
 	private static void log(String msg, FileLogger flogger) {
-		String result = "RobotExpData: " + msg; 
+		String result = RobotExpData.class.getName() + ": " + msg; 
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
@@ -1224,7 +1230,7 @@ public class RobotExpData {
 	}
 	
 	private void log(String msg) {
-		String result = "RobotExpData: " + msg; 
+		String result = getClass().getName() + ": " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
 		if (flogger != null)
@@ -1260,7 +1266,7 @@ public class RobotExpData {
 	
 	public static void main(String[] args) {
 		if (args.length < 1) {
-			print("Usage: pharoslabut.logger.analyzer.RobotExpdata [path to robot experiment data]");
+			print("Usage: " + RobotExpData.class.getName() + " [path to robot experiment data]");
 			System.exit(0);
 		}
 		
