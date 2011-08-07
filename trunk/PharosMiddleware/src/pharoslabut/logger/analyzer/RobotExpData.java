@@ -927,14 +927,58 @@ public class RobotExpData {
 	 */
 	public double getHeading(long timestamp) {
 		if (timestamp < getStartTime()) {
-			log("WARNING: getHeading: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			log("getHeading: WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartHeading();
 		}
 		
 		if (timestamp > getStopTime()) {
-			log("WARNING: getHeading: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			log("getHeading: WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndHeading();
 		}
+		
+		// Find the index of the headings immediately before or after the
+		// desired time
+		int beforeIndx = 0; 
+		int afterIndx = 0;
+		
+		boolean afterIndxFound = false;
+		
+		for (int i=0; i < headings.size(); i++) {
+			HeadingState currHeading = headings.get(i);
+			if (currHeading.getTimestamp() <= timestamp)
+				beforeIndx = i;
+			if (!afterIndxFound && currHeading.getTimestamp() >= timestamp) {
+				afterIndxFound = true;
+				afterIndx = i;
+			}
+		}
+		
+		log("getHeading: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		
+		if (beforeIndx == afterIndx)
+			return headings.get(beforeIndx).getHeading();
+		else {
+			HeadingState bHeading = headings.get(beforeIndx);
+			HeadingState aHeading = headings.get(afterIndx);
+			
+			return getInterpolatedHeading(bHeading, aHeading, timestamp, flogger);
+		}
+	}
+	
+	/**
+	 * Interpolates the heading of the robot at a particular point in time.
+	 * 
+	 * @param bHeading The heading prior to the time of interest.
+	 * @param aHeading The heading after the time of interest.
+	 * @param timestamp The time at which the interpolated heading 
+	 * should be calculated.
+	 * @param flogger The logger for recording debug statements.
+	 * @return The interpolated heading.
+	 */
+	public static double getInterpolatedHeading(HeadingState bHeading, 
+			HeadingState aHeading, long timestamp, FileLogger flogger) 
+	{
+		
 	}
 	
 	/**
@@ -955,12 +999,8 @@ public class RobotExpData {
 			return getEndLocation();
 		}
 		
-		// calculate the percent edge traversal...
-		//double pctTraversed = ((double)(timestamp - startTime)) / ((double)(endTime - startTime)) * 100.0;
-		//log("Path Edge pct traveled: " + pctTraversed);
-		
 		// Find the index of the locations immediately before or after the
-		// desired timestamp
+		// desired time
 		int beforeIndx = 0; 
 		int afterIndx = 0;
 		
@@ -1041,7 +1081,7 @@ public class RobotExpData {
 		
 		Location result = new Location(interpLat, interpLon);
 		
-		log("RobotExpData.getInterpolatedLoc:\n"
+		log("getInterpolatedLoc:\n"
 			+ "\tBefore Location @ " + time1 + ": (" + lat1 + ", " + lon1 + ")\n"
 			+ "\tAfter Location @ " + time2 + ": (" +  lat2 + ", " + lon2 + ")\n"
 			+ "\tInterpolated Location @ " + timestamp + ": " + result, flogger);
