@@ -108,7 +108,7 @@ public abstract class Navigate {
 	 * @return The change in heading angle necessary to make the robot turn towards the target.  A negative
 	 * value indicates a right turn, and a positive value indicates a left turn.
 	 */
-	private static double headingError(double currHeading, double angleToTarget) {
+	public static double headingError(double currHeading, double angleToTarget) {
 		
 		// First convert both heading measurements to be between 0 and 2*PI
 		if (currHeading < 0) currHeading = 2*Math.PI + currHeading;

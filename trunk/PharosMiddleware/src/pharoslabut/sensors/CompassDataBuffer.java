@@ -265,7 +265,7 @@ public class CompassDataBuffer implements Runnable {
 	 * @return true if the heading measurement is valid.
 	 */
 	public static final boolean isValid(double heading) {
-		return heading <= Math.PI/2 && heading >= -Math.PI/2;
+		return heading <= Math.PI && heading >= -Math.PI;
 	}
 	
 	private void log(String msg) {
