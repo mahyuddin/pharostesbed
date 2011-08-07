@@ -10,6 +10,8 @@ import pharoslabut.logger.FileLogger;
  * @author Chien-Liang Fok
  */
 public class TimeCalibrator {
+	private static final boolean ENABLE_DEBUG_OUTPUT = false;
+	
 	private FileLogger flogger;
 	
 	private Vector<Long> calibrationPoints = new Vector<Long>();
@@ -95,8 +97,9 @@ public class TimeCalibrator {
 	}
 	
 	private void log(String msg) {
-		String result = "TimeCalibrator: " + msg; 
-		if (System.getProperty ("PharosMiddleware.debug") != null)
+		String result = getClass().getName() + " " + msg; 
+		//if (System.getProperty ("PharosMiddleware.debug") != null)
+		if (ENABLE_DEBUG_OUTPUT)
 			System.out.println(result);
 		if (flogger != null)
 			flogger.log(result);
