@@ -458,7 +458,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.experiment.PharosExpServer <options>\n");
+		print("Usage: " + PharosExpServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");
