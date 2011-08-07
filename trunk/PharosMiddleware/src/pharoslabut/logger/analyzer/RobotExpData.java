@@ -914,6 +914,17 @@ public class RobotExpData {
 		return headings.get(headings.size()-1).getHeading();
 	}
 	
+	/**
+	 * 
+	 * @return An enumeration of the actual headings.
+	 */
+	public Enumeration<HeadingState> getHeadingEnum() {
+		return headings.elements();
+	}
+	
+	/**
+	 * @return An enumeration of the actual locations.
+	 */
 	public Enumeration<GPSLocationState> getLocationsEnum() {
 		return locations.elements();
 	}
@@ -978,7 +989,10 @@ public class RobotExpData {
 	public static double getInterpolatedHeading(HeadingState bHeading, 
 			HeadingState aHeading, long timestamp, FileLogger flogger) 
 	{
-		
+		Location preHeading = new Location(bHeading.getHeading(), bHeading.getTimestamp());
+		Location postHeading = new Location(aHeading.getHeading(), aHeading.getTimestamp());
+		Line headingLine = new Line(preHeading, postHeading);
+		return headingLine.getLatitude(timestamp);
 	}
 	
 	/**
