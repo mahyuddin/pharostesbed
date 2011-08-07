@@ -1,8 +1,5 @@
 package pharoslabut.logger.analyzer;
 
-import pharoslabut.navigate.Location;
-import playerclient3.structures.gps.PlayerGpsData;
-
 /**
  * A pairing between a heading measurement and the 
  * time at which it was taken.
@@ -34,6 +31,10 @@ public class HeadingState {
 		timestamp = calibrator.getCalibratedTime(timestamp);
 	}
 	
+	/**
+	 * 
+	 * @return The heading in radians.
+	 */
 	public double getHeading() {
 		return heading;
 	}
