@@ -1,14 +1,14 @@
 package pharoslabut.logger.analyzer;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+//import java.io.BufferedReader;
+//import java.io.FileReader;
+//import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Vector;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
-import pharoslabut.navigate.motionscript.MotionScript;
+//import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
  * Analyzes the motion divergence exhibit by one or more mobile nodes as they follow
@@ -16,21 +16,71 @@ import pharoslabut.navigate.motionscript.MotionScript;
  * 
  * @author Chien-Liang Fok
  */
-public class MotionDivergenceGPS {
-
-	private String outputFileName = null;		// Where to save the results
-	private MotionScript motionScript = null;	// The motion script used by all of experiments included in logFileNames
-	private Vector<RobotExpData> robotExpData = new Vector<RobotExpData>();		// The log files
-	private Vector<String> expLabels = new Vector<String>();	// The label for each log file
+public class MotionDivergenceAnalyzer {
+	
+	/**
+	 * The period between calculating divergence in milliseconds.
+	 */
+	public static final long DIVERGENCE_CALCULATION_INTERVAL = 1000;
 	
 	/**
 	 * The constructor.
 	 * 
-	 * @param specFile The name of the file containing the specifications on which log files to analyze.
+	 * @param logFileName The robot's experiment log file to analyze.
 	 */
-	public MotionDivergenceGPS(String specFile) {
-		readSpecFile(specFile); // if this fails, program will exit inside this call
-		calculateDivergence();
+	public MotionDivergenceAnalyzer(String logFileName) {
+		RobotExpData robotData = new RobotExpData(logFileName);
+		
+		// Determine the prefix of the output file
+		String outputFilePrefix = null;
+		if (logFileName.contains(".")) {
+			outputFilePrefix = logFileName.substring(0, logFileName.lastIndexOf('.'));
+		} else {
+			outputFilePrefix = logFileName;
+		}
+		
+		logDbg("outputFilePrefix = " + outputFilePrefix);
+		
+		calcAbsoluteDivergence(robotData, outputFilePrefix + "-absoluteDivergence.txt");
+//		calculateDivergence();
+	}
+	
+	/**
+	 * Calculates the absolute divergence of a robot.
+	 * 
+	 * @param robotData The robot's experiment data.
+	 * @param outputFileName The file in which to save results.
+	 */
+	private void calcAbsoluteDivergence(RobotExpData robotData, String outputFileName) {
+		FileLogger flogger = new FileLogger(outputFileName, false);
+		long startTime = robotData.getStartTime();
+		
+		//robotData.setFileLogger(flogger); // enable saving of debugging statements 
+		
+		// For the duration of the experiment, at every DIVERGENCE_CALCULATION_INTERVAL 
+		// millisecond interval...
+		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
+		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime();
+			time += DIVERGENCE_CALCULATION_INTERVAL) 
+		{
+			// Calculate the absolute divergence by creating the perfect path
+			// along which the robot should travel and finding the point on
+			// this path that is closest to the robot's actual location.
+			PathEdge edge = robotData.getRelevantPathEdge(time);
+			if (edge == null) {
+				logErr("calcAbsoluteDivergence: Could not find relevant path edge!");
+				System.exit(1);
+			} else {
+				//logDbg("calcAbsoluteDivergence: Got path edge " + edge.getSeqNo(), flogger);
+			}
+			Line perfectPath = new Line(edge.getStartLoc(), edge.getEndLocation());
+			Location actualLoc = robotData.getLocation(time);
+			Location closestLoc = perfectPath.getLocationClosestTo(actualLoc);
+			double absDivergence = closestLoc.distanceTo(actualLoc);
+			log(time + "\t" + (time - startTime) + "\t" + (time - startTime)/1000 + "\t" + absDivergence, flogger);
+		}
+		
+		robotData.printWayPointArrivalTable(flogger);
 	}
 		
 //	class AnalysisResults {
@@ -86,124 +136,124 @@ public class MotionDivergenceGPS {
 	 * the GPS-based motion script.  Creates tables containing the divergences of each robot
 	 * along fixed percentages towards each way point.
 	 */
-	private void calculateDivergence() {
-		
-		// Stores the absolute divergence calculations.
-		Vector<DivergenceExp> absoluteDivs = new Vector<DivergenceExp>();
-		
-		// Stores the relative divergence calculations.
-		Vector<DivergenceExp> relativeDivs = new Vector<DivergenceExp>();
-		
-		// Stores the relative-speed divergence calculations.
-		Vector<DivergenceExp> relativeSpeedDivs = new Vector<DivergenceExp>();
-		
-		// For each log file analyze the absolute divergence.
-		Enumeration<RobotExpData> expEnum = robotExpData.elements();
-		while (expEnum.hasMoreElements()) {
-			RobotExpData expData = expEnum.nextElement();
-			log("calculateAbsoluteDivergence: Analyzing robot " + expData.getRobotName() + ", log: " + expData.getFileName());
-			
-			DivergenceExp absDivExp = new DivergenceExp(expData);
-			absoluteDivs.add(absDivExp);
-			DivergenceExp relDivExp = new DivergenceExp(expData);
-			relativeDivs.add(relDivExp);
-			DivergenceExp relSpeedDivExp = new DivergenceExp(expData);
-			relativeSpeedDivs.add(relSpeedDivExp);
-			
-			// For each edge in the motion script...
-			for (int edgeCount = 0; edgeCount < motionScript.numWayPoints(); edgeCount++) {
-				PathEdge currEdge = expData.getPathEdge(edgeCount);
-				
-				// Get the starting location of the robot...
-				Location startLoc = currEdge.getStartLoc();
-				if (startLoc == null) {
-					logErr("calculateAbsoluteDivergence: Unknown start location in path edge:\n" + currEdge);
-					System.exit(-1);
-				}
-
-				// Create the ideal path along which the robot should travel.
-				// This is the line connecting the start location to the end location.
-				Line absolutePerfectRoute = new Line(startLoc, currEdge.getEndLocation());
-
-				// Initially, the relative perfect route is the same as the absolute perfect route.
-				Line relativePerfectRoute = absolutePerfectRoute;
-				
-				// Some debug tests...
-				//		System.out.println("Equation of Perfect Route: " + perfectRoute);
-				//		System.out.println("Check getLongitude: got " + perfectRoute.getLongitude(startLoc.latitude()) + ", expected " + startLoc.longitude());
-				//		System.out.println("Check getLatitude: got " + perfectRoute.getLatitude(startLoc.longitude()) + ", expected " + startLoc.latitude());
-
-				// The destination way point is always the edge count + 1.  For example,
-				// if this is edge 0, the destination way point is way point 1.
-				DivergenceEdge absoluteDivEdge = new DivergenceEdge(edgeCount+1);
-				absDivExp.addEdge(absoluteDivEdge);
-				DivergenceEdge relativeDivEdge = new DivergenceEdge(edgeCount+1);
-				relDivExp.addEdge(relativeDivEdge);
-				DivergenceEdge relativeSpeedDivEdge = new DivergenceEdge(edgeCount+1);
-				relSpeedDivExp.addEdge(relativeSpeedDivEdge);
-				
-				// Divide the edge traversal into ten segments.  We will compute the absolute divergence at 10% intervals.
-				long totalTime = currEdge.getEndTime() - currEdge.getStartTime();
-				long deltaTime = totalTime / 10;
-				log("calculateAbsoluteDivergence: totalTime = " + totalTime + ", deltaTime = " + deltaTime);
-				
-				// For every 10% of the edge traversed...
-				for (int pctComplete = 0; pctComplete <= 100; pctComplete += 10) {
-					long currTime = currEdge.getStartTime() + (pctComplete / 10) * deltaTime;
-					
-					Location currLoc = expData.getLocation(currTime);
-					
-					// Calculate the absolute divergence...
-					Location absoluteIdealLoc = absolutePerfectRoute.getLocationClosestTo(currLoc);
-					double absoluteDivergence = currLoc.distanceTo(absoluteIdealLoc);
-					
-					// Calculate the relative divergence...
-					Location relativeIdealLoc = relativePerfectRoute.getLocationClosestTo(currLoc);
-					double relativeDivergence = currLoc.distanceTo(relativeIdealLoc);
-
-					// Calculate the relative-speed divergence...
-					/*
-					 * Calculate the distance between the previous location of the robot to the current location.
-					 * This will be used to determine where the robot would be if it had traveled
-					 * the exact same distance but along the perfect path towards the destination.
-					 */
-					double deltaDist = relativePerfectRoute.getStartLoc().distanceTo(currLoc);
-					Location relativeSpeedIdealLoc = relativePerfectRoute.getLocationRelativeSpeed(deltaDist);
-					double relativeSpeedDivergence = currLoc.distanceTo(relativeIdealLoc);
-					
-					log("calculateDivergence: pctEdgeComplete=" + pctComplete + ", currTime=" + currTime + ", currLoc=" + currLoc 
-							+ ", absoluteIdealLoc=" + absoluteIdealLoc + ", absoluteDivergence=" + absoluteDivergence
-							+ ", relativeIdealLoc=" + relativeIdealLoc + ", relativeDivergence=" + relativeDivergence
-							+ ", relativeSpeedIdealLoc=" + relativeSpeedIdealLoc + ", relativeSpeedDivergence=" + relativeSpeedDivergence);
-					
-					Divergence absoluteDiv = new Divergence(currTime, pctComplete, currLoc, absoluteIdealLoc, absoluteDivergence, absolutePerfectRoute);
-					absoluteDivEdge.addDivergence(absoluteDiv);
-					Divergence relativeDiv = new Divergence(currTime, pctComplete, currLoc, relativeIdealLoc, relativeDivergence, relativePerfectRoute);
-					relativeDivEdge.addDivergence(relativeDiv);
-					Divergence relativeSpeedDiv = new Divergence(currTime, pctComplete, currLoc, relativeSpeedIdealLoc, relativeSpeedDivergence, relativePerfectRoute);
-					relativeSpeedDivEdge.addDivergence(relativeSpeedDiv);
-					
-					/*
-					 * For relative-divergence, the perfect route is updated to be the
-					 * straight line from the robot's previous location to the final destination.
-					 * This is "fairer" since the robot is always trying to get to the final destination
-					 * from is present location and not necessarily follow the straight line from the
-					 * edge's start location to final location.
-					 */
-					relativePerfectRoute = new Line(currLoc, currEdge.getEndLocation());
-					
-					// Some debug output
-//					System.out.println("currLoc: " + currLoc);
-//					System.out.println("destLoc: " + currEdge.getEndLocation());
-//					System.out.println("Updating perfect route to be: " + perfectRoute);
-				}
-			}
-		}
-		
-		saveResults(outputFileName + "-absoluteDivergence.txt", absoluteDivs);
-		saveResults(outputFileName + "-relativeDivergence.txt", relativeDivs);
-		saveResults(outputFileName + "-relativeSpeedDivergence.txt", relativeSpeedDivs);
-	}
+//	private void calculateDivergence() {
+//		
+//		// Stores the absolute divergence calculations.
+//		Vector<DivergenceExp> absoluteDivs = new Vector<DivergenceExp>();
+//		
+//		// Stores the relative divergence calculations.
+//		Vector<DivergenceExp> relativeDivs = new Vector<DivergenceExp>();
+//		
+//		// Stores the relative-speed divergence calculations.
+//		Vector<DivergenceExp> relativeSpeedDivs = new Vector<DivergenceExp>();
+//		
+//		// For each log file analyze the absolute divergence.
+//		Enumeration<RobotExpData> expEnum = robotExpData.elements();
+//		while (expEnum.hasMoreElements()) {
+//			RobotExpData expData = expEnum.nextElement();
+//			log("calculateAbsoluteDivergence: Analyzing robot " + expData.getRobotName() + ", log: " + expData.getFileName());
+//			
+//			DivergenceExp absDivExp = new DivergenceExp(expData);
+//			absoluteDivs.add(absDivExp);
+//			DivergenceExp relDivExp = new DivergenceExp(expData);
+//			relativeDivs.add(relDivExp);
+//			DivergenceExp relSpeedDivExp = new DivergenceExp(expData);
+//			relativeSpeedDivs.add(relSpeedDivExp);
+//			
+//			// For each edge in the motion script...
+//			for (int edgeCount = 0; edgeCount < motionScript.numWayPoints(); edgeCount++) {
+//				PathEdge currEdge = expData.getPathEdge(edgeCount);
+//				
+//				// Get the starting location of the robot...
+//				Location startLoc = currEdge.getStartLoc();
+//				if (startLoc == null) {
+//					logErr("calculateAbsoluteDivergence: Unknown start location in path edge:\n" + currEdge);
+//					System.exit(-1);
+//				}
+//
+//				// Create the ideal path along which the robot should travel.
+//				// This is the line connecting the start location to the end location.
+//				Line absolutePerfectRoute = new Line(startLoc, currEdge.getEndLocation());
+//
+//				// Initially, the relative perfect route is the same as the absolute perfect route.
+//				Line relativePerfectRoute = absolutePerfectRoute;
+//				
+//				// Some debug tests...
+//				//		System.out.println("Equation of Perfect Route: " + perfectRoute);
+//				//		System.out.println("Check getLongitude: got " + perfectRoute.getLongitude(startLoc.latitude()) + ", expected " + startLoc.longitude());
+//				//		System.out.println("Check getLatitude: got " + perfectRoute.getLatitude(startLoc.longitude()) + ", expected " + startLoc.latitude());
+//
+//				// The destination way point is always the edge count + 1.  For example,
+//				// if this is edge 0, the destination way point is way point 1.
+//				DivergenceEdge absoluteDivEdge = new DivergenceEdge(edgeCount+1);
+//				absDivExp.addEdge(absoluteDivEdge);
+//				DivergenceEdge relativeDivEdge = new DivergenceEdge(edgeCount+1);
+//				relDivExp.addEdge(relativeDivEdge);
+//				DivergenceEdge relativeSpeedDivEdge = new DivergenceEdge(edgeCount+1);
+//				relSpeedDivExp.addEdge(relativeSpeedDivEdge);
+//				
+//				// Divide the edge traversal into ten segments.  We will compute the absolute divergence at 10% intervals.
+//				long totalTime = currEdge.getEndTime() - currEdge.getStartTime();
+//				long deltaTime = totalTime / 10;
+//				log("calculateAbsoluteDivergence: totalTime = " + totalTime + ", deltaTime = " + deltaTime);
+//				
+//				// For every 10% of the edge traversed...
+//				for (int pctComplete = 0; pctComplete <= 100; pctComplete += 10) {
+//					long currTime = currEdge.getStartTime() + (pctComplete / 10) * deltaTime;
+//					
+//					Location currLoc = expData.getLocation(currTime);
+//					
+//					// Calculate the absolute divergence...
+//					Location absoluteIdealLoc = absolutePerfectRoute.getLocationClosestTo(currLoc);
+//					double absoluteDivergence = currLoc.distanceTo(absoluteIdealLoc);
+//					
+//					// Calculate the relative divergence...
+//					Location relativeIdealLoc = relativePerfectRoute.getLocationClosestTo(currLoc);
+//					double relativeDivergence = currLoc.distanceTo(relativeIdealLoc);
+//
+//					// Calculate the relative-speed divergence...
+//					/*
+//					 * Calculate the distance between the previous location of the robot to the current location.
+//					 * This will be used to determine where the robot would be if it had traveled
+//					 * the exact same distance but along the perfect path towards the destination.
+//					 */
+//					double deltaDist = relativePerfectRoute.getStartLoc().distanceTo(currLoc);
+//					Location relativeSpeedIdealLoc = relativePerfectRoute.getLocationRelativeSpeed(deltaDist);
+//					double relativeSpeedDivergence = currLoc.distanceTo(relativeIdealLoc);
+//					
+//					log("calculateDivergence: pctEdgeComplete=" + pctComplete + ", currTime=" + currTime + ", currLoc=" + currLoc 
+//							+ ", absoluteIdealLoc=" + absoluteIdealLoc + ", absoluteDivergence=" + absoluteDivergence
+//							+ ", relativeIdealLoc=" + relativeIdealLoc + ", relativeDivergence=" + relativeDivergence
+//							+ ", relativeSpeedIdealLoc=" + relativeSpeedIdealLoc + ", relativeSpeedDivergence=" + relativeSpeedDivergence);
+//					
+//					Divergence absoluteDiv = new Divergence(currTime, pctComplete, currLoc, absoluteIdealLoc, absoluteDivergence, absolutePerfectRoute);
+//					absoluteDivEdge.addDivergence(absoluteDiv);
+//					Divergence relativeDiv = new Divergence(currTime, pctComplete, currLoc, relativeIdealLoc, relativeDivergence, relativePerfectRoute);
+//					relativeDivEdge.addDivergence(relativeDiv);
+//					Divergence relativeSpeedDiv = new Divergence(currTime, pctComplete, currLoc, relativeSpeedIdealLoc, relativeSpeedDivergence, relativePerfectRoute);
+//					relativeSpeedDivEdge.addDivergence(relativeSpeedDiv);
+//					
+//					/*
+//					 * For relative-divergence, the perfect route is updated to be the
+//					 * straight line from the robot's previous location to the final destination.
+//					 * This is "fairer" since the robot is always trying to get to the final destination
+//					 * from is present location and not necessarily follow the straight line from the
+//					 * edge's start location to final location.
+//					 */
+//					relativePerfectRoute = new Line(currLoc, currEdge.getEndLocation());
+//					
+//					// Some debug output
+////					System.out.println("currLoc: " + currLoc);
+////					System.out.println("destLoc: " + currEdge.getEndLocation());
+////					System.out.println("Updating perfect route to be: " + perfectRoute);
+//				}
+//			}
+//		}
+//		
+//		saveResults(outputFileName + "-absoluteDivergence.txt", absoluteDivs);
+//		saveResults(outputFileName + "-relativeDivergence.txt", relativeDivs);
+//		saveResults(outputFileName + "-relativeSpeedDivergence.txt", relativeSpeedDivs);
+//	}
 	
 	/**
 	 * Saves the results into a text file.
@@ -211,75 +261,87 @@ public class MotionDivergenceGPS {
 	 * @param fileName The name of the file in which to save the results.
 	 * @param divs A vector containing the divergences of the robots.
 	 */
-	private void saveResults(String fileName, Vector<DivergenceExp> divs) {
-		FileLogger fileWriter = new FileLogger(fileName, false);
-		
-		// Create and save the table header
-		StringBuffer tableHeader = new StringBuffer("Dest. Waypoint\tPct. Complete\tIndex");
-		Enumeration<String> expLabelsEnum = expLabels.elements();
-		while (expLabelsEnum.hasMoreElements()) {
-			tableHeader.append("\t");
-			tableHeader.append(expLabelsEnum.nextElement());
-		}
-		tableHeader.append("\t");
-		tableHeader.append("Average");
-		tableHeader.append("\t");
-		tableHeader.append("Std. Dev.");
-		tableHeader.append("\t");
-		tableHeader.append("95% Conf.");
-		log(fileWriter, tableHeader.toString());
-		
-		// For each way point...
-		for (int wayPointIndx = 0; wayPointIndx < motionScript.numWayPoints(); wayPointIndx++) {
-			
-			// For each percentage completed...
-			for (double pctComplete = 0; pctComplete < 100; pctComplete += 10) {
-				
-				StringBuffer sb = new StringBuffer();
-				sb.append(wayPointIndx+1);
-				sb.append("\t");
-				sb.append(pctComplete);
-				sb.append("\t");
-				sb.append(wayPointIndx + (pctComplete/100));
-				
-				
-//				if (pctComplete == 0) {
-//					sb.append(wayPointIndx+1);
-//				} else
-//					sb.append("\t")
-				
-				Vector<Double> allData = new Vector<Double>();
-				
-				// For each experiment get and save the divergence...
-				for (int expIndx = 0; expIndx < divs.size(); expIndx++) {
-					double divergence = divs.get(expIndx).getDivergence(wayPointIndx, pctComplete);
-					sb.append("\t");
-					sb.append(divergence);
-					allData.add(divergence);
-				}
-				
-				// Generate some statistics about the divergence at pctComplete across all experiments.
-				double avg = pharoslabut.util.Stats.getAvg(allData);
-				double stddev = pharoslabut.util.Stats.getSampleStdDev(allData);
-				double conf95 = pharoslabut.util.Stats.getConf95(stddev, allData.size());
-				
-				sb.append("\t");
-				sb.append(avg);
-				sb.append("\t");
-				sb.append(stddev);
-				sb.append("\t");
-				sb.append(conf95);
-				
-				log(fileWriter, sb.toString());
-			}
-		}
-		
+//	private void saveResults(String fileName, Vector<DivergenceExp> divs) {
+//		FileLogger fileWriter = new FileLogger(fileName, false);
+//		
+//		// Create and save the table header
+//		StringBuffer tableHeader = new StringBuffer("Dest. Waypoint\tPct. Complete\tIndex");
+//		Enumeration<String> expLabelsEnum = expLabels.elements();
+//		while (expLabelsEnum.hasMoreElements()) {
+//			tableHeader.append("\t");
+//			tableHeader.append(expLabelsEnum.nextElement());
+//		}
+//		tableHeader.append("\t");
+//		tableHeader.append("Average");
+//		tableHeader.append("\t");
+//		tableHeader.append("Std. Dev.");
+//		tableHeader.append("\t");
+//		tableHeader.append("95% Conf.");
+//		log(fileWriter, tableHeader.toString());
+//		
+//		// For each way point...
+//		for (int wayPointIndx = 0; wayPointIndx < motionScript.numWayPoints(); wayPointIndx++) {
+//			
+//			// For each percentage completed...
+//			for (double pctComplete = 0; pctComplete < 100; pctComplete += 10) {
+//				
+//				StringBuffer sb = new StringBuffer();
+//				sb.append(wayPointIndx+1);
+//				sb.append("\t");
+//				sb.append(pctComplete);
+//				sb.append("\t");
+//				sb.append(wayPointIndx + (pctComplete/100));
+//				
+//				
+////				if (pctComplete == 0) {
+////					sb.append(wayPointIndx+1);
+////				} else
+////					sb.append("\t")
+//				
+//				Vector<Double> allData = new Vector<Double>();
+//				
+//				// For each experiment get and save the divergence...
+//				for (int expIndx = 0; expIndx < divs.size(); expIndx++) {
+//					double divergence = divs.get(expIndx).getDivergence(wayPointIndx, pctComplete);
+//					sb.append("\t");
+//					sb.append(divergence);
+//					allData.add(divergence);
+//				}
+//				
+//				// Generate some statistics about the divergence at pctComplete across all experiments.
+//				double avg = pharoslabut.util.Stats.getAvg(allData);
+//				double stddev = pharoslabut.util.Stats.getSampleStdDev(allData);
+//				double conf95 = pharoslabut.util.Stats.getConf95(stddev, allData.size());
+//				
+//				sb.append("\t");
+//				sb.append(avg);
+//				sb.append("\t");
+//				sb.append(stddev);
+//				sb.append("\t");
+//				sb.append(conf95);
+//				
+//				log(fileWriter, sb.toString());
+//			}
+//		}
+//		
+//	}
+	
+	private void logDbg(String msg) {
+		logDbg(msg, null);
 	}
 	
-	private void log(FileLogger flogger, String msg) {
+	private void logDbg(String msg, FileLogger flogger) {
+		String result = getClass().getName() + ": " + msg; 
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
+		if (flogger != null) 
+			flogger.log(result);
+	}
+	
+	private void log(String msg, FileLogger flogger) {
+		System.out.println(msg);
 		if (flogger != null)
 			flogger.log(msg);
-		System.out.println(msg);
 	}
 	
 	/**
@@ -747,87 +809,87 @@ public class MotionDivergenceGPS {
 //	}
 	
 	
-	/**
-	 * Reads the spec file and initializes variables outputFileName, motionScript, logFileNames, and logFileLabels.
-	 * 
-	 * @param specFile The specification file.
-	 */
-	private void readSpecFile(String specFile) {
-		// Open the specification file
-		BufferedReader input = null;
-		try {
-			input =  new BufferedReader(new FileReader(specFile));
-		} catch (IOException ex){
-			ex.printStackTrace();
-			logErr("Unable to open " + specFile);
-			System.exit(1);
-		}
-		
-		try {
-			String line = null;
-			int lineno = 1;
-			while (( line = input.readLine()) != null) {
-				if (!line.equals("")) {
-					if (line.contains("OUTPUT_FILE")) {
-						String[] elem = line.split("[\\s]+");
-						
-						if (elem.length > 1) {
-							outputFileName = elem[1];
-						} else {
-							System.err.println("ERROR: Syntax error on line " + lineno + " of file " + specFile + ": outfile file not specified.");
-							System.exit(1);
-						}
-					}
-					else if (line.contains("LOG_FILE")) {
-						String[] elem = line.split("[\\s]+");
-					
-						robotExpData.add(new RobotExpData(elem[1]));
-						
-						if (elem.length > 2)
-							expLabels.add(elem[2]);  // user specified the caption name
-						else {
-							// use the mission, experiment, and robot names as the label
-							String label = LogFileNameParser.extractMissionName(elem[1]) 
-								+ "-" + LogFileNameParser.extractExpName(elem[1])
-								+ "-" + LogFileNameParser.extractRobotName(elem[1]); 
-							expLabels.add(label);
-						}
-					}
-					else if (line.contains("MOTION_SCRIPT")) {
-						String[] elem = line.split("[\\s]+");
-						
-						if (elem.length > 1)
-							motionScript = new MotionScript(elem[1]);
-						else {
-							System.err.println("ERROR on line " + lineno + " of file " + specFile + ": Motion script not specified.");
-							System.exit(1);
-						}
-					}
-				}
-				lineno++;
-			}
-			input.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		// Perform some sanity checks to ensure we have all the information we need to perform the 
-		// motion divergence analysis.
-		if (outputFileName == null) {
-			logErr("ERROR: output file name not specified.");
-			System.exit(1);
-		}
-		
-		if (motionScript == null) {
-			logErr("ERROR: motion script not specified.");
-			System.exit(1);
-		}
-		
-		if (robotExpData.size() == 0) {
-			logErr("ERROR: No log files specified.");
-			System.exit(1);
-		}
-	}
+//	/**
+//	 * Reads the spec file and initializes variables outputFileName, motionScript, logFileNames, and logFileLabels.
+//	 * 
+//	 * @param specFile The specification file.
+//	 */
+//	private void readSpecFile(String specFile) {
+//		// Open the specification file
+//		BufferedReader input = null;
+//		try {
+//			input =  new BufferedReader(new FileReader(specFile));
+//		} catch (IOException ex){
+//			ex.printStackTrace();
+//			logErr("Unable to open " + specFile);
+//			System.exit(1);
+//		}
+//		
+//		try {
+//			String line = null;
+//			int lineno = 1;
+//			while (( line = input.readLine()) != null) {
+//				if (!line.equals("")) {
+//					if (line.contains("OUTPUT_FILE")) {
+//						String[] elem = line.split("[\\s]+");
+//						
+//						if (elem.length > 1) {
+//							outputFileName = elem[1];
+//						} else {
+//							System.err.println("ERROR: Syntax error on line " + lineno + " of file " + specFile + ": outfile file not specified.");
+//							System.exit(1);
+//						}
+//					}
+//					else if (line.contains("LOG_FILE")) {
+//						String[] elem = line.split("[\\s]+");
+//					
+//						robotExpData.add(new RobotExpData(elem[1]));
+//						
+//						if (elem.length > 2)
+//							expLabels.add(elem[2]);  // user specified the caption name
+//						else {
+//							// use the mission, experiment, and robot names as the label
+//							String label = LogFileNameParser.extractMissionName(elem[1]) 
+//								+ "-" + LogFileNameParser.extractExpName(elem[1])
+//								+ "-" + LogFileNameParser.extractRobotName(elem[1]); 
+//							expLabels.add(label);
+//						}
+//					}
+//					else if (line.contains("MOTION_SCRIPT")) {
+//						String[] elem = line.split("[\\s]+");
+//						
+//						if (elem.length > 1)
+//							motionScript = new MotionScript(elem[1]);
+//						else {
+//							System.err.println("ERROR on line " + lineno + " of file " + specFile + ": Motion script not specified.");
+//							System.exit(1);
+//						}
+//					}
+//				}
+//				lineno++;
+//			}
+//			input.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		// Perform some sanity checks to ensure we have all the information we need to perform the 
+//		// motion divergence analysis.
+//		if (outputFileName == null) {
+//			logErr("ERROR: output file name not specified.");
+//			System.exit(1);
+//		}
+//		
+//		if (motionScript == null) {
+//			logErr("ERROR: motion script not specified.");
+//			System.exit(1);
+//		}
+//		
+//		if (robotExpData.size() == 0) {
+//			logErr("ERROR: No log files specified.");
+//			System.exit(1);
+//		}
+//	}
 	
 	private void log(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -847,31 +909,23 @@ public class MotionDivergenceGPS {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.logger.analyzer.MotionDivergenceGPS <options>\n");
+		print("Usage: " + MotionDivergenceAnalyzer.class.getName() + " <options>\n");
 		print("Where <options> include:");
-		print("\t-spec <spec file name>: The specification file. (required)");
-		print("\t\tSyntax of specification file:");
-		print("\t\t\tMOTION_SCRIPT <motion script>");
-		print("\t\t\tOUTPUT_FILE <name of output file>");
-		print("\t\t\tLOG_FILE <name of log file> <label (optional)>");
-		print("\t\t\t...");
-		print("\t\tFor each LOG_FILE listed in the specification file, the divergence will be analyzed. " 
-				+ "Reflective divergence is determined based on all of these log files.");
-		print("\t\tFor more details, see: http://pharos.ece.utexas.edu/wiki/index.php/How_to_Analyze_the_Path_Divergence_when_Following_GPS_Waypoints");
+		print("\t-log <log file name>: The experiment log file generated by the robot. (required)");
+		print("\t-d or -debug: Enable debug mode.");
 	}
 	
 	public static void main(String[] args) {
-		String specFileName = null;
+		String logFileName = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
 				if (args[i].equals("-h") || args[i].equals("-help")) {
 					usage();
 					System.exit(0);
-				}
-				
-				if (args[i].equals("-spec")) {
-					specFileName = args[++i];
+				} 
+				else if (args[i].equals("-log")) {
+					logFileName = args[++i];
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -888,19 +942,15 @@ public class MotionDivergenceGPS {
 			System.exit(1);
 		}
 		
-		if (specFileName == null) {
-			printErr("Must specify specification file or log file.");
+		if (logFileName == null) {
+			printErr("Must specify log file.");
 			usage();
 			System.exit(1);
 		}
 		
-		print("SpecFile: " + specFileName);
+		print("Log: " + logFileName);
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
-		try {
-			new MotionDivergenceGPS(specFileName);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		new MotionDivergenceAnalyzer(logFileName);
 	}
 }

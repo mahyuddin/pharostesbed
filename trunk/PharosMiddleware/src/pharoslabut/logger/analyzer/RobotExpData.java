@@ -15,6 +15,7 @@ import playerclient3.structures.gps.PlayerGpsData;
  * @author Chien-Liang Fok
  */
 public class RobotExpData {
+	public static final boolean ENABLE_DEBUG_STATEMENTS = true;
 	/**
 	 * The name of the robot's experiment log file.
 	 */
@@ -384,7 +385,7 @@ public class RobotExpData {
 	}
 	
 	/**
-	 * Reads in and organizes the data in the robot's log file.
+	 * Reads and organizes the data in the robot's experiment log file.
 	 * 
 	 * @throws NumberFormatException
 	 * @throws IOException
@@ -417,23 +418,20 @@ public class RobotExpData {
 			else if (line.contains("WayPointFollower: Going to") 
 					|| line.contains("MotionScriptFollower: Going to")) 
 			{
-				StringTokenizer tokens = new StringTokenizer(line, ":()[], m/s");
-				long timeStamp = Long.valueOf(tokens.nextToken());
-				tokens.nextToken(); // WayPointFollower
-				tokens.nextToken(); // going
-				tokens.nextToken(); // to
-				double lat = Double.valueOf(tokens.nextToken());
-				double lon = Double.valueOf(tokens.nextToken());
-				tokens.nextToken(); // 0.0
-				tokens.nextToken(); // at
-				double speed = Double.valueOf(tokens.nextToken()); 
+				String keyStr = "Going to ";
+				String goingToLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				String[] tokens = goingToLine.split("[\\(\\),\\s,m]+");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				double lat = Double.valueOf(tokens[1]);
+				double lon = Double.valueOf(tokens[2]);
+				double speed = Double.valueOf(tokens[5]); 
 				
 				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
 				
 				// Set the start location of the path edge if we know where we are.
-				if (currLoc != null) {
+				if (currLoc != null)
 					currEdge.setStartLoc(new Location(currLoc));
-				}
 			}
 			else if (line.contains("TestNavigateCompassGPS: Going to")) {
 				String[] tokens = line.split("[\\[\\]:=(), ]");
@@ -596,6 +594,11 @@ public class RobotExpData {
 		if (locations.size() == 0) {
 			logErr("readFile: ERROR: robot has no known locations...");
 			System.exit(1);
+		}
+		
+		// Add sequence number to the path edges...
+		for (int i=0; i < pathEdges.size(); i++) {
+			pathEdges.get(i).setSeqNo(i);
 		}
 	}
 	
@@ -839,11 +842,7 @@ public class RobotExpData {
 	public long getStopTime() {
 		long result = -1;
 		
-		// Find the time when the robot finished traversing the last edge.
-		if (numEdges() > 0) {
-			PathEdge lastEdge = getPathEdge(numEdges()-1);
-			result = lastEdge.getEndTime();
-		} 
+		result = getFinalWaypointArrivalTime();
 		
 		// If the last location is received *after* the end time of the last edge traversed,
 		// consider it to be the end time of the robot.
@@ -860,6 +859,24 @@ public class RobotExpData {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Gets the time at which the robot arrives as the final way point.
+	 * 
+	 * @return The time at which the last waypoint was reached.
+	 */
+	public long getFinalWaypointArrivalTime() {
+		// Find the time when the robot finished traversing the last edge.
+		if (numEdges() > 0) {
+			PathEdge lastEdge = getPathEdge(numEdges()-1);
+			return lastEdge.getEndTime();
+		} else {
+			log("getFinalWaypointArrivalTime: WARNING: Robot did not traverse any edges!");
+			System.exit(1);
+		}
+		
+		return -1;
 	}
 	
 	/**
@@ -973,7 +990,7 @@ public class RobotExpData {
 		} else {	
 			logErr("Could not find path edge covering time " + timestamp 
 				+ " (" + (timestamp - getStartTime()) + ")");
-			printPathEdges();
+			printPathEdges(true);
 			System.exit(1);
 			return Double.MIN_VALUE;
 	
@@ -987,30 +1004,47 @@ public class RobotExpData {
 	 * @return The edge that robot is on at the specified time.
 	 */
 	public PathEdge getRelevantPathEdge(long timestamp) {
+		//log("getRelevantPathEdge: timestamp = " + timestamp);
+		//printPathEdges(false);
+		
 		for (int i = 0;  i < pathEdges.size(); i++) {
-			if (pathEdges.get(i).getStartTime() > timestamp) {
-				// requested time is before start of first edge
-				return pathEdges.get(0);
-			}
-			if (pathEdges.get(i).getStartTime() <= timestamp &&
-				pathEdges.get(i).getEndTime() >= timestamp) 
-			{
-				return pathEdges.get(i);
-			}
+			
+			PathEdge currEdge = pathEdges.get(i);
+			
+			// Check whether the requested time is prior to start of the first edge.
+			if (currEdge.getStartTime() > timestamp)
+				return currEdge;
+			
+			if (currEdge.getStartTime() <= timestamp && currEdge.getEndTime() >= timestamp)
+				return currEdge;
+			
+			// Check whether requested time is after end of the last edge.
+			if (i == pathEdges.size() - 1 && currEdge.getEndTime() < timestamp)
+				return currEdge;
 		}
+		
+		logErr("getRelevantPathEdge: Could not find relevant path edge at time " + timestamp
+				+ " (" + (timestamp - getStartTime()) + ")");
+		printPathEdges(true);
+		
 		return null;
 	}
 	
-	private void printPathEdges() {
+	private void printPathEdges(boolean isError) {
 		log("Start Time\tDelta Start Time\tEnd Time\tDelta End Time\tStart Location\tEnd Location");
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge e = pathEdges.get(i);
-			log(e.getStartTime() 
-					+ "\t" + (e.getStartTime() - getStartTime())
-					+ "\t" + e.getEndTime()
-					+ "\t" + (e.getEndTime() - getStartTime())  
-					+ "\t" + e.getStartLoc() 
-					+ "\t" + e.getEndLocation());
+			String result = e.getStartTime() 
+				+ "\t" + (e.getStartTime() - getStartTime())
+				+ "\t" + e.getEndTime()
+				+ "\t" + (e.getEndTime() - getStartTime())  
+				+ "\t" + e.getStartLoc() 
+				+ "\t" + e.getEndLocation();
+
+			if (isError)
+				logErr(result);
+			else
+				log(result);
 		}
 	}
 	
@@ -1115,7 +1149,7 @@ public class RobotExpData {
 			}
 		}
 		
-		log("getLocation: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		logDbg("getLocation: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		if (beforeIndx == afterIndx)
 			return new Location(locations.get(beforeIndx).getLoc());
@@ -1128,22 +1162,7 @@ public class RobotExpData {
 					aLoc.getLocation().latitude(), aLoc.getLocation().longitude(), aLoc.getTimestamp(),
 					timestamp, flogger);
 		}
-		
-//		PathEdge edge = getPathEdge(timestamp);
-//		if (edge != null)
-//			return edge.getLocation(timestamp);
-//		else {
-//			if (timestamp >= expStartTime) {
-//				//log("getLocation(timestamp): timestamp is after experiment started but prior to robot starting on first edge.");
-//				return pathEdges.get(0).getLocation(0).getLocation();
-//			} else if (timestamp > getPathEdge(numEdges()-1).getEndTime()) {
-//				PathEdge finalEdge = getPathEdge(numEdges()-1); 
-//				return finalEdge.getEndLocation();
-//			} else {
-//				logErr("ERROR: getLocation(timestamp): No edge at time " + timestamp);
-//				return null;
-//			}
-//		}
+	
 	}
 	
 	/**
@@ -1180,7 +1199,7 @@ public class RobotExpData {
 		
 		Location result = new Location(interpLat, interpLon);
 		
-		log("getInterpolatedLoc:\n"
+		logDbg("getInterpolatedLoc:\n"
 			+ "\tBefore Location @ " + time1 + ": (" + lat1 + ", " + lon1 + ")\n"
 			+ "\tAfter Location @ " + time2 + ": (" +  lat2 + ", " + lon2 + ")\n"
 			+ "\tInterpolated Location @ " + timestamp + ": " + result, flogger);
@@ -1229,6 +1248,26 @@ public class RobotExpData {
 			flogger.log(result);
 	}
 	
+	private static void logDbg(String msg, FileLogger flogger) {
+		if (ENABLE_DEBUG_STATEMENTS)
+			log(msg, flogger);
+	}
+	
+	/**
+	 * This only logs statements when ENABLE_DEBUG_STATEMENTS is true.
+	 * 
+	 * @param msg the message to log.
+	 */
+	private void logDbg(String msg) {
+		if (ENABLE_DEBUG_STATEMENTS)
+			log(msg);
+	}
+	
+	/**
+	 * Logs debug statements.
+	 * 
+	 * @param msg the message to log.
+	 */
 	private void log(String msg) {
 		String result = getClass().getName() + ": " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -1245,6 +1284,23 @@ public class RobotExpData {
 	 */
 	private long getRelativeTime(long time) {
 		return (time - getStartTime())/1000;
+	}
+	
+	/**
+	 * Prints a table listing the arrival times of the waypoints.
+	 * 
+	 * @param flogger The file logger to which to print the table.
+	 */
+	public void printWayPointArrivalTable(FileLogger flogger) {
+		flogger.log("Waypoint\tLatitude\tLongitude\tArrival Time (ms)\tArrival Delta Time (ms)\tArrival Delta Time (s)\tY Coordinate");
+		for (int i=0; i < pathEdges.size(); i++) {
+			PathEdge currEdge = pathEdges.get(i);
+			Location waypoint = currEdge.getEndLocation();
+			long endTime = currEdge.getEndTime();
+			flogger.log(i + "\t" + waypoint.latitude() + "\t" + waypoint.longitude() 
+					+ "\t" + endTime + "\t" + (endTime - getStartTime()) 
+					+ "\t" + (endTime - getStartTime())/1000 + "\t0");
+		}
 	}
 	
 	public String toString() {

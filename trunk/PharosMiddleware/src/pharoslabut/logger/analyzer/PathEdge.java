@@ -9,6 +9,11 @@ import pharoslabut.navigate.Location;
  */
 public class PathEdge {
 	
+	/**
+	 * The sequence number of the path edge.
+	 */
+	private int seqno;
+	
 	private Location endLoc;
 	private Location startLoc;
 	
@@ -50,6 +55,22 @@ public class PathEdge {
 		this.endLoc = endLoc;
 		this.startTime = startTime;
 		this.speed = speed;
+	}
+	
+	/**
+	 * Sets the sequence number.
+	 * 
+	 * @param seqno  the sequence number.
+	 */
+	public void setSeqNo(int seqno) {
+		this.seqno = seqno;
+	}
+	
+	/**
+	 * @return The sequence number.
+	 */
+	public int getSeqNo() {
+		return seqno;
 	}
 	
 	/**
@@ -197,30 +218,14 @@ public class PathEdge {
 	}
 	
 	/**
-	 * Returns the end time relative to the start of the experiment.
-	 * The units is milliseconds.
-	 */
-	//public long getEndTime() {
-	//	return endTime - expStartTime;
-	//}
-	
-	/**
-	 * Returns the actual time when the robot arrives at the final waypoint of
+	 * Returns the actual time when the robot arrives at the destination waypoint of
 	 * this edge. The units is in milliseconds since the epoch.
 	 * 
-	 * @return the actual time when the robot reached the end waypoint of this edge.
+	 * @return The actual time when the robot reached the end waypoint of this edge.
 	 */
 	public long getEndTime() {
 		return endTime;
 	}
-	
-	/**
-	 * Returns the end time relative to the start of the edge traversal.
-	 * The units is milliseconds.
-	 */
-//	public long getRelativeEndTime() {
-//		return endTime - startTime;
-//	}
 	
 	/**
 	 * Returns the duration of the edge traversal.  This is the difference
@@ -229,19 +234,9 @@ public class PathEdge {
 	 * @return The duration of the edge in milliseconds.
 	 */
 	public long getDuration() {
-//		GPSLocationState lastLoc = locations.get(locations.size()-1);
-//		return lastLoc.getTimestamp() - startTime;
 		return getEndTime() - getStartTime();
 	}
 	
-	/**
-	 * Returns the final location of the robot when it finishes traversing this edge.
-	 * 
-	 * @return  the final location of the robot when it finishes traversing this edge.
-	 */
-//	public Location getFinalLocation() {
-//		return locations.get(locations.size()-1).getLocation();
-//	}
 	
 	/**
 	 * Returns the location of the robot at the specified time.
