@@ -24,6 +24,14 @@ public class MotionDivergenceAnalyzer {
 	public static final long DIVERGENCE_CALCULATION_INTERVAL = 1000;
 	
 	/**
+	 * The threshold number of degrees that a robot's heading can differ from the ideal
+	 * heading before the robot is considered "oriented".  This is used to calculate
+	 * the oriented start divergence, see: 
+	 * http://pharos.ece.utexas.edu/wiki/index.php/How_to_Analyze_Motion_Divergence_when_a_Robot_Follows_GPS_Waypoints#Oriented_Start_Divergence
+	 */
+	public static final double ORIENTATION_THRESHOLD_DEGREES = 5;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param logFileName The robot's experiment log file to analyze.
@@ -42,6 +50,7 @@ public class MotionDivergenceAnalyzer {
 		logDbg("outputFilePrefix = " + outputFilePrefix);
 		
 		calcAbsoluteDivergence(robotData, outputFilePrefix + "-absoluteDivergence.txt");
+		calcOrientedStartDivergence(robotData, outputFilePrefix + "-orientedStartDivergence.txt");
 //		calculateDivergence();
 	}
 	
@@ -57,9 +66,10 @@ public class MotionDivergenceAnalyzer {
 		
 		//robotData.setFileLogger(flogger); // enable saving of debugging statements 
 		
+		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
+		
 		// For the duration of the experiment, at every DIVERGENCE_CALCULATION_INTERVAL 
 		// millisecond interval...
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
 		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime();
 			time += DIVERGENCE_CALCULATION_INTERVAL) 
 		{
@@ -70,9 +80,10 @@ public class MotionDivergenceAnalyzer {
 			if (edge == null) {
 				logErr("calcAbsoluteDivergence: Could not find relevant path edge!");
 				System.exit(1);
-			} else {
-				//logDbg("calcAbsoluteDivergence: Got path edge " + edge.getSeqNo(), flogger);
 			}
+			
+			//logDbg("calcAbsoluteDivergence: Got path edge " + edge.getSeqNo(), flogger);
+			
 			Line perfectPath = new Line(edge.getStartLoc(), edge.getEndLocation());
 			Location actualLoc = robotData.getLocation(time);
 			Location closestLoc = perfectPath.getLocationClosestTo(actualLoc);
@@ -82,6 +93,53 @@ public class MotionDivergenceAnalyzer {
 		
 		robotData.printWayPointArrivalTable(flogger);
 	}
+	
+	/**
+	 * Calculates the oriented start divergence of a robot.
+	 * 
+	 * @param robotData The robot's experiment data.
+	 * @param outputFileName The file in which to save results.
+	 */
+	private void calcOrientedStartDivergence(RobotExpData robotData, String outputFileName) {
+		FileLogger flogger = new FileLogger(outputFileName, false);
+		long startTime = robotData.getStartTime();
+		
+		//robotData.setFileLogger(flogger); // enable saving of debugging statements 
+		
+		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
+		
+		// For the duration of the experiment, at every DIVERGENCE_CALCULATION_INTERVAL 
+		// millisecond interval...
+		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime();
+			time += DIVERGENCE_CALCULATION_INTERVAL) 
+		{
+			// Get the relevant path edge.  
+			PathEdge edge = robotData.getRelevantPathEdge(time);
+			
+			if (edge == null) {
+				logErr("calcAbsoluteDivergence: Could not find relevant path edge!");
+				System.exit(1);
+			}
+			
+			//logDbg("calcOrientedStartDivergence: Got path edge " + edge.getSeqNo(), flogger);
+			
+			// If the robot has oriented itself by the specified time, determine the
+			// ideal path that the robot should travel an its divergence from this path.
+			LocationState orientedLoc = robotData.getOrientedLocation(edge.getSeqNo(), ORIENTATION_THRESHOLD_DEGREES); 
+			if (orientedLoc.getTimestamp() < time) {
+				
+//				Line perfectPath = new Line(edge.getStartLoc(), edge.getEndLocation());
+//				Location actualLoc = robotData.getLocation(time);
+//				Location closestLoc = perfectPath.getLocationClosestTo(actualLoc);
+//				double absDivergence = closestLoc.distanceTo(actualLoc);
+//				log(time + "\t" + (time - startTime) + "\t" + (time - startTime)/1000 + "\t" + absDivergence, flogger);
+			} else
+				logDbg("calcOrientedStartDivergence: Robot was not oriented yet at time " + time);
+		}
+		
+		robotData.printWayPointArrivalTable(flogger);
+	}
+	
 		
 //	class AnalysisResults {
 //		Vector<ResultEdge> resultAbsoluteDivergence = new Vector<ResultEdge>();

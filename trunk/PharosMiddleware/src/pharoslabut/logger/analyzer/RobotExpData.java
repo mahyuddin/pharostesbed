@@ -1030,6 +1030,26 @@ public class RobotExpData {
 		return null;
 	}
 	
+	/**
+	 * Returns the location and time that a robot becomes oriented as it traverses the specified
+	 * edge.
+	 * 
+	 * @param pathEdgeSeqNo The sequence number of the path edge.
+	 * @param thresholdDegrees The threshold number of degrees before a robot can be considered
+	 * oriented.
+	 * @return the location and time at which the robot becomes oriented.
+	 */
+	public LocationState getOrientedLocation(int pathEdgeSeqNo, double thresholdDegrees) {
+		PathEdge currPathEdge = getPathEdge(pathEdgeSeqNo);
+		int startIndx = -1;
+		for (int i = 0; i < headings.size(); i++) {
+			if (currPathEdge.getStartTime() >= headings.get(i).getTimestamp()) {
+				
+			}
+		}
+		return null;// TODO Remove this.
+	}
+	
 	private void printPathEdges(boolean isError) {
 		log("Start Time\tDelta Start Time\tEnd Time\tDelta End Time\tStart Location\tEnd Location");
 		for (int i=0; i < pathEdges.size(); i++) {
