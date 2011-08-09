@@ -47,7 +47,7 @@ extern "C" {
 #define PROTEUS_OPCODE_SENSORS          0x69
 #define PROTEUS_OPCODE_SONAR_EN         0x6A
 #define PROTEUS_OPCODE_SONAR_DE         0x6B
-#define PROTEUS_OPCODE_ACCEL		    0x6C
+#define PROTEUS_OPCODE_ACCEL		0x6C
 
 enum{
   PROTEUS_MODE_OFF,                  
