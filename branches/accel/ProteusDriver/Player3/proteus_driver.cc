@@ -449,7 +449,8 @@ void Proteus::updateAccel() {
 	memset(&accel_data,0,sizeof(accel_data)); // clear the irdata struct
 	
 //	accel_data.ranges_count = 2;
-	accel_axis_data [2]; // needs to be changed
+	float accel_axis_data[2]; // needs to be changed
+	//accel_axis_data[2];
 	accel_axis_data[0] = this->proteus_dev->accel_x;
 	accel_axis_data[1] = this->proteus_dev->accel_y;
 	accel_axis_data[2] = this->proteus_dev->accel_z;
