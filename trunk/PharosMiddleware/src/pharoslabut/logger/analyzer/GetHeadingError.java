@@ -47,6 +47,8 @@ public class GetHeadingError {
 		
 		// Calculate heading divergence every sampling interval
 		for (long time = startTime; time < robotData.getStopTime(); time += samplingInterval) {
+			
+			// Only do the calculation if the robot has started to move.
 			if (time >= robotData.getPathEdge(0).getStartTime())
 				divergenceData.add(getHeadingError(time));
 		}
