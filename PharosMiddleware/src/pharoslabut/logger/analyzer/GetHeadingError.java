@@ -18,9 +18,10 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 /**
- * Calculates the divergence between the robot's heading
+ * Calculates the difference between the robot's heading
  * and the ideal heading.  The ideal heading is the direction the robot 
  * must face to point to the next waypoint.
+ * Displays the resulting error on a graph, and optionally saves it in a file.
  * 
  * @author Chien-Liang Fok
  */
@@ -44,7 +45,7 @@ public class GetHeadingError {
 		
 		long startTime = robotData.getStartTime();
 		
-		// Calculate heading divergence every 1s
+		// Calculate heading divergence every sampling interval
 		for (long time = startTime; time < robotData.getStopTime(); time += samplingInterval) {
 			if (time >= robotData.getPathEdge(0).getStartTime())
 				divergenceData.add(getHeadingError(time));
