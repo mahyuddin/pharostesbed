@@ -179,6 +179,8 @@ public class TCPMessageSender implements MessageSender {
 
 	    			try {
 	    				log("run: Closing the socket to the destination host...");
+	    				socket.shutdownOutput();
+	    				socket.shutdownInput();
 						socket.close();
 					} catch (IOException e) {
 						logErr("run: Got IOException while closing socket.");
