@@ -1004,8 +1004,7 @@ public class RobotExpData {
 				+ " (" + (timestamp - getStartTime()) + ")");
 			printPathEdges(true);
 			System.exit(1);
-			return Double.MIN_VALUE;
-	
+			return Double.MIN_VALUE; // This is just dummy code to prevent the compiler from complaining.
 		}
 	}
 	
