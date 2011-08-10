@@ -307,8 +307,14 @@ public class RobotExpData {
 	
 	/**
 	 * Tokenizes the file name based on the dashes.  Removes all 
-	 * directories from the name.
+	 * directories from the name.  The two types of file names supported include:
 	 * 
+	 *   [mission name]-[exp desc]-[exp name]-[robot name]-[...]
+	 * 
+	 * and
+	 * 
+	 *   [mission name]-[exp name]-[robot name]-[...]
+	 *   
 	 * @return The tokenized file name.
 	 */
 	private String[] tokenizeFileName() {
@@ -334,9 +340,12 @@ public class RobotExpData {
 	 */
 	public String getRobotName() {
 		String[] tokens = tokenizeFileName();
-		if (tokens.length > 2)
-			return tokens[2];
-		else
+		if (tokens.length > 2) {
+			if (tokens.length == 5)
+				return tokens[3];
+			else
+				return tokens[2];
+		} else
 			return null;
 	}
 	
@@ -360,9 +369,12 @@ public class RobotExpData {
 	 */
 	public String getExpName() {
 		String[] tokens = tokenizeFileName();
-		if (tokens.length > 1)
-			return tokens[1];
-		else
+		if (tokens.length > 1) {
+			if (tokens.length == 5)
+				return tokens[1] + "-" + tokens[2];
+			else
+				return tokens[1];
+		} else
 			return null;
 	}
 	
