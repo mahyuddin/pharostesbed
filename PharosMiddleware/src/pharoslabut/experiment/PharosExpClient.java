@@ -80,7 +80,8 @@ public class PharosExpClient {
 				// Update the delay between each robot.
 				delay += expConfig.getStartInterval();
 				
-				sem.setDelay(delay);
+				//sem.setDelay(delay);
+				sem = new StartExpMsg(expConfig.getExpName(), ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
 			}
 		} catch(Exception e) {
 			logErr("Problem while communicating with the robots...");
