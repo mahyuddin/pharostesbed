@@ -25,11 +25,6 @@ import org.jfree.data.xy.XYSeriesCollection;
  * @author Chien-Liang Fok
  */
 public class GetHeadingError {
-	/**
-	 * The interval at which to calculate the heading error in milliseconds.
-	 */
-	public static final long HEADING_ERROR_CALCULATION_INTERVAL = 500;
-
 	private String logFileName;
 	
 	private RobotExpData robotData;
@@ -40,17 +35,19 @@ public class GetHeadingError {
 	 * The constructor.
 	 * 
 	 * @param logFileName The experiment log file to analyze.
+	 * @param samplingInterval  The interval at which to calculate the heading error in milliseconds.
 	 * @param saveToFile whether to save the error calculations to a file.
 	 */
-	public GetHeadingError(String logFileName, boolean saveToFile) {
+	public GetHeadingError(String logFileName, long samplingInterval, boolean saveToFile) {
 		this.logFileName = logFileName;
 		robotData = new RobotExpData(logFileName);
 		
 		long startTime = robotData.getStartTime();
 		
 		// Calculate heading divergence every 1s
-		for (long time = startTime; time < robotData.getStopTime(); time += HEADING_ERROR_CALCULATION_INTERVAL) {
-			divergenceData.add(getHeadingError(time));
+		for (long time = startTime; time < robotData.getStopTime(); time += samplingInterval) {
+			if (time >= robotData.getPathEdge(0).getStartTime())
+				divergenceData.add(getHeadingError(time));
 		}
 		
 		if (saveToFile)
@@ -249,11 +246,13 @@ public class GetHeadingError {
 		print("Where <options> include:");
 		print("\t-log <log file name>: The log file generated during the experiment. (required)");
 		print("\t-save: Save the heading errors in a text file.  The name will be the same as the log file but ending with \"-headingError.txt\" (optional)");
+		print("\t-interval <sampling interval>: The interval at which to calculate the heading error in milliseconds. (optional, default 500)");
 		print("\t-debug or -d: Enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String logFileName = null;
+		long samplingInterval = 500;
 		boolean saveToFile = false;
 		
 		try {
@@ -264,6 +263,9 @@ public class GetHeadingError {
 				}
 				else if (args[i].equals("-save")) {
 					saveToFile = false;
+				}
+				else if (args[i].equals("-interval")) {
+					samplingInterval = Long.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
 					logFileName = args[++i];
@@ -293,7 +295,7 @@ public class GetHeadingError {
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new GetHeadingError(logFileName, saveToFile);
+			new GetHeadingError(logFileName, samplingInterval, saveToFile);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
