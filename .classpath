@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/arpack_combo-0.1.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/javaclient.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/jcommon-1.0.16.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/jfreechart-1.0.13.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/mtj-0.9.13.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/netlib-java-0.9.1.jar"/>
+	<classpathentry kind="lib" path="PharosMiddleware/jars/tinyos.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
