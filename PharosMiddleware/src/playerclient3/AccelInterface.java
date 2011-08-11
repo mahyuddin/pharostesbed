@@ -64,7 +64,7 @@ public class AccelInterface extends PlayerDevice {
                     xdr.close ();
 
                     acceldata = new PlayerAccelData ();
-                    acceldata.setVoltages (voltages);
+                    acceldata.setVoltages (accelArray);
                     readyAcceldata = true;     
                     break;
                 }
