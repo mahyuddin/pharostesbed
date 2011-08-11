@@ -124,10 +124,7 @@ public class GetHeadingError {
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
 			long waypointTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
-//			HeadingDivergenceState headingErrorState = getHeadingError(currEdge.getEndTime());
-			
-			waypointSeries.add(waypointTime, 0); //headingErrorState.headingError);
-//			log(waypointArrivalTime + ", " + headingErrorState.headingError, null);
+			waypointSeries.add(waypointTime, 0);
 		}
 
 		// Create a dataset out of the data series
