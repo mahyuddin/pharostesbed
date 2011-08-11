@@ -46,7 +46,7 @@ public class AccelInterface extends PlayerDevice {
     private static final boolean isDebugging = PlayerClient.isDebugging;
 
     // Logging support
-    private Logger logger = Logger.getLogger (IRInterface.class.getName ());
+    private Logger logger = Logger.getLogger (AccelInterface.class.getName ());
 
     private PlayerAccelData acceldata;
     private boolean      readyAcceldata = false;
@@ -91,11 +91,11 @@ public class AccelInterface extends PlayerDevice {
             }
         } catch (IOException e) {
             throw new PlayerException
-                ("[IR] : Error reading payload: " +
+                ("[Accel] : Error reading payload: " +
                         e.toString(), e);
         } catch (OncRpcException e) {
             throw new PlayerException
-                ("[IR] : Error while XDR-decoding payload: " +
+                ("[Accel] : Error while XDR-decoding payload: " +
                         e.toString(), e);
         }
     }
