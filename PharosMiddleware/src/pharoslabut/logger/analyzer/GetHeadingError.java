@@ -13,6 +13,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 //import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -117,20 +118,26 @@ public class GetHeadingError {
 			headingErrorSeries.add((currState.time - robotData.getStartTime())/1000, currState.headingError);
 		}
 		
-		// Create a data series containing the times when the robot starts heading towards a waypoint
-		XYSeries waypointSeries = new XYSeries("Begin Edge Traveral");
+		// Create two data series one containing the times when the robot starts heading 
+		// towards a waypoint, and another containing the times when the robot arrives at
+		// a waypoint
+		final XYSeries beginEdgeSeries = new XYSeries("Begin Edge Traveral");
+		final XYSeries waypointArrivalSeries = new XYSeries("Waypoint Arrival");
 		Vector<PathEdge> pathEdges = robotData.getPathEdges();
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			long waypointTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
-			waypointSeries.add(waypointTime, 0);
+			double beginEdgeTime = (currEdge.getStartTime() - robotData.getStartTime())/1000.0;
+			beginEdgeSeries.add(beginEdgeTime, 0);
+			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
+			waypointArrivalSeries.add(wayPointArrivalTime, 0);
 		}
 
 		// Create a dataset out of the data series
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		dataset.addSeries(headingErrorSeries);
-		dataset.addSeries(waypointSeries);
+		dataset.addSeries(beginEdgeSeries);
+		dataset.addSeries(waypointArrivalSeries);
 		
 		// Create the chart
         JFreeChart chart = ChartFactory.createXYLineChart(
@@ -144,6 +151,10 @@ public class GetHeadingError {
             false                                // urls
         );
         
+     // Place the legend on top of the chart just below the title.
+        LegendTitle legend = chart.getLegend();
+        legend.setPosition(RectangleEdge.TOP);
+        
         chart.setBackgroundPaint(Color.white);
         
         XYPlot plot = chart.getXYPlot();
@@ -156,8 +167,14 @@ public class GetHeadingError {
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         renderer.setSeriesLinesVisible(0, true); // display the heading errors as a line
         renderer.setSeriesShapesVisible(0, false);
-        renderer.setSeriesLinesVisible(1, false); // display the waypoints as a point
+        renderer.setSeriesLinesVisible(1, false); // display the begin edge traversal points as blue dots
         renderer.setSeriesShapesVisible(1, true);
+        renderer.setSeriesPaint(1, Color.BLUE);
+        renderer.setSeriesShape(1, new java.awt.geom.Ellipse2D.Double(-3,-3,6,6));
+        renderer.setSeriesLinesVisible(2, false); // display the begin edge traversal points as green dots
+        renderer.setSeriesShapesVisible(2, true);
+        renderer.setSeriesPaint(2, Color.GREEN.darker());
+        renderer.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
         plot.setRenderer(renderer);
         
         
