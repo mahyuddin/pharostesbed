@@ -10,9 +10,11 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 //import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
 //import org.jfree.data.Range;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -59,14 +61,14 @@ public class GetHeadingAndSpeed {
 //	private void saveToFile() {
 //		String fileName;
 //		if (logFileName.contains("."))
-//			fileName = logFileName.substring(logFileName.lastIndexOf('.')) + "-headingError.txt";
+//			fileName = logFileName.substring(logFileName.lastIndexOf('.')) + "-headingSpeed.txt";
 //		else
-//			fileName = logFileName + "-headingError.txt";
+//			fileName = logFileName + "-headingSpeed.txt";
 //		
 //		FileLogger flogger = new FileLogger(fileName, false);
 //		long startTime = robotData.getStartTime();
 //		
-//		log("Time (ms)\tDelta Time (ms)\tHeading (radians)\tSpeed (m/s)", flogger);
+//		log("Time (ms)\tDelta Time (ms)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)", flogger);
 //		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
 //		while (e.hasMoreElements()) {
 //			SpeedHeadingState currState = e.nextElement();
@@ -92,77 +94,136 @@ public class GetHeadingAndSpeed {
 	 * Displays the data in a graph.
 	 */
 	private void showPlot() {
-		// Create a data series containing the heading and speed data...
-		XYSeries headingSeries = new XYSeries("Heading");
-		XYSeries speedSeries = new XYSeries("Speed");
+		// Create the various data series...
+		XYSeries headingSeries = new XYSeries("Estimated Heading");
+		XYSeries headingCmdSeries = new XYSeries("Turn Direction Command");
+		XYSeries speedSeries = new XYSeries("Estimated Speed");
+		XYSeries speedCmdSeries = new XYSeries("Desired Speed");
+		
 		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
 		while (e.hasMoreElements()) {
 			SpeedHeadingState currState = e.nextElement();
 			long currTime = (currState.time - robotData.getStartTime())/1000;
 			headingSeries.add(currTime, currState.heading);
+			headingCmdSeries.add(currTime, currState.headingCmd);
 			speedSeries.add(currTime, currState.speed);
+			speedCmdSeries.add(currTime, currState.speedCmd);
 		}
 		
-		// Create a data series containing the times when the robot starts heading towards a waypoint
-		XYSeries waypointSeries = new XYSeries("Begin Edge Traveral");
+		// Create two data series one containing the times when the robot starts heading 
+		// towards a waypoint, and another containing the times when the robot arrives at
+		// a waypoint
+		final XYSeries beginEdgeSeries = new XYSeries("Begin Edge Traveral");
+		final XYSeries waypointArrivalSeries = new XYSeries("Waypoint Arrival");
 		Vector<PathEdge> pathEdges = robotData.getPathEdges();
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			long waypointTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
-			waypointSeries.add(waypointTime, 0);
+			double beginEdgeTime = (currEdge.getStartTime() - robotData.getStartTime())/1000.0;
+			beginEdgeSeries.add(beginEdgeTime, 0);
+			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
+			waypointArrivalSeries.add(wayPointArrivalTime, 0);
 		}
 
-		// Create a dataset out of the data series
-		XYSeriesCollection dataset = new XYSeriesCollection();
-		dataset.addSeries(headingSeries);
-		dataset.addSeries(waypointSeries);
+		// Create two data sets, one containing heading and headingCmd, and the other
+		// containing speed and speedCmd data.
+		XYSeriesCollection headingDataSet = new XYSeriesCollection();
+		headingDataSet.addSeries(headingSeries);
+		headingDataSet.addSeries(headingCmdSeries);
+		headingDataSet.addSeries(beginEdgeSeries);
+		headingDataSet.addSeries(waypointArrivalSeries);
 		
-		// Create the chart
-        JFreeChart chart = ChartFactory.createXYLineChart(
-            "Robot Heading and Speed vs. Time",            // chart title
-            "Time (s)",                          // x axis label
-            "Heading (radians)",           // y axis label
-            dataset,                             // the data
-            PlotOrientation.VERTICAL,            // plot orientation (y axis is vertical)
-            true,                                // include legend
-            true,                                // tooltips
-            false                                // urls
+		XYSeriesCollection speedDataSet = new XYSeriesCollection();
+		speedDataSet.addSeries(speedSeries);
+		speedDataSet.addSeries(speedCmdSeries);
+		speedDataSet.addSeries(beginEdgeSeries);
+		speedDataSet.addSeries(waypointArrivalSeries);
+		
+		// Create the charts
+		JFreeChart headingChart = ChartFactory.createXYLineChart(
+				"Heading vs. Time",                                    // chart title
+				"Time (s)",                                            // x axis label
+				"Heading (radians)",                                   // y axis label
+				headingDataSet,                                        // the heading data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				true,                                                  // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+        
+        JFreeChart speedChart = ChartFactory.createXYLineChart(
+        		"Speed vs. Time",                                      // chart title
+        		"Time (s)",                                            // x axis label
+        		"Speed (m/s)",                                         // y axis label
+        		speedDataSet,                                          // the speed data
+        		PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+        		true,                                                  // include legend
+        		true,                                                  // tooltips
+        		false                                                  // urls
         );
         
-        chart.setBackgroundPaint(Color.white);
+        // Place the legend on top of the chart just below the title.
+        LegendTitle headingLegend = headingChart.getLegend();
+        headingLegend.setPosition(RectangleEdge.TOP);
+        LegendTitle speedLegend = speedChart.getLegend();
+        speedLegend.setPosition(RectangleEdge.TOP);
         
-        XYPlot plot = chart.getXYPlot();
-//        plot.setBackgroundPaint(Color.lightGray);
-//    //    plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
-//        plot.setDomainGridlinePaint(Color.white);
-//        plot.setRangeGridlinePaint(Color.white);
+        headingChart.setBackgroundPaint(Color.white);
+        speedChart.setBackgroundPaint(Color.white);
         
-        // Display the points and not the lines connecting the points
-        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesLinesVisible(0, true); // display the heading errors as a line
-        renderer.setSeriesShapesVisible(0, false);
-        renderer.setSeriesLinesVisible(1, false); // display the waypoints as a point
-        renderer.setSeriesShapesVisible(1, true);
-        plot.setRenderer(renderer);
+        // Configure when to display lines an when to display the shapes that indicate data points
+        XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+        renderer1.setSeriesLinesVisible(0, true); // display the heading as a line
+        renderer1.setSeriesShapesVisible(0, false);
+        renderer1.setSeriesPaint(0, Color.BLACK);
+        renderer1.setSeriesLinesVisible(1, true); // display the headingCmd as a line
+        renderer1.setSeriesShapesVisible(1, false);
+        renderer1.setSeriesPaint(1, Color.RED);
+        renderer1.setSeriesLinesVisible(2, false); // display the begin edge traversal points as blue dots
+        renderer1.setSeriesShapesVisible(2, true);
+        renderer1.setSeriesPaint(2, Color.BLUE);
+        renderer1.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-3,-3,6,6));
+        renderer1.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+        renderer1.setSeriesShapesVisible(3, true);
+        renderer1.setSeriesPaint(3, Color.GREEN.darker());
+        renderer1.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
         
+        final XYPlot headingPlot = headingChart.getXYPlot();
+        headingPlot.setRenderer(0, renderer1);
         
-//        final NumberAxis domainAxis = (NumberAxis)plot.getDomainAxis();
-//        domainAxis.setRange(new Range(0,140));
-
+        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
+        renderer2.setSeriesLinesVisible(0, true); // display the speed as a line
+        renderer2.setSeriesShapesVisible(0, false);
+        renderer2.setSeriesPaint(0, Color.BLACK);
+        renderer2.setSeriesLinesVisible(1, true); // display the speedCmd as a line
+        renderer2.setSeriesShapesVisible(1, false);
+        renderer2.setSeriesPaint(1, Color.RED);
+        renderer2.setSeriesLinesVisible(2, false); // display the waypoints as points
+        renderer2.setSeriesShapesVisible(2, true);
+        renderer2.setSeriesPaint(2, Color.BLUE);
+        renderer2.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+        renderer2.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+        renderer2.setSeriesShapesVisible(3, true);
+        renderer2.setSeriesPaint(3, Color.GREEN);
+        renderer2.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
         
-//        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-//     // change the auto tick unit selection to integer units only...
-////        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-//        rangeAxis.setRange(new Range(-Math.PI, Math.PI));     
+        final XYPlot speedPlot = speedChart.getXYPlot();
+        speedPlot.setRenderer(0, renderer2);
         
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setPreferredSize(new java.awt.Dimension(1000, 600));
+        // Place the charts in their own panels.
+        ChartPanel headingChartPanel = new ChartPanel(headingChart);
+        headingChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
+        ChartPanel speedChartPanel = new ChartPanel(speedChart);
+        speedChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
        
+        // Place both chart panels within a single panel with two rows.
+        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(2,1));
+        chartsPanel.add(headingChartPanel);
+        chartsPanel.add(speedChartPanel);
        
         // Create a frame for the chart, then display it.
         ApplicationFrame appFrame = new ApplicationFrame("Heading and Speed for " + logFileName);
-        appFrame.setContentPane(chartPanel);
+        appFrame.setContentPane(chartsPanel);
         appFrame.pack();
 		RefineryUtilities.centerFrameOnScreen(appFrame);
 		appFrame.setVisible(true);
@@ -234,8 +295,8 @@ public class GetHeadingAndSpeed {
 		print("Usage: " + GetHeadingAndSpeed.class.getName()  + " <options>\n");
 		print("Where <options> include:");
 		print("\t-log <log file name>: The log file generated during the experiment. (required)");
-		print("\t-save: Save the heading errors in a text file.  The name will be the same as the log file but ending with \"-headingError.txt\" (optional)");
-		print("\t-interval <sampling interval>: The interval at which to calculate the heading error in milliseconds. (optional, default 500)");
+		print("\t-save: Save the movement and movement commands in a text file.  The name will be the same as the log file but ending with \"-headingSpeed.txt\" (optional)");
+		print("\t-interval <sampling interval>: The interval at which to calculate the movement and movement commands in milliseconds. (optional, default 500)");
 		print("\t-debug or -d: Enable debug mode");
 	}
 	
@@ -284,7 +345,7 @@ public class GetHeadingAndSpeed {
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new GetHeadingError(logFileName, samplingInterval, saveToFile);
+			new GetHeadingAndSpeed(logFileName, samplingInterval, saveToFile);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
