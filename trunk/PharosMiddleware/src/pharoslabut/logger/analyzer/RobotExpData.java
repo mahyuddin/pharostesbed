@@ -68,6 +68,12 @@ public class RobotExpData {
 	private Vector<Long> headingErrors = new Vector<Long>();
 	
 	/**
+	 * Holds the logical motion commands issued by the MotionArbiter to the
+	 * robot.
+	 */
+	private Vector<MotionCmd> motionCmds = new Vector<MotionCmd>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the robot's experiment log file.
@@ -595,6 +601,22 @@ public class RobotExpData {
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				headingErrors.add(timeStamp);
 			}
+			
+			// Extract the logical motion commands of the robot
+			else if (line.contains("MotionArbiter: Sending motion command")) {
+				String keyStr = "MotionArbiter: Sending motion command";
+				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = headingLine.split("[=,\\s ]+");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				double speed  = Double.valueOf(tokens[2]);
+				double heading = Double.valueOf(tokens[4]);
+				
+				
+				motionCmds.add(new MotionCmd(timeStamp, speed, heading));
+			}
 		}
 		
 		// Do some sanity checks...
@@ -891,6 +913,89 @@ public class RobotExpData {
 		return -1;
 	}
 	
+	
+	/**
+	 * Returns the speed command that the Pharos Middleware is issuing to the robot.
+	 * 
+	 * @param time The time at which to determine the logical speed.
+	 * @return The speed that the Pharos Middleware wants the robot to travel at in m/s.
+	 */
+	public double getSpeedCmd(long time) {
+		int indx = getRelevantMotionCmdIndx(time);
+		return motionCmds.get(indx).speedCmd;
+	}
+	
+	/**
+	 * Returns the robot's estimated speed based on consecutive GPS measurements.
+	 * 
+	 * @param time The time at which to determine the actual speed.
+	 * @return The speed that the robot is actually traveling at based on GPS measurements.
+	 */
+	public double getSpeed(long time) {
+		if (time < getStartTime()) {
+			log("WARNING: getSpeed: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
+			return 0;
+		}
+		
+		if (time > getStopTime()) {
+			log("WARNING: getSpeed: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
+			return 0;
+		}
+		
+		// Find the index of the GPS measurements immediately before or after the desired time
+		int beforeIndx = 0; 
+		int afterIndx = 0;
+		
+		boolean afterIndxFound = false;
+		
+		for (int i=0; i < locations.size(); i++) {
+			GPSLocationState currLocation = locations.get(i);
+			if (currLocation.getTimestamp() <= time)
+				beforeIndx = i;
+			if (!afterIndxFound && currLocation.getTimestamp() >= time) {
+				afterIndxFound = true;
+				afterIndx = i;
+			}
+		}
+		
+		logDbg("getSpeed: timestamp = " + time + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		
+		GPSLocationState preLoc, postLoc;
+		
+		if (beforeIndx == afterIndx) {
+			// A GPS measurement arrived at precise time we want to estimate the robot's speed.
+			// Use this GPS measurement and the one just before it if it exists.  Otherwise,
+			// use the one just after it if it exists.
+			if (beforeIndx > 0) {
+				preLoc = locations.get(beforeIndx - 1);
+				postLoc = locations.get(beforeIndx);	
+			} else if (beforeIndx + 1 < locations.size()){
+				preLoc = locations.get(beforeIndx);
+				postLoc = locations.get(beforeIndx + 1);
+			} else {
+				logErr("getSpeed: Unable to get two GPS measurements to estimate speed.");
+				System.exit(1);
+				preLoc = postLoc = null; // dummy code to prevent compiler from complaining 
+			}
+		} else {
+			preLoc = locations.get(beforeIndx);
+			postLoc = locations.get(afterIndx);
+		}
+		
+		// Calculate the difference in time
+		double deltaTime = (postLoc.getTimestamp() - preLoc.getTimestamp()) / 1000.0;
+		
+		// Calculate the distance between the two GPS measurements
+		double dist = preLoc.getLocation().distanceTo(postLoc.getLocation());
+		
+		double speed = dist / deltaTime;
+		
+		log("getSpeed: preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
+				+ ", deltaTime=" + deltaTime + ", speed=" + speed);
+		
+		return speed;
+	}
+	
 	/**
 	 * Returns the neighbor list of this robot.
 	 * 
@@ -1080,6 +1185,56 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Finds the index within the motionCmds vector that contains the command that is
+	 * active at the specified time.
+	 * 
+	 * @param timestamp The specified time.
+	 * @return The index within motionCmds that contains the relevant motion command.
+	 */
+	private int getRelevantMotionCmdIndx(long timestamp) {
+		
+		for (int indx = 0; indx < motionCmds.size() - 1; indx++) {
+			
+			MotionCmd currCmd = motionCmds.get(indx);
+			MotionCmd nxtCmd = motionCmds.get(indx+1);
+			
+			// Check if the relevant time is prior to the first motion command.
+			if (indx == 0 && timestamp <  currCmd.time) {
+				log("getRelevantMotionCmdIndx: WARNING: timestamp before that of first motion command (" 
+						+ timestamp + " < " + currCmd.time + "), assuming first command is relevant...");
+				return 0;
+			}
+			
+			// Check if the timestamp falls between the current and next motion commands
+			else if (currCmd.time <= timestamp && timestamp < nxtCmd.time) {
+				log("getRelevantMotionCmdIndx: Found relevant motion command at index " + indx);
+				return indx;
+			}
+			
+			// Check if timestamp falls after the last command.
+			else if (indx + 1 == motionCmds.size() - 1 && nxtCmd.time <= timestamp) {
+				return indx+1;
+			}
+			
+		}
+		
+		logErr("getRelevantMotionCmdIndx: Failed to find relevant motion task, timestamp = " + timestamp);
+		System.exit(1); // fatal error
+		return -1; // should never get here
+	}
+	/**
+	 * Returns the heading command issued by the MotionArbiter to the robot.
+	 * This does not interpolate the value because it is continuously defined.
+	 * 
+	 * @param timestamp The time of interest.
+	 * @return The heading command.
+	 */
+	public double getHeadingCmd(long timestamp) {
+		int indx = getRelevantMotionCmdIndx(timestamp);
+		return motionCmds.get(indx).headingCmd;
+	}
+	
+	/**
 	 * Returns the heading of the robot at the specified time.
 	 * Uses a linear interpolation of the robot's heading when necessary.
 	 * 
@@ -1263,6 +1418,20 @@ public class RobotExpData {
 		return pathEdges.get(wayPoint).getLateness();
 	}
 	
+	/**
+	 * Holds a motion command and when it was issued.
+	 */
+	private class MotionCmd {
+		long time;
+		double speedCmd, headingCmd;
+		
+		public MotionCmd(long time, double speedCmd, double headingCmd) {
+			this.time = time;
+			this.speedCmd = speedCmd;
+			this.headingCmd = headingCmd;
+		}
+	}
+	
 	private void logErr(String msg) {
 		String result = getClass().getName() + ": ERROR: " + msg;
 		System.err.println(result);
@@ -1351,6 +1520,11 @@ public class RobotExpData {
 		System.out.println(msg);
 	}
 	
+	/**
+	 * A small test of this class.
+	 * 
+	 * @param args The command line arguments.
+	 */
 	public static void main(String[] args) {
 		if (args.length < 1) {
 			print("Usage: " + RobotExpData.class.getName() + " [path to robot experiment data]");
