@@ -10,7 +10,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 //import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberAxis;
+//import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
@@ -53,42 +53,55 @@ public class GetHeadingAndSpeed {
 			speedHeadingData.add(dataPoint);			
 		}
 		
-//		if (saveToFile)
-//			saveToFile();
+		if (saveToFile)
+			saveToFile();
+
 		showPlot();
 	}
 	
-//	private void saveToFile() {
-//		String fileName;
-//		if (logFileName.contains("."))
-//			fileName = logFileName.substring(logFileName.lastIndexOf('.')) + "-headingSpeed.txt";
-//		else
-//			fileName = logFileName + "-headingSpeed.txt";
-//		
-//		FileLogger flogger = new FileLogger(fileName, false);
-//		long startTime = robotData.getStartTime();
-//		
-//		log("Time (ms)\tDelta Time (ms)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)", flogger);
-//		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
-//		while (e.hasMoreElements()) {
-//			SpeedHeadingState currState = e.nextElement();
-//			log(currState.time 
-//					+ "\t" + (currState.time - startTime) 
-//					+ "\t" + currState.heading 
-//					+ "\t" + currState.speed, flogger);
-//		}
-//		
-//		// Print when the robot starts traversing an edge...
-//		log("Start Times of Edge Traversal:", flogger);
-//		log("Time (ms)\tDelta Time (ms)\tDummy", flogger);
-//		Vector<PathEdge> pathEdges = robotData.getPathEdges();
-//		Enumeration<PathEdge> e2 = pathEdges.elements();
-//		while (e2.hasMoreElements()) {
-//			PathEdge currEdge = e2.nextElement();
-//			long relStartTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
-//			log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0, flogger);
-//		}
-//	}
+	private void saveToFile() {
+		String fileName;
+		if (logFileName.contains("."))
+			fileName = logFileName.substring(logFileName.lastIndexOf('.')) + "-headingSpeed.txt";
+		else
+			fileName = logFileName + "-headingSpeed.txt";
+		
+		FileLogger flogger = new FileLogger(fileName, false);
+		long startTime = robotData.getStartTime();
+		
+		log("Time (ms)\tDelta Time (ms)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)", flogger);
+		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
+		while (e.hasMoreElements()) {
+			SpeedHeadingState currState = e.nextElement();
+			log(currState.time 
+					+ "\t" + (currState.time - startTime) 
+					+ "\t" + currState.heading 
+					+ "\t" + currState.headingCmd
+					+ "\t" + currState.speed
+					+ "\t" + currState.speedCmd, flogger);
+		}
+		
+		// Print when the robot starts traversing an edge...
+		log("Start Times of Edge Traversal:", flogger);
+		log("Time (ms)\tDelta Time (ms)\tDummy", flogger);
+		Vector<PathEdge> pathEdges = robotData.getPathEdges();
+		Enumeration<PathEdge> e2 = pathEdges.elements();
+		while (e2.hasMoreElements()) {
+			PathEdge currEdge = e2.nextElement();
+			long relStartTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
+			log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0, flogger);
+		}
+		
+		// Print when the robot arrives at a waypoint...
+		log("Start Times of Edge Traversal:", flogger);
+		log("Time (ms)\tDelta Time (ms)\tDummy", flogger);
+		e2 = pathEdges.elements();
+		while (e2.hasMoreElements()) {
+			PathEdge currEdge = e2.nextElement();
+			long relEndTime = (currEdge.getEndTime() - robotData.getStartTime())/1000;
+			log(currEdge.getEndTime() + "\t" + relEndTime + "\t" + 0, flogger);
+		}
+	}
 	
 	/**
 	 * Displays the data in a graph.
@@ -251,6 +264,7 @@ public class GetHeadingAndSpeed {
 	 * @param msg The message to log.
 	 */
 //	private void logDbg(String msg) {
+//		String result = getClass().getName() + ": " + msg;
 //		if (System.getProperty ("PharosMiddleware.debug") != null)
 //			log(msg);
 //	}
@@ -266,8 +280,7 @@ public class GetHeadingAndSpeed {
 //	}
 	
 	private void log(String msg, FileLogger flogger) {
-		String result = getClass().getName() + ": " + msg;
-		System.out.println(result);
+		System.out.println(msg);
 		if (flogger != null)
 			flogger.log(msg);
 	}
