@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import playerclient3.structures.PlayerMsgHdr;
-import playerclient3.structures.PlayerPose3d;
+//import playerclient3.structures.PlayerPose3d;
 import playerclient3.structures.accel.PlayerAccelData;
 import playerclient3.xdr.OncRpcException;
 import playerclient3.xdr.XdrBufferDecodingStream;
