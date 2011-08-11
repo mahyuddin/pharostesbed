@@ -36,7 +36,7 @@ import playerclient3.structures.*;
 public class PlayerAccelData implements PlayerConstants {
 
     // voltages [V]
-    private float[] voltages;
+    private short[] voltages;
  
     /**
      * @return  number of samples
@@ -48,14 +48,14 @@ public class PlayerAccelData implements PlayerConstants {
     /**
      * @return  voltages [V]
      */
-    public synchronized float[] getVoltages () {
+    public synchronized short[] getVoltages () {
         return this.voltages;
     }
 
     /**
      * @param newVoltages  voltages [V]
      */
-    public synchronized void setVoltages (float[] newAccel) {
+    public synchronized void setVoltages (short[] newAccel) {
         this.voltages = newAccel;
     }
 
