@@ -201,7 +201,7 @@ public class MotionArbiter implements Runnable {
 	}
 	
 	private void log(String msg) {
-		String result = "MotionArbiter: " + msg;
+		String result = getClass().getName() + ": " + msg;
 		if (System.getProperty ("PharosMiddleware.debug") != null) 
 			System.out.println(result);
 		
