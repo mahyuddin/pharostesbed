@@ -88,6 +88,14 @@ public class RobotExpData {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
+		// Debugging code...
+//		log("Time\tRel Time (s)\tSpeed Command (m/s)\tHeading Command (radians)");
+//		for (int i=0; i < motionCmds.size(); i++) {
+//			//if (motionCmds.get(i).speedCmd == 0)
+//				log(motionCmds.get(i).toString());
+//		}
+//		log("End of MotionCmd table.");
 	}
 	
 	/**
@@ -602,7 +610,7 @@ public class RobotExpData {
 				headingErrors.add(timeStamp);
 			}
 			
-			// Extract the logical motion commands of the robot
+			// Extract the motion commands being issued by the motion arbiter
 			else if (line.contains("MotionArbiter: Sending motion command")) {
 				String keyStr = "MotionArbiter: Sending motion command";
 				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
@@ -707,6 +715,10 @@ public class RobotExpData {
 		
 		for (int i=0; i < headingErrors.size(); i++) {
 			headingErrors.set(i, calibrator.getCalibratedTime(headingErrors.get(i)));
+		}
+		
+		for (int i=0; i < motionCmds.size(); i++) {
+			motionCmds.get(i).calibrateTime(calibrator);
 		}
 	}
 	
@@ -1429,6 +1441,23 @@ public class RobotExpData {
 			this.time = time;
 			this.speedCmd = speedCmd;
 			this.headingCmd = headingCmd;
+		}
+		
+		/**
+		 * Recalibrates the time based on the GPS timestamps.
+		 * 
+		 * @param calibrator The time calibrator.
+		 */
+		public void calibrateTime(TimeCalibrator calibrator) {
+			time = calibrator.getCalibratedTime(time);
+		}
+		
+//		public String getTableHeader() {
+//			return "Time\tSpeed Command (m/s)\tHeading Command (radians)";
+//		}
+		
+		public String toString() {
+			return time + "\t" + (time - getStartTime())/1000.0 + "\t" + speedCmd + "\t" + headingCmd;
 		}
 	}
 	
