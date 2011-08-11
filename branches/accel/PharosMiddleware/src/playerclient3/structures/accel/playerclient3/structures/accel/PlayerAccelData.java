@@ -37,10 +37,7 @@ public class PlayerAccelData implements PlayerConstants {
 
     // voltages [V]
     private float[] voltages;
-    // ranges [m]
-    private float[] ranges;
-
-
+ 
     /**
      * @return  number of samples
      */
