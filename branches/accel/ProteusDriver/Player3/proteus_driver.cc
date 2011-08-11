@@ -204,12 +204,19 @@ Driver* Proteus_Init(ConfigFile* cf, int section) {
 	return (Driver*)(new Proteus(cf, section));
 }
 
+/*Driver* Accel_Init(ConfigFile* cf, int section) {
+	return (Driver*)(new accel(cf, section));
+}*/
+
 /**
  * A driver registration function
  */
 void proteus_Register(DriverTable* table) {
 	table->AddDriver("proteus", Proteus_Init);
+	table->AddDriver("accel", Proteus_Init);
 }
+
+
 
 /**
  * The constructor.  The Proteus class extends the Driver class whose API can be found here:
@@ -230,8 +237,8 @@ Proteus::Proteus(ConfigFile* cf, int section)
 	//memset(&this->sonar_addr,0,sizeof(player_devaddr_t));
 	memset(&this->opaque_addr,0,sizeof(player_devaddr_t));
 	memset(&this->compass_addr, 0, sizeof(player_devaddr_t));
-	memset(&this->accel_addr, 0, sizeof(player_devaddr_t));  ///////////////////added for accel
-	
+	memset(&this->accel_addr, 0, sizeof(player_devaddr_t));  ///////////////added for accel
+	printf("%ld.%.6ld after memset\n", _currTime.tv_sec, _currTime.tv_usec);
 	// Reset the interfaces enabled...
 	interfacesEnabled = 0;
 	
@@ -285,8 +292,10 @@ Proteus::Proteus(ConfigFile* cf, int section)
 			return;
 		}
 		interfacesEnabled |= ACCEL_INTERFACE;
-	}
+		printf("%ld.%.6ld int enabled accel\n", _currTime.tv_sec, _currTime.tv_usec);
+		printf("%ld.%.6ld intefacesEnabled = %x \n", _currTime.tv_sec, _currTime.tv_usec,interfacesEnabled);
 
+	}
 
 
 
@@ -317,6 +326,7 @@ Proteus::Proteus(ConfigFile* cf, int section)
 	this->safe = cf->ReadInt(section, "safe", 1);
 	//this->ir_as_sonar = cf->ReadInt(section, "ir_as_sonar", 0);
 	this->proteus_dev = NULL;
+	
 } // end constructor
 
 /*result_t Proteus::openSerialConnection() {
@@ -446,7 +456,7 @@ void Proteus::updateCompass() {
 void Proteus::updateAccel() {
 	player_imu_data_calib_t accel_data;   
 
-	memset(&accel_data,0,sizeof(accel_data)); // clear the irdata struct
+	memset(&accel_data,0,sizeof(accel_data)); // clear the accel struct
 	
 //	accel_data.ranges_count = 2;
 	float accel_axis_data[2]; // needs to be changed
@@ -580,7 +590,9 @@ void Proteus::Main() {
 		 */
 		if (loopCount % 10 == 0) {
 			// send a heart beat at 1Hz
+			printf("before heartbeat\n");
 			commOK = proteus_sendHeartBeat(this->proteus_dev, interfacesEnabled);
+			
 		}
 		loopCount++;
 		

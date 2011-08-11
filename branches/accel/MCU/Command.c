@@ -254,29 +254,29 @@ void Command_sendAccelPacket(void) {
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
 void Command_sendData() {
-  //char message[50];
-	//if (sprintf(message, "Command_sendData Called") > 0)
-		  //Command_sendMessagePacket(message);
+  char message[50];
+	if (sprintf(message, "Command_sendData Called") > 0)
+		  Command_sendMessagePacket(message);
 		
-//	if (_heartbeatReceived) {
-//		LED_GREEN2 ^= 1;
+	if (_heartbeatReceived) {
+		LED_GREEN2 ^= 1;
 		
-//		if (_interfacesEnabled & POSITION2D_INTERFACE)
-//			Command_sendOdometryPacket();
+		if (_interfacesEnabled & POSITION2D_INTERFACE)
+			Command_sendOdometryPacket();
 		
-//		if (_interfacesEnabled & COMPASS_INTERFACE)
-//			Compass_getHeading();
+		if (_interfacesEnabled & COMPASS_INTERFACE)
+			Compass_getHeading();
 			
-//		if (_interfacesEnabled & IR_INTERFACE)
-//			Command_sendIRPacket();
+		if (_interfacesEnabled & IR_INTERFACE)
+			Command_sendIRPacket();
 		
-//		if ( _interfacesEnabled & ACCEL_INTERFACE)
+		if ( _interfacesEnabled & IMU_INTERFACE)
 			Command_sendAccelPacket();
 		
-//	} else {
-//		LED_GREEN2 = LED_OFF;
-//		LED_BLUE2 = LED_OFF;
-//	}
+	} else {
+		LED_GREEN2 = LED_OFF;
+		LED_BLUE2 = LED_OFF;
+	}
 }
 
 void Command_sendStatus() {
@@ -348,6 +348,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 		case PROTEUS_OPCODE_DRIVE:
 			processDriveCmd(cmd, size);
 			break;
+		
 		/*case PROTEUS_OPCODE_LEDS:
 			// TODO...
 			break;

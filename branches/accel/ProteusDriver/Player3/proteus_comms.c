@@ -315,7 +315,7 @@ static inline result_t sendOp(proteus_comm_t* r, uint8_t op) {
  * @return SUCCESS if successful, FAIL otherwise
  */
 result_t proteus_sendHeartBeat(proteus_comm_t* r, uint16_t interfacesEnabled) {
-	//printf("proteus_comms: sendHeartBeat: sending heartbeat.\n");
+	printf("proteus_comms: sendHeartBeat: sending heartbeat.\n");
 	//return sendOp(r, PROTEUS_OPCODE_HEARTBEAT);
 	if (r != NULL) {
 		uint8_t cmdbuf[5];
