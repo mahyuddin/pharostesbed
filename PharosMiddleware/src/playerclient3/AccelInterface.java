@@ -45,26 +45,26 @@ public class AccelInterface extends PlayerDevice {
             switch (header.getSubtype ()) {
                 case PLAYER_IMU_DATA_CALIB: {
                     this.timestamp = header.getTimestamp();
-
+                    
+                    acceldata = new PlayerAccelData ();
+                    
                     // Buffer for reading voltages_count
-                    byte[] buffer = new byte[4];
+                    byte[] buffer = new byte[2];
 
                     // Read voltages_count
-                    is.readFully (buffer, 0, 4);
+                    is.readFully (buffer, 0, 2);
 
                     // Begin decoding the XDR buffer
                     XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
-                    xdr.beginDecoding ();
-                    short[] accelArray;         
-                    accelArray = new short[2];      
-                    accelArray[0] = xdr.xdrDecodeShort ();
-                    accelArray[1] = xdr.xdrDecodeShort ();
-                    accelArray[2] = xdr.xdrDecodeShort ();
+                    xdr.beginDecoding ();         
+                    acceldata.setX_axis  (xdr.xdrDecodeShort ());
+                    acceldata.setY_axis  (xdr.xdrDecodeShort ());
+                    acceldata.setZ_axis  (xdr.xdrDecodeShort ());
                     xdr.endDecoding   ();
                     xdr.close ();
 
-                    acceldata = new PlayerAccelData ();
-                    acceldata.setVoltages (accelArray);
+                    
+                   // acceldata.setVoltages (accelArray);
                     readyAcceldata = true;     
                     break;
                 }
