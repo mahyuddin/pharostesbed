@@ -62,44 +62,46 @@ public class GetHeadingAndSpeed {
 	private void saveToFile() {
 		String fileName;
 		if (logFileName.contains("."))
-			fileName = logFileName.substring(logFileName.lastIndexOf('.')) + "-headingSpeed.txt";
+			fileName = logFileName.substring(0, logFileName.lastIndexOf('.')) + "-headingSpeed.txt";
 		else
 			fileName = logFileName + "-headingSpeed.txt";
 		
+		log("Saving data to " + fileName, null);
 		FileLogger flogger = new FileLogger(fileName, false);
 		long startTime = robotData.getStartTime();
 		
-		log("Time (ms)\tDelta Time (ms)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)", flogger);
+		flogger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)");
 		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
 		while (e.hasMoreElements()) {
 			SpeedHeadingState currState = e.nextElement();
-			log(currState.time 
+			flogger.log(currState.time 
 					+ "\t" + (currState.time - startTime) 
+					+ "\t" + (currState.time - startTime) / 1000.0 
 					+ "\t" + currState.heading 
 					+ "\t" + currState.headingCmd
 					+ "\t" + currState.speed
-					+ "\t" + currState.speedCmd, flogger);
+					+ "\t" + currState.speedCmd);
 		}
 		
 		// Print when the robot starts traversing an edge...
-		log("Start Times of Edge Traversal:", flogger);
-		log("Time (ms)\tDelta Time (ms)\tDummy", flogger);
+		flogger.log("Start Times of Edge Traversal:");
+		flogger.log("Time (ms)\tDelta Time (ms)\tDummy");
 		Vector<PathEdge> pathEdges = robotData.getPathEdges();
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
 			long relStartTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
-			log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0, flogger);
+			flogger.log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0);
 		}
 		
 		// Print when the robot arrives at a waypoint...
-		log("Start Times of Edge Traversal:", flogger);
-		log("Time (ms)\tDelta Time (ms)\tDummy", flogger);
+		flogger.log("Waypoint arrival times:");
+		flogger.log("Time (ms)\tDelta Time (ms)\tDummy");
 		e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
 			long relEndTime = (currEdge.getEndTime() - robotData.getStartTime())/1000;
-			log(currEdge.getEndTime() + "\t" + relEndTime + "\t" + 0, flogger);
+			flogger.log(currEdge.getEndTime() + "\t" + relEndTime + "\t" + 0);
 		}
 	}
 	
@@ -325,7 +327,7 @@ public class GetHeadingAndSpeed {
 					System.exit(0);
 				}
 				else if (args[i].equals("-save")) {
-					saveToFile = false;
+					saveToFile = true;
 				}
 				else if (args[i].equals("-interval")) {
 					samplingInterval = Long.valueOf(args[++i]);
