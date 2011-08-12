@@ -61,60 +61,55 @@ public class Line {
 	}
 	
 	/**
-	 * Returns the shortest distance from any point on this line
-	 * to the specified location.
+	 * Returns the location on the line that is the closest to the specified location.
 	 * 
 	 * @param loc The specified location
-	 * @return The shortest distance
+	 * @return The closest location
 	 */
-	public double shortestDistanceTo(Location loc) {
-		double result = Double.NaN;
-		
+	public Location getLocationClosestTo(Location loc) {
 		if (isVertical) {
 			/*
 			 * Since this line is vertical, the shortest distance is the
 			 * difference in longitudes (the latitude can be anything)
 			 */
-			Location loc1 = new Location(loc.latitude(), xIntersect);
+			Location closestLoc = new Location(loc.latitude(), xIntersect);
 //			System.out.println("Calculating shortest distance between line: " + toString() + " and " + loc);
-			result = loc1.distanceTo(loc);
+			return closestLoc;
 		} else if (slope == 0) {
 			/*
 			 * Since this line is horizontal, the shortest distance is the
 			 * difference in latitudes (the longitude does not matter)
 			 */
-			Location loc1 = new Location(yIntersect, loc.longitude());
-			result = loc1.distanceTo(loc);
+			Location closestLoc = new Location(yIntersect, loc.longitude());
+			return closestLoc;
 		} else {
-			Line perpLine = getPerpendicularLine(loc);
+			Line perpendicularLine = getPerpendicularLine(loc);
 //			System.out.println("Perpendicular line: " + perpLine);
-			Location intersectionPoint = getIntersection(perpLine);
+			Location intersectionPoint = getIntersection(perpendicularLine);
 //			System.out.println("Intersection point: " + intersectionPoint);
 //			System.out.println("Target Point: " + loc);
-			result = loc.distanceTo(intersectionPoint);
+			return intersectionPoint;
 		}
-		
-		if (Double.isNaN(result)){
-			System.err.println("WARNING: Line.shortestDistanceTo(Location) calculated NaN:");
-			System.err.println("\tLine: " + toString());
-			System.err.println("\tLocation: " + loc);
-			System.exit(-1);
-		}
-		
-		return result;
+//		if (Double.isNaN(result)){
+//			System.err.println("WARNING: Line.shortestDistanceTo(Location) calculated NaN:");
+//			System.err.println("\tLine: " + toString());
+//			System.err.println("\tLocation: " + loc);
+//			System.exit(-1);
+//		}
+//		
+//		return result;
 	}
 	
 	/**
-	 * Returns the shortest distance from the point on this line
-	 * that the robot would be at if it had traveled the specified 
-	 * distance towards the stopLoc from the startloc.
 	 * 
-	 * @param loc The specified location
+	 * Returns the location that the robot would have been at if it had traveled along
+	 * this line for the specified distance.  It finds this location using a divide-and-conquer search.
+	 *
 	 * @param distanceTraveled The distance in meters that the robot
 	 * traveled from the startLoc towards the destLoc.
-	 * @return The shortest distance
+	 * @return The closest location.
 	 */
-	public double shortestDistanceTo(Location loc, double distanceTraveled) {
+	public Location getLocationRelativeSpeed(double distanceTraveled) {
 		
 		/*
 		 * This is the location along this line that the robot would
@@ -171,7 +166,7 @@ public class Line {
 //			System.out.println("\tcurrDist = " + currDist + ", distanceTraveled = " + distanceTraveled + ", diff = " + (currDist - distanceTraveled));
 		}
 //		System.out.println("Ideal point: " + midPoint);
-		return midPoint.distanceTo(loc);
+		return midPoint;
 	}
 	
 	/**

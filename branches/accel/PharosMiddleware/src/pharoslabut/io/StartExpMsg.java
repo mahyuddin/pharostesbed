@@ -8,7 +8,7 @@ import pharoslabut.experiment.ExpType;
  * 
  * @author Chien-Liang Fok
  */
-public class StartExpMsg implements Message {
+public class StartExpMsg implements AckedMsg {
 
 	private static final long serialVersionUID = -2260269827599336883L;
 
@@ -64,6 +64,15 @@ public class StartExpMsg implements Message {
 	@Override
 	public MsgType getType() {
 		return MsgType.STARTEXP;
+	}
+	
+	/**
+	 * Sets the delay in milliseconds before the robot starts the experiment.
+	 * 
+	 * @param delay The delay in milliseconds.
+	 */
+	public void setDelay(int delay) {
+		this.delay = delay;
 	}
 	
 	/**

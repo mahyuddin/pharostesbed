@@ -77,15 +77,15 @@ public class TestServos implements MCUConstants {
 		}
 	}
 	
-	private void pause(int milliseconds) {
-		synchronized(this) {
-			try {
-				this.wait(milliseconds);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-	}
+//	private void pause(int milliseconds) {
+//		synchronized(this) {
+//			try {
+//				this.wait(milliseconds);
+//			} catch (InterruptedException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//	}
 	
 
 	
@@ -100,7 +100,7 @@ public class TestServos implements MCUConstants {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.irobotcam.TestServos <options>");
+		print("Usage: pharoslabut.demo.simonsays.TestServos <options>");
 		print("Where <options> include:");
 		print("\t-comm <comm port>: The comm port on which the MCU is attached (default: /dev/ttyS0)");
 		print("\t-file <file name>: The name of the file in which to save log data.");

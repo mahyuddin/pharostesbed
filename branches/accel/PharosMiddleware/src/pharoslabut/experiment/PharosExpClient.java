@@ -2,7 +2,6 @@ package pharoslabut.experiment;
 
 import pharoslabut.io.*;
 import pharoslabut.navigate.motionscript.MotionScript;
-import pharoslabut.navigate.motionscript.MotionScriptReader;
 
 /**
  * Coordinates the initialization of a multi-robot GPS-based motion script experiment. 
@@ -46,7 +45,7 @@ public class PharosExpClient {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				log("\tSending motion script to robot " + currRobot.getName());
 				
-				MotionScript script = MotionScriptReader.readTraceFile(currRobot.getMotionScript());
+				MotionScript script = new MotionScript(currRobot.getMotionScript());
 				MotionScriptMsg msg = new MotionScriptMsg(script);
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
 			}
@@ -69,7 +68,9 @@ public class PharosExpClient {
 			
 			// Send each robot the start experiment command.
 			int delay = 0;
+			
 			StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
+			
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				
@@ -78,6 +79,9 @@ public class PharosExpClient {
 				
 				// Update the delay between each robot.
 				delay += expConfig.getStartInterval();
+				
+				//sem.setDelay(delay);
+				sem = new StartExpMsg(expConfig.getExpName(), ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
 			}
 		} catch(Exception e) {
 			logErr("Problem while communicating with the robots...");
@@ -99,7 +103,7 @@ public class PharosExpClient {
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.experiment.PharosExpClient <options>\n");
+		print("Usage: " + PharosExpClient.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-debug: enable debug mode");
