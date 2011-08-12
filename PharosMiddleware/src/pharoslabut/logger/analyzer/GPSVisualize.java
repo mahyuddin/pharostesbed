@@ -5,6 +5,7 @@ import java.util.*;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
+import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
  * Reads log files created by robots as they follow a motion script, 
@@ -12,7 +13,6 @@ import pharoslabut.navigate.Location;
  * plot the traces on a map.  
  * 
  * @author Chien-Liang Fok
- *
  */
 public class GPSVisualize {
 	// These colors were taken from: http://www.angelfire.com/wa/rogerswhome/colorchart.html
@@ -56,7 +56,7 @@ public class GPSVisualize {
 							outputFileName = elem[1];
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Warning: Syntax error on line " + lineno + " of config file " + fileName + ":\n" + line);
+							System.err.println("ERROR: Syntax error on line " + lineno + " of config file " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					}
@@ -67,8 +67,10 @@ public class GPSVisualize {
 						if (elem.length > 2)
 							captionNames.add(elem[2]);  // user specified the caption name
 						else {
-							String robotName = extractRobotName(elem[1]); // use the robot name as the caption
-							captionNames.add(robotName);
+							String missionName = LogFileNameParser.extractMissionName(elem[1]);
+							String expName = LogFileNameParser.extractExpName(elem[1]);
+							String robotName = LogFileNameParser.extractRobotName(elem[1]); // use the robot name as the caption
+							captionNames.add(missionName + "-" + expName + "-" + robotName);
 						}
 						
 						if (elem.length > 3)
@@ -81,7 +83,7 @@ public class GPSVisualize {
 					else if (line.contains("WAYPOINT")) {
 						String[] elem = line.split("[\\s]+");
 						
-						// If specification file includes name of waypoint, use it.
+						// If specification file include a waypoint name, use it.
 						// Otherwise, give it a sequential name.
 						String name;
 						if (elem.length == 4)
@@ -96,6 +98,17 @@ public class GPSVisualize {
 						else
 							waypoints.add(new WayPoint(latlong2, latlong1, name));
 					}
+					else if (line.contains("MOTION_SCRIPT")) {
+						String[] elem = line.split("[\\s]+");
+						
+						// Extract the waypoints from the motion script.
+						MotionScript ms = new MotionScript(elem[1]);
+						Location[] wp = ms.getWayPoints();
+						
+						for (int i=0; i < wp.length; i++) {
+							waypoints.add(new WayPoint(wp[i], "Waypoint " + (waypoints.size()+1)));
+						}
+					}
 				}
 				lineno++;
 			}
@@ -105,38 +118,6 @@ public class GPSVisualize {
 		}
 		
 		createGPSVisualizerFile(outputFileName, logFileNames, captionNames, traceColors, waypoints);
-	}
-	
-	/**
-	 * Extract the robot's name from it's log file.  
-	 * Assumes the log file is of form "M##-Exp##-RobotName-Pharos_##.log"
-	 * 
-	 * @param logFileName The name of the log file
-	 * @return The name of the robot.
-	 */
-	private String extractRobotName(String logFileName) {
-		String robotName = null;
-		
-		String[] pathTokens = logFileName.split("/");
-		for (int i=0; i < pathTokens.length; i++) {
-			String currToken = pathTokens[i];
-			if (currToken.endsWith(".log")) {
-				String[] fileNameTokens = currToken.split("-");
-				if (fileNameTokens.length > 3 && fileNameTokens[0].matches("M\\d+") && 
-						fileNameTokens[1].matches("Exp\\d+")) 
-				{
-					robotName = fileNameTokens[2];
-				}
-			}
-		}
-		
-		if (robotName == null) {
-			System.err.println("ERROR: Unable to determine robot name: " + logFileName);
-			new Exception().printStackTrace();
-			System.exit(1);
-		}
-		
-		return robotName;
 	}
 	
 	/**
@@ -232,12 +213,14 @@ public class GPSVisualize {
 	}
 	
 	private static void print(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(msg);
+		System.out.println(msg);
+	}
+	
+	private static void printErr(String msg) {
+		System.err.println(msg);
 	}
 	
 	private static void usage() {
-		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: pharoslabut.logger.analyzer.GPSVisualize <options>\n");
 		print("Where <options> include:");
 		print("\t-spec <spec file name>: The specification file. (required)");
@@ -247,10 +230,11 @@ public class GPSVisualize {
 		print("\t\t\t...");
 		print("\t\tEach LOG_FILE listed in the specification file will have its own trace in the resulting GPSVisualizer script.");
 		print("\t\tFor more details, see: http://pharos.ece.utexas.edu/wiki/index.php/How_to_Plot_a_Robot%27s_Path_on_GPSVisualizer");
+		print("Or:");
 		print("\t-log <log file name>: The name of the log file that was recorded by the robot as it carried out an experiment (default null)");
 		print("\t-caption <caption name>: The caption for the trace (required)");
 		print("\t-color <color>: The color used to plot the trace (default red)");
-		print("\t-output <output file name>: The name of the output file (default GPSVisualize)");
+		print("\t-output <output file name>: The name of the output file (required).");
 		print("\t\tNote: the \".csv\" extension is automatically apptended");
 		print("\t-debug: enable debug mode");
 	}
@@ -261,11 +245,15 @@ public class GPSVisualize {
 		String logFileName = null;
 		String caption = null;
 		String color = "red";
-		String outputFile = "GPSVisualize";
+		String outputFile = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-spec")) {
+				if (args[i].equals("-h")) {
+					usage();
+					System.exit(1);
+				}
+				else if (args[i].equals("-spec")) {
 					specFileName = args[++i];
 				}
 				else if (args[i].equals("-log")) {
@@ -284,8 +272,7 @@ public class GPSVisualize {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
 				else {
-					System.setProperty ("PharosMiddleware.debug", "true");
-					print("Unknown option: " + args[i]);
+					printErr("Unknown option: " + args[i]);
 					usage();
 					System.exit(1);
 				}
@@ -297,8 +284,7 @@ public class GPSVisualize {
 		}
 		
 		if (specFileName == null && logFileName == null) {
-			System.setProperty ("PharosMiddleware.debug", "true");
-			print("Must set either specify specification file or log file.");
+			printErr("Must either specify specification file or log file.");
 			usage();
 			System.exit(1);
 		}
@@ -314,9 +300,15 @@ public class GPSVisualize {
 			}
 		} else {
 			// Generate a GPS visualization for a single robot.
+			
+			if (outputFile == null) {
+				printErr("ERROR: Output file not specified.");
+				usage();
+				System.exit(1);
+			}
+			
 			if (caption == null) {
-				System.setProperty ("PharosMiddleware.debug", "true");
-				print("ERROR: caption not specified.");
+				printErr("ERROR: caption not specified.");
 				usage();
 				System.exit(1);
 			}

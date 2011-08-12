@@ -13,7 +13,7 @@ public class CPPData extends AbstractTableModel {
 	
 	private static final long serialVersionUID = -1177234844657331415L;
 
-	private final String[] columnNames = {"Instruction", "Program State", "Environment State"};
+	private final String[] columnNames = {"Instruction", "Logical Parameter", "Physical Parameter"};
 	
 	private Vector<CPP> cppValues = new Vector<CPP>();
 	

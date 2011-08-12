@@ -4,7 +4,8 @@ import playerclient3.structures.gps.PlayerGpsData;
 import pharoslabut.navigate.Location;
 
 /**
- * A pairing between a PlayerGpsData provider by Player and the timestamp at which it was received.
+ * A pairing between a PlayerGpsData object provided by Player and the 
+ * time at which it was received.
  * 
  * @author Chien-Liang Fok
  *
@@ -46,6 +47,6 @@ public class GPSLocationState {
 	}
 	
 	public String toString() {
-		return timestamp + "\t" + gpsLoc;
+		return "GPSLocationState: " + timestamp + "\t" + gpsLoc;
 	}
 }

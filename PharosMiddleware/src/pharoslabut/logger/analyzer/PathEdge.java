@@ -9,6 +9,11 @@ import pharoslabut.navigate.Location;
  */
 public class PathEdge {
 	
+	/**
+	 * The sequence number of the path edge.
+	 */
+	private int seqno;
+	
 	private Location endLoc;
 	private Location startLoc;
 	
@@ -33,6 +38,12 @@ public class PathEdge {
 	private double speed;
 	
 	/**
+	 * The initial heading of the robot when it starts to traverse
+	 * this path edge.
+	 */
+	private double startHeading = Double.MIN_VALUE;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param endLoc The ideal destination location as specified by the motion script.
@@ -44,6 +55,22 @@ public class PathEdge {
 		this.endLoc = endLoc;
 		this.startTime = startTime;
 		this.speed = speed;
+	}
+	
+	/**
+	 * Sets the sequence number.
+	 * 
+	 * @param seqno  the sequence number.
+	 */
+	public void setSeqNo(int seqno) {
+		this.seqno = seqno;
+	}
+	
+	/**
+	 * @return The sequence number.
+	 */
+	public int getSeqNo() {
+		return seqno;
 	}
 	
 	/**
@@ -134,7 +161,7 @@ public class PathEdge {
 	/**
 	 * Whether the start location was set for this edge.
 	 * 
-	 * @return true if a start edge was set.
+	 * @return true if a start location was set for this edge.
 	 */
 	public boolean hasStartLoc() {
 		return startLoc != null;
@@ -152,6 +179,35 @@ public class PathEdge {
 	}
 	
 	/**
+	 * Sets the start heading of this edge.
+	 * 
+	 * @param startHeading The robot's starting heading along this edge.
+	 */
+	public void setStartHeading(double startHeading) {
+		this.startHeading = startHeading;
+	}
+	
+	/**
+	 * Whether the start heading was set for this edge.
+	 * 
+	 * @return true if a start heading was set.
+	 */
+	public boolean hasStartHeading() {
+		return startHeading != Double.MIN_VALUE;
+	}
+	
+	/**
+	 * Returns the starting heading of the robot as it traverses this edge.
+	 * This is the actual start heading, not the ideal which is directly facing
+	 * the next waypoint.
+	 * 
+	 * @return The starting heading.
+	 */
+	public double getStartHeading() {
+		return startHeading;
+	}
+	
+	/**
 	 * Sets the time when the robot reaches the destination.  Its value is the number of
 	 * milliseconds that have passed since the epoch.
 	 * 
@@ -162,30 +218,14 @@ public class PathEdge {
 	}
 	
 	/**
-	 * Returns the end time relative to the start of the experiment.
-	 * The units is milliseconds.
-	 */
-	//public long getEndTime() {
-	//	return endTime - expStartTime;
-	//}
-	
-	/**
-	 * Returns the actual time when the robot arrives at the final waypoint of
+	 * Returns the actual time when the robot arrives at the destination waypoint of
 	 * this edge. The units is in milliseconds since the epoch.
 	 * 
-	 * @return the actual time when the robot reached the end waypoint of this edge.
+	 * @return The actual time when the robot reached the end waypoint of this edge.
 	 */
 	public long getEndTime() {
 		return endTime;
 	}
-	
-	/**
-	 * Returns the end time relative to the start of the edge traversal.
-	 * The units is milliseconds.
-	 */
-//	public long getRelativeEndTime() {
-//		return endTime - startTime;
-//	}
 	
 	/**
 	 * Returns the duration of the edge traversal.  This is the difference
@@ -194,19 +234,9 @@ public class PathEdge {
 	 * @return The duration of the edge in milliseconds.
 	 */
 	public long getDuration() {
-//		GPSLocationState lastLoc = locations.get(locations.size()-1);
-//		return lastLoc.getTimestamp() - startTime;
 		return getEndTime() - getStartTime();
 	}
 	
-	/**
-	 * Returns the final location of the robot when it finishes traversing this edge.
-	 * 
-	 * @return  the final location of the robot when it finishes traversing this edge.
-	 */
-//	public Location getFinalLocation() {
-//		return locations.get(locations.size()-1).getLocation();
-//	}
 	
 	/**
 	 * Returns the location of the robot at the specified time.
@@ -310,6 +340,7 @@ public class PathEdge {
 	
 	/**
 	 * Returns the ideal final location of the edge.
+	 * This is the location as specified by the motion script.
 	 */
 	public Location getEndLocation() {
 		return endLoc;
