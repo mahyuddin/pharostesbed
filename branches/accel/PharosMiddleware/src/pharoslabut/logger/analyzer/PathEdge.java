@@ -15,6 +15,7 @@ public class PathEdge {
 	private int seqno;
 	
 	private Location endLoc;
+	private Location idealStartLoc;
 	private Location startLoc;
 	
 	/**
@@ -46,12 +47,15 @@ public class PathEdge {
 	/**
 	 * The constructor.
 	 * 
+	 * @param idealStartLoc The ideal starting location as specified by the motion script.  This is the 
+	 * previous way point if one exists.
 	 * @param endLoc The ideal destination location as specified by the motion script.
 	 * @param startTime The time at which the robot started to traverse the edge.
 	 * @param speed The ideal speed at which the robot was supposed to move,
 	 * as specified by the motion script.
 	 */
-	public PathEdge(Location endLoc, long startTime, double speed) {
+	public PathEdge(Location idealStartLoc, Location endLoc, long startTime, double speed) {
+		this.idealStartLoc = idealStartLoc;
 		this.endLoc = endLoc;
 		this.startTime = startTime;
 		this.speed = speed;
@@ -356,6 +360,17 @@ public class PathEdge {
 	}
 	
 	/**
+	 * Returns the ideal starting location of the robot as it traverses this edge.  This is the location of the
+	 * previous waypoint as specified in the motion script.  The actual starting location
+	 * may differ based on where the robot stopped when it reached the previous waypoint.
+	 * 
+	 * @return The ideal starting location of the robot as it traverses this edge
+	 */
+	public Location getIdealStartLoc() {
+		return idealStartLoc;
+	}
+	
+	/**
 	 * Returns the ideal speed of the robot.  This is the speed that the
 	 * motion script specified.  The actual speed may differ based on
 	 * the calibration of the encoder, misalignment of the front wheels, etc.
@@ -377,7 +392,7 @@ public class PathEdge {
 	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
-		sb.append("Start Location: " + getStartLoc() + ", Destination: " + getEndLocation() + "\n");
+		sb.append("Ideal Start Location: " + getIdealStartLoc() + ", Actual Start Location: " + getStartLoc() + ", Destination: " + getEndLocation() + "\n");
 		sb.append("Start time: " + getStartTime() + ", End Time: " + getEndTime() + "\n");
 		sb.append("Speed of travel: " + getIdealSpeed() + "\n");
 //		sb.append("Number of GPS records: " + getNumLocations()  + "\n");

@@ -3,95 +3,169 @@ package pharoslabut.logger.analyzer;
 //import java.io.BufferedReader;
 //import java.io.FileReader;
 //import java.io.IOException;
+import java.awt.Color;
 import java.util.Enumeration;
 import java.util.Vector;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RefineryUtilities;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
 //import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
- * Analyzes the motion divergence exhibit by one or more mobile nodes as they follow
- * a motion script based on GPS way points.
+ * Analyzes the motion divergence exhibit by a Proteus robot as it follows
+ * a GPS-based motion script.
  * 
  * @author Chien-Liang Fok
  */
 public class MotionDivergenceAnalyzer {
 	
 	/**
-	 * The period between calculating divergence in milliseconds.
+	 * The period at which to calculate divergence in milliseconds.
 	 */
-	public static final long DIVERGENCE_CALCULATION_INTERVAL = 1000;
+	private long samplingInterval;
 	
 	/**
-	 * The threshold number of degrees that a robot's heading can differ from the ideal
-	 * heading before the robot is considered "oriented".  This is used to calculate
-	 * the oriented start divergence, see: 
+	 * The robot's experiment data.
+	 */
+	private RobotExpData robotData;
+	
+	/**
+	 * The maximum heading error in radians before the robot is considered "oriented".  
+	 * This is used to calculate the oriented start divergence, see: 
 	 * http://pharos.ece.utexas.edu/wiki/index.php/How_to_Analyze_Motion_Divergence_when_a_Robot_Follows_GPS_Waypoints#Oriented_Start_Divergence
 	 */
-	public static final double ORIENTATION_THRESHOLD_DEGREES = 5;
+	private double orientedThreshold;
+	
+	// Calculate the various forms of divergence
+	Vector<SpatialDivergence> absDivs;      // absolute divergence
+	Vector<SpatialDivergence> osDivs;  // oriented start divergence
+	Vector<TemporalDivergence> tempDivs;    // temporal divergence
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param logFileName The robot's experiment log file to analyze.
+	 * @param samplingInterval  The interval at which to calculate the divergence in milliseconds.
 	 */
-	public MotionDivergenceAnalyzer(String logFileName) {
-		RobotExpData robotData = new RobotExpData(logFileName);
+	public MotionDivergenceAnalyzer(String logFileName, long samplingInterval, double orientedThreshold, boolean saveData) {
+		
+		this.robotData = new RobotExpData(logFileName);
+		this.samplingInterval = samplingInterval;
+		this.orientedThreshold = orientedThreshold;
+		
+		// Calculate the various forms of divergence
+		absDivs = calcAbsoluteDivergence();      // absolute divergence
+		osDivs = calcOrientedStartDivergence();  // oriented start divergence
+		//tempDivs = calcTemporalDivergence();    // temporal divergence
+		
+		if (saveData)
+			saveResults();
+		
+		showPlot();
+	}
+	
+	/**
+	 * Save the results into files.
+	 */
+	private void saveResults() {
+		String logFileName = robotData.getFileName();
 		
 		// Determine the prefix of the output file
 		String outputFilePrefix = null;
+		
 		if (logFileName.contains(".")) {
 			outputFilePrefix = logFileName.substring(0, logFileName.lastIndexOf('.'));
 		} else {
 			outputFilePrefix = logFileName;
 		}
 		
-		logDbg("outputFilePrefix = " + outputFilePrefix);
+		logDbg("saveResults: outputFilePrefix = " + outputFilePrefix);
 		
-		calcAbsoluteDivergence(robotData, outputFilePrefix + "-absoluteDivergence.txt");
-		calcOrientedStartDivergence(robotData, outputFilePrefix + "-orientedStartDivergence.txt");
-//		calculateDivergence();
+		// Save the absolute divergence...
+		FileLogger flogger = new FileLogger(outputFilePrefix + "-absDivergence.txt");
+		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
+		
+		Enumeration<SpatialDivergence> e = absDivs.elements();
+		while (e.hasMoreElements()) {
+			SpatialDivergence sd = e.nextElement();
+			log(sd.getTimeStamp() 
+					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime()) 
+					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime())/1000 
+					+ "\t" + sd.getDivergence(), flogger);
+		}
+		
+		robotData.printWayPointArrivalTable(flogger); // save the waypoint arrival table
+		
+		// Save the oriented start divergence...
+		flogger = new FileLogger(outputFilePrefix + "-orientedStartDivergence.txt");
+		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tOriented Start Divergence", flogger);
+		e = osDivs.elements();
+		while (e.hasMoreElements()) {
+			SpatialDivergence sd = e.nextElement();
+			log(sd.getTimeStamp() 
+					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime()) 
+					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime())/1000 
+					+ "\t" + sd.getDivergence(), flogger);
+		}
+		
+		robotData.printWayPointArrivalTable(flogger); // save the waypoint arrival table
+		
+		// Save the temporal divergence
+//		flogger = new FileLogger(outputFilePrefix + "-temporalDivergence.txt");
+//		log("WayPoint Number\tActual Arrival Time\tIdeal Arrival Time\tTemporal Divergence", flogger);
+//		Enumeration<TemporalDivergence> e2 = tempDivs.elements();
+//		while (e2.hasMoreElements()) {
+//			TemporalDivergence td = e2.nextElement();
+//			log(td.getWaypointNumber()
+//					+ "\t" + td.getActualTOA()
+//					+ "\t" + td.getIdealTOA()
+//					+ "\t" + td.getDivergence(), flogger);
+//		}
+//		
+//		robotData.printWayPointArrivalTable(flogger);
 	}
 	
 	/**
 	 * Calculates the absolute divergence of a robot.
 	 * 
-	 * @param robotData The robot's experiment data.
-	 * @param outputFileName The file in which to save results.
+	 * @return The absolute divergence.
 	 */
-	private void calcAbsoluteDivergence(RobotExpData robotData, String outputFileName) {
-		FileLogger flogger = new FileLogger(outputFileName, false);
+	private Vector<SpatialDivergence> calcAbsoluteDivergence() {
+		
 		long startTime = robotData.getStartTime();
+		Vector<SpatialDivergence> result = new Vector<SpatialDivergence>(); 
 		
-		//robotData.setFileLogger(flogger); // enable saving of debugging statements 
-		
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
-		
-		// For the duration of the experiment, at every DIVERGENCE_CALCULATION_INTERVAL 
-		// millisecond interval...
-		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime();
-			time += DIVERGENCE_CALCULATION_INTERVAL) 
-		{
+		// For the duration of the experiment, at every sampling interval... 
+		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime(); time += samplingInterval) {
+			
 			// Calculate the absolute divergence by creating the perfect path
 			// along which the robot should travel and finding the point on
 			// this path that is closest to the robot's actual location.
 			PathEdge edge = robotData.getRelevantPathEdge(time);
-			if (edge == null) {
-				logErr("calcAbsoluteDivergence: Could not find relevant path edge!");
-				System.exit(1);
-			}
 			
-			//logDbg("calcAbsoluteDivergence: Got path edge " + edge.getSeqNo(), flogger);
+//			logDbg("Got path edge " + edge.getSeqNo(), flogger);
 			
 			Line perfectPath = new Line(edge.getStartLoc(), edge.getEndLocation());
 			Location actualLoc = robotData.getLocation(time);
-			Location closestLoc = perfectPath.getLocationClosestTo(actualLoc);
-			double absDivergence = closestLoc.distanceTo(actualLoc);
-			log(time + "\t" + (time - startTime) + "\t" + (time - startTime)/1000 + "\t" + absDivergence, flogger);
+			Location idealLoc = perfectPath.getLocationClosestTo(actualLoc);
+			
+			result.add(new SpatialDivergence(time, actualLoc, idealLoc, perfectPath));
 		}
 		
-		robotData.printWayPointArrivalTable(flogger);
+		return result;
 	}
 	
 	/**
@@ -100,47 +174,181 @@ public class MotionDivergenceAnalyzer {
 	 * @param robotData The robot's experiment data.
 	 * @param outputFileName The file in which to save results.
 	 */
-	private void calcOrientedStartDivergence(RobotExpData robotData, String outputFileName) {
-		FileLogger flogger = new FileLogger(outputFileName, false);
+	private Vector<SpatialDivergence> calcOrientedStartDivergence() {
+		
 		long startTime = robotData.getStartTime();
+		Vector<SpatialDivergence> result = new Vector<SpatialDivergence>();
 		
-		//robotData.setFileLogger(flogger); // enable saving of debugging statements 
-		
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
-		
-		// For the duration of the experiment, at every DIVERGENCE_CALCULATION_INTERVAL 
-		// millisecond interval...
-		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime();
-			time += DIVERGENCE_CALCULATION_INTERVAL) 
-		{
+		// For the duration of the experiment, at every sampling interval... 
+		for (long time = startTime; time < robotData.getFinalWaypointArrivalTime(); time += samplingInterval) {
 			// Get the relevant path edge.  
 			PathEdge edge = robotData.getRelevantPathEdge(time);
-			
-			if (edge == null) {
-				logErr("calcAbsoluteDivergence: Could not find relevant path edge!");
-				System.exit(1);
-			}
 			
 			//logDbg("calcOrientedStartDivergence: Got path edge " + edge.getSeqNo(), flogger);
 			
 			// If the robot has oriented itself by the specified time, determine the
-			// ideal path that the robot should travel an its divergence from this path.
-			LocationState orientedLoc = robotData.getOrientedLocation(edge.getSeqNo(), ORIENTATION_THRESHOLD_DEGREES); 
+			// ideal path over which the robot should travel and its divergence from this path.
+			LocationState orientedLoc = robotData.getOrientedLocation(edge, orientedThreshold); 
+			logDbg("StartLoc=" + edge.getStartLoc() + " @ " + edge.getStartTime() + ", OrientedLoc=" + orientedLoc.getLoc()
+					+ " @ " + orientedLoc.getTimestamp());
+			
 			if (orientedLoc.getTimestamp() < time) {
 				
-//				Line perfectPath = new Line(edge.getStartLoc(), edge.getEndLocation());
-//				Location actualLoc = robotData.getLocation(time);
-//				Location closestLoc = perfectPath.getLocationClosestTo(actualLoc);
-//				double absDivergence = closestLoc.distanceTo(actualLoc);
-//				log(time + "\t" + (time - startTime) + "\t" + (time - startTime)/1000 + "\t" + absDivergence, flogger);
+				Line perfectPath = new Line(orientedLoc.getLoc(), edge.getEndLocation());
+				Location actualLoc = robotData.getLocation(time);
+				Location idealLoc = perfectPath.getLocationClosestTo(actualLoc);
+				
+				result.add(new SpatialDivergence(time, actualLoc, idealLoc, perfectPath));
 			} else
 				logDbg("calcOrientedStartDivergence: Robot was not oriented yet at time " + time);
 		}
 		
-		robotData.printWayPointArrivalTable(flogger);
+		return result;
 	}
 	
+	
+	/**
+	 * Displays the data in a graph.
+	 */
+	private void showPlot() {
+		// Create the various data series...
+		XYSeries absDivSeries = new XYSeries("Absolute Divergence");
+		XYSeries osDivSeries = new XYSeries("Oriented Start Divergence, threshold=" + orientedThreshold);
 		
+		Enumeration<SpatialDivergence> e = absDivs.elements();
+		while (e.hasMoreElements()) {
+			SpatialDivergence currDiv = e.nextElement();
+			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
+			absDivSeries.add(currTime, currDiv.getDivergence());
+		}
+		
+		e = osDivs.elements();
+		while (e.hasMoreElements()) {
+			SpatialDivergence currDiv = e.nextElement();
+			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
+			osDivSeries.add(currTime, currDiv.getDivergence());
+		}
+		
+		
+		// Create two data series one containing the times when the robot starts heading 
+		// towards a waypoint, and another containing the times when the robot arrives at
+		// a waypoint
+		final XYSeries beginEdgeSeries = new XYSeries("Begin Edge Traveral");
+		final XYSeries waypointArrivalSeries = new XYSeries("Waypoint Arrival");
+		Vector<PathEdge> pathEdges = robotData.getPathEdges();
+		Enumeration<PathEdge> e2 = pathEdges.elements();
+		while (e2.hasMoreElements()) {
+			PathEdge currEdge = e2.nextElement();
+			double beginEdgeTime = (currEdge.getStartTime() - robotData.getStartTime())/1000.0;
+			beginEdgeSeries.add(beginEdgeTime, 0);
+			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
+			waypointArrivalSeries.add(wayPointArrivalTime, 0);
+		}
+
+		// Create data sets out of the data series.
+		XYSeriesCollection spatialDivDataSet = new XYSeriesCollection();
+		spatialDivDataSet.addSeries(absDivSeries);
+		spatialDivDataSet.addSeries(osDivSeries);
+		spatialDivDataSet.addSeries(beginEdgeSeries);
+		spatialDivDataSet.addSeries(waypointArrivalSeries);
+		
+//		XYSeriesCollection osDivDataSet = new XYSeriesCollection();
+//		osDivDataSet.addSeries(osDivSeries);
+//		osDivDataSet.addSeries(beginEdgeSeries);
+//		osDivDataSet.addSeries(waypointArrivalSeries);
+		
+		// Create the charts
+		JFreeChart absDivChart = ChartFactory.createXYLineChart(
+				"Spatial Divergence vs. Time",                        // chart title
+				"Time (s)",                                            // x axis label
+				"Divergence (m)",                                      // y axis label
+				spatialDivDataSet,                                         // the absolute divergence data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				true,                                                  // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+//        
+//        JFreeChart osDivChart = ChartFactory.createXYLineChart(
+//        		"Oriented-Start Divergence vs. Time",                  // chart title
+//        		"Time (s)",                                            // x axis label
+//        		"Divergence (m)",                                         // y axis label
+//        		osDivDataSet,                                          // the oriented start data
+//        		PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+//        		true,                                                  // include legend
+//        		true,                                                  // tooltips
+//        		false                                                  // urls
+//        );
+        
+        // Place the legend on top of the chart just below the title.
+        LegendTitle headingLegend = absDivChart.getLegend();
+        headingLegend.setPosition(RectangleEdge.TOP);
+//        LegendTitle speedLegend = osDivChart.getLegend();
+//        speedLegend.setPosition(RectangleEdge.TOP);
+        
+        absDivChart.setBackgroundPaint(Color.white);
+//        osDivChart.setBackgroundPaint(Color.white);
+        
+        // Configure when to display lines an when to display the shapes that indicate data points
+        XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+        renderer1.setSeriesLinesVisible(0, false); // display the heading as a line
+        renderer1.setSeriesShapesVisible(0, true);
+        renderer1.setSeriesPaint(0, Color.BLACK);
+        renderer1.setSeriesShape(0, org.jfree.util.ShapeUtilities.createUpTriangle(2));
+        renderer1.setSeriesLinesVisible(1, false); // display the headingCmd as a line
+        renderer1.setSeriesShapesVisible(1, true);
+        renderer1.setSeriesPaint(1, Color.RED);
+        renderer1.setSeriesShape(1, new java.awt.Rectangle(-2,-2, 4, 4));
+        renderer1.setSeriesLinesVisible(2, false); // display the begin edge traversal points as blue dots
+        renderer1.setSeriesShapesVisible(2, true);
+        renderer1.setSeriesPaint(2, Color.BLUE);
+        renderer1.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-3,-3,6,6));
+        renderer1.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+        renderer1.setSeriesShapesVisible(3, true);
+        renderer1.setSeriesPaint(3, Color.GREEN.darker());
+        renderer1.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+        
+        final XYPlot headingPlot = absDivChart.getXYPlot();
+        headingPlot.setRenderer(0, renderer1);
+        
+//        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
+//        renderer2.setSeriesLinesVisible(0, true); // display the speed as a line
+//        renderer2.setSeriesShapesVisible(0, false);
+//        renderer2.setSeriesPaint(0, Color.BLACK);
+//        renderer2.setSeriesLinesVisible(1, true); // display the speedCmd as a line
+//        renderer2.setSeriesShapesVisible(1, false);
+//        renderer2.setSeriesPaint(1, Color.RED);
+//        renderer2.setSeriesLinesVisible(2, false); // display the waypoints as points
+//        renderer2.setSeriesShapesVisible(2, true);
+//        renderer2.setSeriesPaint(2, Color.BLUE);
+//        renderer2.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+//        renderer2.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+//        renderer2.setSeriesShapesVisible(3, true);
+//        renderer2.setSeriesPaint(3, Color.GREEN);
+//        renderer2.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+        
+//        final XYPlot speedPlot = osDivChart.getXYPlot();
+//        speedPlot.setRenderer(0, renderer2);
+        
+        // Place the charts in their own panels.
+        ChartPanel headingChartPanel = new ChartPanel(absDivChart);
+        headingChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
+//        ChartPanel speedChartPanel = new ChartPanel(osDivChart);
+//        speedChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
+       
+        // Place both chart panels within a single panel with two rows.
+//        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(2,1));
+//        chartsPanel.add(headingChartPanel);
+//        chartsPanel.add(speedChartPanel);
+       
+        // Create a frame for the chart, then display it.
+        ApplicationFrame appFrame = new ApplicationFrame("Divergence for " + robotData.getFileName());
+//        appFrame.setContentPane(chartsPanel);
+        appFrame.setContentPane(headingChartPanel);
+        appFrame.pack();
+		RefineryUtilities.centerFrameOnScreen(appFrame);
+		appFrame.setVisible(true);
+	}
 //	class AnalysisResults {
 //		Vector<ResultEdge> resultAbsoluteDivergence = new Vector<ResultEdge>();
 //		Vector<ResultEdge> resultRelativeDivergence = new Vector<ResultEdge>();
@@ -385,7 +593,15 @@ public class MotionDivergenceAnalyzer {
 //	}
 	
 	private void logDbg(String msg) {
-		logDbg(msg, null);
+		
+		// Add the name of the calling method to the beginning of the message.
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		String result = getClass().getName() + ": " + stackTraceElements[2].getMethodName() + ": " + msg;
+		
+		//stackTraceElements[2].getClass().getName();
+		
+		if (System.getProperty ("PharosMiddleware.debug") != null)
+			System.out.println(result);
 	}
 	
 	private void logDbg(String msg, FileLogger flogger) {
@@ -402,150 +618,150 @@ public class MotionDivergenceAnalyzer {
 			flogger.log(msg);
 	}
 	
-	/**
-	 * Holds the divergence exhibited by a robot throughout an experiment.
-	 * 
-	 * @author Chien-Liang Fok
-	 */
-	private class DivergenceExp {
-		
-		private RobotExpData robotExpData;
-		
-		private Vector<DivergenceEdge> edges = new Vector<DivergenceEdge>();
-		
-		public DivergenceExp(RobotExpData robotExpData) {
-			this.robotExpData = robotExpData;
-		}
-		
-		public void addEdge(DivergenceEdge edge) {
-			edges.add(edge);
-		}
-		
-		/**
-		 * Returns the divergence of the robot as it travels towards a certain waypoint.
-		 * 
-		 * @param wayPointIndx The destination way point.  The way point index is the way point number minus one.
-		 * @param pctComplete The percentage of the edge traversal that is complete.
-		 * @return The divergence of the robot.
-		 */
-		public double getDivergence(int wayPointIndx, double pctComplete) {
-			DivergenceEdge de = edges.get(wayPointIndx);
-			return de.getDivergence(pctComplete);
-		}
-		
-		/**
-		 * @return The raw experiment data recorded by the robot that is the source of the divergence data.
-		 */
-		public RobotExpData getRobotExpData() {
-			return robotExpData;
-		}
-		
-		public String toString() {
-			StringBuffer sb = new StringBuffer("Divergence for experiment: ");
-			sb.append(robotExpData.getFileName());
-			sb.append("\n");
-			
-			for (int i=0; i < edges.size(); i++) {
-				DivergenceEdge currEdge = edges.get(i);
-				sb.append(currEdge.toString());
-				sb.append("\n");
-			}
-			
-			return sb.toString();
-		}
-	}
+//	/**
+//	 * Holds the divergence exhibited by a robot throughout an experiment.
+//	 * 
+//	 * @author Chien-Liang Fok
+//	 */
+//	private class DivergenceExp {
+//		
+//		private RobotExpData robotExpData;
+//		
+//		private Vector<DivergenceEdge> edges = new Vector<DivergenceEdge>();
+//		
+//		public DivergenceExp(RobotExpData robotExpData) {
+//			this.robotExpData = robotExpData;
+//		}
+//		
+//		public void addEdge(DivergenceEdge edge) {
+//			edges.add(edge);
+//		}
+//		
+//		/**
+//		 * Returns the divergence of the robot as it travels towards a certain waypoint.
+//		 * 
+//		 * @param wayPointIndx The destination way point.  The way point index is the way point number minus one.
+//		 * @param pctComplete The percentage of the edge traversal that is complete.
+//		 * @return The divergence of the robot.
+//		 */
+//		public double getDivergence(int wayPointIndx, double pctComplete) {
+//			DivergenceEdge de = edges.get(wayPointIndx);
+//			return de.getDivergence(pctComplete);
+//		}
+//		
+//		/**
+//		 * @return The raw experiment data recorded by the robot that is the source of the divergence data.
+//		 */
+//		public RobotExpData getRobotExpData() {
+//			return robotExpData;
+//		}
+//		
+//		public String toString() {
+//			StringBuffer sb = new StringBuffer("Divergence for experiment: ");
+//			sb.append(robotExpData.getFileName());
+//			sb.append("\n");
+//			
+//			for (int i=0; i < edges.size(); i++) {
+//				DivergenceEdge currEdge = edges.get(i);
+//				sb.append(currEdge.toString());
+//				sb.append("\n");
+//			}
+//			
+//			return sb.toString();
+//		}
+//	}
+	
+//	/**
+//	 * Hold the divergence exhibited by a robot as it traversed a single edge of a motion script.
+//	 * 
+//	 * @author Chien-Liang Fok
+//	 *
+//	 */
+//	private class DivergenceEdge {
+//		
+//		/**
+//		 * The destination way point at the end of this edge.
+//		 */
+//		private int destWayPoint;
+//		
+//		
+//		/**
+//		 * The divergences from the ideal path that the robot actually traversed.
+//		 */
+//		private Vector<SpatialDivergence> divergences = new Vector<SpatialDivergence>();
+//		
+//		/**
+//		 * The constructor.
+//		 * 
+//		 * @param destWayPoint The destination way point.
+//		 */
+//		public DivergenceEdge(int destWayPoint) {
+//			this.destWayPoint = destWayPoint;
+//		}
+//		
+//		/**
+//		 * Adds a divergence measurement to this edge.
+//		 * 
+//		 * @param div The divergence measurement.
+//		 */
+//		public void addDivergence(SpatialDivergence div) {
+//			divergences.add(div);
+//		}
+//		
+//		/**
+//		 * Returns the divergence of the robot when it has traveled a certain 
+//		 * percentage of the edge.
+//		 * 
+//		 * @param pctComplete The percentage traversed.
+//		 * @return The divergence of the robot.
+//		 */
+//		public double getDivergence(double pctComplete) {
+//			Enumeration<SpatialDivergence> divEnum = divergences.elements();
+//			while (divEnum.hasMoreElements()) {
+//				SpatialDivergence div = divEnum.nextElement();
+//				if (div.getPctComplete() == pctComplete)
+//					return div.getDivergence();
+//			}
+//			logErr("DivergenceEdge: getDivergence: ERROR: Unable to get divergence of robot at " + pctComplete + "% completion");
+//			System.exit(1);
+//			return -1; // should never get here...
+//		}
+//		
+//		/**
+//		 * @return The destination way point.
+//		 */
+//		public int getDestWayPoint() {
+//			return destWayPoint;
+//		}
+//		
+//		/**
+//		 * @return The divergence measurements along this edge.
+//		 */
+//		public Vector<SpatialDivergence> getDivergences() {
+//			return divergences;
+//		}
+//		
+//		public String toString() {
+//			StringBuffer sb = new StringBuffer("Towards Way Point ");
+//			sb.append(getDestWayPoint());
+//			sb.append("\n");
+//			
+//			for (int i=0; i < divergences.size(); i++) {
+//				SpatialDivergence div = divergences.get(i);
+//				sb.append(div.toString());
+//				sb.append("\n");
+//			}
+//			
+//			return sb.toString();
+//		}
+//	}
 	
 	/**
-	 * Hold the divergence exhibited by a robot as it traversed a single edge of a motion script.
-	 * 
-	 * @author Chien-Liang Fok
-	 *
-	 */
-	private class DivergenceEdge {
-		
-		/**
-		 * The destination way point at the end of this edge.
-		 */
-		private int destWayPoint;
-		
-		
-		/**
-		 * The divergences from the ideal path that the robot actually traversed.
-		 */
-		private Vector<Divergence> divergences = new Vector<Divergence>();
-		
-		/**
-		 * The constructor.
-		 * 
-		 * @param destWayPoint The destination way point.
-		 */
-		public DivergenceEdge(int destWayPoint) {
-			this.destWayPoint = destWayPoint;
-		}
-		
-		/**
-		 * Adds a divergence measurement to this edge.
-		 * 
-		 * @param div The divergence measurement.
-		 */
-		public void addDivergence(Divergence div) {
-			divergences.add(div);
-		}
-		
-		/**
-		 * Returns the divergence of the robot when it has traveled a certain 
-		 * percentage of the edge.
-		 * 
-		 * @param pctComplete The percentage traversed.
-		 * @return The divergence of the robot.
-		 */
-		public double getDivergence(double pctComplete) {
-			Enumeration<Divergence> divEnum = divergences.elements();
-			while (divEnum.hasMoreElements()) {
-				Divergence div = divEnum.nextElement();
-				if (div.getPctComplete() == pctComplete)
-					return div.getDivergence();
-			}
-			logErr("DivergenceEdge: getDivergence: ERROR: Unable to get divergence of robot at " + pctComplete + "% completion");
-			System.exit(1);
-			return -1; // should never get here...
-		}
-		
-		/**
-		 * @return The destination way point.
-		 */
-		public int getDestWayPoint() {
-			return destWayPoint;
-		}
-		
-		/**
-		 * @return The divergence measurements along this edge.
-		 */
-		public Vector<Divergence> getDivergences() {
-			return divergences;
-		}
-		
-		public String toString() {
-			StringBuffer sb = new StringBuffer("Towards Way Point ");
-			sb.append(getDestWayPoint());
-			sb.append("\n");
-			
-			for (int i=0; i < divergences.size(); i++) {
-				Divergence div = divergences.get(i);
-				sb.append(div.toString());
-				sb.append("\n");
-			}
-			
-			return sb.toString();
-		}
-	}
-	
-	/**
-	 * Contains a single divergence measurement.
+	 * A spatial divergence measurement.
 	 *
 	 * @author Chien-Liang Fok
 	 */
-	private class Divergence {
+	private class SpatialDivergence {
 		/**
 		 * The time stamp of the divergence measurement.
 		 */
@@ -554,12 +770,7 @@ public class MotionDivergenceAnalyzer {
 		/**
 		 * The ideal path along which the robot should traverse.
 		 */
-		private Line idealEdge;
-		
-		/**
-		 * The percentage of the edge that the robot has completed traversing.
-		 */
-		private double pctComplete;
+		private Line idealPath;
 		
 		/**
 		 * The actual location of the robot.
@@ -573,26 +784,18 @@ public class MotionDivergenceAnalyzer {
 		private Location idealLoc;
 		
 		/**
-		 * The distance between the robot's current location and its ideal location.
-		 */
-		private double divergence;
-		
-		/**
 		 * The constructor.
 		 * 
 		 * @param timeStamp The time stamp of the divergence measurement.
-		 * @param pctComplete The percentage of the edge the robot has traversed, based on the path the robot actually traveled.
 		 * @param currLoc The current location.
 		 * @param idealLoc The ideal location.
-		 * @param divergence The divergence between the robot's actual location and its ideal location.
+		 * @param idealPath The ideal path along which the robot should travel.
 		 */
-		public Divergence(long timeStamp, double pctComplete, Location currLoc, Location idealLoc, double divergence, Line idealEdge) {
+		public SpatialDivergence(long timeStamp, Location currLoc, Location idealLoc, Line idealPath) {
 			this.timeStamp = timeStamp;
-			this.pctComplete = pctComplete;
 			this.currLoc = currLoc;
 			this.idealLoc = idealLoc;
-			this.divergence = divergence;
-			this.idealEdge = idealEdge;
+			this.idealPath = idealPath;
 		}
 		
 		/**
@@ -605,15 +808,8 @@ public class MotionDivergenceAnalyzer {
 		/**
 		 * @return The ideal edge.
 		 */
-		public Line getIdealEdge() {
-			return idealEdge;
-		}
-		
-		/**
-		 * @return The percentage of the edge completed.
-		 */
-		public double getPctComplete() {
-			return pctComplete;
+		public Line getIdealPath() {
+			return idealPath;
 		}
 		
 		/**
@@ -635,11 +831,51 @@ public class MotionDivergenceAnalyzer {
 		 * @return The divergence.
 		 */
 		public double getDivergence() {
-			return divergence;
+			return currLoc.distanceTo(idealLoc);
 		}
 		
 		public String toString() {
-			return timeStamp + "\t" + pctComplete + "\t" + currLoc + "\t" + idealLoc + "\t" + divergence;
+			return timeStamp + "\t" + "\t" + currLoc + "\t" + idealLoc + "\t" + getDivergence();
+		}
+	}
+	
+	/**
+	 * A temporal divergence measurement.
+	 *
+	 * @author Chien-Liang Fok
+	 */
+	private class TemporalDivergence {
+		
+		private int waypointNumber;
+		
+		private long idealTOA;
+		
+		private long actualTOA;
+		
+		public TemporalDivergence(int waypointNumber, long idealTOA, long actualTOA) {
+			this.waypointNumber = waypointNumber;
+			this.idealTOA = idealTOA;
+			this.actualTOA = actualTOA;
+		}
+		
+		public int getWaypointNumber() {
+			return waypointNumber;
+		}
+		
+		public long getIdealTOA() {
+			return idealTOA;
+		}
+		
+		public long getActualTOA() {
+			return actualTOA;
+		}
+		
+		public long getDivergence() {
+			return actualTOA - idealTOA;
+		}
+		
+		public String toString() {
+			return "waypointNumber=" + waypointNumber + "idealTOA=" + idealTOA + ", actualTOA=" + actualTOA + ", temporal divergence=" + getDivergence();
 		}
 	}
 	
@@ -970,11 +1206,17 @@ public class MotionDivergenceAnalyzer {
 		print("Usage: " + MotionDivergenceAnalyzer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-log <log file name>: The experiment log file generated by the robot. (required)");
+		print("\t-interval <sampling interval>: The interval in milliseconds at which the divergence is calculated. (default 1000)");
+		print("\t-orientedThreshold <oriented threshold>: The maximum heading error in radians before a robot is considered oriented. (default 0.25)");
+		print("\t-saveReults: Save the results into a file.");
 		print("\t-d or -debug: Enable debug mode.");
 	}
 	
 	public static void main(String[] args) {
 		String logFileName = null;
+		double orientedThreshold = 0.25;
+		long samplingInterval = 1000;
+		boolean saveResults = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -984,6 +1226,15 @@ public class MotionDivergenceAnalyzer {
 				} 
 				else if (args[i].equals("-log")) {
 					logFileName = args[++i];
+				}
+				else if (args[i].equals("-interval")) {
+					samplingInterval = Long.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-orientedThreshold")) {
+					orientedThreshold = Double.valueOf(args[++i]);
+				}
+				else if (args[i].equals("-saveResults")) {
+					saveResults = true;
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -1007,8 +1258,11 @@ public class MotionDivergenceAnalyzer {
 		}
 		
 		print("Log: " + logFileName);
+		print("Sampling Interval: " + samplingInterval);
+		print("Oriented Threshold: " + orientedThreshold);
+		print("Save results: " + saveResults);
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
-		new MotionDivergenceAnalyzer(logFileName);
+		new MotionDivergenceAnalyzer(logFileName, samplingInterval, orientedThreshold, saveResults);
 	}
 }
