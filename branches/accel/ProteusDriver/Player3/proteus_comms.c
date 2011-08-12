@@ -28,7 +28,7 @@
  *   - remove the sleep(...) hack
  *   - Fixed code that makes reading from the serial port blocking in proteus_open(...)
  */
-
+//
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
