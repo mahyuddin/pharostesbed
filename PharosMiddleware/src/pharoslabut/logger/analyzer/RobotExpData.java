@@ -453,13 +453,7 @@ public class RobotExpData {
 				double lon = Double.valueOf(tokens[2]);
 				double speed = Double.valueOf(tokens[5]); 
 				
-				Location idealStartLoc = null;
-				if (currEdge != null)
-					idealStartLoc = currEdge.getEndLocation();
-				else
-					idealStartLoc = new Location(currLoc);
-				
-				currEdge = new PathEdge(idealStartLoc, new Location(lat, lon), timeStamp, speed);
+				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
 				
 				// Set the start location of the path edge if we know where we are.
 				if (currLoc != null)
@@ -475,13 +469,7 @@ public class RobotExpData {
 				double lon = Double.valueOf(tokens[11]);
 				double speed = Double.valueOf(tokens[16]);
 				
-				Location idealStartLoc = null;
-				if (currEdge != null)
-					idealStartLoc = currEdge.getEndLocation();
-				else
-					idealStartLoc = new Location(currLoc);
-				
-				currEdge = new PathEdge(idealStartLoc, new Location(lat, lon), timeStamp, speed);
+				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
 				
 				// Set the start location of the path edge if we know where we are.
 				if (currLoc != null)
@@ -637,6 +625,20 @@ public class RobotExpData {
 				
 				
 				motionCmds.add(new MotionCmd(timeStamp, speed, heading));
+			}
+		} // end while...
+		
+		// Set the ideal start locations...
+		for (int i=0; i < pathEdges.size(); i++) {
+			if (i == 0) {
+				// The first edge's ideal start location is where it actually
+				// started.
+				pathEdges.get(0).setIdealStartLoc(getStartLocation());
+			} else {
+				// For every path edge after the first one, the ideal start location
+				// the ideal end location of the previous edge.
+				PathEdge prevEdge = pathEdges.get(i-1);
+				pathEdges.get(i).setIdealStartLoc(prevEdge.getEndLocation());
 			}
 		}
 		

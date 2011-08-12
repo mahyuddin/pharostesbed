@@ -46,19 +46,27 @@ public class PathEdge {
 	
 	/**
 	 * The constructor.
-	 * 
-	 * @param idealStartLoc The ideal starting location as specified by the motion script.  This is the 
-	 * previous way point if one exists.
+	 *
 	 * @param endLoc The ideal destination location as specified by the motion script.
 	 * @param startTime The time at which the robot started to traverse the edge.
 	 * @param speed The ideal speed at which the robot was supposed to move,
 	 * as specified by the motion script.
 	 */
-	public PathEdge(Location idealStartLoc, Location endLoc, long startTime, double speed) {
-		this.idealStartLoc = idealStartLoc;
+	public PathEdge(Location endLoc, long startTime, double speed) {
 		this.endLoc = endLoc;
 		this.startTime = startTime;
 		this.speed = speed;
+	}
+	
+	/**
+	 * Sets the ideal start location.  This is the location as specified 
+	 * in the motion script.
+	 * 
+	 * @param idealStartLoc The ideal starting location as specified by the motion script.  This is the 
+	 * previous way point if one exists.
+	 */
+	public void setIdealStartLoc(Location idealStartLoc) {
+		this.idealStartLoc = idealStartLoc;
 	}
 	
 	/**
