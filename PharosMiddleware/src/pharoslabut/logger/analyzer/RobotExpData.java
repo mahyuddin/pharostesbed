@@ -5,6 +5,7 @@ import java.util.*;
 
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.navigate.Location;
 import playerclient3.structures.gps.PlayerGpsData;
@@ -411,7 +412,7 @@ public class RobotExpData {
 	}
 	
 	/**
-	 * Reads and organizes the data in the robot's experiment log file.
+	 * Reads and organizes the data contained in the robot's experiment log file.
 	 * 
 	 * @throws NumberFormatException
 	 * @throws IOException
@@ -625,6 +626,23 @@ public class RobotExpData {
 				
 				
 				motionCmds.add(new MotionCmd(timeStamp, speed, heading));
+			}
+			
+			// Extract the pause durations
+			else if (line.contains("MotionScriptFollower: Pausing for")) {
+				String keyStr = "MotionScriptFollower: Pausing for";
+				String pausingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = pausingLine.split("[=,\\s m]+");
+				
+				//long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				long pauseTime  = Long.valueOf(tokens[1]);
+				
+				if (currEdge != null)
+					currEdge.addPauseTime(pauseTime);
+				else
+					Logger.logDbg("WARNING: discarding pause time because currEdge not defined!");
 			}
 		} // end while...
 		

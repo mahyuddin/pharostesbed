@@ -20,7 +20,7 @@ import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RefineryUtilities;
 
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.*;
 import pharoslabut.navigate.Location;
 //import pharoslabut.navigate.motionscript.MotionScript;
 
@@ -69,7 +69,7 @@ public class MotionDivergenceAnalyzer {
 		// Calculate the various forms of divergence
 		absDivs = calcAbsoluteDivergence();      // absolute divergence
 		osDivs = calcOrientedStartDivergence();  // oriented start divergence
-		//tempDivs = calcTemporalDivergence();    // temporal divergence
+		tempDivs = calcTemporalDivergence();    // temporal divergence
 		
 		if (saveData)
 			saveResults();
@@ -92,33 +92,33 @@ public class MotionDivergenceAnalyzer {
 			outputFilePrefix = logFileName;
 		}
 		
-		logDbg("saveResults: outputFilePrefix = " + outputFilePrefix);
+		Logger.logDbg("saveResults: outputFilePrefix = " + outputFilePrefix);
 		
 		// Save the absolute divergence...
 		FileLogger flogger = new FileLogger(outputFilePrefix + "-absDivergence.txt");
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence", flogger);
+		flogger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tAbsolute Divergence");
 		
 		Enumeration<SpatialDivergence> e = absDivs.elements();
 		while (e.hasMoreElements()) {
 			SpatialDivergence sd = e.nextElement();
-			log(sd.getTimeStamp() 
+			flogger.log(sd.getTimeStamp() 
 					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime()) 
 					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime())/1000 
-					+ "\t" + sd.getDivergence(), flogger);
+					+ "\t" + sd.getDivergence());
 		}
 		
 		robotData.printWayPointArrivalTable(flogger); // save the waypoint arrival table
 		
 		// Save the oriented start divergence...
 		flogger = new FileLogger(outputFilePrefix + "-orientedStartDivergence.txt");
-		log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tOriented Start Divergence", flogger);
+		flogger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tOriented Start Divergence");
 		e = osDivs.elements();
 		while (e.hasMoreElements()) {
 			SpatialDivergence sd = e.nextElement();
-			log(sd.getTimeStamp() 
+			flogger.log(sd.getTimeStamp() 
 					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime()) 
 					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime())/1000 
-					+ "\t" + sd.getDivergence(), flogger);
+					+ "\t" + sd.getDivergence());
 		}
 		
 		robotData.printWayPointArrivalTable(flogger); // save the waypoint arrival table
@@ -189,7 +189,7 @@ public class MotionDivergenceAnalyzer {
 			// If the robot has oriented itself by the specified time, determine the
 			// ideal path over which the robot should travel and its divergence from this path.
 			LocationState orientedLoc = robotData.getOrientedLocation(edge, orientedThreshold); 
-			logDbg("StartLoc=" + edge.getStartLoc() + " @ " + edge.getStartTime() + ", OrientedLoc=" + orientedLoc.getLoc()
+			Logger.logDbg("StartLoc=" + edge.getStartLoc() + " @ " + edge.getStartTime() + ", OrientedLoc=" + orientedLoc.getLoc()
 					+ " @ " + orientedLoc.getTimestamp());
 			
 			if (orientedLoc.getTimestamp() < time) {
@@ -200,10 +200,61 @@ public class MotionDivergenceAnalyzer {
 				
 				result.add(new SpatialDivergence(time, actualLoc, idealLoc, perfectPath));
 			} else
-				logDbg("calcOrientedStartDivergence: Robot was not oriented yet at time " + time);
+				Logger.logDbg("Robot was not oriented yet at time " + time);
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Calculates the temporal divergence of the robot.  This is the difference between the time
+	 * the robot is expected to be at a waypoint and the time it actually arrives at the waypoint.
+	 * 
+	 * @return The temporal divergence of the robot.
+	 */
+	private Vector<TemporalDivergence> calcTemporalDivergence() {
+		Logger.logDbg("Calculating the temporal divergence of the robot...");
+		
+		Vector<PathEdge> pathEdges = robotData.getPathEdges();
+		
+		if (pathEdges.size() == 0) {
+			Logger.logErr("No edges present!");
+			System.exit(1);
+		}
+		
+		long edgeStartTime = pathEdges.get(0).getStartTime(); // initialize this to be the start of the first edge
+		Logger.logDbg("first edgeStartTime = " + edgeStartTime);
+		
+		Vector<TemporalDivergence> result = new Vector<TemporalDivergence>();
+		
+		// First calculate the expected time that the robot is supposed to reach
+		// each waypoint.  Then determine the temporal divergence by comparing it
+		// with the actual time the robot reached the waypoint.
+		for (int i=0; i < pathEdges.size(); i++) {
+			PathEdge currEdge = pathEdges.get(i);
+			
+			Location idealStartLoc = currEdge.getIdealStartLoc();
+			Location idealEndLoc = currEdge.getEndLocation();
+			double idealSpeed = currEdge.getIdealSpeed();
+			
+			double idealDist = idealStartLoc.distanceTo(idealEndLoc);
+			double idealDuration = idealDist / idealSpeed;
+			
+			long idealArrivalTime = (long)(edgeStartTime + idealDuration); // this is cumulative across the entire experiment
+			long idealRelArrivalTime = (long)(currEdge.getStartTime() + idealDuration); // this is relative to the previous waypoint
+			long actualArrivalTime = currEdge.getEndTime();
+			
+			TemporalDivergence td = new TemporalDivergence(i, idealArrivalTime, idealRelArrivalTime, actualArrivalTime);
+			
+			//Logger.logDbg("Waypoint " + i + ", ideal TOA = " + idealArrivalTime + ", actual TOA = " + actualArrivalTime + ", delta = " + td.getDivergence());
+			
+			result.add(td);
+			
+			edgeStartTime = idealArrivalTime + currEdge.getPauseTime(); // include the pause time that the robot stops at each waypoint
+		}
+		
+		return result;
+		
 	}
 	
 	
@@ -592,31 +643,31 @@ public class MotionDivergenceAnalyzer {
 //		
 //	}
 	
-	private void logDbg(String msg) {
-		
-		// Add the name of the calling method to the beginning of the message.
-		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		String result = getClass().getName() + ": " + stackTraceElements[2].getMethodName() + ": " + msg;
-		
-		//stackTraceElements[2].getClass().getName();
-		
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-	}
-	
-	private void logDbg(String msg, FileLogger flogger) {
-		String result = getClass().getName() + ": " + msg; 
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null) 
-			flogger.log(result);
-	}
-	
-	private void log(String msg, FileLogger flogger) {
-		System.out.println(msg);
-		if (flogger != null)
-			flogger.log(msg);
-	}
+//	private void logDbg(String msg) {
+//		
+//		// Add the name of the calling method to the beginning of the message.
+//		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+//		String result = getClass().getName() + ": " + stackTraceElements[2].getMethodName() + ": " + msg;
+//		
+//		//stackTraceElements[2].getClass().getName();
+//		
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//	}
+//	
+//	private void logDbg(String msg, FileLogger flogger) {
+//		String result = getClass().getName() + ": " + msg; 
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null) 
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg, FileLogger flogger) {
+//		System.out.println(msg);
+//		if (flogger != null)
+//			flogger.log(msg);
+//	}
 	
 //	/**
 //	 * Holds the divergence exhibited by a robot throughout an experiment.
@@ -846,15 +897,42 @@ public class MotionDivergenceAnalyzer {
 	 */
 	private class TemporalDivergence {
 		
+		/**
+		 * The waypoint sequence number, starting from zero.
+		 */
 		private int waypointNumber;
 		
+		/**
+		 * The ideal time at which the robot should have arrived at the waypoint.
+		 * This is based on when the robot first started to move.
+		 */
 		private long idealTOA;
 		
+		/**
+		 * The ideal time that the robot should have reached the waypoint relative to
+		 * when it left the previous waypoint.
+		 */
+		private long idealRelTOA;
+		
+		/**
+		 * The actual time when the robot reached the waypoint.
+		 */
 		private long actualTOA;
 		
-		public TemporalDivergence(int waypointNumber, long idealTOA, long actualTOA) {
+		/**
+		 * The constructor.
+		 * 
+		 * @param waypointNumber The waypoint sequence number, starting from zero.
+		 * @param idealTOA The ideal time at which the robot should have arrived at the waypoint.
+		 * This is based on when the robot first started to move.
+		 * @param idealRelTOA The ideal time that the robot should have reached the waypoint relative to
+		 * when it left the previous waypoint.
+		 * @param actualTOA The actual time when the robot reached the waypoint.
+		 */
+		public TemporalDivergence(int waypointNumber, long idealTOA, long idealRelTOA, long actualTOA) {
 			this.waypointNumber = waypointNumber;
 			this.idealTOA = idealTOA;
+			this.idealRelTOA = idealRelTOA;
 			this.actualTOA = actualTOA;
 		}
 		
@@ -866,16 +944,25 @@ public class MotionDivergenceAnalyzer {
 			return idealTOA;
 		}
 		
+		public long getIdealRelTOA() {
+			return idealRelTOA;
+		}
+		
 		public long getActualTOA() {
 			return actualTOA;
 		}
 		
+		/**
+		 * 
+		 * @return The temporal divergence in milliseconds.
+		 */
 		public long getDivergence() {
 			return actualTOA - idealTOA;
 		}
 		
 		public String toString() {
-			return "waypointNumber=" + waypointNumber + "idealTOA=" + idealTOA + ", actualTOA=" + actualTOA + ", temporal divergence=" + getDivergence();
+			return "TemporalDivergence: waypointNumber=" + waypointNumber + "idealTOA=" + idealTOA + ", idealRelTOA=" + idealRelTOA 
+			+ ", actualTOA=" + actualTOA + ", temporal divergence=" + getDivergence();
 		}
 	}
 	
@@ -1185,14 +1272,19 @@ public class MotionDivergenceAnalyzer {
 //		}
 //	}
 	
-	private void log(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(msg);
-	}
-	
-	private void logErr(String msg) {
-		System.err.println(msg);
-	}
+//	private void log(String msg) {
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(msg);
+//	}
+//	
+//	private void logErr(String msg) {
+//		// Add the name of the calling method to the beginning of the message.
+//		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+//		String callingMethodName = stackTraceElements[2].getMethodName();
+//		
+//		String result = getClass().getName() + ": " + callingMethodName + ": ERROR: " + msg;
+//		System.err.println(result);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);
