@@ -116,7 +116,7 @@ public class GetHeadingAndSpeed {
 		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
 		while (e.hasMoreElements()) {
 			SpeedHeadingState currState = e.nextElement();
-			long currTime = (currState.time - robotData.getStartTime())/1000;
+			double currTime = (currState.time - robotData.getStartTime())/1000.0;
 			headingSeries.add(currTime, currState.heading);
 			headingCmdSeries.add(currTime, currState.headingCmd);
 			speedSeries.add(currTime, currState.speed);
