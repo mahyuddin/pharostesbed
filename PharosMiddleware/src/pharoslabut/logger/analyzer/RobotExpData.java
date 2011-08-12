@@ -453,7 +453,13 @@ public class RobotExpData {
 				double lon = Double.valueOf(tokens[2]);
 				double speed = Double.valueOf(tokens[5]); 
 				
-				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
+				Location idealStartLoc = null;
+				if (currEdge != null)
+					idealStartLoc = currEdge.getEndLocation();
+				else
+					idealStartLoc = new Location(currLoc);
+				
+				currEdge = new PathEdge(idealStartLoc, new Location(lat, lon), timeStamp, speed);
 				
 				// Set the start location of the path edge if we know where we are.
 				if (currLoc != null)
@@ -467,8 +473,15 @@ public class RobotExpData {
 				long timeStamp = Long.valueOf(tokens[1]);
 				double lat = Double.valueOf(tokens[9]);
 				double lon = Double.valueOf(tokens[11]);
-				double speed = Double.valueOf(tokens[16]); 
-				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
+				double speed = Double.valueOf(tokens[16]);
+				
+				Location idealStartLoc = null;
+				if (currEdge != null)
+					idealStartLoc = currEdge.getEndLocation();
+				else
+					idealStartLoc = new Location(currLoc);
+				
+				currEdge = new PathEdge(idealStartLoc, new Location(lat, lon), timeStamp, speed);
 				
 				// Set the start location of the path edge if we know where we are.
 				if (currLoc != null)
@@ -1154,7 +1167,7 @@ public class RobotExpData {
 		logErr("getRelevantPathEdge: Could not find relevant path edge at time " + timestamp
 				+ " (" + (timestamp - getStartTime()) + ")");
 		printPathEdges(true);
-		
+		System.exit(1);
 		return null;
 	}
 	
@@ -1162,20 +1175,34 @@ public class RobotExpData {
 	 * Returns the location and time that a robot becomes oriented as it traverses the specified
 	 * edge.
 	 * 
-	 * @param pathEdgeSeqNo The sequence number of the path edge.
-	 * @param thresholdDegrees The threshold number of degrees before a robot can be considered
-	 * oriented.
+	 * @param pathEdge The path edge along which the robot is traveling.
+	 * @param orientedThreshold The maximum heading error in radians before a robot is considered oriented.
 	 * @return the location and time at which the robot becomes oriented.
 	 */
-	public LocationState getOrientedLocation(int pathEdgeSeqNo, double thresholdDegrees) {
-		PathEdge currPathEdge = getPathEdge(pathEdgeSeqNo);
-		int startIndx = -1;
-		for (int i = 0; i < headings.size(); i++) {
-			if (currPathEdge.getStartTime() >= headings.get(i).getTimestamp()) {
-				
+	public LocationState getOrientedLocation(PathEdge pathEdge, double orientedThreshold) {
+		
+		LocationState result = null;
+		
+		long currTime = pathEdge.getStartTime();
+		
+		while (result == null && currTime < pathEdge.getEndTime()) {
+			double actualHeading = getHeading(currTime);
+			double idealHeading = getIdealHeading(currTime);
+			
+			if (Math.abs(actualHeading - idealHeading) < orientedThreshold) {
+				log("getOrientedLocation: Found oriented location!");
+				result = new LocationState(currTime, getLocation(currTime));
 			}
+			
+			currTime += 100; // check every 0.1s
 		}
-		return null;// TODO Remove this.
+		
+		if (result == null) {
+			logErr("Unable to find oriented location along edge " + pathEdge.getSeqNo() + ", threshold=" + orientedThreshold);
+			System.exit(1);
+		}
+		
+		return result;
 	}
 	
 	private void printPathEdges(boolean isError) {
@@ -1462,7 +1489,11 @@ public class RobotExpData {
 	}
 	
 	private void logErr(String msg) {
-		String result = getClass().getName() + ": ERROR: " + msg;
+		// Add the name of the calling method to the beginning of the message.
+		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+		String callingMethodName = stackTraceElements[2].getMethodName();
+		
+		String result = getClass().getName() + ": " + callingMethodName + ": ERROR: " + msg;
 		System.err.println(result);
 		System.err.flush();
 		if (flogger != null)
