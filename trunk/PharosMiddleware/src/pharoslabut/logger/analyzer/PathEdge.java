@@ -359,9 +359,9 @@ public class PathEdge {
 	}
 	
 	/**
-	 * The start time of the experiment.
+	 * The time at which the robot started to traverse this edge.
 	 * 
-	 * @return The start time of the experiment.
+	 * @return The start time at which the robot began traversing this edge.
 	 */
 	public long getStartTime() {
 		return startTime;
