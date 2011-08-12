@@ -1949,10 +1949,22 @@ public class PlayerClient extends Thread implements PlayerConstants {
      * @param access access mode
      * @return a IMU device if successful, null otherwise
      */
-    public IMUInterface requestInterfaceIMU (int index, int access) {
-        return (IMUInterface)requestInterface (PLAYER_IMU_CODE, index, access);
+    
+    
+    // ???????
+    public AccelInterface requestInterfaceIMU (int index, int access) {
+        return (AccelInterface)requestInterface (PLAYER_IMU_CODE, index, access);
     }
-
+    	//was IMUInterface instead of AccelInterface
+    
+    
+    
+    
+    
+    
+    
+    
+    
     /**
      * Request a PointCloud3D device.
      * @param index the device index
