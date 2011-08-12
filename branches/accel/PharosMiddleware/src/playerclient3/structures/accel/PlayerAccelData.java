@@ -34,32 +34,32 @@ import playerclient3.structures.*;
  * </ul>
  */
 public class PlayerAccelData implements PlayerConstants {
+	 	
+	private short x_axis;
+	private short y_axis;
+	private short z_axis;
+	//X
+	 public synchronized short getX_axis () {
+	        return this.x_axis;
+	    }
 
-    // voltages [V]
-    private float[] voltages;
-    // ranges [m]
-    private float[] ranges;
+    public synchronized void setX_axis (short newX_axis) {
+	        this.x_axis = newX_axis;
+	    }
+    //Y
+	 public synchronized short getY_axis () {
+		        return this.y_axis;
+		    }
 
+	   public synchronized void setY_axis (short newY_axis) {
+		        this.y_axis = newY_axis;
+		    }
+	   //Z
+		 public synchronized short getZ_axis () {
+			        return this.z_axis;
+			    }
 
-    /**
-     * @return  number of samples
-     */
-    public synchronized int getVoltages_count () {
-        return (this.voltages == null)?0:this.voltages.length;
-    }
-
-    /**
-     * @return  voltages [V]
-     */
-    public synchronized float[] getVoltages () {
-        return this.voltages;
-    }
-
-    /**
-     * @param newVoltages  voltages [V]
-     */
-    public synchronized void setVoltages (float[] newAccel) {
-        this.voltages = newAccel;
-    }
-
+	    public synchronized void setZ_axis (short newZ_axis) {
+			        this.z_axis = newZ_axis;
+			    }
 }
