@@ -1383,7 +1383,7 @@ public class PlayerClient extends Thread implements PlayerConstants {
                 break;
             }
             case PLAYER_IMU_CODE: {                 // IMU interface
-                newpd = new IMUInterface (this);
+                newpd = new AccelInterface (this);
                 break;
             }
             case PLAYER_POINTCLOUD3D_CODE: {        // PointCloud3D interface

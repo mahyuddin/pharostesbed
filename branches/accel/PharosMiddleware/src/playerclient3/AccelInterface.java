@@ -2,15 +2,12 @@
 package playerclient3;
 
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import playerclient3.structures.PlayerMsgHdr;
-//import playerclient3.structures.PlayerPose3d;
 import playerclient3.structures.accel.PlayerAccelData;
 import playerclient3.xdr.OncRpcException;
 import playerclient3.xdr.XdrBufferDecodingStream;
-import playerclient3.xdr.XdrBufferEncodingStream;
 
 /**
  * The ir interface provides access to an array of infrared (IR) range sensors.

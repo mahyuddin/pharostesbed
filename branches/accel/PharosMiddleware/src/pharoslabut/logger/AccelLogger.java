@@ -74,7 +74,7 @@ public class AccelLogger implements Runnable {
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
 		logDbg("Creating GPSDataBuffer...");
-		acceldb = new GPSDataBuffer(accel, flogger);
+		acceldb = new AccelDataBuffer(accel, flogger);
 	}
 	
 	/**

@@ -173,15 +173,15 @@ public class AccelDataBuffer {
 			buff.add(0, new AccelDataWrapper(newData)); // add new data to the front of the buffer
 			log("getCurrLoc: New Accel Data: " + newData + ", buffer size=" + buff.size());
 			
-			// Estimate the robot's speed
-			if (buff.size() > 1) {
-				Location currLoc = new Location(buff.get(0).getAccelData());
-				Location prevLoc = new Location(buff.get(1).getAccelData());
-				
-				Double dist = currLoc.distanceTo(prevLoc);
-				double time = (buff.get(0).getTimeStamp() - buff.get(1).getTimeStamp()) / 1000.0;
-				log("getCurrLoc: Estimated Speed: " + dist/time + " m/s");
-			}
+//			// Estimate the robot's speed
+//			if (buff.size() > 1) {
+//				Location currLoc = new Location(buff.get(0).getAccelData());
+//				Location prevLoc = new Location(buff.get(1).getAccelData());
+//				
+//				Double dist = currLoc.distanceTo(prevLoc);
+//				double time = (buff.get(0).getTimeStamp() - buff.get(1).getTimeStamp()) / 1000.0;
+//				log("getCurrLoc: Estimated Speed: " + dist/time + " m/s");
+//			}
 		}
 		
 		// Remove any expired GPS location measurements...
