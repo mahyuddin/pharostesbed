@@ -124,18 +124,19 @@ public class MotionDivergenceAnalyzer {
 		robotData.printWayPointArrivalTable(flogger); // save the waypoint arrival table
 		
 		// Save the temporal divergence
-//		flogger = new FileLogger(outputFilePrefix + "-temporalDivergence.txt");
-//		log("WayPoint Number\tActual Arrival Time\tIdeal Arrival Time\tTemporal Divergence", flogger);
-//		Enumeration<TemporalDivergence> e2 = tempDivs.elements();
-//		while (e2.hasMoreElements()) {
-//			TemporalDivergence td = e2.nextElement();
-//			log(td.getWaypointNumber()
-//					+ "\t" + td.getActualTOA()
-//					+ "\t" + td.getIdealTOA()
-//					+ "\t" + td.getDivergence(), flogger);
-//		}
-//		
-//		robotData.printWayPointArrivalTable(flogger);
+		flogger = new FileLogger(outputFilePrefix + "-temporalDivergence.txt");
+		flogger.log("WayPoint Number\tActual Arrival Time\tIdeal Relative Arrival Time\tIdeal Arrival Time\tTemporal Divergence");
+		Enumeration<TemporalDivergence> e2 = tempDivs.elements();
+		while (e2.hasMoreElements()) {
+			TemporalDivergence td = e2.nextElement();
+			flogger.log(td.getWaypointNumber()
+					+ "\t" + td.getActualTOA()
+					+ "\t" + td.getIdealRelTOA()
+					+ "\t" + td.getIdealTOA()
+					+ "\t" + td.getDivergence());
+		}
+		
+		robotData.printWayPointArrivalTable(flogger);
 	}
 	
 	/**
@@ -265,6 +266,8 @@ public class MotionDivergenceAnalyzer {
 		// Create the various data series...
 		XYSeries absDivSeries = new XYSeries("Absolute Divergence");
 		XYSeries osDivSeries = new XYSeries("Oriented Start Divergence, threshold=" + orientedThreshold);
+		XYSeries tempDivSeries = new XYSeries("Temporal Divergence");
+		XYSeries relTempDivSeries = new XYSeries("Relative Temporal Divergence");
 		
 		Enumeration<SpatialDivergence> e = absDivs.elements();
 		while (e.hasMoreElements()) {
@@ -280,6 +283,12 @@ public class MotionDivergenceAnalyzer {
 			osDivSeries.add(currTime, currDiv.getDivergence());
 		}
 		
+		Enumeration<TemporalDivergence> e3 = tempDivs.elements();
+		while (e3.hasMoreElements()) {
+			TemporalDivergence currDiv = e3.nextElement();
+			tempDivSeries.add(currDiv.getWaypointNumber(), currDiv.getDivergence());
+			relTempDivSeries.add(currDiv.getWaypointNumber(), currDiv.getRelDivergence());
+		}
 		
 		// Create two data series one containing the times when the robot starts heading 
 		// towards a waypoint, and another containing the times when the robot arrives at
@@ -295,7 +304,7 @@ public class MotionDivergenceAnalyzer {
 			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
 			waypointArrivalSeries.add(wayPointArrivalTime, 0);
 		}
-
+		
 		// Create data sets out of the data series.
 		XYSeriesCollection spatialDivDataSet = new XYSeriesCollection();
 		spatialDivDataSet.addSeries(absDivSeries);
@@ -303,10 +312,9 @@ public class MotionDivergenceAnalyzer {
 		spatialDivDataSet.addSeries(beginEdgeSeries);
 		spatialDivDataSet.addSeries(waypointArrivalSeries);
 		
-//		XYSeriesCollection osDivDataSet = new XYSeriesCollection();
-//		osDivDataSet.addSeries(osDivSeries);
-//		osDivDataSet.addSeries(beginEdgeSeries);
-//		osDivDataSet.addSeries(waypointArrivalSeries);
+		XYSeriesCollection tempDivDataSet = new XYSeriesCollection();
+		tempDivDataSet.addSeries(tempDivSeries);
+		tempDivDataSet.addSeries(relTempDivSeries);
 		
 		// Create the charts
 		JFreeChart absDivChart = ChartFactory.createXYLineChart(
@@ -319,26 +327,26 @@ public class MotionDivergenceAnalyzer {
 				true,                                                  // tooltips
 				false                                                  // urls
 		);
-//        
-//        JFreeChart osDivChart = ChartFactory.createXYLineChart(
-//        		"Oriented-Start Divergence vs. Time",                  // chart title
-//        		"Time (s)",                                            // x axis label
-//        		"Divergence (m)",                                         // y axis label
-//        		osDivDataSet,                                          // the oriented start data
-//        		PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
-//        		true,                                                  // include legend
-//        		true,                                                  // tooltips
-//        		false                                                  // urls
-//        );
+       
+        JFreeChart tempDivChart = ChartFactory.createXYLineChart(
+        		"Temporal Divergence vs. Time",                  // chart title
+        		"Time (s)",                                            // x axis label
+        		"Temporal Divergence (s)",                                         // y axis label
+        		tempDivDataSet,                                          // the oriented start data
+        		PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+        		true,                                                  // include legend
+        		true,                                                  // tooltips
+        		false                                                  // urls
+        );
         
         // Place the legend on top of the chart just below the title.
         LegendTitle headingLegend = absDivChart.getLegend();
         headingLegend.setPosition(RectangleEdge.TOP);
-//        LegendTitle speedLegend = osDivChart.getLegend();
-//        speedLegend.setPosition(RectangleEdge.TOP);
+        LegendTitle speedLegend = tempDivChart.getLegend();
+        speedLegend.setPosition(RectangleEdge.TOP);
         
         absDivChart.setBackgroundPaint(Color.white);
-//        osDivChart.setBackgroundPaint(Color.white);
+        tempDivChart.setBackgroundPaint(Color.white);
         
         // Configure when to display lines an when to display the shapes that indicate data points
         XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
@@ -384,8 +392,8 @@ public class MotionDivergenceAnalyzer {
         // Place the charts in their own panels.
         ChartPanel headingChartPanel = new ChartPanel(absDivChart);
         headingChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
-//        ChartPanel speedChartPanel = new ChartPanel(osDivChart);
-//        speedChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
+        ChartPanel temporalChartPanel = new ChartPanel(tempDivChart);
+        temporalChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
        
         // Place both chart panels within a single panel with two rows.
 //        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(2,1));
@@ -393,12 +401,18 @@ public class MotionDivergenceAnalyzer {
 //        chartsPanel.add(speedChartPanel);
        
         // Create a frame for the chart, then display it.
-        ApplicationFrame appFrame = new ApplicationFrame("Divergence for " + robotData.getFileName());
+        ApplicationFrame appFrame1 = new ApplicationFrame("Divergence for " + robotData.getFileName());
 //        appFrame.setContentPane(chartsPanel);
-        appFrame.setContentPane(headingChartPanel);
-        appFrame.pack();
-		RefineryUtilities.centerFrameOnScreen(appFrame);
-		appFrame.setVisible(true);
+        appFrame1.setContentPane(headingChartPanel);
+        appFrame1.pack();
+		RefineryUtilities.centerFrameOnScreen(appFrame1);
+		appFrame1.setVisible(true);
+		
+		ApplicationFrame appFrame2 = new ApplicationFrame("Divergence for " + robotData.getFileName());
+		appFrame2.setContentPane(temporalChartPanel);
+		appFrame2.pack();
+		RefineryUtilities.centerFrameOnScreen(appFrame2);
+		appFrame2.setVisible(true);
 	}
 //	class AnalysisResults {
 //		Vector<ResultEdge> resultAbsoluteDivergence = new Vector<ResultEdge>();
@@ -958,6 +972,14 @@ public class MotionDivergenceAnalyzer {
 		 */
 		public long getDivergence() {
 			return actualTOA - idealTOA;
+		}
+		
+		/**
+		 * 
+		 * @return The relative divergence in milliseconds.
+		 */
+		public long getRelDivergence() {
+			return actualTOA - idealRelTOA;
 		}
 		
 		public String toString() {
