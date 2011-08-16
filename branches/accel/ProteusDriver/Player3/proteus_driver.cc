@@ -173,7 +173,7 @@ class Proteus : public ThreadedDriver {
 		//player_devaddr_t sonar_addr;
 		player_devaddr_t opaque_addr;
 		player_devaddr_t compass_addr;
-		player_devaddr_t accel_addr ;                     ////accel interface
+		player_devaddr_t accel_addr;                     ////accel interface
 		
 		
 		// The underlying proteus object
@@ -187,7 +187,7 @@ class Proteus : public ThreadedDriver {
 		player_ir_pose ir_array;
 		player_sonar_geom sonar_array;
 		player_opaque_data_t opaque_data;
-		player_imu_data_calib_t accel_data;
+		player_imu_data_quat accel_data;
 		
 		// Whether the interface is being used
 		uint16_t interfacesEnabled;
@@ -458,12 +458,12 @@ void Proteus::updateAccel() {
 
 	memset(&accel_data,0,sizeof(accel_data)); // clear the accel struct
 	
-//	accel_data.ranges_count = 2;
+    //	accel_data.ranges_count = 2;
 	float accel_axis_data[2]; // needs to be changed
 	//accel_axis_data[2];
-	accel_axis_data[0] = this->proteus_dev->accel_x;
-	accel_axis_data[1] = this->proteus_dev->accel_y;
-	accel_axis_data[2] = this->proteus_dev->accel_z;
+	accel_axis_data[0] = this->proteus_dev->q0;
+	accel_axis_data[1] = this->proteus_dev->q1;
+	accel_axis_data[2] = this->proteus_dev->q2;
 	
 
 printf("Publishing Accel data: %f, %f, %f\n", accel_axis_data[0], accel_axis_data[1],     
@@ -592,7 +592,7 @@ void Proteus::Main() {
 			// send a heart beat at 1Hz
 			printf("before heartbeat\n");
 			commOK = proteus_sendHeartBeat(this->proteus_dev, interfacesEnabled);
-			
+			printf("commok= %i \n", commOK);
 		}
 		loopCount++;
 		
@@ -607,12 +607,14 @@ void Proteus::Main() {
 		this->ProcessMessages(); // should we only process one message at a time by passing a '1' in as a parameter?
 		
 		printf("proteus_driver: main: receiving serial data...\n");
-		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
+		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); 
+		printf("commok= %i \n", commOK);
+		}
 		
 		printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
-				//printf("proteus_driver: main: checking for new data to publish...\n");
+				printf("proteus_driver: main: checking for new data to publish...\n");
 				
 				if (this->proteus_dev->newOdometryData) {
 					//printf("proteus_driver: main: Publishing new odometry data!\n");

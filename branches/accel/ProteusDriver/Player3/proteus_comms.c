@@ -438,6 +438,7 @@ void addToRxSerialBuffer(proteus_comm_t* r, uint8_t data) {
  * Returns the number of elements in the Rx serial buffer.
  */
 int rxSerialBufferSize(proteus_comm_t* r) {
+	printf("rxBuffStartIndx: %i rxBuffEndIndx: %i SERIAL_RX_BUFFER_SIZE: %i \n", r->rxBuffStartIndx , r->rxBuffEndIndx, SERIAL_RX_BUFFER_SIZE);
 	if (r->rxBuffStartIndx <= r->rxBuffEndIndx) {
 		return r->rxBuffEndIndx - r->rxBuffStartIndx;
 	} else {
@@ -652,7 +653,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 		
 		if(distance < 1023 && distance > 0){
-			r->accel_x = distance;
+			r->q0 = distance;
 			r->newACCELdata = 1;
 		}
 		
@@ -664,7 +665,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 		
 		if(distance < 1023 && distance > 0){
-			r->accel_y = distance;
+			r->q1 = distance;
 			r->newACCELdata = 1;
 		}
 
@@ -676,7 +677,7 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		distance = data;
 	
 		if(distance < 1023 && distance > 0){
-			r->accel_z = distance;
+			r->q2 = distance;
 			r->newACCELdata = 1;
 		}
 	
@@ -684,9 +685,9 @@ result_t processAccelPacket(proteus_comm_t* r) {
 		
 		if (r->newACCELdata) {
 			// taking this out... because this massive printing lags the performance of the computer too much
-			printf("proteus_comms: processAccelPacket: accel_x_axis: %f mm\n", ((r->newACCELdata)?(r->accel_x):0));
-			printf("proteus_comms: processAccelPacket: accel_y_axis: %f mm\n", ((r->newACCELdata)?(r->accel_y):0));
-			printf("proteus_comms: processAccelPacket: accel_z_axis: %f mm\n", ((r->newACCELdata)?(r->accel_z):0));
+			printf("proteus_comms: processAccelPacket: accel_x_axis: %f mm\n", ((r->newACCELdata)?(r->q0):0));
+			printf("proteus_comms: processAccelPacket: accel_y_axis: %f mm\n", ((r->newACCELdata)?(r->q1):0));
+			printf("proteus_comms: processAccelPacket: accel_z_axis: %f mm\n", ((r->newACCELdata)?(r->q2):0));
 			
 			
 		}
@@ -941,6 +942,7 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 	}
 	
 	if (rxSerialBufferSize(r) < 3) {
+		printf("proteus_comms: proteusProcessRxData: ERROR: not enough space. value of Buffersize: %i \n", rxSerialBufferSize(r));
 		// Not enough space in rxSerialBuffer to hold a message.
 		return FAIL;
 	}
@@ -953,9 +955,11 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 	//{
 	
 	if (r->serialRxBuffer[r->rxBuffStartIndx] == PROTEUS_BEGIN) {
+		printf(" Looking at what msgType to send");
 		uint8_t msgType;
 		getRxSerialBuff(r, 1, &msgType); // the message type is the byte after the begin message
 		switch(msgType) {
+			printf("msgtype = %i \n", msgType);
 			case PROTEUS_ODOMETRY_PACKET:
 				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
 				return processOdometryPacket(r);
@@ -978,6 +982,7 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
 			case PROTEUS_ACCEL_PACKET:
+				printf("proteus_comms: proteusProcessRxData: processing accel packet!\n");
 				return processAccelPacket(r);
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
@@ -990,8 +995,10 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 				if (rxSerialBufferSize(r) != 0) {
 					popRxSerialBuff(r, NULL); // remove final PROTEUS_END byte
 					return SUCCESS;
-				} else
+				} else {
+					printf("Packet size was wrong length");
 					return FAIL;
+					}
 		} // switch msg type
 	} 
 	// else {
