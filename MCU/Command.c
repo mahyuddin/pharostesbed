@@ -254,6 +254,7 @@ void Command_sendAccelPacket(void) {
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
 void Command_sendData() {
+	LED_RED1 ^=1;//activity light
   char message[50];
 	if (sprintf(message, "Command_sendData Called") > 0)
 		  Command_sendMessagePacket(message);
@@ -270,12 +271,13 @@ void Command_sendData() {
 		if (_interfacesEnabled & IR_INTERFACE)
 			Command_sendIRPacket();
 		
-		if ( _interfacesEnabled & IMU_INTERFACE)
+		if ( _interfacesEnabled & ACCEL_INTERFACE)
 			Command_sendAccelPacket();
 		
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
+		
 	}
 }
 
@@ -340,6 +342,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			MotorControl_disableSafeMode(); // Sets the mode of operation to be "full"
 			break;
 		case PROTEUS_OPCODE_STOP:
+			Command_sendAccelPacket();// added for testing
 			Command_stopSendingData();
 			MotorControl_setTargetSpeed(0); // stop the robot
 			Servo_setSteeringAngle(0); // straighten the front wheels
@@ -347,7 +350,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			break;
 		case PROTEUS_OPCODE_DRIVE:
 			processDriveCmd(cmd, size);
-			break;
+			break;		
 		
 		/*case PROTEUS_OPCODE_LEDS:
 			// TODO...
@@ -363,7 +366,7 @@ void Command_processCmd(uint8_t* cmd, uint16_t size) {
 			break;*/
 	
 		default: 
-			//LED_ORANGE2 ^= 1; // Command not recognized, toggle LED_RED3
+			LED_YELLOW1 ^= 1; // Command not recognized, toggle LED_RED3
 			break; 
 	} // end switch
 }

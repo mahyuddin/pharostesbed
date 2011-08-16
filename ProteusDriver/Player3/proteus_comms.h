@@ -80,7 +80,7 @@ enum{
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
-#define PROTEUS_ACCEL_PACKET_SIZE         7 
+#define PROTEUS_ACCEL_PACKET_SIZE         8 
 
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
 
@@ -216,13 +216,14 @@ typedef struct {
 	uint8_t serialRxBuffer[SERIAL_RX_BUFFER_SIZE];
 	uint16_t rxBuffStartIndx; // points to the next Rx byte to process
 	uint16_t rxBuffEndIndx; // points to the location where the next Rx byte should be stored
-
-	float newACCELdata;
-	float accel_data;
+	
+    float accel_data;
 	float  accel_axis_data[];
-	float  accel_x;  //xaxis accelerometer data
-	float  accel_y;  //yaxis accelerometer data
-	float  accel_z;  //zaxis accelerometer data
+	
+	uint8_t newACCELdata;	
+	float  q0;  //xaxis accelerometer data
+	float  q1;  //yaxis accelerometer data
+	float  q2;  //zaxis accelerometer data
 	
 
 } proteus_comm_t;
