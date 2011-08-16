@@ -30,7 +30,8 @@ public abstract class Navigate {
 	}
 
 	/**
-	 * Calculates the angle from currLoc to the targetLoc.
+	 * Calculates the angle from currLoc to the targetLoc.  The return angle is from -PI to PI
+	 * where 0 is due North.
 	 * 
 	 * @param currLoc The current location
 	 * @param targetLoc the target location
