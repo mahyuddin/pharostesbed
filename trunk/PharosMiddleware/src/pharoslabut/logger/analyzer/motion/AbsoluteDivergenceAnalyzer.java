@@ -1,8 +1,5 @@
 package pharoslabut.logger.analyzer.motion;
 
-//import java.io.BufferedReader;
-//import java.io.FileReader;
-//import java.io.IOException;
 import java.awt.Color;
 import java.util.Enumeration;
 import java.util.Vector;
@@ -22,11 +19,9 @@ import org.jfree.ui.RefineryUtilities;
 
 import pharoslabut.logger.*;
 import pharoslabut.logger.analyzer.Line;
-//import pharoslabut.logger.analyzer.LocationState;
 import pharoslabut.logger.analyzer.PathEdge;
 import pharoslabut.logger.analyzer.RobotExpData;
 import pharoslabut.navigate.Location;
-//import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
  * Analyzes the absolute motion divergence of a Proteus robot as it follows
@@ -36,28 +31,10 @@ import pharoslabut.navigate.Location;
  */
 public class AbsoluteDivergenceAnalyzer {
 	
-//	/**
-//	 * The period at which to calculate absolute divergence in milliseconds.
-//	 */
-//	private long samplingInterval;
-//	
-//	/**
-//	 * The robot's experiment data.
-//	 */
-//	private RobotExpData robotData;
-	
 	private static final AbsoluteDivergenceAnalyzer analyzer = new AbsoluteDivergenceAnalyzer();
 	
 	/**
 	 * The constructor.
-	 * 
-//	 * @param logFileName The robot's experiment log file to analyze.
-//	 * @param samplingInterval  The interval at which to calculate the divergence in milliseconds.
-//	 * @param saveData Whether to save the absolute divergence in a file.
-//	 * @param noheading Whether to ignore the heading of the robot relative to the ideal heading.
-//	 * If this is set to true, the divergence measurement will be reported in absolute terms.
-//	 * Otherwise, the sign of the heading will indicate whether the robot is left of (positive)
-//	 * or right of (negative) the ideal path.
 	 */
 	private AbsoluteDivergenceAnalyzer() {}
 	
@@ -138,8 +115,6 @@ public class AbsoluteDivergenceAnalyzer {
 			/*
 			 * Determine whether the robot is left of or right of the perfect path
 			 */
-//			double actualHeading = robotData.getHeading(time);
-//			double idealHeading = pharoslabut.navigate.Navigate.angle(actualLoc, idealLoc);
 			result.add(new SpatialDivergence(time, actualLoc, idealLoc, perfectPath));
 		}
 		
