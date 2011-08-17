@@ -174,7 +174,7 @@ public class AbsoluteDivergenceAnalyzer {
         
         // Configure when to display lines an when to display the shapes that indicate data points
         XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
-        renderer1.setSeriesLinesVisible(0, false); // display the heading as a line
+        renderer1.setSeriesLinesVisible(0, false); // display the absolute divergence as black triangles
         renderer1.setSeriesShapesVisible(0, true);
         renderer1.setSeriesPaint(0, Color.BLACK);
         renderer1.setSeriesShape(0, org.jfree.util.ShapeUtilities.createUpTriangle(2));
