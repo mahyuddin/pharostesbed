@@ -7,6 +7,8 @@ package pharoslabut.logger;
  */
 public class Logger {
 
+	private static FileLogger flogger = null;
+	
 	private static String getPrefix() {
 		// Add the name of the calling method to the beginning of the message.
 		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
@@ -19,6 +21,15 @@ public class Logger {
 	}
 	
 	/**
+	 * Sets the file logger that this logger uses.  
+	 * 
+	 * @param flogger The file logger to use.  This may be null.
+	 */
+	public static void setFileLogger(FileLogger flogger) {
+		Logger.flogger = flogger;
+	}
+	
+	/**
 	 * Logs a message to StdErr.
 	 * The caller's class and method name is added to the front of the message.
 	 * 
@@ -27,18 +38,8 @@ public class Logger {
 	public static void logErr(String msg) {
 		String result = getPrefix() + "ERROR: " + msg;
 		System.err.println(result);
-	}
-	
-	/**
-	 * Logs a message to StdErr and a file logger.
-	 * The caller's class and method name is added to the front of the message.
-	 * 
-	 * @param msg The message to log.
-	 */
-	public static void logErr(String msg, FileLogger flogger) {
-		String result = getPrefix() + "ERROR: " + msg;
-		System.err.println(result);
-		flogger.log(result);
+		if (Logger.flogger != null)
+			Logger.flogger.log(result);
 	}
 	
 	/**
@@ -50,18 +51,8 @@ public class Logger {
 	public static void log(String msg) {
 		String result = getPrefix() + msg;
 		System.out.println(result);
-	}
-	
-	/**
-	 * Logs a message to StdOut and a file logger.
-	 * The caller's class and method name is added to the front of the message.
-	 * 
-	 * @param msg The message to log.
-	 */
-	public static void log(String msg, FileLogger flogger) {
-		String result = getPrefix() + msg;
-		System.out.println(result);
-		flogger.log(result);
+		if (Logger.flogger != null)
+			Logger.flogger.log(result);
 	}
 	
 	/**
@@ -73,25 +64,10 @@ public class Logger {
 	 * @param msg The message to log.
 	 */
 	public static void logDbg(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
-			String result = getPrefix() + msg;
+		String result = getPrefix() + msg;
+		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(result);
-		}
-	}
-	
-	/**
-	 * Logs a message to StdOut and a file logger if debug mode is enabled.
-	 * Debug mode is enabled by the system property "PharosMiddleware.debug" being set
-	 * to a value that is not null.
-	 * The caller's class and method name is added to the front of the message.
-	 * 
-	 * @param msg The message to log.
-	 */
-	public static void logDbg(String msg, FileLogger flogger) {
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
-			String result = getPrefix() + msg;
-			System.out.println(result);
-			flogger.log(result);
-		}
+		if (Logger.flogger != null)
+			Logger.flogger.log(result);
 	}
 }
