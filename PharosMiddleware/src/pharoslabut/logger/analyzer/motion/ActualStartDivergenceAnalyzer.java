@@ -56,7 +56,7 @@ public class ActualStartDivergenceAnalyzer {
 	 * @param actualStartDivs The absolute divergence measurements.
 	 * @param absolute whether to report the divergence in absolute terms.
 	 */
-	private void saveResults(RobotExpData robotData, Vector<SpatialDivergence> actualStartDivs, boolean absolute) {
+	public void saveResults(RobotExpData robotData, Vector<SpatialDivergence> actualStartDivs, boolean absolute) {
 		String logFileName = robotData.getFileName();
 		
 		// Determine the prefix of the output file
@@ -126,13 +126,13 @@ public class ActualStartDivergenceAnalyzer {
 			Vector<SpatialDivergence> actualStartDivs, boolean noheading) 
 	{
 		// Create a data series containing the actual start divergence.
-		XYSeries absDivSeries = new XYSeries("Actual Start Divergence (" + samplingInterval + "ms interval)");
+		XYSeries asDivSeries = new XYSeries("Actual Start Divergence (" + samplingInterval + "ms interval)");
 		
 		Enumeration<SpatialDivergence> e = actualStartDivs.elements();
 		while (e.hasMoreElements()) {
 			SpatialDivergence currDiv = e.nextElement();
 			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
-			absDivSeries.add(currTime, currDiv.getDivergence(noheading));
+			asDivSeries.add(currTime, currDiv.getDivergence(noheading));
 		}
 		
 		// Create two data series containing the times when the robot starts heading 
@@ -150,28 +150,28 @@ public class ActualStartDivergenceAnalyzer {
 		}
 		
 		// Create data sets out of the data series.
-		XYSeriesCollection absDivDataSet = new XYSeriesCollection();
-		absDivDataSet.addSeries(absDivSeries);
-		absDivDataSet.addSeries(beginEdgeSeries);
-		absDivDataSet.addSeries(waypointArrivalSeries);
+		XYSeriesCollection asDivDataSet = new XYSeriesCollection();
+		asDivDataSet.addSeries(asDivSeries);
+		asDivDataSet.addSeries(beginEdgeSeries);
+		asDivDataSet.addSeries(waypointArrivalSeries);
 		
 		// Create the chart
-		JFreeChart absDivChart = ChartFactory.createXYLineChart(
-				"Actual Start Divergence vs. Time",                        // chart title
-				"Time (s)",                                            // x axis label
-				"Divergence (m)",                                      // y axis label
-				absDivDataSet,                                         // the absolute divergence data
-				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
-				true,                                                  // include legend
-				true,                                                  // tooltips
-				false                                                  // urls
+		JFreeChart asDivChart = ChartFactory.createXYLineChart(
+				"Actual Start Divergence vs. Time",                   // chart title
+				"Time (s)",                                           // x axis label
+				"Divergence (m)",                                     // y axis label
+				asDivDataSet,                                         // the actual start divergence data
+				PlotOrientation.VERTICAL,                             // plot orientation (y axis is vertical)
+				true,                                                 // include legend
+				true,                                                 // tooltips
+				false                                                 // urls
 		);
        
         // Place the legend on top of the chart just below the title.
-        LegendTitle headingLegend = absDivChart.getLegend();
+        LegendTitle headingLegend = asDivChart.getLegend();
         headingLegend.setPosition(RectangleEdge.TOP);
         
-        absDivChart.setBackgroundPaint(Color.white);
+        asDivChart.setBackgroundPaint(Color.white);
         
         // Configure when to display lines an when to display the shapes that indicate data points
         XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
@@ -188,11 +188,11 @@ public class ActualStartDivergenceAnalyzer {
         renderer1.setSeriesPaint(2, Color.GREEN.darker());
         renderer1.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
         
-        final XYPlot headingPlot = absDivChart.getXYPlot();
+        final XYPlot headingPlot = asDivChart.getXYPlot();
         headingPlot.setRenderer(0, renderer1);
         
         // Place the charts in their own panels.
-        ChartPanel headingChartPanel = new ChartPanel(absDivChart);
+        ChartPanel headingChartPanel = new ChartPanel(asDivChart);
         headingChartPanel.setPreferredSize(new java.awt.Dimension(1200, 500));
        
         // Create a frame for the chart, then display it.
@@ -270,7 +270,7 @@ public class ActualStartDivergenceAnalyzer {
 		print("Log: " + logFileName);
 		print("Divergence Calculation Interval: " + samplingInterval);
 		print("Save results: " + saveResults);
-		print("Report absolute divergence: " + absolute);
+		print("Report absolute value of divergence: " + absolute);
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 
 		RobotExpData robotData = new RobotExpData(logFileName);

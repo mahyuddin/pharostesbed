@@ -55,7 +55,7 @@ public class AbsoluteDivergenceAnalyzer {
 	 * @param absDivs The absolute divergence measurements.
 	 * @param absolute whether to report the divergence in absolute terms.
 	 */
-	private void saveResults(RobotExpData robotData, Vector<SpatialDivergence> absDivs, boolean absolute) {
+	public void saveResults(RobotExpData robotData, Vector<SpatialDivergence> absDivs, boolean absolute) {
 		String logFileName = robotData.getFileName();
 		
 		// Determine the prefix of the output file
@@ -269,7 +269,7 @@ public class AbsoluteDivergenceAnalyzer {
 		print("Log: " + logFileName);
 		print("Divergence Calculation Interval: " + samplingInterval);
 		print("Save results: " + saveResults);
-		print("Report absolute divergence: " + absolute);
+		print("Report absolute value of divergence: " + absolute);
 		print("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 
 		RobotExpData robotData = new RobotExpData(logFileName);
