@@ -1,5 +1,6 @@
 package pharoslabut.logger.analyzer;
 
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 
 /**
@@ -221,9 +222,49 @@ public class Line {
 		return result;
 	}
 	
+	/**
+	 * Determines whether the specified location is left of or right of the specified line.
+	 * 
+	 * @param loc The location.
+	 * @param line The line.
+	 * @return true if the location is left of the line.
+	 */
+	public static boolean isLocationLeftOf(Location loc, Line line) {
+		
+//		Logger.logDbg("\n------------------\nBegin method call:\n\tLocation: " + loc + "\n\tLine: " + line + "\n\tLine start: " + line.getStartLoc() + "\n\tLine stop: " + line.getStopLoc());
+		Location lineStart = line.getStartLoc();
+		
+		// Calculate the line's heading.  This is a value between -PI to PI.
+		double lineHeading = pharoslabut.navigate.Navigate.angle(lineStart, line.getStopLoc());
+//		Logger.logDbg("Heading of line: " + lineHeading);
+		
+		// Calculate the heading to the location.  This is a value between -PI to PI.
+		double headingToLoc = pharoslabut.navigate.Navigate.angle(lineStart, loc);
+//		Logger.logDbg("Heading to target location: " + lineHeading);
+		
+		// Rotate the axis such that the heading of the line is due north (0 radians)
+		double rotatedHeadingToLoc = headingToLoc - lineHeading;
+//		Logger.logDbg("Rotated heading to target location: " + rotatedHeadingToLoc);
+		
+		// Ensure the rotated heading to loc remains between -PI to PI
+		if (rotatedHeadingToLoc < -Math.PI)
+			rotatedHeadingToLoc = Math.PI - rotatedHeadingToLoc;
+		else if (rotatedHeadingToLoc > Math.PI)
+			rotatedHeadingToLoc = rotatedHeadingToLoc - 2 * Math.PI;
+//		Logger.logDbg("Rotated heading to target location between -PI to PI: " + rotatedHeadingToLoc);
+		
+		if (rotatedHeadingToLoc > 0) {
+//			Logger.logDbg("location is left of the line!\n------------------\n");
+			return true;
+		} else {
+//			Logger.logDbg("location is right of the line!\n------------------\n");
+			return false;
+		}
+	}
+	
 	public String toString() {
 		if (isVertical)
-			return "vertical line, longitude = " + xIntersect;
+			return "vertical, longitude = " + xIntersect;
 		else
 			return "latitude = " + slope + " * longitude + " + yIntersect;
 	}
