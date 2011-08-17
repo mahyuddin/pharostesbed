@@ -1478,6 +1478,86 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * 
+	 * @return The maximum latitude coordinate of the robot.
+	 */
+	public double getMaxLat() {
+		if (locations.size() > 0) {
+			double result = locations.get(0).getLocation().latitude();
+			for (int i=1; i < locations.size(); i++) {
+				double currLat = locations.get(i).getLocation().latitude(); 
+				if (currLat > result)
+					result = currLat;
+			}
+			return result;
+		} else {
+			Logger.logErr("No known locations!");
+			System.exit(1);
+			return -1; // will never get here
+		}
+	}
+	
+	/**
+	 * 
+	 * @return The minimum latitude coordinate of the robot.
+	 */
+	public double getMinLat() {
+		if (locations.size() > 0) {
+			double result = locations.get(0).getLocation().latitude();
+			for (int i=1; i < locations.size(); i++) {
+				double currLat = locations.get(i).getLocation().latitude(); 
+				if (currLat < result)
+					result = currLat;
+			}
+			return result;
+		} else {
+			Logger.logErr("No known locations!");
+			System.exit(1);
+			return -1; // will never get here
+		}
+	}
+	
+	/**
+	 * 
+	 * @return The maximum longitude coordinate of the robot.
+	 */
+	public double getMaxLon() {
+		if (locations.size() > 0) {
+			double result = locations.get(0).getLocation().longitude();
+			for (int i=1; i < locations.size(); i++) {
+				double currLon = locations.get(i).getLocation().longitude(); 
+				if (currLon > result)
+					result = currLon;
+			}
+			return result;
+		} else {
+			Logger.logErr("No known locations!");
+			System.exit(1);
+			return -1; // will never get here
+		}
+	}
+	
+	/**
+	 * 
+	 * @return The minimum longitude coordinate of the robot.
+	 */
+	public double getMinLon() {
+		if (locations.size() > 0) {
+			double result = locations.get(0).getLocation().longitude();
+			for (int i=1; i < locations.size(); i++) {
+				double currLon = locations.get(i).getLocation().longitude(); 
+				if (currLon < result)
+					result = currLon;
+			}
+			return result;
+		} else {
+			Logger.logErr("No known locations!");
+			System.exit(1);
+			return -1; // will never get here
+		}
+	}
+	
+	/**
 	 * Holds a motion command and when it was issued.
 	 */
 	private class MotionCmd {
