@@ -96,11 +96,11 @@ public class SpatialDivergenceAnalyzer {
         
         // Configure when to display lines an when to display the shapes that indicate data points
         XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
-        renderer1.setSeriesLinesVisible(0, false); // display the heading as a line
+        renderer1.setSeriesLinesVisible(0, false); // display the absolute divergence as black triangles
         renderer1.setSeriesShapesVisible(0, true);
         renderer1.setSeriesPaint(0, Color.BLACK);
         renderer1.setSeriesShape(0, org.jfree.util.ShapeUtilities.createUpTriangle(2));
-        renderer1.setSeriesLinesVisible(1, false); // display the heading as a line
+        renderer1.setSeriesLinesVisible(1, false); // display the actual start divergence as red crosses
         renderer1.setSeriesShapesVisible(1, true);
         renderer1.setSeriesPaint(1, Color.RED);
         renderer1.setSeriesShape(1, org.jfree.util.ShapeUtilities.createRegularCross(2,(float).3));
