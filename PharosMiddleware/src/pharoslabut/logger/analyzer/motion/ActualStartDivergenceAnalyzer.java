@@ -53,10 +53,10 @@ public class ActualStartDivergenceAnalyzer {
 	 * Save the results into files.
 	 * 
 	 * @param robotData The robot data obtained during an experiment.
-	 * @param absDivs The absolute divergence measurements.
+	 * @param actualStartDivs The absolute divergence measurements.
 	 * @param absolute whether to report the divergence in absolute terms.
 	 */
-	private void saveResults(RobotExpData robotData, Vector<SpatialDivergence> absDivs, boolean absolute) {
+	private void saveResults(RobotExpData robotData, Vector<SpatialDivergence> actualStartDivs, boolean absolute) {
 		String logFileName = robotData.getFileName();
 		
 		// Determine the prefix of the output file
@@ -74,7 +74,7 @@ public class ActualStartDivergenceAnalyzer {
 		FileLogger flogger = new FileLogger(outputFilePrefix + "-actualStartDivergence.txt");
 		flogger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tActual Start Divergence");
 		
-		Enumeration<SpatialDivergence> e = absDivs.elements();
+		Enumeration<SpatialDivergence> e = actualStartDivs.elements();
 		while (e.hasMoreElements()) {
 			SpatialDivergence sd = e.nextElement();
 			
@@ -95,7 +95,7 @@ public class ActualStartDivergenceAnalyzer {
 	 * 
 	 * @param robotData The robot data obtained during an experiment.
 	 * @param samplingInterval The period at which to calculate the absolute divergence.
-	 * @return The absolute divergence.
+	 * @return The actual start divergence.
 	 */
 	public Vector<SpatialDivergence> getActualStartDivergence(RobotExpData robotData, long samplingInterval) {
 		long startTime = robotData.getStartTime();
@@ -123,12 +123,12 @@ public class ActualStartDivergenceAnalyzer {
 	 * Displays the data in a graph.
 	 */
 	private void showPlot(RobotExpData robotData, long samplingInterval, 
-			Vector<SpatialDivergence> absDivs, boolean noheading) 
+			Vector<SpatialDivergence> actualStartDivs, boolean noheading) 
 	{
 		// Create a data series containing the actual start divergence.
 		XYSeries absDivSeries = new XYSeries("Actual Start Divergence (" + samplingInterval + "ms interval)");
 		
-		Enumeration<SpatialDivergence> e = absDivs.elements();
+		Enumeration<SpatialDivergence> e = actualStartDivs.elements();
 		while (e.hasMoreElements()) {
 			SpatialDivergence currDiv = e.nextElement();
 			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
