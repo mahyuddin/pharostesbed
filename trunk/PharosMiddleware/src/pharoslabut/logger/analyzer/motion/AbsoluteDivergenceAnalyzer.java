@@ -112,9 +112,6 @@ public class AbsoluteDivergenceAnalyzer {
 			Location actualLoc = robotData.getLocation(time);
 			Location idealLoc = perfectPath.getLocationClosestTo(actualLoc);
 			
-			/*
-			 * Determine whether the robot is left of or right of the perfect path
-			 */
 			result.add(new SpatialDivergence(time, actualLoc, idealLoc, perfectPath));
 		}
 		
