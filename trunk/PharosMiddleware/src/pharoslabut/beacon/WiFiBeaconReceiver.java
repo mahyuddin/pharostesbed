@@ -47,7 +47,7 @@ public class WiFiBeaconReceiver implements Runnable {
     
     private String networkInterfaceName;
     
-    private FileLogger flogger;
+//    private FileLogger flogger;
     
     /**
      * Creates a BeaconReceiver listening to the given multicast socket.
@@ -70,9 +70,9 @@ public class WiFiBeaconReceiver implements Runnable {
         bListeners = new Vector<WiFiBeaconListener>();
     }
     
-    public void setFileLogger(FileLogger flogger) {
-    	this.flogger = flogger;
-    }
+//    public void setFileLogger(FileLogger flogger) {
+//    	this.flogger = flogger;
+//    }
     
     /**
      * Adds a beaconListener to this server.  The beacon listener
@@ -124,7 +124,7 @@ public class WiFiBeaconReceiver implements Runnable {
                 mSocket.joinGroup(socketAddr, ni);
             }
             catch(IOException ioe) {
-            	log("Problems connecting to multicast group!");
+            	Logger.logErr("Problems connecting to multicast group!");
                 ioe.printStackTrace();
                 System.exit(1);
             }
@@ -160,12 +160,13 @@ public class WiFiBeaconReceiver implements Runnable {
      * Notifies each of the listeners of the new beacon.
      */
     private void distributeBeacon(WiFiBeacon beacon) {
-        WiFiBeaconEvent be = new WiFiBeaconEvent(beacon);
+    	Logger.log("Received beacon: " + beacon);
+    	
+    	WiFiBeaconEvent be = new WiFiBeaconEvent(beacon);
         for (int i = 0; i < bListeners.size(); i++) {
             WiFiBeaconListener bl = bListeners.elementAt(i);
             bl.beaconReceived(be);
         }
-        log("Received beacon: " + beacon);
     }
     
     /**
@@ -207,13 +208,13 @@ public class WiFiBeaconReceiver implements Runnable {
         }
     }
     
-    private void log(String msg) {
-    	String result = "BeaconReciever: " + msg;
-        System.out.println(result);
-        if (flogger != null) {
-        	flogger.log(result);
-        }
-    }
+//    private void log(String msg) {
+//    	String result = "BeaconReciever: " + msg;
+//        System.out.println(result);
+//        if (flogger != null) {
+//        	flogger.log(result);
+//        }
+//    }
 
 //	/**
 //	 * Find the local network interface that is connected to the Pharos wireless

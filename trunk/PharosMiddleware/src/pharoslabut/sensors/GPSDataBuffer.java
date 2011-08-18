@@ -4,6 +4,7 @@ import java.util.*;
 
 import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 
 import playerclient3.*;
@@ -44,7 +45,7 @@ public class GPSDataBuffer {
 	/**
 	 * The file logger in which to save log data.
 	 */
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 //	private Vector<GPSListener> gpsListeners = new Vector<GPSListener>();
 	
@@ -57,16 +58,16 @@ public class GPSDataBuffer {
 		this.gps = gps;
 	}
 	
-	/**
-	 * A constructor with a flogger input parameter.
-	 * 
-	 * @param gps The GPS proxy object.
-	 * @param flogger The file logger used to store debug statements.
-	 */
-	public GPSDataBuffer(GPSInterface gps, FileLogger flogger) {
-		this(gps);
-		this.flogger = flogger;
-	}
+//	/**
+//	 * A constructor with a flogger input parameter.
+//	 * 
+//	 * @param gps The GPS proxy object.
+//	 * @param flogger The file logger used to store debug statements.
+//	 */
+//	public GPSDataBuffer(GPSInterface gps, FileLogger flogger) {
+//		this(gps);
+//		this.flogger = flogger;
+//	}
 	
     /**
      * Adds a listener for GPS data.  All listeners are notified whenever
@@ -123,15 +124,15 @@ public class GPSDataBuffer {
 			return true;
 	}
 	
-	/**
-	 * Sets the file logger.  If the file logger is not null, this component
-	 * logs GPS data to a file.
-	 * 
-	 * @param flogger The file logger.  This may be null.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger.  If the file logger is not null, this component
+//	 * logs GPS data to a file.
+//	 * 
+//	 * @param flogger The file logger.  This may be null.
+//	 */
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Start the reception of GPS data.
@@ -171,7 +172,7 @@ public class GPSDataBuffer {
 		if (gps.isDataReady()) {
 			PlayerGpsData newData = gps.getData();
 			buff.add(0, new GPSDataWrapper(newData)); // add new data to the front of the buffer
-			log("getCurrLoc: New GPS Data: " + newData + ", buffer size=" + buff.size());
+			Logger.log("New GPS Data: " + newData + ", buffer size=" + buff.size());
 			
 			// Estimate the robot's speed
 			if (buff.size() > 1) {
@@ -180,13 +181,13 @@ public class GPSDataBuffer {
 				
 				Double dist = currLoc.distanceTo(prevLoc);
 				double time = (buff.get(0).getTimeStamp() - buff.get(1).getTimeStamp()) / 1000.0;
-				log("getCurrLoc: Estimated Speed: " + dist/time + " m/s");
+				Logger.log("Estimated Speed: " + dist/time + " m/s");
 			}
 		}
 		
 		// Remove any expired GPS location measurements...
 		removeExpiredElements();
-		log("getCurrLoc: buffer size after clearing expired elements: " + buff.size());
+		Logger.log("buffer size after clearing expired elements: " + buff.size());
 		
 		if (buff.size() > 0)
 			return buff.get(0).getGpsData();
@@ -247,13 +248,13 @@ public class GPSDataBuffer {
 //		log("run: thread terminating...");
 //	}
 //	
-	private void log(String msg) {
-		String result = "GPSDataBuffer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null) 
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "GPSDataBuffer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null) 
+//			flogger.log(result);
+//	}
 	
 	/**
 	 * Wraps a GPS location measurement with a time stamp.  This is used instead of

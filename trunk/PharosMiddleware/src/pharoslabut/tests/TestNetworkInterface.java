@@ -15,11 +15,9 @@ import pharoslabut.demo.autoIntersection.*;
  */
 public class TestNetworkInterface implements MessageReceiver{
 	
-	private FileLogger flogger;
 	private NetworkInterface ni;
 	
-	public TestNetworkInterface(boolean useUDP, String serverIP, int localPort, int remotePort, FileLogger flogger) {
-		this.flogger = flogger;
+	public TestNetworkInterface(boolean useUDP, String serverIP, int localPort, int remotePort) {
 		
 		if (useUDP) {
 			ni = new UDPNetworkInterface(localPort);
@@ -33,7 +31,7 @@ public class TestNetworkInterface implements MessageReceiver{
 		try {
 			address = InetAddress.getByName(serverIP);
 		} catch (UnknownHostException e) {
-			log("ERROR: Unable to get server address...");
+			Logger.logErr("Unable to get server address...");
 			e.printStackTrace();
 			System.exit(1);
 		}
@@ -46,10 +44,10 @@ public class TestNetworkInterface implements MessageReceiver{
 			//Message m = new pharoslabut.demo.autoIntersection.msgs.ExitingMsg(address, 0);
 			
 			if (ni.sendMessage(address, remotePort, m)) {
-				log("Sent message " + cntr);
+				Logger.log("Sent message " + cntr);
 				cntr++;
 			} else {
-				log("Failed to send message, waiting an then trying again...");
+				Logger.logErr("Failed to send message, waiting an then trying again...");
 			}
 			
 			try {
@@ -64,18 +62,11 @@ public class TestNetworkInterface implements MessageReceiver{
 	
 	@Override
 	public void newMessage(Message msg) {
-		log("Received message: " + msg);
-	}
-	
-	private void log(String msg) {
-		String result = "TestNetworkInterface: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
+		Logger.log("Received message: " + msg);
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestNetworkInterface <options>\n");
+		System.err.println("Usage: " + TestNetworkInterface.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-protocol <type>: The protocol type, either TCP or UDP (default UDP)");
 		System.err.println("\t-server <ip address>: The IP address of the remote host (default localhost)");
@@ -86,7 +77,6 @@ public class TestNetworkInterface implements MessageReceiver{
 	}
 	
 	public static void main(String[] args) {
-		FileLogger flogger = null;
 		String serverIP = "localhost";
 		boolean useUDP = true;
 		int serverPort = 8889;
@@ -107,7 +97,7 @@ public class TestNetworkInterface implements MessageReceiver{
 					localPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-file")) {
-					flogger = new FileLogger(args[++i]);
+					Logger.setFileLogger(new FileLogger(args[++i]));
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -124,10 +114,6 @@ public class TestNetworkInterface implements MessageReceiver{
 			System.exit(1);
 		}
 		
-//		log("Protocol: " + (useUDP ? "UDP" : "TCP"));
-//		log("Server IP: " + serverIP);
-//		log("Server port: " + serverPort);
-		
-		new TestNetworkInterface(useUDP, serverIP, serverPort, localPort, flogger);
+		new TestNetworkInterface(useUDP, serverIP, serverPort, localPort);
 	}
 }

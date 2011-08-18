@@ -35,17 +35,13 @@ public class SnapshotFrame extends JFrame {
 	
 	private ImageSaver imageSaver = new ImageSaver();
 	
-	private FileLogger flogger;
-	
 	/**
 	 * Create a new CameraFrame object.
 	 * 
 	 * @param img The image to display.
-	 * @param flogger The file logger for recording debug statements.
 	 */
-	public SnapshotFrame(BufferedImage img, FileLogger flogger) {
+	public SnapshotFrame(BufferedImage img) {
 		this.img = img;
-		this.flogger = flogger;
 		this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);	//disposes frame upon exiting
 		
 		/*
@@ -99,7 +95,7 @@ public class SnapshotFrame extends JFrame {
 			f = new File(actualFileName);
 		}
 		
-		log("Saving image to: " + f.getName());
+		Logger.log("Saving image to: " + f.getName());
 		try {
 			f.createNewFile();
 			ImageIO.write(img, "jpg", f);
@@ -137,7 +133,7 @@ public class SnapshotFrame extends JFrame {
                 }
                 
             } else {
-                log("User cancelled save image operation.");
+            	Logger.log("User cancelled save image operation.");
             }
 		}
 		
@@ -168,14 +164,14 @@ public class SnapshotFrame extends JFrame {
 	        g.drawImage(image, 0, 0, null); // see javadoc for more info on the parameters
 	    }
 	}
-
-	private void log(String msg) {
-		String result = "SnapshotFrame: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//
+//	private void log(String msg) {
+//		String result = "SnapshotFrame: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	/**
 	 * Paint the camera stream to the JInternalFrame.

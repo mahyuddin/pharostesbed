@@ -13,7 +13,7 @@ public class BehRightTurn extends Behavior{
 	@Override
 	public boolean startCondition() {
 		// TODO Auto-generated method stub
-		_wm.setCount(0);
+		_wm.resetCount();
 		return false;
 	}
 
@@ -22,7 +22,7 @@ public class BehRightTurn extends Behavior{
 		// TODO Auto-generated method stub
 		if(_wm.getCount() < 10)
 		{
-			_wm.setCount(_wm.getCount()+1);
+			_wm.incCount(); //setCount(_wm.getCount()+1);
 			return false;
 		}
 		return true;

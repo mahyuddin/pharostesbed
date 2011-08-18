@@ -1,6 +1,6 @@
 package pharoslabut.navigate;
 
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * The parent class of all navigation components.
@@ -16,18 +16,18 @@ public abstract class Navigate {
 	 */
 	public static final int NAV_CYCLE_PERIOD = 200;
 	
-	protected static FileLogger flogger = null;
+//	protected static FileLogger flogger = null;
 	
 	/**
 	 * A constructor.
 	 */
 	public Navigate() {
-		this(null);
+//		this(null);
 	}
 	
-	public Navigate(FileLogger fl) {
-		flogger = fl;
-	}
+//	public Navigate(FileLogger fl) {
+//		flogger = fl;
+//	}
 
 	/**
 	 * Calculates the angle from currLoc to the targetLoc.  The return angle is from -PI to PI
@@ -61,7 +61,7 @@ public abstract class Navigate {
 	 */
 	public TargetDirection locateTarget(Location currLoc, double currHeading, Location targetLoc) {
 		if (currLoc == null) {
-			log("locateTarget(...): ERROR: currLoc is null!");
+			Logger.logErr("currLoc is null!");
 			return null;
 		}
 		double distance =  currLoc.distanceTo(targetLoc);
@@ -88,7 +88,7 @@ public abstract class Navigate {
 			sb.append("\t\tAngle to target: " + angleToTarget + " radians\n");
 			sb.append("\t\tCurrent Heading: " + currHeading + " radians\n");
 			sb.append("\t\tHeading Error: " + headingErr + " radians (" + ((headingErr < 0) ? "Must Turn Right!" : "Must Turn Left!") + ")");
-			log(sb.toString());
+			Logger.log(sb.toString());
 		}
 		
 		return new TargetDirection(distance, headingErr);
@@ -125,15 +125,15 @@ public abstract class Navigate {
 		return headingErr;
 	}
 	
-	private static void log(String msg) {
-		String result = "Navigate:" + msg;
-		
-		// Only print text out if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// Always print the log text to a file if the FileLogger exists
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private static void log(String msg) {
+//		String result = "Navigate:" + msg;
+//		
+//		// Only print text out if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// Always print the log text to a file if the FileLogger exists
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

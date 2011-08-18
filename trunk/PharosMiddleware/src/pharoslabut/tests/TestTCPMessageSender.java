@@ -7,20 +7,19 @@ import pharoslabut.behavior.MultiRobotBehaveMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 public class TestTCPMessageSender {
 
 	/**
 	 * A file logger for recording debug data.
 	 */
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	
 	/**
 	 * The constructor.
 	 */
-	public TestTCPMessageSender(String serverIP, int port, String logFileName) {
-		
-		flogger = new FileLogger(logFileName, false);
+	public TestTCPMessageSender(String serverIP, int port) {
 		
 		InetAddress address = null;
 		try {
@@ -31,16 +30,15 @@ public class TestTCPMessageSender {
 		}
 		
 		TCPMessageSender sndr = TCPMessageSender.getSender();
-		sndr.setFileLogger(flogger);
 		
 		int cntr = 0;
 		while(true) {
 			try {
 				MultiRobotBehaveMsg msg = new MultiRobotBehaveMsg("blah", 0, cntr++);
-				log("Sending " + msg);
+				Logger.log("Sending " + msg);
 				sndr.sendMessage(address, port, msg);
 			} catch (PharosException e) {
-				logErr("Error while sending message: " + e.getMessage());
+				Logger.logErr("Problem while sending message: " + e.getMessage());
 				e.printStackTrace();
 			}
 			pause(1000);
@@ -56,24 +54,24 @@ public class TestTCPMessageSender {
 		}
 	}
 	
-    private void logErr(String msg) {
-		String result = "TestTCPMessageSender: ERROR: " + msg;
-		System.err.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
-    
-	private void log(String msg) {
-		String result = "TestTCPMessageSender: " + msg;
-		System.out.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
+//    private void logErr(String msg) {
+//		String result = "TestTCPMessageSender: ERROR: " + msg;
+//		System.err.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//    
+//	private void log(String msg) {
+//		String result = "TestTCPMessageSender: " + msg;
+//		System.out.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestTCPMessageSender <options>\n");
+		System.err.println("Usage: " + TestTCPMessageSender.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -96,7 +94,7 @@ public class TestTCPMessageSender {
 					serverPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
-					logFileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -115,6 +113,6 @@ public class TestTCPMessageSender {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("Log: " + logFileName);
 		
-		new TestTCPMessageSender(serverIP, serverPort, logFileName);
+		new TestTCPMessageSender(serverIP, serverPort);
 	}
 }

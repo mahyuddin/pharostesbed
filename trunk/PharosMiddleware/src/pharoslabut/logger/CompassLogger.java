@@ -24,7 +24,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 	private Position2DInterface compass = null;
 	private ProteusOpaqueInterface poi;
 	private CompassLoggerGUI gui;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private boolean logging = false;
 	private long startTime;
 	
@@ -34,34 +34,33 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 	 * @param serverIP The IP address of the server
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the compass device
-	 * @param flogger The name of the file in which to save the log.
 	 * @param showGUI Whether to display the compass logger's GUI
 	 * @param getStatusMsgs Whether to get status messages.
 	 */
-	public CompassLogger(String serverIP, int serverPort, int deviceIndex, FileLogger flogger, 
+	public CompassLogger(String serverIP, int serverPort, int deviceIndex, 
 			boolean showGUI, boolean getStatusMsgs) 
 	{
 		PlayerClient client = null;
 	
-		this.flogger = flogger;
+//		this.flogger = flogger;
 		
 		try {
-			log("Connecting to server " + serverIP + ":" + serverPort);
+			Logger.logDbg("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			log("Error connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
+			Logger.logErr("Error connecting to Player: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
 		while (compass == null) {
 			try {
-				log("Subscribing to compass service...");
+				Logger.logDbg("Subscribing to compass service...");
 				compass = client.requestInterfacePosition2D(deviceIndex, PlayerConstants.PLAYER_OPEN_MODE);
 				if (compass != null)
-					log("Subscribed to compass service...");
+					Logger.logDbg("Subscribed to compass service...");
 				else {
-					log("ERROR: Compass service was null, pausing 1s then retrying...");
+					Logger.logErr("Compass service was null, pausing 1s then retrying...");
 					synchronized(this) {
 						try {
 							wait(1000);
@@ -71,33 +70,33 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 					}
 				}
 			} catch(PlayerException pe) {
-				System.err.println("Error: " + pe.getMessage());
+				Logger.logErr(pe.getMessage());
 			}
 		}
 		
-		log("Creating CompassDataBuffer...");
+		Logger.logDbg("Creating CompassDataBuffer...");
 		CompassDataBuffer cdb = new CompassDataBuffer(compass);
-		cdb.setFileLogger(flogger);
+//		cdb.setFileLogger(flogger);
 		
-		log("Registering self as listener to CompassDataBuffer events...");
+		Logger.logDbg("Registering self as listener to CompassDataBuffer events...");
 		cdb.addPos2DListener(this);
 		cdb.start();
 		
 		if (getStatusMsgs) {
-			log("Connecting to ProteusOpaqueInterface...");
+			Logger.logDbg("Connecting to ProteusOpaqueInterface...");
 			poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 			
-			log("Registering self as listener to Opaque data...");
+			Logger.logDbg("Registering self as listener to Opaque data...");
 			poi.addOpaqueListener(this);
 		}
 		
 		if (showGUI)
 			initGUI();
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.logDbg("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 	}
 	
@@ -124,15 +123,6 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 			initGUI();
 	}
 	
-	/**
-	 * Sets the file logger.
-	 * 
-	 * @param flogger The file logger to use.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
-	
 	private void initGUI() {
 		gui = new CompassLoggerGUI("Proteus Compass Data");
 		gui.pack();
@@ -142,8 +132,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 	
 	/**
 	 * Starts the logging process.
-	 * 
-	 * @param period The period in which to access the compass.
+	 *
 	 * @return true if the start was successful. false if it was already started.
 	 */
 	public boolean start() {
@@ -151,7 +140,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 			logging = true;
 			
 			// Print a header to the table...
-			log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)");
+			Logger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)");
 			
 			// Record the starting time...
 			startTime = System.currentTimeMillis();
@@ -179,7 +168,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 
 		
 		double heading = data.getPos().getPa();
-		log(endTime + "\t" + deltaTimeMS + "\t" + deltaTimeS + "\t" + heading);
+		Logger.log(endTime + "\t" + deltaTimeMS + "\t" + deltaTimeS + "\t" + heading);
 
 		if (gui != null)
 			gui.addData(deltaTimeS, heading);
@@ -188,18 +177,11 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		String s = new String(opaqueData.getData());
-		log(s);
-	}
-	
-	private void log(String msg) {
-		String result = "CompassLogger: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
+		Logger.log(s);
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.logger.CompassLogger <options>\n");
+		System.err.println("Usage: " + CompassLogger.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -259,11 +241,10 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 		System.out.println("Log time: " + time + "s");
 		System.out.println("Get status messages: " + getStatusMsgs);
 		
-		FileLogger flogger = null;
 		if (fileName != null)
-			flogger = new FileLogger(fileName, false);
+			Logger.setFileLogger(new FileLogger(fileName, false)); // The false parameter removes the time stamp at the beginning of each line
 		
-		CompassLogger cl = new CompassLogger(serverIP, serverPort, index, flogger, showGUI, getStatusMsgs);
+		CompassLogger cl = new CompassLogger(serverIP, serverPort, index, showGUI, getStatusMsgs);
 		cl.start();
 		
 		if (time > 0) {

@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import pharoslabut.*;
 import pharoslabut.exceptions.*;
 import pharoslabut.logger.*;
-import pharoslabut.radioMeter.cc2420.TelosBeaconException;
+//import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 
 /**
  * This class listens for and transmits UDP datagram packets.
@@ -19,7 +19,7 @@ public class UDPRxTx implements Runnable {
 	
 	private int port;
 	private DatagramSocket socket;
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	private Hashtable<String, Integer> serialnoTable = new Hashtable<String, Integer>();
 	
 	private PCSExpRunner pcsexpr;
@@ -47,21 +47,21 @@ public class UDPRxTx implements Runnable {
 	
 	
 	public UDPRxTx() {
-		System.out.println("Starting the experiment.");
+		Logger.log("Starting the experiment.");
 		//PCSExpRunner pcsExp = new PCSExpRunner("TestExp", "TestRobot");
 		
 		BigDataGenerator bdg = new BigDataGenerator("TestExp", "TestRobot");
 		
 		synchronized(this) { 
 			try {
-				System.out.println("Letting test run for 60 seconds...");
+				Logger.log("Letting test run for 60 seconds...");
 				this.wait(60000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
 		
-		System.out.println("Stopping the experiment.");
+		Logger.log("Stopping the experiment.");
 		//pcsExp.stop();
 		bdg.stop();
 	}
@@ -71,9 +71,9 @@ public class UDPRxTx implements Runnable {
 	 * 
 	 * @param port The port on which to listen for and transmit UDP datagram packets.
 	 */
-	public UDPRxTx(String expName, String robotName, int port, FileLogger flogger) {
+	public UDPRxTx(String expName, String robotName, int port) {
 		this.port = port;
-		this.flogger = flogger;
+//		this.flogger = flogger;
 		
 		try {
 			socket = new DatagramSocket(port);
@@ -88,7 +88,7 @@ public class UDPRxTx implements Runnable {
 			
 		} catch (SocketException e) {
 			e.printStackTrace();
-			log("ERROR: Unable to create datagram socket, message: " + e.getMessage());
+			Logger.logErr("Unable to create datagram socket, message: " + e.getMessage());
 		}
 	}
 	
@@ -112,7 +112,7 @@ public class UDPRxTx implements Runnable {
 			
 			DatagramPacket pkt = new DatagramPacket(buf, buf.length, addr, port);
 			socket.send(pkt);
-			log("Sent UDP packet to " + address + ", serial number " + serialno);
+			Logger.log("Sent UDP packet to " + address + ", serial number " + serialno);
 			
 			// update the hashtable to remember which serial number we are using
 			// for each node
@@ -121,19 +121,19 @@ public class UDPRxTx implements Runnable {
 			
 		} catch (Exception e) {
 			e.printStackTrace();
-			log("ERROR sending UDP packet to " + address + ", message: " + e.getMessage());
+			Logger.logErr("Problem sending UDP packet to " + address + ", message: " + e.getMessage());
 		}
 	}
 	
-	public void setLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	public void setLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	public void stop() {
 		
 		synchronized(this) {
 			try {
-				log("Waiting 5 minutes before stopping the AODV test...");
+				Logger.log("Waiting 5 minutes before stopping the AODV test...");
 				wait(1000 * 60 * 5); // wait 5 min before stopping
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -163,35 +163,36 @@ public class UDPRxTx implements Runnable {
 				if (rxData.length == 4) {
 					//int serialno = ByteBuffer.allocate(4).put(packet.getData()).getInt();
 					int serialno = ((rxData[0] & 0xff) << 24) | ((rxData[1] & 0xff) << 16) | ((rxData[2] & 0xff) << 8) | (rxData[3] & 0xff);
-					log("Received UDP packet from " + address + ", serial number " + serialno);
+					Logger.log("Received UDP packet from " + address + ", serial number " + serialno);
 				}
 			} catch (IOException e) {
 				e.printStackTrace();
-				log("ERROR: while receiving datagram packets, message: " + e.getMessage());
+				Logger.log("ERROR: while receiving datagram packets, message: " + e.getMessage());
 			}
 			
 		}
 		
-		log("Receive thread exiting...");
+		Logger.log("Receive thread exiting...");
 		
 	}
 	
-	private void log(String msg) {
-		String result = "UDPRxTx: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
-			System.out.println(result);
-		}
-		
-		// always log text to file if a FileLogger is present
-		if (flogger != null) {
-			flogger.log(result);
-		}
-	}
+//	private void log(String msg) {
+//		String result = "UDPRxTx: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null) {
+//			System.out.println(result);
+//		}
+//		
+//		// always log text to file if a FileLogger is present
+//		if (flogger != null) {
+//			flogger.log(result);
+//		}
+//	}
 	
 	public static void main(String[] args) {
 		System.setProperty ("PharosMiddleware.debug", "true");
+		Logger.setFileLogger(new FileLogger("UDPRxTx-Test.log", false));
 		
 		new UDPRxTx();
 		
@@ -304,7 +305,7 @@ public class UDPRxTx implements Runnable {
 			try {
 				Runtime rt = Runtime.getRuntime();
 				String cmd = "scp Big1MBFile.bin ut@" + addr + ":M15/" + missionName + "-" + expName + "-" + myID + "-" + serialno + ".bin";
-				log("BigFileTx: " + cmd);
+				Logger.log("Command: " + cmd);
 				
 				serialno++;
 
@@ -315,15 +316,13 @@ public class UDPRxTx implements Runnable {
 				String line=null;
 
 				while((line=input.readLine()) != null) {
-					log(line);
+					Logger.log(line);
 				}
 
 				int exitVal = pr.waitFor();
-				log("BigFileTx: scp exited with code " + exitVal);
+				Logger.log("scp exited with code " + exitVal);
 			} catch(Exception e) {
-				String eMsg = "Unable to run aodvd: " + e.toString();
-				System.err.println(eMsg);
-				log(eMsg);
+				Logger.logErr("Unable to run aodvd: " + e.toString());
 				System.exit(1);
 			}
 		}
@@ -363,7 +362,7 @@ public class UDPRxTx implements Runnable {
 		}
 		
 		public void stop() {
-			log("stopping AODV process.");
+			Logger.log("stopping AODV process.");
 //			pr.destroy();
 //			int exitVal;
 //			try {
@@ -391,7 +390,7 @@ public class UDPRxTx implements Runnable {
 				//String cmd = "sudo /home/ut/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -p " + expName + "-" + robotName;
 				//String cmd = "sudo /home/ut/pcs_experiment/aodvd -i wlan0 -l -g -D -r 1 -d";
 				String cmd = "sudo /home/ut/pcs_experiment/pcs_exp_start.pl " + 2 + " " + expName + "-" + robotName;
-				log("AODV command: " + cmd);
+				Logger.log("AODV command: " + cmd);
 
 				pr = rt.exec(cmd);
 
@@ -400,15 +399,13 @@ public class UDPRxTx implements Runnable {
 				String line=null;
 
 				while((line=input.readLine()) != null) {
-					log(line);
+					Logger.log(line);
 				}
 
 				int exitVal = pr.waitFor();
-				log("pcs_exp_start.pl exited with code " + exitVal);
+				Logger.log("pcs_exp_start.pl exited with code " + exitVal);
 			} catch(Exception e) {
-				String eMsg = "Unable to run aodvd: " + e.toString();
-				System.err.println(eMsg);
-				log(eMsg);
+				Logger.logErr("Unable to run aodvd: " + e.toString());
 				System.exit(1);
 			}
 		}

@@ -92,7 +92,7 @@ public class TestRangerInterface implements RangerListener, ProteusOpaqueListene
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestIRInterface <options>\n");
+		System.err.println("Usage: " + TestRangerInterface.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");

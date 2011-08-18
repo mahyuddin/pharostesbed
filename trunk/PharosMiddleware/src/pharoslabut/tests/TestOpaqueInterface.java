@@ -14,7 +14,7 @@ import playerclient3.structures.*;
 public class TestOpaqueInterface implements ProteusOpaqueListener {
 	
 	private PlayerClient client = null;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private ProteusOpaqueInterface poi;
 	
 	/**
@@ -22,51 +22,47 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 	 * 
 	 * @param serverIP The IP address of the player server
 	 * @param serverPort The port on which the player server is listening.
-	 * @param logFileName The name of the file to record log messages, may be null.
 	 */
-	public TestOpaqueInterface(String serverIP, int serverPort, String logFileName) {
+	public TestOpaqueInterface(String serverIP, int serverPort) {
 		
-		if (logFileName != null)
-			flogger = new FileLogger(logFileName);
-		
-		log("Connecting to the player server " + serverIP + ":" + serverPort + "...");
+		Logger.log("Connecting to the player server " + serverIP + ":" + serverPort + "...");
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			log("Error connecting to Player server: ");
-			log("    [ " + e.toString() + " ]");
+			Logger.logErr("Error connecting to Player server: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		log("Connecting to ProteusOpaqueInterface...");
+		Logger.log("Connecting to ProteusOpaqueInterface...");
 		poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		
-		log("Registering self as listener to Opaque data...");
+		Logger.log("Registering self as listener to Opaque data...");
 		poi.addOpaqueListener(this);
 	}
 	
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		String s = new String(opaqueData.getData());
-		log(s);
+		Logger.log(s);
 	}
 	
-	private void log(String msg) {
-		String result = "TestOpaqueInterface: " + msg;
-		System.out.println(result);
-		if (flogger != null) {
-			flogger.log(result);
-		}
-	}
+//	private void log(String msg) {
+//		String result = "TestOpaqueInterface: " + msg;
+//		System.out.println(result);
+//		if (flogger != null) {
+//			flogger.log(result);
+//		}
+//	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestOpaqueInterface <options>\n");
+		System.err.println("Usage: " + TestOpaqueInterface.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -74,7 +70,6 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 	}
 	
 	public static void main(String[] args) {
-		String fileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 
@@ -87,7 +82,7 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 					serverPort = Integer.valueOf(args[++i]);
 				} 
 				else if (args[i].equals("-log")) {
-					fileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i])); 
 				}
 				else {
 					usage();
@@ -102,8 +97,7 @@ public class TestOpaqueInterface implements ProteusOpaqueListener {
 		
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
-		System.out.println("Log: " + fileName);
 		
-		new TestOpaqueInterface(serverIP, serverPort, fileName);
+		new TestOpaqueInterface(serverIP, serverPort);
 	}
 }

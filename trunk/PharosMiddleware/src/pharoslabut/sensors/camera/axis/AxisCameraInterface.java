@@ -7,14 +7,14 @@ import java.awt.image.*;
 import javax.imageio.*;
 import javax.swing.ImageIcon;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * Provides an API for accessing the Axis 211M camera.
  * 
  */
 public class AxisCameraInterface {	
-	private FileLogger flogger = null;
 	
 	// IMAGE RELATED OBJECTS
 	//private Image cameraStream;
@@ -40,13 +40,11 @@ public class AxisCameraInterface {
 	 * @param url
 	 * @param username
 	 * @param password
-	 * @param flogger The file logger
 	 */
-	public AxisCameraInterface(String url, String username, String password, FileLogger flogger) {
+	public AxisCameraInterface(String url, String username, String password) {
 		this.cameraURLString = url; // Set the camera URL.
 		this.username = username; // Set the camera username.
 		this.password = password; // Set the camera password.
-		this.flogger = flogger;
 
 		try {
 			// Create a new URL object from the URL-string of our camera.
@@ -75,12 +73,12 @@ public class AxisCameraInterface {
 
 		// If the camera object is null, return.
 		if (cameraURL == null) {
-			log("ERROR: sendSnapshot: cameraURL is null!");
+			Logger.logErr("cameraURL is null!");
 			return null;
 		}
 
 		try {
-			log("getSnapshot: CameraURL: " + cameraURL);
+			Logger.log("cameraURL: " + cameraURL);
 			// Read the image data from the camera URL.
 			return ImageIO.read(cameraURL);
 		} catch (IOException e) {
@@ -251,13 +249,13 @@ public class AxisCameraInterface {
 
 	}
 	
-	private void log(String msg) {
-		String result = "AxisCameraInterface: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "AxisCameraInterface: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 //	public static void main(String[] args) {
 //		System.out.println("Creating camera...");

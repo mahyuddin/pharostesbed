@@ -1,7 +1,8 @@
 package pharoslabut.navigate;
 
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.motionscript.*;
 import pharoslabut.radioMeter.cc2420.*;
 
@@ -18,7 +19,7 @@ public class MotionScriptFollower implements Runnable {
 	
 	private MotionScript script;
 	private boolean running = false;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private MotionScriptFollowerDoneListener doneListener;
 	
 	/**
@@ -51,12 +52,10 @@ public class MotionScriptFollower implements Runnable {
 	 * @param wifiBroadcaster The object that broadcasts WiFi beacons.
 	 * @param beaconBroadcaster The WiFi beacon broadcaster.
 	 * @param telosBeaconBroadcaster The Telos beacon broadcaster.
-	 * @param flogger The file logger for saving debug/experiment output.
 	 */
 	public MotionScriptFollower(NavigateCompassGPS navigator, Scooter scooter,
 			WiFiBeaconBroadcaster wifiBroadcaster, 
-			TelosBeaconBroadcaster telosBeaconBroadcaster,
-			FileLogger flogger) 
+			TelosBeaconBroadcaster telosBeaconBroadcaster) 
 	{
 		this.navigator = navigator;
 		this.scooter = scooter;
@@ -67,8 +66,6 @@ public class MotionScriptFollower implements Runnable {
 			this.telosBeaconBroadcaster = telosBeaconBroadcaster;
 			this.telosBeaconReceiver = telosBeaconBroadcaster.getReceiver();
 		}
-		
-		this.flogger = flogger;
 	}
 	
 	/**
@@ -121,13 +118,13 @@ public class MotionScriptFollower implements Runnable {
 	private boolean handleMove(Move moveInstr) {
 		boolean result = true;
 		
-		log("Going to " + moveInstr.getDest() + " at " + moveInstr.getSpeed() + " m/s");
+		Logger.log("Going to " + moveInstr.getDest() + " at " + moveInstr.getSpeed() + " m/s");
 
 		// The following is a blocking operation.  It does not return until the robot is at the destination.
 		if (navigator.go(moveInstr.getDest(), moveInstr.getSpeed())) { 
-			log("Destination Reached!");
+			Logger.log("Destination Reached!");
 		} else {
-			log("Destination not reached!");
+			Logger.log("Destination not reached!");
 			result = false;
 		}
 		
@@ -143,12 +140,12 @@ public class MotionScriptFollower implements Runnable {
 	private boolean handlePause(Pause pauseInstr) {
 		boolean result = true;
 		
-		log("Pausing for " + pauseInstr.getPauseTime() + "ms");
+		Logger.log("Pausing for " + pauseInstr.getPauseTime() + "ms");
 		synchronized(this) {
 			try {
 				wait(pauseInstr.getPauseTime());
 			} catch (InterruptedException e) {
-				log("Interrupted while paused... " + e.getMessage());
+				Logger.logErr("Interrupted while paused... " + e.getMessage());
 				e.printStackTrace();
 				result = false;
 			}
@@ -165,17 +162,17 @@ public class MotionScriptFollower implements Runnable {
 	private boolean handleStartBcastTelosB(StartBcastTelosB instr) {
 		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
 			// Start the TelosB cc2420 radio signal meter
-			log("handleStartBcastTelosB: Starting TelosB beacon broadcaster, minPeriod = " 
+			Logger.log("Starting TelosB beacon broadcaster, minPeriod = " 
 					+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
 			return telosBeaconBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 		} else {
-			logErr("handleStartBcastTelosB: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			Logger.logErr("Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
 	
 	private boolean handleStartBcastWiFi(StartBcastWiFi instr) {
-		flogger.log("Starting WiFi beacon broadcaster, minPeriod = " 
+		Logger.log("Starting WiFi beacon broadcaster, minPeriod = " 
 				+ instr.getMinPeriod() + ", maxPeriod = " + instr.getMaxPeriod());
 		return wifiBroadcaster.start(instr.getMinPeriod(), instr.getMaxPeriod(), instr.getTxPowerLevel());
 	}
@@ -188,23 +185,23 @@ public class MotionScriptFollower implements Runnable {
 	 */
 	private boolean handleStopBcastTelosB(StopBcastTelosB instr) {
 		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
-			log("handleStopBcastTelosB: Stopping TelosB beacon broadcaster.");
+			Logger.log("Stopping TelosB beacon broadcaster.");
 			telosBeaconBroadcaster.stop();
 			return true;
 		} else {
-			logErr("handleStopBcastTelosB: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			Logger.logErr("Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
 	
 	private boolean handleStopBcastWiFi(StopBcastWifi msg) {
-		log("handleStopBcastWiFi: Stopping WiFi beacon broadcaster.");
+		Logger.log("Stopping WiFi beacon broadcaster.");
 		wifiBroadcaster.stop();
 		return true;
 	}
 	
 	private boolean handleScoot(Scoot msg) {
-		log("handleScoot: Scooting the robot " + msg.getAmount());
+		Logger.log("Scooting the robot " + msg.getAmount());
 		scooter.scoot(msg.getAmount());
 		return true;
 	}
@@ -220,7 +217,7 @@ public class MotionScriptFollower implements Runnable {
 			telosBeaconReceiver.rcvBeacons(instr.getNumBeacons());
 			return true;
 		} else {
-			logErr("handleRcvTelosbBeacons: Cannot execute the following instruction because the TelosB is disabled: " + instr);
+			Logger.logErr("Cannot execute the following instruction because the TelosB is disabled: " + instr);
 			return false; // the TelosB was disabled!
 		}
 	}
@@ -261,12 +258,12 @@ public class MotionScriptFollower implements Runnable {
 				running = false; // Tell this MotionScriptFollower to stop running (this is the end fo the script)
 				break;
 			default:
-				log("ERROR Unknown instruction: " + instr);
+				Logger.logErr("Unknown instruction: " + instr);
 				running = false;
 			}
 			
 			if (!continueRunning && !running) 
-				log("ERROR while executing instruction " + instrIndex + " of the motion script.");
+				Logger.logErr("Problem while executing instruction " + instrIndex + " of the motion script.");
 			else 
 				instrIndex++;
 		}
@@ -276,9 +273,9 @@ public class MotionScriptFollower implements Runnable {
 		
 		// Log whether the execution of the motion script was successful.
 		if (success)
-			log("Motion Script Completed!");
+			Logger.log("Motion Script Completed!");
 		else 
-			log("ERROR: Motion Script terminated prematurely.");
+			Logger.logErr("Motion Script terminated prematurely.");
 		
 		// Notify done listeners that this motion script has finished executing.
 		if (doneListener != null)
@@ -287,25 +284,25 @@ public class MotionScriptFollower implements Runnable {
 		stop();
 	}
 	
-	private void logErr(String msg) {
-		String result = "MotionScriptFollower: ERROR: " + msg;
-		
-		System.err.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "MotionScriptFollower: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "MotionScriptFollower: ERROR: " + msg;
+//		
+//		System.err.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "MotionScriptFollower: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

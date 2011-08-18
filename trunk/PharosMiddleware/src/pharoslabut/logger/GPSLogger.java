@@ -21,7 +21,7 @@ public class GPSLogger implements Runnable {
 	private GPSDataBuffer gpsdb;
 	private boolean logging = false;
 	private long startTime;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 	/**
 	 * A constructor that creates a new PlayerClient to connect to the GPS device.
@@ -29,30 +29,29 @@ public class GPSLogger implements Runnable {
 	 * @param serverIP The IP address of the server
 	 * @param serverPort The server's port number
 	 * @param deviceIndex The index of the GPS device
-	 * @param flogger The FileLogger to use to save debug messages.
 	 */
-	public GPSLogger(String serverIP, int serverPort, int deviceIndex, FileLogger flogger) {
+	public GPSLogger(String serverIP, int serverPort, int deviceIndex) {
 		
 		PlayerClient client = null;
 		
-		this.flogger = flogger;
+//		this.flogger = flogger;
 		
 		try {
-			logDbg("Connecting to server " + serverIP + ":" + serverPort);
+			Logger.logDbg("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			logErr("Problem connecting to Player server: " + e.toString());
+			Logger.logErr("Problem connecting to Player server: " + e.toString());
 			System.exit (1);
 		}
 		
 		while (gps == null) {
 			try {
-				logDbg("Subscribing to GPS service...");
+				Logger.logDbg("Subscribing to GPS service...");
 				gps = client.requestInterfaceGPS(deviceIndex, PlayerConstants.PLAYER_OPEN_MODE);
 				if (gps != null)
-					logDbg("Subscribed to GPS service...");
+					Logger.logDbg("Subscribed to GPS service...");
 				else {
-					logErr("GPS service was null, waiting 1s then retrying...");
+					Logger.logErr("GPS service was null, waiting 1s then retrying...");
 					synchronized(this) {
 						try {
 							wait(1000);
@@ -62,19 +61,19 @@ public class GPSLogger implements Runnable {
 					}
 				}
 			} catch(PlayerException pe) {
-				logErr(pe.getMessage());
+				Logger.logErr(pe.getMessage());
 			}
 		}
 		
 		// The runThreaded and change of data delivery mode can be done in reverse order.
-		logDbg("Setting Player Client to run in continuous threaded mode...");
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		logDbg("Changing Player server mode to PUSH...");
+		Logger.logDbg("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		logDbg("Creating GPSDataBuffer...");
-		gpsdb = new GPSDataBuffer(gps, flogger);
+		Logger.logDbg("Creating GPSDataBuffer...");
+		gpsdb = new GPSDataBuffer(gps);
 	}
 	
 	/**
@@ -95,7 +94,7 @@ public class GPSLogger implements Runnable {
 		if (!logging) {
 			logging = true;
 			
-			log("Time (ms)\tDelta Time (ms)\tGPS Quality\tLatitude\tLongitude\tAltitude\tGPS Time (s)\tGPS Time(us)\tGPS Error Vertical\tGPS Error Horizontal");
+			Logger.log("Time (ms)\tDelta Time (ms)\tGPS Quality\tLatitude\tLongitude\tAltitude\tGPS Time (s)\tGPS Time(us)\tGPS Error Vertical\tGPS Error Horizontal");
 			
 			startTime = System.currentTimeMillis();
 			
@@ -133,7 +132,7 @@ public class GPSLogger implements Runnable {
 	public void run() {
 		PlayerGpsData gpsData;
 
-		logDbg("run: thread starting...");
+		Logger.logDbg("thread starting...");
 
 		while(logging) {
 			try {
@@ -151,13 +150,13 @@ public class GPSLogger implements Runnable {
 					+ gpsData.getTime_sec() + "\t" + gpsData.getTime_usec() + "\t"
 					+ gpsData.getErr_vert() + "\t" + gpsData.getErr_horz();
 
-					log(result);
+					Logger.log(result);
 				}
 				
 				oldData = gpsData;
 				
 			} catch (NoNewDataException e1) {
-				logDbg("run: No new data...");
+				Logger.logDbg("No new data...");
 			}
 
 			try {
@@ -169,48 +168,48 @@ public class GPSLogger implements Runnable {
 			}
 		}
 
-		logDbg("run: thread terminating...");
+		Logger.logDbg("thread terminating...");
 	}
 
-	/**
-	 * Log debug statements.  These statements are only logged if we are running in 
-	 * debug mode.
-	 * 
-	 * @param msg The debug statement.
-	 */
-	private void logDbg(String msg) {
-		String result = "GPSLogger: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null) {
-			System.out.println(result);
-			if (flogger != null)
-				flogger.log(result);
-		}
-	}
-	
-	/**
-	 * Log error statements.  These are always logged regardless of whether we are running
-	 * in debug mode.
-	 * 
-	 * @param msg The statement.
-	 */
-	private void logErr(String msg) {
-		String result = "GPSLogger: ERROR: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	/**
-	 * Log statements.  These are always logged regardless of whether we are running
-	 * in debug mode.
-	 * 
-	 * @param msg The statement.
-	 */
-	private void log(String msg) {
-		System.out.println(msg);
-		if (flogger != null)
-			flogger.log(msg);
-	}
+//	/**
+//	 * Log debug statements.  These statements are only logged if we are running in 
+//	 * debug mode.
+//	 * 
+//	 * @param msg The debug statement.
+//	 */
+//	private void logDbg(String msg) {
+//		String result = "GPSLogger: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null) {
+//			System.out.println(result);
+//			if (flogger != null)
+//				flogger.log(result);
+//		}
+//	}
+//	
+//	/**
+//	 * Log error statements.  These are always logged regardless of whether we are running
+//	 * in debug mode.
+//	 * 
+//	 * @param msg The statement.
+//	 */
+//	private void logErr(String msg) {
+//		String result = "GPSLogger: ERROR: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	/**
+//	 * Log statements.  These are always logged regardless of whether we are running
+//	 * in debug mode.
+//	 * 
+//	 * @param msg The statement.
+//	 */
+//	private void log(String msg) {
+//		System.out.println(msg);
+//		if (flogger != null)
+//			flogger.log(msg);
+//	}
 	
 	private static void usage() {
 		System.err.println("Usage: pharoslabut.logger.GPSLogger <options>\n");
@@ -261,12 +260,11 @@ public class GPSLogger implements Runnable {
 		System.out.println("Loge: " + fileName);
 		System.out.println("Debug: " + (System.getProperty("PharosMiddleware.debug") != null));
 		System.out.println("Log time: " + time + "s");
-		
-		FileLogger flogger = null;
+	
 		if (fileName != null)
-			flogger = new FileLogger(fileName, false);
+			Logger.setFileLogger(new FileLogger(fileName, false));
 		
-		GPSLogger gl = new GPSLogger(serverIP, serverPort, index, flogger);
+		GPSLogger gl = new GPSLogger(serverIP, serverPort, index);
 		gl.start();
 		
 		if (time > 0) {

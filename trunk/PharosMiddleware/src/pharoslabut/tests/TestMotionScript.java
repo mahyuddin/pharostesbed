@@ -10,7 +10,7 @@ import pharoslabut.navigate.motionscript.*;;
 public class TestMotionScript {
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestMotionScript <options>\n");
+		System.err.println("Usage: " + TestMotionScript.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-script <motion script file name>: name of motion script to evaluate (required)");
 		System.err.println("\t-d or -debug: enable debug mode.");

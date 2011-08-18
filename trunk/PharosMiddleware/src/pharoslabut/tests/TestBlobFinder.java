@@ -14,7 +14,6 @@ import playerclient3.structures.*;
  * @author Chien-Liang Fok
  */
 public class TestBlobFinder {
-	private FileLogger flogger = null;
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
 	private BlobFinderVisualizer visualizer;
@@ -24,12 +23,8 @@ public class TestBlobFinder {
 	 * 
 	 * @param serverIP The IP address of the robot.
 	 * @param serverPort The port on which the robot is listening.
-	 * @param logFileName The log file in which to save results.
 	 */
-	public TestBlobFinder(String serverIP, int serverPort, String logFileName) {
-		
-		if (logFileName != null)
-			flogger = new FileLogger(logFileName);
+	public TestBlobFinder(String serverIP, int serverPort) {
 		
 		// connect to player server
 		try {
@@ -43,14 +38,14 @@ public class TestBlobFinder {
 		
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	visualizer = new BlobFinderVisualizer(flogger);
+            	visualizer = new BlobFinderVisualizer();
             }
         });
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
 		boolean done = false;
@@ -69,11 +64,11 @@ public class TestBlobFinder {
 		System.exit(0);
 	}
 	
-	private void log(String msg) {
-		System.out.println(msg);
-		if (flogger != null) 
-			flogger.log(msg);
-	}
+//	private void log(String msg) {
+//		System.out.println(msg);
+//		if (flogger != null) 
+//			flogger.log(msg);
+//	}
 
 	private void pause(int duration) {
 		synchronized(this) {
@@ -86,7 +81,7 @@ public class TestBlobFinder {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestBlobFinder <options>\n");
+		System.err.println("Usage: " + TestBlobFinder.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -94,7 +89,6 @@ public class TestBlobFinder {
 	}
 	
 	public static void main(String[] args) {
-		String logFileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		
@@ -107,7 +101,7 @@ public class TestBlobFinder {
 					serverPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
-					logFileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false)); 
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -124,8 +118,7 @@ public class TestBlobFinder {
  
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
-		System.out.println("Log: " + logFileName);
 		
-		new TestBlobFinder(serverIP, serverPort, logFileName);
+		new TestBlobFinder(serverIP, serverPort);
 	}
 }

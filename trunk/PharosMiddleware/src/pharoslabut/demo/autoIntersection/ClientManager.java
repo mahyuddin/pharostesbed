@@ -1,6 +1,7 @@
 package pharoslabut.demo.autoIntersection;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.LineFollowerEvent;
 import pharoslabut.navigate.LineFollowerEventListener;
@@ -20,19 +21,19 @@ public class ClientManager implements LineFollowerEventListener  {
 	public static enum ClientManagerState {IDLE, FOLLOW_LINE, REMOTE_TRAVERSAL, LOCAL_TRAVERSAL};
     
 	private ClientManagerState currState = ClientManagerState.IDLE;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private LineFollower lf;
 	private RemoteIntersectionManager rim;
 	private LocalIntersectionManager lim;
 	private LaneIdentifier li;
 	
-	public ClientManager(String serverIP, int port, String playerIP, int playerPort, FileLogger flogger) {
+	public ClientManager(String serverIP, int port, String playerIP, int playerPort) {
 		
-		this.flogger = flogger;
+//		this.flogger = flogger;
 		
-		lf = new LineFollower(playerIP, playerPort, flogger);
-		rim = new RemoteIntersectionManager(lf, serverIP, port, this, flogger);
-		lim = new LocalIntersectionManager(lf, this, flogger);
+		lf = new LineFollower(playerIP, playerPort);
+		rim = new RemoteIntersectionManager(lf, serverIP, port, this);
+		lim = new LocalIntersectionManager(lf, this);
 		li = new LaneIdentifier("/dev/ttyS1");
 		
 		// This class is a listener for line follower events.
@@ -51,16 +52,16 @@ public class ClientManager implements LineFollowerEventListener  {
 	 */
 	public void remoteIntersectionMgrDone(boolean success) {
 		if (success) {
-			log("remoteIntersectionMgrDone: Success!  Returning to FOLLOW_LINE state...");
+			Logger.log("Success!  Returning to FOLLOW_LINE state...");
 			currState = ClientManagerState.FOLLOW_LINE;
 		} else {
-			log("remoteIntersectionMgrDone: Fail!");
+			Logger.log("Fail!");
 			if (currState == ClientManagerState.REMOTE_TRAVERSAL) {
-				log("remoteIntersectionMgrDone: Switching to the LocalIntersectionManager...");
+				Logger.log("Switching to the LocalIntersectionManager...");
 				currState = ClientManagerState.LOCAL_TRAVERSAL;
 				lim.start(getLaneSpecs());
 			} else {
-				log("remoteIntersectionMgrDone: ERROR: Unexpected state: " + currState + ", aborting demo...", false);
+				Logger.logErr("Unexpected state: " + currState + ", aborting demo...");
 				lf.stop();
 				currState = ClientManagerState.IDLE;
 			}
@@ -75,11 +76,11 @@ public class ClientManager implements LineFollowerEventListener  {
 	 */
 	public void localIntersectionMgrDone(boolean success) {
 		if (success) {
-			log("localIntersectionMgrDone: The LocalIntersectionManager succeeded, returning to FOLLOW_LINE state...");
+			Logger.log("The LocalIntersectionManager succeeded, returning to FOLLOW_LINE state...");
 			currState = ClientManagerState.FOLLOW_LINE;
 		} else {
 			// At this point in time, we have no recourse but to abort the demo...
-			log("localIntersectionMgrDone: ERROR: The LocalIntersectionManager failed...", false);
+			Logger.logErr("The LocalIntersectionManager failed...");
 			lf.stop();
 			currState = ClientManagerState.IDLE;
 		}
@@ -100,7 +101,7 @@ public class ClientManager implements LineFollowerEventListener  {
 		
 		// If the LineFollower fails, abort!
 		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
-			log("newLineFollowerEvent: Received error from the LineFollower, aborting demo...");
+			Logger.log("Received error from the LineFollower, aborting demo...");
 			currState = ClientManagerState.IDLE;
 			lf.stop(); // There was an error, stop!
 		}
@@ -109,37 +110,37 @@ public class ClientManager implements LineFollowerEventListener  {
 		// is if it is in the FOLLOW_LINE state.
 		else if (currState == ClientManagerState.FOLLOW_LINE) {
 			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
-				log("newLineFollowerEvent: Robot is approaching intersection, activating RemoteIntersectionManager...");
+				Logger.log("Robot is approaching intersection, activating RemoteIntersectionManager...");
 				currState = ClientManagerState.REMOTE_TRAVERSAL;
 				rim.start(getLaneSpecs());
 			} else
-				log("newLineFollowerEvent: Discarding unexpected event from LineFollower: " + lfe);
+				Logger.log("Discarding unexpected event from LineFollower: " + lfe);
 		} else
-			log("newLineFollowerEvent: Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
+			Logger.log("Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
 	}
 	
-	/**
-	 * Logs a debug message.  This message is only printed when debug mode is enabled.
-	 * 
-	 * @param msg The message to log.
-	 */
-	private void log(String msg) {
-		log(msg, true);
-	}
-	
-	/**
-	 * Logs a message.
-	 * 
-	 * @param msg  The message to log.
-	 * @param isDebugMsg Whether the message is a debug message.
-	 */
-	private void log(String msg, boolean isDebugMsg) {
-		String result = "ClientManager: " + msg;
-		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	/**
+//	 * Logs a debug message.  This message is only printed when debug mode is enabled.
+//	 * 
+//	 * @param msg The message to log.
+//	 */
+//	private void log(String msg) {
+//		log(msg, true);
+//	}
+//	
+//	/**
+//	 * Logs a message.
+//	 * 
+//	 * @param msg  The message to log.
+//	 * @param isDebugMsg Whether the message is a debug message.
+//	 */
+//	private void log(String msg, boolean isDebugMsg) {
+//		String result = "ClientManager: " + msg;
+//		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -148,7 +149,7 @@ public class ClientManager implements LineFollowerEventListener  {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.demo.autoIntersection.ClientManager <options>\n");
+		print("Usage: " + ClientManager.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-server <ip address>: The IP address of the intersection server (required)");
 		print("\t-port <port number>: The port on which the intersection server is listening (required)");
@@ -164,7 +165,6 @@ public class ClientManager implements LineFollowerEventListener  {
 		
 		String playerServerIP = "localhost";
 		int playerServerPort = 6665;
-		FileLogger flogger = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -179,7 +179,7 @@ public class ClientManager implements LineFollowerEventListener  {
 				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				} else if (args[i].equals("-log")) {
-					flogger = new FileLogger(args[++i]);
+					Logger.setFileLogger(new pharoslabut.logger.FileLogger(args[++i]));
 				} else {
 					print("Unknown argument " + args[i]);
 					usage();
@@ -201,6 +201,6 @@ public class ClientManager implements LineFollowerEventListener  {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		new ClientManager(serverIP, serverPort, playerServerIP, playerServerPort, flogger);
+		new ClientManager(serverIP, serverPort, playerServerIP, playerServerPort);
 	}
 }

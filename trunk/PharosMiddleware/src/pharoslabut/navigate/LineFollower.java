@@ -79,8 +79,6 @@ public class LineFollower implements Runnable {
 	double speed = 0;
 	double pan = 0;  // ----------------------------------------------------------------added by sushen--------
 	
-	private FileLogger flogger = null;
-	
 	/**
 	 * A reference to the thread performing the line following task.  It is null initially, but
 	 * is assigned a value when start() is called.
@@ -92,42 +90,38 @@ public class LineFollower implements Runnable {
 	 * 
 	 * @param serverIP The IP address of the server.
 	 * @param serverPort The port of the server.
-	 * @param flogger The file logger for recording debug data.
 	 */
-	public LineFollower(String serverIP, int serverPort, FileLogger flogger) {
-		this.flogger = flogger;
-		
+	public LineFollower(String serverIP, int serverPort) {
 		// connect to player server
 		try{
 			client = new PlayerClient(serverIP, serverPort);
-		} catch (PlayerException e) { log("Error, could not connect to server.", false); System.exit(1); }
-		log("Created robot client.");
+		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
+		Logger.log("Created robot client.");
 		
 		// connect to blobfinder
 		try{
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { log("Error, could not connect to blob finder proxy.", false); System.exit(1);}
-		log("Created BlobFinder.");
+		} catch (PlayerException e) { Logger.logErr("Could not connect to blob finder proxy."); System.exit(1);}
+		Logger.log("Created BlobFinder.");
 		
 		//set up pos. 2d proxy
 		try{
 			p2di = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { log("Error, could not connect to position 2d proxy.", false); System.exit(1);}
-		log("Created Position2dProxy.");
+		} catch (PlayerException e) { Logger.logErr("Could not connect to position 2d proxy."); System.exit(1);}
+		Logger.log("Created Position2dProxy.");
 		
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
 
-		// connect to PTZ -----------------------------------------------------------added by sushen-------------------
+		// Connect to PTZ
 		try {
 			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}
-		//-------------------------------------------------------------------------------------------------------------
+		} catch (PlayerException e) { Logger.logErr("Could not connect to PTZ proxy."); System.exit(1);}
+		Logger.log("Connected to PTZ proxy.");
 
-
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);	
 	}
 	
@@ -181,9 +175,9 @@ public class LineFollower implements Runnable {
 			done = false;
 			thread = new Thread(this);
 			thread.start();
-			log("start: thread started");
+			Logger.log("Thread started");
 		} else
-			log("start: WARNING: Thread already started.");
+			Logger.log("WARNING: Thread already started.");
 	}
 	
 	/**
@@ -191,20 +185,20 @@ public class LineFollower implements Runnable {
 	 */
 	public synchronized void stop() {
 		if (thread != null) {
-			log("Stop: setting done = true");
+			Logger.log("setting done = true");
 			done = true;
 			
-			log("Stop: Joining thread...");
+			Logger.log("Joining thread...");
 			try {
 				thread.join();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-			log("Stop: Thread joined...");
+			Logger.log("Thread joined...");
 			thread = null; // was causing RemoteIntersectionManager to crash 
-			log("Stop: thread stopped.");
+			Logger.log("thread stopped.");
 		} else
-			log("Stop: WARNING: already stopped.");
+			Logger.log("WARNING: already stopped.");
 	}
 	
 	/**
@@ -221,7 +215,7 @@ public class LineFollower implements Runnable {
 	 * @return The maximum turn angle.
 	 */
 	private double getMaxTurnAngle(double divergencePct) {
-		log("getMaxTurnAgle: " + divergencePct);
+		Logger.log("getMaxTurnAgle: " + divergencePct);
 		if (divergencePct < .10)
 			return MAX_TURN_ANGLE * 0.1;
 		if (divergencePct < .20)
@@ -246,14 +240,14 @@ public class LineFollower implements Runnable {
 	 * @param midPoint The middle of the field of view.
 	 */
 	private void adjustHeadingAndSpeed(PlayerBlobfinderBlob blob, int midPoint) {
-		log("adjustHeadingAndSpeed: Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight() + ", x=" + blob.getX());
+		Logger.log("Blob area=" + blob.getArea() + ", color=" + blob.getColor() + ", left=" + blob.getLeft() + ", right=" + blob.getRight() + ", x=" + blob.getX());
 
 		//int turnSign;		//-------------------------------------------------------------------------------added by sushen----------
 		if (blob.getX() > midPoint) {
-			log("adjustHeadingAndSpeed: Center of blob is right of midpoint, must turn right!");
+			Logger.log("Center of blob is right of midpoint, must turn right!");
 			turnSign = -1;
 		} else {
-			log("adjustHeadingAndSpeed: Center of blob is left of midpoint, must turn left!");
+			Logger.log("Center of blob is left of midpoint, must turn left!");
 			turnSign = 1;
 		}
 
@@ -263,7 +257,7 @@ public class LineFollower implements Runnable {
 		// A divergencePct of 0 means that the robot is perfectly centered on the line.
 		double divergence = Math.abs(blob.getX() - midPoint);  // blob.getX() returns the centroid's X coordinate
 		double divergencePct = divergence / midPoint;
-		log("adjustHeadingAndSpeed: divergencePct = " + divergencePct);
+		Logger.log("divergencePct = " + divergencePct);
 		
 		
 		angle = turnSign * getMaxTurnAngle(divergencePct) * divergencePct;
@@ -309,34 +303,35 @@ public class LineFollower implements Runnable {
 		// TODO: Add logic that determines the type of event that was detected.
 		// One the type of event is determined, broadcast it to all registered listeners
 		// Here's an example of how to broadcast an APPROACHING event.
-		log("handleSecondaryBlob: area=" + secondary.getArea() + ", primary x=" + primary.getX() + ", secondary x=" + secondary.getX() + ", blob width=" + (Math.abs(secondary.getLeft()-secondary.getRight())) + ", previousEventType= " + previousEventType);
+		Logger.log("area=" + secondary.getArea() + ", primary x=" + primary.getX() + ", secondary x=" + secondary.getX() 
+				+ ", blob width=" + (Math.abs(secondary.getLeft()-secondary.getRight())) + ", previousEventType= " + previousEventType);
 		
 		if ((primary.getX() < secondary.getX()) && (Math.abs(secondary.getLeft() - secondary.getRight()) < 80)) {
 			if (previousEventType == null || previousEventType  != LineFollowerEvent.LineFollowerEventType.APPROACHING) {
-				log("handleSecondaryBlob: APPROACHING Intersection!");
+				Logger.log("APPROACHING Intersection!");
 				previousEventType = LineFollowerEvent.LineFollowerEventType.APPROACHING;
 				LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.APPROACHING);
 				notifyListeners(lfe);
 			} else
-				log("handleSecondaryBlob: Supressing duplicate APPROACHING event");
+				Logger.log("Supressing duplicate APPROACHING event");
 		}
 		else if ((primary.getX() > secondary.getX()) && (Math.abs(secondary.getLeft() - secondary.getRight()) < 80)) { 
 			if (previousEventType == null || previousEventType  != LineFollowerEvent.LineFollowerEventType.ENTERING) {
-				log("handleSecondaryBlob: ENTERING Intersection!");
+				Logger.log("ENTERING Intersection!");
 				previousEventType = LineFollowerEvent.LineFollowerEventType.ENTERING;
 				LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.ENTERING);
 				notifyListeners(lfe);
 			} else
-				log("handleSecondaryBlob: Supressing duplicate ENTERING Intersection event");
+				Logger.log("Supressing duplicate ENTERING Intersection event");
 		}
 		else if ((Math.abs(secondary.getLeft() - secondary.getRight()) > 100)) {
 			if (previousEventType == null || previousEventType  != LineFollowerEvent.LineFollowerEventType.EXITING) {
-				log("handleSecondaryBlob: EXITING Intersection!");
+				Logger.log("EXITING Intersection!");
 				previousEventType = LineFollowerEvent.LineFollowerEventType.EXITING;
 				LineFollowerEvent lfe = new LineFollowerEvent(LineFollowerEvent.LineFollowerEventType.EXITING);
 				notifyListeners(lfe);
 			} else
-				log("handleSecondaryBlob: Supressing duplicate EXITING Intersection event");
+				Logger.log("Supressing duplicate EXITING Intersection event");
 		}
 	}
 
@@ -352,7 +347,7 @@ public class LineFollower implements Runnable {
 		// Check to make sure we have valid data...
 		if (data != null) {
 			int numBlobs = data.getBlobs_count();
-			log("processBlobs: There are " + numBlobs + " blobs...");
+			Logger.log("There are " + numBlobs + " blobs...");
 
 			if(numBlobs > 0) {	
 				PlayerBlobfinderBlob[] blobListCopy = null;
@@ -372,7 +367,7 @@ public class LineFollower implements Runnable {
 					int midPoint = data.getWidth()/2;
 					adjustHeadingAndSpeed(blobListCopy[0], midPoint);
 				} else {
-					log("processBlobs: ERROR: No primary blob, stopping robot...");
+					Logger.logErr("No primary blob, stopping robot...");
 					speed = angle = 0;					
 				}
 
@@ -382,28 +377,28 @@ public class LineFollower implements Runnable {
 						handleSecondaryBlob(blobListCopy[0], blobListCopy[1]);
 					} 
 					else {
-						log("processBlobs: No secondary blob!");
+						Logger.log("No secondary blob!");
 						previousEventType = null;
 					}
 				} catch(ArrayIndexOutOfBoundsException e) {
 					// TODO Figure out why this sometimes happens.
-					log("processBlobs: got an unexpected ArrayIndexOutOfBoundsException: " + e.getMessage());
+					Logger.logErr("got an unexpected ArrayIndexOutOfBoundsException: " + e.getMessage());
 					previousEventType = null;
 				}
 			}
 			else {
-				log("processBlobs: ERROR: No blobs present, stopping robot...");
+				Logger.logErr("No blobs present, stopping robot...");
 				speed = angle = 0;
 				noBlobs += 1;                                //----------------------------------------------------this line too added by sushen
 				if(noBlobs > 7){				// if after 7 passes or .7 second there is no blob
 					pan = 20 * turnSign;						//--------------------------added by sushen
-					log("Pan value after no blobs detected= " + pan + "\nturnSign = " + turnSign +"\n\n\n\n\n");///// added by sushen 
+					Logger.log("Pan value after no blobs detected= " + pan + "\nturnSign = " + turnSign +"\n\n\n\n\n");///// added by sushen 
 				}			
 			}
 		} else {
-			log("processBlobs: ERROR: Blob data is null, stopping robot...");
+			Logger.logErr("Blob data is null, stopping robot...");
 			speed = angle = 0;
-			log("something is happening 1!!!\n\n\n\n");
+			Logger.log("Something is happening 1!!!\n\n\n\n");
 		}
 	}
 	
@@ -432,7 +427,7 @@ public class LineFollower implements Runnable {
 			
 			// If no blob data is received within a certain time window, stop the robot.
 			if (System.currentTimeMillis() - dataTimeStamp > BLOB_MAX_VALID_AGE) {
-				log("run: ERROR: No blob data within valid window of " + BLOB_MAX_VALID_AGE + "ms");
+				Logger.log("ERROR: No blob data within valid window of " + BLOB_MAX_VALID_AGE + "ms");
 				speed = angle = 0;
 			}
 			
@@ -450,12 +445,12 @@ public class LineFollower implements Runnable {
 			// ----------------------------------------------------------------------------------------------------------------------
 
 
-			log("run: Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
+			Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
 			pause(CYCLE_PERIOD);
 
 		}
 		
-		log("run: thread exiting, ensuring robot is stopped...");
+		Logger.log("thread exiting, ensuring robot is stopped...");
 		speed = angle = 0;
 		p2di.setSpeed(speed, dtor(angle));
 		
@@ -480,28 +475,5 @@ public class LineFollower implements Runnable {
 				e.printStackTrace();
 			}
 		}
-	}
-	
-	/**
-	 * Logs a debug message.  This message is only printed when debug mode is enabled.
-	 * 
-	 * @param msg The message to log.
-	 */
-	private void log(String msg) {
-		log(msg, true);
-	}
-	
-	/**
-	 * Logs a message.
-	 * 
-	 * @param msg  The message to log.
-	 * @param isDebugMsg Whether the message is a debug message.
-	 */
-	private void log(String msg, boolean isDebugMsg) {
-		String result = "LineFollower: " + msg;
-		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
 	}
 }

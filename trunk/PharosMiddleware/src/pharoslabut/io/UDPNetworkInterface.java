@@ -3,6 +3,8 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.logger.Logger;
+
 /**
  * The UDP Network Interface uses UDP to transmit and receive messages.
  * 
@@ -52,12 +54,12 @@ public class UDPNetworkInterface extends NetworkInterface {
 	public boolean sendMessage(InetAddress address, int port, Message m) {
 		
         if(m == null) {
-        	log("sendMessage: ERROR: message is null", false);
+        	Logger.log("ERROR: message is null");
         	return false;
         }
         
         if (socket == null) {
-        	log("sendMessage: ERROR: socket is null...", false);
+        	Logger.log("ERROR: socket is null...");
         	return false;
         }
 
@@ -73,14 +75,14 @@ public class UDPNetworkInterface extends NetworkInterface {
         	
         	byte[] sendByte = bos.toByteArray();
         	
-        	log("sendMessage: packet size= " + sendByte.length);
+        	Logger.log("packet size= " + sendByte.length);
         	
         	DatagramPacket pkt = new DatagramPacket(sendByte, sendByte.length, address, port);
         	socket.send(pkt);
         	
-        	log("sendMessage: Sent message " + m + " to " + address + ":" + port);
+        	Logger.log("Sent message " + m + " to " + address + ":" + port);
         } catch(IOException ioe) {
-        	log("sendMessage: ERROR: while sending datagram packet, error: " + ioe.getMessage(), false);
+        	Logger.logErr("Problem while sending datagram packet, error: " + ioe.getMessage());
         	ioe.printStackTrace();
         	return false;
         }
@@ -94,15 +96,15 @@ public class UDPNetworkInterface extends NetworkInterface {
 	 */
 	private void openSocket() {
 		while (socket == null) {
-			log("Opening server socket...");
+			Logger.log("Opening server socket...");
 			try {
 				if (port == -1)
 					socket = new DatagramSocket();
 				else
 					socket = new DatagramSocket(port);
-				log("Server socket listening on port " + getLocalPort() + ", sendBufferSize=" + socket.getSendBufferSize());
+				Logger.log("Server socket listening on port " + getLocalPort() + ", sendBufferSize=" + socket.getSendBufferSize());
 			} catch (SocketException e) {
-				log("ERROR: Failed to open server socket, error: " + e.getMessage(), false);
+				Logger.logErr("Failed to open server socket, error: " + e.getMessage());
 
 				try {
 					synchronized(this) {
@@ -150,12 +152,12 @@ public class UDPNetworkInterface extends NetworkInterface {
 							Message m = (Message)ois.readObject();
 							newMessage(m); // notify all listeners of message
 						} catch (ClassNotFoundException e) {
-							log("ERROR: while extracting object from datagram packet: " + e.getMessage(), false);
+							Logger.logErr("Problem while extracting object from datagram packet: " + e.getMessage());
 							e.printStackTrace();
 						}
 			            
 					} catch(IOException ioe) {
-						log("ERROR: while receiving packet: " + ioe.getMessage(), false);
+						Logger.logErr("Problem while receiving packet: " + ioe.getMessage());
 						ioe.printStackTrace();
 						socket.close();
 						socket = null;
@@ -167,17 +169,17 @@ public class UDPNetworkInterface extends NetworkInterface {
 		}
 	}
 	
-	private void log(String msg) {
-		log(msg, true);
-	}
-	
-	private void log(String msg, boolean isDebugMsg) {
-		String result = "UDPNetworkInterface: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg) {
-			System.out.println(result);
-			System.out.flush();
-		}
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		log(msg, true);
+//	}
+//	
+//	private void log(String msg, boolean isDebugMsg) {
+//		String result = "UDPNetworkInterface: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg) {
+//			System.out.println(result);
+//			System.out.flush();
+//		}
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

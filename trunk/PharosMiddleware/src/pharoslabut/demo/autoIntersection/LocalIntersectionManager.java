@@ -1,6 +1,7 @@
 package pharoslabut.demo.autoIntersection;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.LineFollowerEvent;
 import pharoslabut.navigate.LineFollowerEventListener;
@@ -26,7 +27,7 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 	/**
 	 * For logging debug messages.
 	 */
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 	/**
 	 * Keeps track of whether the LocalIntersectionManager is running.
@@ -69,12 +70,10 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 	 * @param lf The LineFollower
 	 * @param clientmgr The client manager that should be notified should this
 	 * class fail to navigate the intersection.
-	 * @param flogger The FileLogger for recording debug statements.
 	 */
-	public LocalIntersectionManager(LineFollower lf, ClientManager clientMgr, FileLogger flogger) {
+	public LocalIntersectionManager(LineFollower lf, ClientManager clientMgr) {
 		this.lf = lf;
 		this.clientMgr = clientMgr;
-		this.flogger = flogger;
 		this.isRunning = true; 
 		
 		// Connect to the IR sensors...
@@ -86,7 +85,7 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
 			//ir.addIRListener(this);
 		} catch (PlayerException e) { 
-			log("Error, could not connect to IR proxy.", false);
+			Logger.logErr("Could not connect to IR proxy.");
 			System.exit(1);
 		}
 	}
@@ -105,7 +104,7 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			this.reachedExit = false;
 			new Thread(this).start();
 		} else {
-			log("start: ERROR: Trying to start twice!", false);
+			Logger.logErr("Trying to start twice!");
 		}
 	}
 	
@@ -129,14 +128,14 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 				
 //			This message is now handled by the ClientManager
 			case ERROR:
-				log("newLineFollowerEvent: Received error from line follower!  Aborting demo.", false);
+				Logger.logErr("Logger.log(Received error from line follower!  Aborting demo.");
 				lf.stop(); // There was an error, stop!
 //				break;
 			default:
-				log("newLineFollowerEvent: Unexpected event from line follower (discarding): " + lfe, false);
+				Logger.log("Logger.log(Unexpected event from line follower (discarding): " + lfe);
 			}
 		} else
-			log("newLineFollowerEvent: Ignoring event because not running: " + lfe);
+			Logger.log("Logger.log(Ignoring event because not running: " + lfe);
 	}
 	
 //	@Override
@@ -146,7 +145,7 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 //	}
 	
 	public void run() {
-		log("run: Thread starting...");
+		Logger.log("Thread starting...");
 		
 		while(!reachedExit) {
 			// TODO...
@@ -154,10 +153,11 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			// If IR sensors detect obstacle, call lf.stop()
 			// If all clear, call lf.go()
 			// Make use of member variables "irData" and "irDataTimeStamp"
-			float ranges[] = (irData.getRanges());
-			log("ranges are: " + ranges[0] + " " + ranges[1] + " " + ranges[2]);
+			float ranges[] = irData.getRanges();
+			Logger.log("ranges are: " + ranges[0] + ", " + ranges[1] + ", " + ranges[2]);
 			
-			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {	
+			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {
+				Logger.log("Stopping robot because obstacle detected using IR range data.");
 				lf.stop();
 			}
 			else {
@@ -172,29 +172,29 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 		// Notify the ClientManager that the LocalIntersectionManager is done.
 		clientMgr.localIntersectionMgrDone(true);
 		
-		log("run: Thread terminating...");
+		Logger.log("Thread terminating...");
 	}
 	
-	/**
-	 * Logs a debug message.  This message is only printed when debug mode is enabled.
-	 * 
-	 * @param msg The message to log.
-	 */
-	private void log(String msg) {
-		log(msg, true);
-	}
-	
-	/**
-	 * Logs a message.
-	 * 
-	 * @param msg  The message to log.
-	 * @param isDebugMsg Whether the message is a debug message.
-	 */
-	private void log(String msg, boolean isDebugMsg) {
-		String result = "LocalIntersectionMar: " + msg;
-		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	/**
+//	 * Logs a debug message.  This message is only printed when debug mode is enabled.
+//	 * 
+//	 * @param msg The message to log.
+//	 */
+//	private void log(String msg) {
+//		log(msg, true);
+//	}
+//	
+//	/**
+//	 * Logs a message.
+//	 * 
+//	 * @param msg  The message to log.
+//	 * @param isDebugMsg Whether the message is a debug message.
+//	 */
+//	private void log(String msg, boolean isDebugMsg) {
+//		String result = "LocalIntersectionMar: " + msg;
+//		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }
