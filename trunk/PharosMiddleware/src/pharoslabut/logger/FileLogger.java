@@ -35,11 +35,22 @@ public class FileLogger {
 	public FileLogger(String fileName) {
 		int indx = 1;
 		
+		String fileNamePrefix;
+		String fileNamePostfix;
+		if (fileName.contains(".")) {
+			fileNamePrefix = fileName.substring(0, fileName.lastIndexOf('.'));
+			fileNamePostfix = fileName.substring(fileName.lastIndexOf('.'));
+		} else {
+			fileNamePrefix = fileName;
+			fileNamePostfix = "";
+		}
+		
 		String actualFileName = fileName;
 		// If file exists, find an extension number to avoid deleting files
 		File f = new File(actualFileName);
 		while (f.exists()) {
-			actualFileName = fileName + "-" + (indx++);
+			
+			actualFileName = fileNamePrefix + "-" + (indx++) + fileNamePostfix;
 			f = new File(actualFileName);
 		}
 
