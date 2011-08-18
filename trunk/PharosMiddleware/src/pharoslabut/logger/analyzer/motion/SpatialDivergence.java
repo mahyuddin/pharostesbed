@@ -30,16 +30,6 @@ public class SpatialDivergence {
 	 */
 	private Location idealLoc;
 	
-//	/**
-//	 * The actual heading of the robot.
-//	 */
-//	private double actualHeading;
-//	
-//	/**
-//	 * The ideal heading for the robot to point to the next waypoint.
-//	 */
-//	private double idealHeading;
-	
 	/**
 	 * The constructor.
 	 * 
@@ -47,8 +37,6 @@ public class SpatialDivergence {
 	 * @param currLoc The current location.
 	 * @param idealLoc The ideal location.
 	 * @param idealPath The ideal path along which the robot should travel.
-//	 * @param actualHeading The actual heading of the robot.
-//	 * @param idealHeading The ideal heading for the robot to point to the next waypoint.
 	 */
 	public SpatialDivergence(long timeStamp, Location currLoc, Location idealLoc, Line idealPath)
 			//double actualHeading, double idealHeading) 
@@ -57,8 +45,6 @@ public class SpatialDivergence {
 		this.currLoc = currLoc;
 		this.idealLoc = idealLoc;
 		this.idealPath = idealPath;
-//		this.actualHeading = actualHeading;
-//		this.idealHeading = idealHeading;
 	}
 	
 	/**
@@ -90,32 +76,6 @@ public class SpatialDivergence {
 		return idealLoc;
 	}
 	
-//	/**
-//	 * 
-//	 * @return The ideal heading for the robot to point to the next waypoint.
-//	 */
-//	public double getIdealHeading() {
-//		return idealHeading;
-//	}
-//	
-//	/**
-//	 * 
-//	 * @return The actual heading of the robot.
-//	 */
-//	public double getActualHeading() {
-//		return actualHeading;
-//	}
-//	
-//	/**
-//	 * Returns the heading error.  A negative heading error means the robot must turn 
-//	 * right.  A positive heading error means the robot must turn left.
-//	 *   
-//	 * @return The heading error.
-//	 */
-//	public double getHeadingError() {
-//		return pharoslabut.navigate.Navigate.headingError(actualHeading, idealHeading);
-//	}
-//	
 	/**
 	 * @return The absolute value of the divergence.
 	 */
