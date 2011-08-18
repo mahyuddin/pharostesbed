@@ -33,7 +33,7 @@ public class TemporalDivergence {
 	 * The constructor.
 	 * 
 	 * @param waypointNumber The waypoint sequence number, starting from zero.
-	 * @param idealTOA The ideal time at which the robot should have arrived at the waypoint.
+	 * @param idealTOA The ideal time when the robot should arrive at the waypoint.
 	 * This is based on when the robot first started to move.
 	 * @param idealRelTOA The ideal time that the robot should have reached the waypoint relative to
 	 * when it left the previous waypoint.
@@ -66,20 +66,29 @@ public class TemporalDivergence {
 	 * 
 	 * @return The temporal divergence in milliseconds.
 	 */
-	public long getDivergence() {
-		return actualTOA - idealTOA;
+	public long getLateness(boolean absolute) {
+		long result = actualTOA - idealTOA;
+		if (absolute)
+			return Math.abs(result);
+		else
+			return result;
 	}
 	
 	/**
 	 * 
 	 * @return The relative divergence in milliseconds.
 	 */
-	public long getRelDivergence() {
-		return actualTOA - idealRelTOA;
+	public long getRelLateness(boolean absolute) {
+		long result = actualTOA - idealRelTOA;
+		if (absolute)
+			return Math.abs(result);
+		else
+			return result;
 	}
 	
 	public String toString() {
 		return "TemporalDivergence: waypointNumber=" + waypointNumber + "idealTOA=" + idealTOA + ", idealRelTOA=" + idealRelTOA 
-		+ ", actualTOA=" + actualTOA + ", temporal divergence=" + getDivergence();
+		+ ", actualTOA=" + actualTOA + ", lateness=" + getLateness(false)
+		+ ", relative lateness=" + getRelLateness(false);
 	}
 }
