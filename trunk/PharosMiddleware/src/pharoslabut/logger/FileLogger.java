@@ -28,7 +28,7 @@ public class FileLogger {
 	}
 	
 	/**
-	 * A constructor.  Includes a time stamp with every line logged.
+	 * A constructor.  Includes a time stamp with every line logged if printTimeStamp = true.
 	 * 
 	 * @param fileName The name of the file in which to log text.
 	 */
