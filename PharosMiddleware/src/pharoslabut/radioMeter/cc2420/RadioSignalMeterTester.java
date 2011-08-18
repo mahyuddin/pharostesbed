@@ -6,24 +6,24 @@ public class RadioSignalMeterTester {
 
 	public RadioSignalMeterTester() {
 		
-		FileLogger flogger = new FileLogger("RadioSignalMeterTester-" 
-				+ FileLogger.getUniqueNameExtension() + ".log");
+		Logger.setFileLogger(new FileLogger("RadioSignalMeterTester-" 
+				+ FileLogger.getUniqueNameExtension() + ".log", false));;
 		
 		TelosBeaconBroadcaster tbb = null;
 		try {
 			tbb = new TelosBeaconBroadcaster();
-			tbb.setFileLogger(flogger);
+//			tbb.setFileLogger(flogger);
 			long minPeriod = 1000, maxPeriod = 4000;
 			tbb.start(minPeriod, maxPeriod, TelosBeaconBroadcaster.TX_PWR_MAX);
 		} catch (TelosBeaconException e) {
 			String msg = "Failed to start CC2420 radio signal meter.";
-			flogger.log(msg);
+			Logger.logErr(msg);
 			System.err.println(msg);
 			System.exit(1);
 		}
 		
 		synchronized(this) {
-			System.out.println("Waiting 10s...");
+			Logger.log("Waiting 10s...");
 			try {
 				wait(10000);
 			} catch (InterruptedException e) {
@@ -31,17 +31,19 @@ public class RadioSignalMeterTester {
 			}
 		}
 		
-		System.out.println("Shutting down beacons...");
+		Logger.log("Shutting down beacons...");
 		tbb.stop();
 		
 		synchronized(this) {
-			System.out.println("Waiting another 10s before shuttind down...");
+			Logger.log("Waiting another 10s before shutting down...");
 			try {
 				wait(10000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
 		}
+		
+		
 	}
 	
 	private static void print(String msg) {
@@ -51,7 +53,7 @@ public class RadioSignalMeterTester {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.radiometer.cc2420 <options>\n");
+		print("Usage: " +  RadioSignalMeterTester.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-debug: enable debug mode");
 		System.exit(0);

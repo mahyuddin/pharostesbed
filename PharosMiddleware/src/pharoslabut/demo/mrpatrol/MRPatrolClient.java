@@ -4,6 +4,7 @@ import pharoslabut.experiment.ExpConfigReader;
 import pharoslabut.experiment.ExpType;
 import pharoslabut.experiment.RobotExpSettings;
 import pharoslabut.io.*;
+import pharoslabut.logger.Logger;
 
 public class MRPatrolClient {
 	/**
@@ -32,10 +33,10 @@ public class MRPatrolClient {
 //				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
 //			}
 			
-			log("Sending each robot their motion scripts, numrobots=" + expConfig.numRobots());
+			Logger.log("Sending each robot their motion scripts, numrobots=" + expConfig.numRobots());
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
-				log("\tSending configuration data to robot " + currRobot.getName());
+				Logger.log("\tSending configuration data to robot " + currRobot.getName());
 				
 				
 				// read file currRobot.getMotionScript() into String fileVar 
@@ -47,14 +48,14 @@ public class MRPatrolClient {
 				// 
 //				MotionScript script = MotionScriptReader.readTraceFile();
 //				MotionScriptMsg msg = new MotionScriptMsg(script);
-				log("\tConfiguration file:"+myMsg.GetConfigData()+"\t data type:"+myMsg.getType());
+				Logger.log("\tConfiguration file:"+myMsg.GetConfigData()+"\t data type:"+myMsg.getType());
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), myMsg);
 			}
 			
 			// Pause to ensure each robot receives their motion script.
 			// This is to prevent out-of-order messages.
 			int startTime = 5;
-			log("Starting experiment in " + startTime + "...");
+			Logger.log("Starting experiment in " + startTime + "...");
 			while (startTime-- > 0) {
 				synchronized(this) { 
 					try {
@@ -63,7 +64,7 @@ public class MRPatrolClient {
 						e.printStackTrace();
 					}
 				}
-				if (startTime > 0) log(startTime + "...");
+				if (startTime > 0) Logger.log(startTime + "...");
 			}
 			
 			
@@ -73,33 +74,33 @@ public class MRPatrolClient {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				StartExpMsg sem = new StartExpMsg(expConfig.getExpName(), ExpType.RUN_BEHAVIOR_GPS, delay);
 				
-				log("Sending StartExpMsg to robot " + currRobot.getName() + "...");
+				Logger.log("Sending StartExpMsg to robot " + currRobot.getName() + "...");
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), sem);
 				
 				// Update the delay between each robot.
 				delay += expConfig.getStartInterval();
 			}
 		} catch(Exception e) {
-			logErr("Problem while communicating with the robots...");
+			Logger.logErr("Problem while communicating with the robots...");
 			e.printStackTrace();
 		}
 	}
 	
-	private void logErr(String msg) {
-		System.err.println("MrPatrolClient: " + msg);
-	}
-	
-	private void log(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println("MrPatrolClient: " + msg);
-	}
+//	private void logErr(String msg) {
+//		System.err.println("MrPatrolClient: " + msg);
+//	}
+//	
+//	private void log(String msg) {
+//		if (System.getProperty ("PharosMiddleware.debug") != null) 
+//			System.out.println("MrPatrolClient: " + msg);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.mrpatrol.MRPatrolServer <options>\n");
+		print("Usage: " + MRPatrolClient.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-debug: enable debug mode");

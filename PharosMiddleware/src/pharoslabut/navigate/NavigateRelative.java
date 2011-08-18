@@ -1,6 +1,7 @@
 package pharoslabut.navigate;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.tasks.MotionTask;
 
 /**
@@ -12,14 +13,14 @@ import pharoslabut.tasks.MotionTask;
 public class NavigateRelative implements Runnable {
 	
 	private MotionArbiter motionArbiter;
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private RelativeMotionScript script;
 	private boolean running = false;
 	
-	public NavigateRelative(MotionArbiter motionArbiter, RelativeMotionScript script, FileLogger flogger) {
+	public NavigateRelative(MotionArbiter motionArbiter, RelativeMotionScript script) {
 		this.motionArbiter = motionArbiter;
 		this.script = script;
-		this.flogger = flogger;
+//		this.flogger = flogger;
 	}
 	
 	public void start() {
@@ -44,12 +45,12 @@ public class NavigateRelative implements Runnable {
 			MotionTask currMotionTask = script.getMotionTask(indx);
 			long currDuration = script.getDuration(indx);
 			
-			log("Submitting task: " + currMotionTask + ", duration: " + currDuration + "...");
+			Logger.log("Submitting task: " + currMotionTask + ", duration: " + currDuration + "...");
 			motionArbiter.submitTask(currMotionTask);
 			
 			try {
 				synchronized(this) {
-					log("Waiting for " + currDuration + "ms...");
+					Logger.log("Waiting for " + currDuration + "ms...");
 					wait(currDuration);
 				}
 			} catch (InterruptedException e) {
@@ -60,15 +61,15 @@ public class NavigateRelative implements Runnable {
 			indx++;
 		}
 		
-		log("Done following motion script...");
+		Logger.log("Done following motion script...");
 	}
 	
-	private void log(String msg) {
-		String result = "NavigateRelative: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println(result);
-		if (flogger != null) {
-			flogger.log(result);
-		}
-	}
+//	private void log(String msg) {
+//		String result = "NavigateRelative: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null) 
+//			System.out.println(result);
+//		if (flogger != null) {
+//			flogger.log(result);
+//		}
+//	}
 }

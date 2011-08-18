@@ -2,7 +2,7 @@ package pharoslabut.behavior.management;
 
 import pharoslabut.behavior.fileParsing.StringParsing;
 import pharoslabut.demo.mrpatrol.MRPConfData;
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 public class WorldModel {
 
@@ -23,23 +23,28 @@ public class WorldModel {
 	//the amount of time the robot is waiting for its teammates - after that, it will continue without coordination
 	final int MAX_WAITING_PERIOD = 5000;
 	
-	private FileLogger _flogger = null;
+//	private FileLogger _flogger = null;
 	
 //	private boolean connectToAllServers;
-	//The robot index in team
+	
+	/**
+	 * The index of the local robot within the world model
+	 */
 	private int wmMyIndex;
+	
+	/**
+	 * The number of times the stop condition was checked for a behavior.
+	 */
+	private int count;
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param mrpConfData The configuration of the multi-robot patrol experiment.
-	 * @param flogger The file logger for debugging (may be null).
 	 */
-	WorldModel(MRPConfData mrpConfData, FileLogger flogger)
-	{
+	WorldModel(MRPConfData mrpConfData) {
 		wmTeamSize = mrpConfData.GetNumRobots(); // The number of robots in the team.
 		wmMyIndex = mrpConfData.GetMyindex(); // This robot's index within the team.
-		_flogger = flogger;
 		_numBehaviors = mrpConfData.GetNumMissions(); // The number of behaviors
 		
 		wmCurrentBehavior = new String[wmTeamSize];
@@ -51,7 +56,8 @@ public class WorldModel {
 //		allmyClientConnected = false;
 //		connectToAllServers = false;
 	}
-	private int count;
+	
+	
 //	public synchronized boolean isAllMyClientsConnected(){return allmyClientConnected;}
 //	public synchronized void setAllMyClientsConnected(){allmyClientConnected = true;}
 	
@@ -65,7 +71,9 @@ public class WorldModel {
 	public synchronized int getPort(int index){return teamPort[index];}
 	
 	public synchronized int getCount(){return count;}
-	public synchronized void setCount(int c){count = c;}
+	public synchronized void incCount() { count++; }
+	public synchronized void resetCount() { count = 0; }
+//	public synchronized void setCount(int c){count = c;}
 	
 	public void setCurrentMsgTime(int index){_lastTimeUpdate[index] = System.currentTimeMillis();}
 	public long getLastMsgTime(int index){return _lastTimeUpdate[index];}
@@ -88,12 +96,12 @@ public class WorldModel {
 		boolean wasAccepted = false;
 		
 		if(wmCurrentBehavior[index].equals(_outofRange)){
-			log("setTeamCurrentBehavior : Behaior of teammate " + index + " BACK IN RANGE");
+			Logger.log("Behaior of teammate " + index + " BACK IN RANGE");
 		}
 		for(int validIndices = wmCurrentIndex[index]; validIndices <= wmCurrentIndex[index] + VALIDITY_WINDOW && !wasAccepted; validIndices++) {
 //			int currValidIndex = validIndices % _numBehaviors;
 			if (behaveID == validIndices) {
-				log("setTeamCurrentBehavior: updating teammate "+ index + " behavior " + beh + " ID " + behaveID);
+				Logger.log("updating teammate "+ index + " behavior " + beh + " ID " + behaveID);
 				
 				wmCurrentBehavior[index] = beh; 
 				wmCurrentIndex[index] = behaveID;
@@ -102,11 +110,8 @@ public class WorldModel {
 			}
 		}
 		
-		if (!wasAccepted) {
-			log("setTeamCurrentBehavior: Got an old message: new behaveID is " + behaveID + "old behaveID is "+ wmCurrentIndex[index]);
-			return;
-		}
-
+		if (!wasAccepted)
+			Logger.log("Got an old message: new behaveID is " + behaveID + "old behaveID is "+ wmCurrentIndex[index]);
 	}
 
 	public synchronized void setTeamOutOfRange(int index){wmCurrentBehavior[index] = _outofRange;}
@@ -117,8 +122,8 @@ public class WorldModel {
 	
 	public synchronized void checkAliveTeam(){
 		long currentTime = System.currentTimeMillis();
-		for (int i=0;i<wmTeamSize;i++){
-			if(i==wmMyIndex)
+		for (int i=0; i<wmTeamSize; i++){
+			if(i == wmMyIndex)
 				continue;
 			if ((currentTime-_lastTimeUpdate[i]) > MAX_WAITING_PERIOD){
 				setTeamOutOfRange(i);
@@ -134,12 +139,12 @@ public class WorldModel {
 //		int myBeID = getTeamBehaviorID(wmMyIndex);
 		
 		if(wmTeamSize ==1) {
-			log("isTeamSynchronized : only one team member; report synchronized");
+			Logger.log("Team is synchronized: only one team member");
 			return true;
 		}
 		
 		if(behaviorName == null) {
-			log("isTeamSynchronized: current behavior NULL\n");
+			Logger.log("Team NOT synchronized: current behavior is NULL\n");
 			return false;
 		}
 		
@@ -155,13 +160,12 @@ public class WorldModel {
 		
 		String teamBeh;
 		boolean isStopTeamMember;
-		for(i=0;i<wmTeamSize;i++)
-		{	
+		for(i=0; i < wmTeamSize; i++) {	
 			if(wmCurrentBehavior[i] == null) {
-				log("isTeamSynchronized: Behavior " + i + " is NULL\n");
+				Logger.log("Team NOT synchronized: Behavior " + i + " is NULL\n");
 				return false;
 			} else 
-				log("isTeamSynchronized: Behavior " + i + " is " + wmCurrentBehavior[i]);
+				Logger.log("Behavior " + i + " is " + wmCurrentBehavior[i]);
 
 			
 			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
@@ -174,7 +178,7 @@ public class WorldModel {
 			//Get Teammate's behavior ID
 			
 			if(isStop == false && behPureName.equals(teamBeh)==false) {
-				log("isTeamSynchronized:  Team is NOT synch: isstop = false; behPureName.equals(teamBeh) = false");
+				Logger.log("Team NOT synchronized: isstop = false; behPureName.equals(teamBeh) = false");
 				return false;
 			}
 			if((isStop == true) // I am stopped 
@@ -182,15 +186,15 @@ public class WorldModel {
 					&& (behPureName.equals(teamBeh)) // we are running the same behavior
 				) {
 				
-				log("isTeamSynchronized: Team is NOT synch: isstop = true; isStopTeamMember = false; behPureName.equals(teamBeh) = true");
+				Logger.log("Team NOT synchronized: isstop = true; isStopTeamMember = false; behPureName.equals(teamBeh) = true");
 				return false;
 			}
 /*			if((isStop == true) && (isStopTeamMember == false) && !(teamBehID == (myBeID+1)%_numBehaviors)){
-				log("isTeamSynchronized:  Team is NOT synch: isstop = true; isStopTeamMember = false; !(teamBeID == (myBeID+1)%numBeh");
+				log(" Team is NOT synch: isstop = true; isStopTeamMember = false; !(teamBeID == (myBeID+1)%numBeh");
 				return false;
 			}
 */		}
-		log("isTeamSynchronized: team is synchronized");
+		Logger.log("Team is synchronized: passed all false checks.");
 		return true;
 	}
 	
@@ -200,7 +204,7 @@ public class WorldModel {
 		int i;
 		String behaviorName = wmCurrentBehavior[wmMyIndex];
 		
-		log("isTeamSynchronizedDynamically: entering dynamic synchronization\n");
+		Logger.log("entering dynamic synchronization\n");
 		if(behaviorName == null){
 			System.out.print("current behavior NULL\n");
 			return false;
@@ -221,17 +225,17 @@ public class WorldModel {
 		for(i=0;i<wmTeamSize;i++)
 		{	
 			if(wmCurrentBehavior[i] == null) {
-				log("isTeamSynchronizedDynamically: behavior "+i+" NULL\n");
+				Logger.log("behavior "+i+" NULL\n");
 				return false;
 			} else 
-				log("isTeamSynchronizedDynamically: Behavior "+i+" is "+wmCurrentBehavior[i]);
+				Logger.log("Behavior "+i+" is "+wmCurrentBehavior[i]);
 
 			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
 			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
 			
 			//If team member is out of range - disregard it
 			if(teamBeh.equals(_outofRange)){
-				log("isTeamSynchronizedDynamically: Team member " + i + " behavior is marked as OUT_OF_RANGE");
+				Logger.log("Team member " + i + " behavior is marked as OUT_OF_RANGE");
 				continue;
 			}
 			// If team member's behavior ID is smaller than mine - I have to wait for it. 
@@ -250,7 +254,7 @@ public class WorldModel {
 			}
 			if((isStop == true) && (isStopTeamMember == false) && (behPureName.equals(teamBeh))){
 				//if I'm behind - I should continue. If I'm more advanced - I should wait
-				log("isTeamSynchronizedDynamically: I'm stopped, my mate is not (on the same behavior) - I wait");
+				Logger.log("I'm stopped, my mate is not (on the same behavior) - I wait");
 				return false;
 			}
 			
@@ -268,17 +272,17 @@ public class WorldModel {
 //			_flogger.log(result);
 //	}
 	
-	private void log(String msg) {
-		String result = "WorldModel: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "WorldModel: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
 	
 	public String toString() {
 		return "WorldModel: MyIP=" + getMyIp() + ", MyPort=" + getMyPort() + ", TeamSize=" + getTeamSize() 

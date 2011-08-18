@@ -3,7 +3,7 @@ package pharoslabut.sensors;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 import playerclient3.RangerInterface;
 import playerclient3.structures.ranger.PlayerRangerData;
@@ -24,11 +24,6 @@ public class RangerDataBuffer implements Runnable {
 	private boolean running = false;
 	
 	/**
-	 * The file logger for saving debug data.
-	 */
-	private FileLogger flogger;
-	
-	/**
 	 * Listeners for range events.
 	 */
 	private Vector<RangerListener> listeners = new Vector<RangerListener>();
@@ -40,16 +35,6 @@ public class RangerDataBuffer implements Runnable {
 	 */
 	public RangerDataBuffer(RangerInterface ranger) {
 		this.ranger = ranger;
-	}
-	
-	/**
-	 * Sets the file logger.  If the file logger is not null, this component
-	 * logs compass data to a file.
-	 * 
-	 * @param flogger The file logger.  This may be null.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
 	}
 	
     /**
@@ -103,9 +88,8 @@ public class RangerDataBuffer implements Runnable {
 	 * Stops the CompassDataBuffer.  Allows the thread that reads compass data to terminate.
 	 */
 	public synchronized void stop() {
-		if (running) {
+		if (running)
 			running = false;
-		}
 	}
 	
 	/**
@@ -113,7 +97,7 @@ public class RangerDataBuffer implements Runnable {
 	 */
 	public void run() {
 		
-		log("run: thread starting...");
+		Logger.log("thread starting...");
 		
 		while(running) {
 			
@@ -132,14 +116,14 @@ public class RangerDataBuffer implements Runnable {
 			}
 		}
 		
-		log("run: thread terminating...");
+		Logger.log("thread terminating...");
 	}
 	
-	private void log(String msg) {
-		String result = "RangerDataBuffer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null) 
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "RangerDataBuffer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null) 
+//			flogger.log(result);
+//	}
 }

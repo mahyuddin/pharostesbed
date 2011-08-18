@@ -1,6 +1,7 @@
 package pharoslabut.sensors;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import playerclient3.structures.ranger.*;
 
 import java.awt.*;
@@ -21,7 +22,6 @@ public class RangerVisualizer {
 	private JFrame window;
 	private IRPanel irPanel;
 	private boolean isClosed = false;
-	private FileLogger flogger = null;
 	
 	private double distFC = 0;
 	private double distFR = 0;
@@ -31,12 +31,6 @@ public class RangerVisualizer {
 	private double distRL = 0;
 	
 	public RangerVisualizer() {
-		this(null);
-	}
-	
-	public RangerVisualizer(FileLogger flogger) {
-		this.flogger = flogger;
-		
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createGUI();
@@ -111,7 +105,7 @@ public class RangerVisualizer {
     		distRR = data[5];
     		javax.swing.SwingUtilities.invokeLater(irPanel); // repaints the IR panel
     	} else {
-    		log("ERROR: Expected 6 sensors, instead got " + numSensors);
+    		Logger.logErr("Expected 6 sensors, instead got " + numSensors);
     	}
     }
     
@@ -276,13 +270,13 @@ public class RangerVisualizer {
     	}
     }
     
-	private void log(String msg) {
-		String result = "RangerVisualizer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "RangerVisualizer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	
 //	public static void main(String[] args) {

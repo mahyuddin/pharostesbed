@@ -12,8 +12,6 @@ import pharoslabut.logger.*;
  *
  */
 public class MCUInterface implements MCUConstants {
-
-	private FileLogger flogger = null;
 	private OutputStream os = null;
 	private InputStream is = null;
 	private boolean ackRcvd = false;
@@ -24,9 +22,7 @@ public class MCUInterface implements MCUConstants {
 	 * 
 	 * @param portName The comm port on which the MCU is attached.
 	 */
-	public MCUInterface(String portName, FileLogger flogger) {
-		this.flogger = flogger;
-		
+	public MCUInterface(String portName) {
 		// listPorts();
 		try {
 			connect(portName);
@@ -44,7 +40,7 @@ public class MCUInterface implements MCUConstants {
 		double angleRadians = angle / 180 * Math.PI; // convert angle to radians
 		short angleMCU = (short)(angleRadians * 10000); // convert angle to units expected by MCU (0.0001 radians)
 		
-		//log("Setting camera tilt angle to be " + angle + " degrees (" + angleMCU + " 0.0001 radians)");
+		//Logger.log("Setting camera tilt angle to be " + angle + " degrees (" + angleMCU + " 0.0001 radians)");
 		
 		byte[] cmd = {
 				PROTEUS_BEGIN,
@@ -54,7 +50,7 @@ public class MCUInterface implements MCUConstants {
 				PROTEUS_END
 		};
 		
-		//log("Writing the following command: " + byteArrayToString(cmd, cmd.length));
+		//Logger.log("Writing the following command: " + byteArrayToString(cmd, cmd.length));
 		
 		sendToMCU(cmd);
 
@@ -69,7 +65,7 @@ public class MCUInterface implements MCUConstants {
 		double angleRadians = angle / 180 * Math.PI; // convert angle to radians
 		short angleMCU = (short)(angleRadians * 10000); // convert angle to units expected by MCU (0.0001 radians)
 		
-		//log("Setting camera pan angle to be " + angle + " degrees (" + angleMCU + " 0.0001 radians)");
+		//Logger.log("Setting camera pan angle to be " + angle + " degrees (" + angleMCU + " 0.0001 radians)");
 		
 		byte[] cmd = {
 				PROTEUS_BEGIN,
@@ -79,7 +75,7 @@ public class MCUInterface implements MCUConstants {
 				PROTEUS_END
 		};
 		
-		//log("Writing the following command: " + byteArrayToString(cmd, cmd.length));
+		//Logger.log("Writing the following command: " + byteArrayToString(cmd, cmd.length));
 		sendToMCU(cmd);
 	}
 	
@@ -135,7 +131,7 @@ public class MCUInterface implements MCUConstants {
 			}
 		}
 		
-		//log("Cmd sent, waiting for ack...");
+		//Logger.log("Cmd sent, waiting for ack...");
 		synchronized(reader) {
 			try {
 				reader.wait(MCU_TIMEOUT_PERIOD);
@@ -145,18 +141,11 @@ public class MCUInterface implements MCUConstants {
 		}
 		
 		if (!ackRcvd)
-			//log("Ack received...");
+			//Logger.log("Ack received...");
 		//else
-			log("No ack!");
+			Logger.logErr("No ack!");
 		
 		return ackRcvd;
-	}
-	
-	private void log(String msg) {
-		String result = "MCUInterface: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
 	}
 	
     public class SerialReader implements Runnable {
@@ -183,7 +172,7 @@ public class MCUInterface implements MCUConstants {
         		panAngle = (short)(byteBuffer.remove(0) << 8);
         		panAngle += byteBuffer.remove(0);
         		
-        		log("MCU Status Msg: tilt angle = " + tiltAngle + ", panAngle = " + panAngle);
+        		Logger.log("MCU Status Msg: tilt angle = " + tiltAngle + ", panAngle = " + panAngle);
         		
         		byteBuffer.remove(0); // remove PROTEUS_END
         		return true;
@@ -197,10 +186,10 @@ public class MCUInterface implements MCUConstants {
         	
         	byte length = byteBuffer.get(2); // third position is length of string
         	
-        	log("MCU Msg length: " + length);
+        	Logger.log("MCU Msg length: " + length);
         	
         	if (byteBuffer.size() < 3 + length) {
-        		log("Insufficient bytes in buffer for message");
+        		Logger.log("Insufficient bytes in buffer for message");
         		return false; 
         	}
         	
@@ -214,7 +203,7 @@ public class MCUInterface implements MCUConstants {
     			msgBytes[i] = byteBuffer.remove(0);
     		}
     		
-    		log("MCU Msg: " + new String(msgBytes).toString());
+    		Logger.log("MCU Msg: " + new String(msgBytes).toString());
     		return true;
         	
         }
@@ -242,7 +231,7 @@ public class MCUInterface implements MCUConstants {
         	// Remove extraneous bytes in the front of the buffer
         	while (byteBuffer.size() > 0 && byteBuffer.get(0) != PROTEUS_BEGIN) {
         		byte b = byteBuffer.remove(0);
-        		log("Discarding extraneous byte: 0x" + Integer.toHexString(b));
+        		Logger.log("Discarding extraneous byte: 0x" + Integer.toHexString(b));
         	}
         	
         	boolean done = false;
@@ -259,7 +248,7 @@ public class MCUInterface implements MCUConstants {
         			done = readAckPacket();
         			break;
         		default: 
-        			log("Unknown message type: " + byteBuffer.get(1));
+        			Logger.log("Unknown message type: " + byteBuffer.get(1));
         			byteBuffer.remove(0);
         		}
         	}
@@ -283,15 +272,15 @@ public class MCUInterface implements MCUConstants {
             catch ( IOException e ) {
                 e.printStackTrace();
             }         
-            log("SerialReader thread exiting...");
+            Logger.log("SerialReader thread exiting...");
         }
     }
     
 	private void connect(String portName) throws Exception {
-		log("Connecting to: " + portName);
+		Logger.log("Connecting to: " + portName);
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
         if ( portIdentifier.isCurrentlyOwned() ){
-        	log("Error: Port is currently in use");
+        	Logger.log("Error: Port is currently in use");
         } else {
             CommPort commPort = portIdentifier.open(this.getClass().getName(),2000);
             
@@ -302,10 +291,10 @@ public class MCUInterface implements MCUConstants {
                 is = serialPort.getInputStream();
                 os = serialPort.getOutputStream();
                 
-                log("Starting serial reader thread...");
+                Logger.log("Starting serial reader thread...");
                 reader = new SerialReader(is);
             } else {
-            	log("Error: Only serial ports are handled by this example.");
+            	Logger.logErr("Only serial ports are handled by this example.");
             }
         }   
 	}

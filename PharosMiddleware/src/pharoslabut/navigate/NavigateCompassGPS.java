@@ -4,7 +4,8 @@ import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.exceptions.NoNewDataException;
 import playerclient3.structures.gps.PlayerGpsData;
 
@@ -52,9 +53,9 @@ public class NavigateCompassGPS extends Navigate {
 	 * @param compassDataBuffer The compass data source (buffered).
 	 * @param gpsDataBuffer The GPS data source (buffered).
 	 */
-	public NavigateCompassGPS(MotionArbiter motionArbiter, CompassDataBuffer compassDataBuffer, GPSDataBuffer gpsDataBuffer,
-			FileLogger flogger) {
-		super(flogger);
+	public NavigateCompassGPS(MotionArbiter motionArbiter, CompassDataBuffer compassDataBuffer, 
+			GPSDataBuffer gpsDataBuffer) 
+	{
 		this.motionArbiter = motionArbiter;
 		this.compassDataBuffer = compassDataBuffer;
 		this.gpsDataBuffer = gpsDataBuffer;
@@ -221,7 +222,7 @@ public class NavigateCompassGPS extends Navigate {
 			return gpsDataBuffer.getCurrLoc();
 		} catch (NoNewDataException e) {
 			e.printStackTrace();
-			logErr("getLocation: Failed to get current location\n");
+			Logger.logErr("Failed to get current location\n");
 			return null;
 		}
 	}
@@ -230,9 +231,8 @@ public class NavigateCompassGPS extends Navigate {
 		try {
 			return compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
 		} catch (NoNewDataException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
-			logErr("getCompassHeading: Unable to get compass heading\n");
+			Logger.logErr("Unable to get compass heading\n");
 			return ERROR_HEADING;
 		}
 	}
@@ -263,7 +263,7 @@ public class NavigateCompassGPS extends Navigate {
 		motionArbiter.submitTask(mt);
 		prevTask = mt;
 		
-		log("Current Instruction:\n\tVelocity: + " + mt.getVelocity() + "\n\tHeading: " + mt.getHeading());
+		Logger.log("Current Instruction:\n\tVelocity: + " + mt.getVelocity() + "\n\tHeading: " + mt.getHeading());
 	}
 	
 	/**
@@ -281,7 +281,7 @@ public class NavigateCompassGPS extends Navigate {
 		boolean done = false;
 		
 		if (targetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
-			log("Destination reached!");
+			Logger.log("Destination reached!");
 			done = true;
 
 			// Submit a stop motion task
@@ -293,9 +293,9 @@ public class NavigateCompassGPS extends Navigate {
 			motionArbiter.submitTask(mt);
 			prevTask = mt;
 			
-			log("Arrived at destination " + dest + "!");
+			Logger.log("Arrived at destination " + dest + "!");
 		} else if (targetDirection.getDistance() > 2000) {
-				log("Invalid distance: Greater than 2km (" + targetDirection.getDistance() + "), stopping robot...");
+			Logger.logErr("Invalid distance: Greater than 2km (" + targetDirection.getDistance() + "), stopping robot...");
 				stopRobot();
 		} else {
 			SubmitMotionTask(targetDirection, velocity);
@@ -326,14 +326,14 @@ public class NavigateCompassGPS extends Navigate {
 					if (done) success = true;
 					//dprevLoc = currLoc;
 				} else {
-					logErr("go: Invalid current location " + currLoc + ", halting robot...");
+					Logger.logErr("Invalid current location " + currLoc + ", halting robot...");
 					stopRobot();
 				}
 			} catch(NoNewDataException nnde) {
 				if (currLoc == null) {
-					logErr("go: Unable to get the current location, halting robot...");
+					Logger.logErr("Unable to get the current location, halting robot...");
 				} else
-					logErr("go: Unable to get the current heading, halting robot...");
+					Logger.logErr("Unable to get the current heading, halting robot...");
 				stopRobot();
 			}
 			
@@ -347,32 +347,32 @@ public class NavigateCompassGPS extends Navigate {
 				}
 			}
 		}
-		log("go: Done going to " + dest + ", success=" + success);
+		Logger.log("Done going to " + dest + ", success=" + success);
 		return success;
 	}
 	
-	private void logErr(String msg) {
-		String result = "NavigateCompassGPS: ERROR: " + msg;
-		
-		System.err.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "NavigateCompassGPS: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
+//	private void logErr(String msg) {
+//		String result = "NavigateCompassGPS: ERROR: " + msg;
+//		
+//		System.err.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "NavigateCompassGPS: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
 //	public static final void main(String[] args) {
 //		String serverIP = "10.11.12.20";
 //		int serverPort = 6665;

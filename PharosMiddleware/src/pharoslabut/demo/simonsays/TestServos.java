@@ -9,7 +9,7 @@ import pharoslabut.logger.*;
  */
 public class TestServos implements MCUConstants {
 	
-	FileLogger flogger = null;
+//	FileLogger flogger = null;
 	MCUInterface mcu;
 	
 	/**
@@ -17,14 +17,14 @@ public class TestServos implements MCUConstants {
 	 * 
 	 * @param portName The comm port on which the MCU is attached.
 	 */
-	public TestServos(String portName, String fileName) {
+	public TestServos(String portName) {
 		// listPorts();
 		
-		if (fileName != null) 
-			flogger = new FileLogger(fileName);
+//		if (fileName != null) 
+//			flogger = 
 		
 		try {
-			mcu = new MCUInterface(portName, flogger);
+			mcu = new MCUInterface(portName);
 			doTest();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,12 +86,6 @@ public class TestServos implements MCUConstants {
 //			}
 //		}
 //	}
-	
-
-	
-
-
-
 
 	
 	private static void print(String msg) {
@@ -112,7 +106,6 @@ public class TestServos implements MCUConstants {
 	 */
 	public static void main(String[] args) {
 		String portName = "/dev/ttyS0";
-		String fileName = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -120,7 +113,7 @@ public class TestServos implements MCUConstants {
 					portName = args[++i];
 				}
 				else if (args[i].equals("-file") ) {
-					fileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i]));
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -138,10 +131,9 @@ public class TestServos implements MCUConstants {
 		}
 		
 		print("Port: " + portName);
-		print("File: " + fileName);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new TestServos(portName, fileName);
+		new TestServos(portName);
 	}
 
 }

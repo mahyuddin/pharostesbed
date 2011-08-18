@@ -16,7 +16,7 @@ public class BehGotoGPSCoord extends Behavior {
 	private NavigateCompassGPS _navigatorGPS;
 	private boolean _stopAtEndBehavior;
 	private Location _destLoc;
-	protected static FileLogger _flogger = null;
+//	protected static FileLogger _flogger = null;
 	public static final double GPS_TARGET_RADIUS_METERS = 3.5;
 	private TargetDirection _lastTargetDirection;
 	private double _lastCurrHeading;
@@ -25,10 +25,8 @@ public class BehGotoGPSCoord extends Behavior {
 	private boolean _simulateAll = false;
 
 	
-	public BehGotoGPSCoord(WorldModel wm, MissionData md, NavigateCompassGPS navigateData, FileLogger flogger) {
+	public BehGotoGPSCoord(WorldModel wm, MissionData md, NavigateCompassGPS navigateData) {
 		super(wm, md);
-		
-		_flogger = flogger;
 		
 		if(System.getProperty ("simulateBehave") != null)
 			_simulateAll = true;
@@ -39,11 +37,11 @@ public class BehGotoGPSCoord extends Behavior {
 		if(_wm.getTeamSize() > 1){
 			_stopAtEndBehavior = true;
 		} else {
-			log("BehGotoGPSCoord: I have no teammates; not stopping at the end of the behavior");
+			Logger.log("No teammates; not stopping at the end of the behavior");
 			_stopAtEndBehavior = false;
 		}
 		
-		log("Constructor behavior; latitude = "+ _md.GetLatitude()+ "longitude = "+ _md.GetLongitude());
+		Logger.log("Constructor behavior; latitude = "+ _md.GetLatitude()+ "longitude = "+ _md.GetLongitude());
 
 		_navigatorGPS = navigateData;
 		
@@ -56,25 +54,27 @@ public class BehGotoGPSCoord extends Behavior {
 	@Override
 	public boolean startCondition() {
 		// Check if the robot can receive GPS data
-		Location currLoc = null;
-		_wm.setCount(0);
+		_wm.resetCount();
 		
 		if(_simulateAll)
 			return true;
-		log("startCondition: start condition for behavior "+_behaveIndex);
-		currLoc = new Location(_navigatorGPS.getLocation());
-		if( currLoc== null){
-			logErr("startCondition: Start condition: no current location (GPS null)");
+		
+		Logger.log("start condition for behavior " + _behaveIndex);
+		
+		PlayerGpsData gpsData = _navigatorGPS.getLocation();
+		
+		if(gpsData == null){
+			Logger.logErr("No current location (GPS null), thus start condition is false.");
 			return false;
 		}
-			
-		_wm.setCount(0);
+		
+		_wm.resetCount();
 		return true;
 	}
 
 	@Override
 	public boolean stopCondition() {
-		log("stopCondition: start method call...");
+		Logger.log("start method call...");
 		
 		_lastTargetDirection = null; // reset the direction command...
 		
@@ -99,29 +99,29 @@ public class BehGotoGPSCoord extends Behavior {
 			_lastcurrLoc = null;
 		
 		if( _lastcurrLoc== null){
-			logErr("stopCondition: Stop Condition: no current location (gps is null)");
+			Logger.logErr("Stop Condition: no current location (gps is null)");
 			//return true;
 			
 			// No GPS data at this time, continue to execute the current behavior
 			return false;
 		} else {
-			log("stopCondition: Current location: " + _lastcurrLoc);
+			Logger.log("Current location: " + _lastcurrLoc);
 		}
 		
 		_lastCurrHeading = _navigatorGPS.getCompassHeading();
 		_lastTargetDirection = _navigatorGPS.locateTarget(_lastcurrLoc, _lastCurrHeading, _destLoc);
 		if (_lastTargetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
-			log("stopCondition: Destination reached! "+ _behaveIndex);
+			Logger.log("Destination reached! "+ _behaveIndex);
 			// if we should stop at the end of the behavior (single robot case) - instruct the robot to stop!
 			if(_stopAtEndBehavior)
 				_navigatorGPS.stopRobot();
 			return true;
 		}else if (_lastTargetDirection.getDistance() > 2000) {
-			logErr("stopCondition: Invalid distance: Greater than 2km (" + _lastTargetDirection.getDistance() + "), stopping robot...");
+			Logger.logErr("Invalid distance: Greater than 2km (" + _lastTargetDirection.getDistance() + "), stopping robot...");
 			_navigatorGPS.stopRobot();
 			return true;
 		} else{
-			log("stopCondition: Haven't reached destination yet, stop condition false\n");
+			Logger.log("Haven't reached destination yet, stop condition false\n");
 			return false;
 		}
 	}
@@ -132,12 +132,12 @@ public class BehGotoGPSCoord extends Behavior {
 			return;
 		if (_lastTargetDirection != null && (_lastCurrHeading != NavigateCompassGPS.ERROR_HEADING)) { 
 			_navigatorGPS.SubmitMotionTask(_lastTargetDirection, _md.GetVelocity());
-			log("action: Running action, _LastTargetDirection=" + _lastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
+			Logger.log("Running action, _LastTargetDirection=" + _lastTargetDirection + ", velocity=" + _md.GetVelocity() + "\n");
 		} else { //stop robot if we have no GPS data
 			if(_lastTargetDirection == null)
-				log("action: Last target direction not set, stopping the robot...");
+				Logger.log("Last target direction not set, stopping the robot...");
 			else
-				log("action: _LastCurrHeading is not valid, stopping the robot...");
+				Logger.log("_LastCurrHeading is not valid, stopping the robot...");
 			
 			_navigatorGPS.stopRobot();
 		}
@@ -145,27 +145,27 @@ public class BehGotoGPSCoord extends Behavior {
 		
 		
 		
-
-	private void logErr(String msg) {
-		String result = "BehGotoGPSCoord: ERROR: " + msg;
-		
-		System.err.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "BehGotoGPSCoord: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
+//
+//	private void logErr(String msg) {
+//		String result = "BehGotoGPSCoord: ERROR: " + msg;
+//		
+//		System.err.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "BehGotoGPSCoord: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
 
 }

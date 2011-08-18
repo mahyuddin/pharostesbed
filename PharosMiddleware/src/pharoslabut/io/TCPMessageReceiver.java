@@ -3,7 +3,7 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * Accepts clients connects and listens for messages of these clients.
@@ -35,7 +35,7 @@ public class TCPMessageReceiver implements Runnable {
 	/**
 	 * A file logger for recording debug data.
 	 */
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
     
 	/**
 	 * A constructor for creating a TCPMessageReceiver that listens to any free port.
@@ -47,28 +47,16 @@ public class TCPMessageReceiver implements Runnable {
     	this(receiver, 0);
     	port = ss.getLocalPort();
     }
-	
-    /**
-	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
-	 *
-	 * @param receiver The message receiver two which received messages should be sent.
-	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.
-	 */
-    public TCPMessageReceiver(MessageReceiver receiver, int port) {
-    	this(receiver, port, null);
-    }
     
     /**
 	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
 	 *
 	 * @param receiver The message receiver two which received messages should be sent.
 	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.
-	 * @param flogger The file logger  
 	 */
-    public TCPMessageReceiver(MessageReceiver receiver, int port, FileLogger flogger){
+    public TCPMessageReceiver(MessageReceiver receiver, int port){
     	this.receiver = receiver;
 		this.port = port;
-		this.flogger = flogger;
 		
 		// create the server socket
 		while (ss == null) {
@@ -79,7 +67,7 @@ public class TCPMessageReceiver implements Runnable {
 					ss = new ServerSocket(0);
 				}
 			} catch (IOException e) {
-				logErr("Unable to open server socket, waiting a couple seconds before trying again...");
+				Logger.logErr("Unable to open server socket, waiting a couple seconds before trying again...");
 				try {
 					synchronized(this) { wait(1000*2); }
 				} catch (InterruptedException e1) {
@@ -88,17 +76,17 @@ public class TCPMessageReceiver implements Runnable {
 			}
 		}
 		
-		log("Starting the thread that accepts connections...");
+		Logger.log("Starting the thread that accepts connections...");
 		acceptThread = new Thread(this);
 		acceptThread.start();
     }
     
-    /**
-     * Sets the file logger.
-     */
-    public void setFileLogger(FileLogger flogger) {
-    	this.flogger = flogger;
-    }
+//    /**
+//     * Sets the file logger.
+//     */
+//    public void setFileLogger(FileLogger flogger) {
+//    	this.flogger = flogger;
+//    }
     
     /**
      * @return The port on which this receiver is listening.
@@ -128,20 +116,20 @@ public class TCPMessageReceiver implements Runnable {
     public void run() {
 		
     	while(!ss.isClosed()) {
-			log("run: Waiting for a connection on port " + port);
+    		Logger.log("Waiting for a connection on port " + port);
 			
     		try {
     			Socket s = ss.accept();
 				if (s != null) {
-					log("run: Connection accepted, passing to client handler.");
+					Logger.log("Connection accepted, passing to client handler.");
 					s.setTcpNoDelay(true);
 					new ClientHandler(s);
 				} else {
-					logErr("run: got a null socket connection.");
+					Logger.logErr("got a null socket connection.");
 				}
     		} catch(IOException e) {
     			e.printStackTrace();
-    			logErr("run: IOException while accepting client connections. ServerSocket.isClosed = " + ss.isClosed());
+    			Logger.logErr("IOException while accepting client connections. ServerSocket.isClosed = " + ss.isClosed());
     		}
     	}
     }
@@ -154,22 +142,22 @@ public class TCPMessageReceiver implements Runnable {
 //		}
 //    }
     
-    private void logErr(String msg) {
-		String result = "TCPMessageReceiver: ERROR: " + msg;
-		System.err.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
-    
-	private void log(String msg) {
-		String result = "TCPMessageReceiver: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
+//    private void logErr(String msg) {
+//		String result = "TCPMessageReceiver: ERROR: " + msg;
+//		System.err.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//    
+//	private void log(String msg) {
+//		String result = "TCPMessageReceiver: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
     
     /**
 	 * Handles incoming messages from a particular client.
@@ -214,7 +202,7 @@ public class TCPMessageReceiver implements Runnable {
 				oos = new ObjectOutputStream(os);
 				in = new ObjectInputStream(socket.getInputStream());
 			} catch(IOException e) {
-				logErr("run: IOException while extracing output and input streams.");
+				Logger.logErr("IOException while extracing output and input streams.");
 				e.printStackTrace();
 				return;
 			}
@@ -222,21 +210,21 @@ public class TCPMessageReceiver implements Runnable {
 			Message msg = null;
 			
 			try {
-				log("run: Awaiting message...");
+				Logger.log("Awaiting message...");
 				Object o = in.readObject();
 				
 				if (o != null) {
 					if (o instanceof Message)
 						msg = (Message)o;
 					else
-						logErr("run: received message was not a message!");
+						Logger.logErr("Received message was not a message!");
 				} else
-					logErr("run: received message was null!");		
+					Logger.logErr("Received message was null!");		
 			} catch(ClassNotFoundException e) {
-				logErr("run: ClassNotFoundException while receiving.");
+				Logger.logErr("ClassNotFoundException while receiving.");
 				e.printStackTrace();
 			} catch(IOException e) {
-				logErr("run: IOException while receiving.");
+				Logger.logErr("IOException while receiving.");
 				e.printStackTrace();
 			}
 			
@@ -245,43 +233,46 @@ public class TCPMessageReceiver implements Runnable {
 				// First send an Ack if the message is an AckMsg.
 				try {
 					if (msg instanceof AckedMsg) {
-						log("run: message was an AckedMsg, sending ack.");
+						Logger.log("Message was an AckedMsg, sending ack.");
 						PharosAckMsg ackMsg = PharosAckMsg.getAckMsg();
 						oos.writeObject(ackMsg);
 						oos.flush();
 						os.flush();
-						log("run: ack sent!");
+						Logger.log("Ack sent!");
 					}
 				} catch(IOException e) {
-					logErr("run: IOException while sending an Ack.");
+					Logger.logErr("IOException while sending an Ack.");
 					e.printStackTrace();
 				}
 				
-				log("run: Received message: " + msg);
+				Logger.log("Received message: " + msg);
 				receiver.newMessage(msg);
 			}
 			
 			try {
+				socket.shutdownOutput();
+				socket.shutdownInput();
 				socket.close();
 			} catch(Exception e) {
+				e.printStackTrace();
 			}
 		}
 		
-		void logErr(String msg) {
-			String result = "TCPMessageReceiver: ClientHandler: ERROR: " + msg;
-			System.err.println(result);
-			if (flogger != null)
-				flogger.log(result);
-		}
-		
-		void log(String msg) {
-			String result = "TCPMessageReceiver: ClientHandler: " + msg;
-			
-			if (System.getProperty ("PharosMiddleware.debug") != null)
-				System.out.println(result);
-			
-			if (flogger != null)
-				flogger.log(result);
-		}
+//		void logErr(String msg) {
+//			String result = "TCPMessageReceiver: ClientHandler: ERROR: " + msg;
+//			System.err.println(result);
+//			if (flogger != null)
+//				flogger.log(result);
+//		}
+//		
+//		void log(String msg) {
+//			String result = "TCPMessageReceiver: ClientHandler: " + msg;
+//			
+//			if (System.getProperty ("PharosMiddleware.debug") != null)
+//				System.out.println(result);
+//			
+//			if (flogger != null)
+//				flogger.log(result);
+//		}
     }
 }

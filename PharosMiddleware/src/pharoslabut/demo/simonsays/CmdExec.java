@@ -22,7 +22,7 @@ public class CmdExec implements MessageReceiver {
 	
 	private TCPMessageSender tcpSender = TCPMessageSender.getSender();
 	private TCPMessageReceiver tcpReceiver = new TCPMessageReceiver(this);
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	
 	private InetAddress destAddr;
 	private int destPort;
@@ -37,14 +37,10 @@ public class CmdExec implements MessageReceiver {
 	 * 
 	 * @param destAddr The destination IP address.
 	 * @param destPort The destination port.
-	 * @param flogger The file logger for recording debug statements.  May be null.
 	 */
-	public CmdExec(InetAddress destAddr, int destPort, FileLogger flogger) {
+	public CmdExec(InetAddress destAddr, int destPort) {
 		this.destAddr = destAddr;
 		this.destPort = destPort;
-		this.flogger = flogger;
-		
-		tcpSender.setFileLogger(flogger);
 		
 		String localAddrStr = null;
 		try {
@@ -53,11 +49,11 @@ public class CmdExec implements MessageReceiver {
 			localPort = tcpReceiver.getPort();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
-			logErr("Failed to get InetAddress from ad hoc IP address: " + localAddrStr);
+			Logger.logErr("Failed to get InetAddress from ad hoc IP address: " + localAddrStr);
 			System.exit(1);
 		} catch (PharosException e) {
 			e.printStackTrace();
-			logErr("Failed to get ad hoc IP address.");
+			Logger.logErr("Failed to get ad hoc IP address.");
 			System.exit(1);
 		}
 	}
@@ -87,7 +83,7 @@ public class CmdExec implements MessageReceiver {
 			tcpSender.sendMessage(destAddr, destPort, msg);
 		} catch (PharosException e1) {
 			e1.printStackTrace();
-			logErr("sendMsg: ERROR: Failed to send message.");
+			Logger.logErr("Failed to send message.");
 			return false;
 		}
 		
@@ -96,7 +92,7 @@ public class CmdExec implements MessageReceiver {
 		// Wait until an ack arrives...
 		synchronized(this) {
 			if (rcvMsg == null) {
-				log("sendMsg: Waiting for acknowledgment...");
+				Logger.log("Waiting for acknowledgment...");
 				try {
 					//wait(MAX_ACK_LATENCY);
 					// TODO: abort this wait if network connectivity to robot is broken.
@@ -109,14 +105,14 @@ public class CmdExec implements MessageReceiver {
 			if (rcvMsg != null) {
 				if (rcvMsg instanceof CmdDoneMsg) {
 					CmdDoneMsg ackMsg = (CmdDoneMsg)rcvMsg;
-					log("sendMsg: Ack received, success = " + ackMsg.getSuccess());
+					Logger.log("Ack received, success = " + ackMsg.getSuccess());
 					result = ackMsg.getSuccess(); // success
 				} else {
-					logErr("sendMsg: ERROR: Ack received but is of wrong type: " + rcvMsg);
+					Logger.logErr("Ack received but is of wrong type: " + rcvMsg);
 				}
 				rcvMsg = null;
 			} else {
-				logErr("sendMsg: ERROR: Ack not received...");
+				Logger.logErr("Ack not received...");
 			}
 		}
 		
@@ -148,12 +144,12 @@ public class CmdExec implements MessageReceiver {
 	 * Stops the player server.
 	 */
 	public boolean stopPlayer() {
-		log("stopPlayer: Stopping the player server...");
+		Logger.log("Stopping the player server...");
 		return sendMsg(new PlayerControlMsg(PlayerControlCmd.STOP));
 	}
 	
 	public boolean startPlayer() {
-		log("startPlayer: Starting the player server...");
+		Logger.log("Starting the player server...");
 		return sendMsg(new PlayerControlMsg(PlayerControlCmd.START));
 	}
 	
@@ -232,7 +228,7 @@ public class CmdExec implements MessageReceiver {
 	 * @return The image taken, or null if error.
 	 */
 	public BufferedImage takeSnapshot() {
-		log("takeSnapshot: Sending take camera snapshot command to DemoServer...");
+		Logger.log("Sending take camera snapshot command to DemoServer...");
 		
 		// Create the message
 		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
@@ -247,7 +243,7 @@ public class CmdExec implements MessageReceiver {
 			tcpSender.sendMessage(destAddr, destPort, takeSnapshotMsg);
 		} catch (PharosException e1) {
 			e1.printStackTrace();
-			logErr("sendMsg: ERROR: Failed to send message.");
+			Logger.logErr("ERROR: Failed to send message.");
 			return null;
 		}
 		
@@ -256,7 +252,7 @@ public class CmdExec implements MessageReceiver {
 		// Wait until an ack arrives...
 		synchronized(this) {
 			if (rcvMsg == null) {
-				log("takeSnapshot: Waiting for CameraSnapshotMsg...");
+				Logger.log("Waiting for CameraSnapshotMsg...");
 				try {
 					//wait(MAX_ACK_LATENCY);
 					
@@ -270,38 +266,38 @@ public class CmdExec implements MessageReceiver {
 			if (rcvMsg != null) {
 				if (rcvMsg instanceof CameraSnapshotMsg) {
 					CameraSnapshotMsg ackMsg = (CameraSnapshotMsg)rcvMsg;
-					log("takeSnapshot: CameraSnapshotMsg received, success = " + ackMsg.getSuccess());
+					Logger.log("CameraSnapshotMsg received, success = " + ackMsg.getSuccess());
 					if (ackMsg.getSuccess()) {
 						try {
 							result = ackMsg.getImage();
 						} catch(IOException e) {
 							e.printStackTrace();
-							logErr("takeSnapshot: ERROR: Failed to get image from CameraSnapshotMsg, error = " + e.getMessage());
+							Logger.logErr("Failed to get image from CameraSnapshotMsg, error = " + e.getMessage());
 						}
 					} else
-						logErr("takeSnapshot: ERROR: CameraSnapshotMsg.getSuccess() returned false.");
+						Logger.logErr("CameraSnapshotMsg.getSuccess() returned false.");
 				} else
-					logErr("takeSnapshot: Ack received but is of wrong type: " + rcvMsg);
+					Logger.logErr("Ack received but is of wrong type: " + rcvMsg);
 				rcvMsg = null;
 			} else
-				logErr("takeSnapshot: ERROR: Ack not received...");
+				Logger.logErr("Ack not received...");
 		}
 		
 		return result;
 	}
 	
-	private void logErr(String msg) {
-		String result = "CmdExec: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "CmdExec: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "CmdExec: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "CmdExec: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

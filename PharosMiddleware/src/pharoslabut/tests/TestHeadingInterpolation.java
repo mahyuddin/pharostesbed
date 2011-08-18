@@ -50,15 +50,11 @@ public class TestHeadingInterpolation {
 		if (flogger != null) 
 			flogger.log(msg);
 	}
-	
-//	private void log(String msg) {
-//		log(msg, null);
-//	}
 
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestHeadingInterpolation <options>\n");
+		System.err.println("Usage: " + TestHeadingInterpolation.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
-		System.err.println("\t-log <file name>: name of file in which to save results (required)");
+		System.err.println("\t-log <file name>: robot's experiment log file (required)");
 		System.err.println("\t-output <file name>: the name of the file in which to save the interpolated heading (required)");
 		System.err.println("\t-d or -debug: enable debug mode.");
 	}

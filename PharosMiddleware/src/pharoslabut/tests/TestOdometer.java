@@ -31,7 +31,7 @@ public class TestOdometer implements Position2DListener {
 	private Position2DInterface compass;
 	private CompassDataBuffer compassDataBuffer;
 	
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 	/**
 	 * The constructor.
@@ -41,14 +41,12 @@ public class TestOdometer implements Position2DListener {
 	 * @param speed The speed to move at in meters per second.
 	 * @param dist The distance to move in meters.
 	 * @param useCompass Whether to use the compass.
-	 * @param flogger The FileLogger in which to store log data.
 	 */
 	public TestOdometer(String serverAddr, int serverPort, double speed, double dist, 
-			boolean useCompass, FileLogger flogger) 
+			boolean useCompass) 
 	{
-		this.flogger = flogger;
 		
-		log("Connecting to player server " + serverAddr + ":" + serverPort + "...");
+		Logger.log("Connecting to player server " + serverAddr + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
 			client = new PlayerClient(serverAddr, serverPort);
@@ -58,7 +56,7 @@ public class TestOdometer implements Position2DListener {
 			System.exit (1);
 		}
 
-		log("Subscribing to motor interface...");
+		Logger.log("Subscribing to motor interface...");
 		motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 
 		if (motors == null) {
@@ -73,13 +71,13 @@ public class TestOdometer implements Position2DListener {
 				System.exit(1);
 			}
 			compassDataBuffer = new CompassDataBuffer(compass);
-			compassDataBuffer.setFileLogger(flogger);
+//			compassDataBuffer.setFileLogger(flogger);
 		}
 		
-		log("Resetting the odometer...");
+		Logger.log("Resetting the odometer...");
 		motors.resetOdometry();
 		
-		log("Listening for position2D events...");
+		Logger.log("Listening for position2D events...");
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
@@ -109,18 +107,18 @@ public class TestOdometer implements Position2DListener {
 		}
 		
 		double startX = getPosition2dData().getPos().getPx();
-		log("Start X = " + startX);
+		Logger.log("Start X = " + startX);
 		
 		PlayerPosition2dData posData;
 		
 		while ((posData = getPosition2dData()).getPos().getPx() - startX < dist) {
-			log("Distance moved: " + (posData.getPos().getPx() - startX));
-			log("Sending move command: speed=" + speed + ", heading = " + 0);
+			Logger.log("Distance moved: " + (posData.getPos().getPx() - startX));
+			Logger.log("Sending move command: speed=" + speed + ", heading = " + 0);
 			motors.setCarCMD(speed, 0);
 			pause(100); // cycle at 10Hz
 		}
 		
-		log("Done moving " + dist + " meters.");
+		Logger.log("Done moving " + dist + " meters.");
 		motors.setCarCMD(0, 0);
 	}
 	
@@ -144,7 +142,7 @@ public class TestOdometer implements Position2DListener {
 			}
 			Thread.yield();
 		}
-		log("Initial heading: " + initHeading);
+		Logger.log("Initial heading: " + initHeading);
 		
 		// busy wait until position2d data arrives (this is the odometer)
 		while (pos2dData == null) {
@@ -152,16 +150,16 @@ public class TestOdometer implements Position2DListener {
 		}
 		
 		double startX = pos2dData.getPos().getPx();
-		log("Start X = " + startX);
+		Logger.log("Start X = " + startX);
 		
 		while (pos2dData.getPos().getPx() - startX < dist) {
-			log("Distance moved: " + (pos2dData.getPos().getPx() - startX));
+			Logger.log("Distance moved: " + (pos2dData.getPos().getPx() - startX));
 			
 			// Calculate the change in heading to keep robot heading in a straight line
 			try {
 				currHeading = compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
 			} catch(NoNewDataException e) {
-				log("Unable to get new heading, using old heading...");
+				Logger.logErr("Unable to get new heading, using old heading...");
 				e.printStackTrace();
 			}
 			
@@ -173,12 +171,12 @@ public class TestOdometer implements Position2DListener {
 			
 			double heading = sign * MAX_TURN_ANGLE * (divergence / MAX_HEADING_DIVERGENCE);
 			
-			log("Sending move command: speed=" + 0.4 + ", heading = " + heading);
+			Logger.log("Sending move command: speed=" + 0.4 + ", heading = " + heading);
 			motors.setCarCMD(0.4, heading);
 			pause(100);
 		}
 		
-		log("Done moving " + dist + " meters.");
+		Logger.log("Done moving " + dist + " meters.");
 		motors.setCarCMD(0, 0);
 	}
 	
@@ -201,7 +199,7 @@ public class TestOdometer implements Position2DListener {
 			}
 			Thread.yield();
 		}
-		log("Initial heading: " + initHeading);
+		Logger.log("Initial heading: " + initHeading);
 		
 		// busy wait until position2d data arrives (this is the odometer)
 		while (pos2dData == null) {
@@ -211,18 +209,18 @@ public class TestOdometer implements Position2DListener {
 		long startTime = System.currentTimeMillis();
 		
 		double startX = pos2dData.getPos().getPx();
-		log("Start X = " + startX);
+		Logger.log("Start X = " + startX);
 		
 		long elapsedTime;
 		
 		while ((elapsedTime = System.currentTimeMillis() - startTime) < duration) {
-			log("Elapsed time = " + elapsedTime + ", distance moved: " + (pos2dData.getPos().getPx() - startX));
+			Logger.log("Elapsed time = " + elapsedTime + ", distance moved: " + (pos2dData.getPos().getPx() - startX));
 			
 			// Calculate the change in heading to keep robot heading in a straight line
 			try {
 				currHeading = compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
 			} catch(NoNewDataException e) {
-				log("Unable to get new heading, using old heading...");
+				Logger.logErr("Unable to get new heading, using old heading...");
 				e.printStackTrace();
 			}
 			
@@ -234,12 +232,12 @@ public class TestOdometer implements Position2DListener {
 			
 			double heading = sign * MAX_TURN_ANGLE * (divergence / MAX_HEADING_DIVERGENCE);
 			
-			log("Sending move command: speed=" + speed + ", heading = " + heading);
+			Logger.log("Sending move command: speed=" + speed + ", heading = " + heading);
 			motors.setCarCMD(speed, heading);
 			pause(100);
 		}
 		
-		log("Done moving " + speed + "m/s for " + duration + "ms");
+		Logger.log("Done moving " + speed + "m/s for " + duration + "ms");
 		motors.setCarCMD(0, 0);
 		System.exit(0);
 	}
@@ -247,7 +245,7 @@ public class TestOdometer implements Position2DListener {
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		// This is the odometer data coming in...
-		log(data.toString());
+		Logger.log(data.toString());
 		
 		synchronized(this) {
 			this.pos2dData = data;
@@ -264,12 +262,12 @@ public class TestOdometer implements Position2DListener {
 		}
 	}
 	
-	private void log(String msg) {
-		String result = "TestOdometer: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "TestOdometer: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -331,6 +329,8 @@ public class TestOdometer implements Position2DListener {
 			System.exit(1);
 		}
 		
-		new TestOdometer(serverAddr, serverPort, speed, dist, usecompass, new FileLogger(logFile, false));
+		Logger.setFileLogger(new FileLogger(logFile, false));
+		
+		new TestOdometer(serverAddr, serverPort, speed, dist, usecompass);
 	}
 }

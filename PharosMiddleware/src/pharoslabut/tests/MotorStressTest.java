@@ -17,41 +17,36 @@ import playerclient3.structures.position2d.PlayerPosition2dData;
  */
 public class MotorStressTest implements Position2DListener {
 	private PlayerClient client = null;
-	private FileLogger flogger = null;
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param serverIP The IP address of the robot.
 	 * @param serverPort The port on which the robot is listening.
-	 * @param logFileName The log file in which to save results.
 	 * @param mobilityPlane The type of mobility plane being used.
 	 * @param testStartDelay The number of seconds to wait before starting the test.
 	 * @param speed The speed in m/s at which to move.
 	 * @param duration The duration in milliseconds to move.
 	 * @param heading The heading in which to turn in radians.
 	 */
-	public MotorStressTest(String serverIP, int serverPort,	String logFileName, 
+	public MotorStressTest(String serverIP, int serverPort,
 			MotionArbiter.MotionType mobilityPlane, int testStartDelay,
 			double speed, int duration, double heading) 
 	{
-		if (logFileName != null)
-			flogger = new FileLogger(logFileName);
-		
 		
 		try {
-			log("Connecting to server " + serverIP + ":" + serverPort);
+			Logger.logDbg("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			logErr("ERROR: Could not connect to player server: ");
-			logErr("    [ " + e.toString() + " ]");
+			Logger.logErr("ERROR: Could not connect to player server: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
-		log("Subscribing to motor interface and creating motion arbiter");
+		Logger.logDbg("Subscribing to motor interface and creating motion arbiter");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("ERROR: motors is null");
+			Logger.logErr("ERROR: motors is null");
 			System.exit(1);
 		} else {
 			// subscribe to MCU debug messages
@@ -59,9 +54,9 @@ public class MotorStressTest implements Position2DListener {
 			p2db.addPos2DListener(this);
 			p2db.start();
 		}
-		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors, flogger);
+		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		
-		log("Starting motor stress test in " + testStartDelay + " seconds ...");
+		Logger.logDbg("Starting motor stress test in " + testStartDelay + " seconds ...");
 		while (testStartDelay-- > 0) {
 			synchronized(this) { 
 				try {
@@ -70,31 +65,31 @@ public class MotorStressTest implements Position2DListener {
 					e.printStackTrace();
 				}
 			}
-			if (testStartDelay > 0) log(testStartDelay + "...");
+			if (testStartDelay > 0) Logger.log(testStartDelay + "...");
 		}
 		
 		MotionTask currTask;
 		
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(duration);
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
-		log("Pausing 5s before moving in reverse...");
+		Logger.log("Pausing 5s before moving in reverse...");
 		pause(5000);
 		
 		currTask = new MotionTask(Priority.SECOND, -1 * speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
 		pause(duration);
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
 		/*currTask = new MotionTask(Priority.SECOND, -speedStep, 0);
@@ -107,14 +102,14 @@ public class MotorStressTest implements Position2DListener {
 		log("Submitting: " + currTask);
 		motionArbiter.submitTask(currTask);*/
 		
-		log("Test complete!");
+		Logger.log("Test complete!");
 		System.exit(0);
 	}
 	
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose2d pp = data.getPos();
-		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
+		Logger.log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
 	}
 	
 	private void pause(int duration) {
@@ -127,22 +122,22 @@ public class MotorStressTest implements Position2DListener {
 		}
 	}
 	
-	private void logErr(String msg) {
-		String result = "MotorStressTest: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "MotorStressTest: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "MotorStressTest: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "MotorStressTest: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.MotorStressTest <options>\n");
+		System.err.println("Usage: " + MotorStressTest.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -155,7 +150,6 @@ public class MotorStressTest implements Position2DListener {
 	}
 	
 	public static void main(String[] args) {
-		String logFileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		int testStartDelay = 4;
@@ -173,7 +167,7 @@ public class MotorStressTest implements Position2DListener {
 					serverPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
-					logFileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				}
 				else if (args[i].equals("-testStartDelay")) {
 					testStartDelay = Integer.valueOf(args[++i]);
@@ -214,13 +208,12 @@ public class MotorStressTest implements Position2DListener {
 		
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
-		System.out.println("Log: " + logFileName);
 		System.out.println("Mobility Plane: " + mobilityPlane);
 		System.out.println("Test start delay: " + testStartDelay);
 		System.out.println("Speed: " + speed);
 		System.out.println("Duration: " + duration);
 		System.out.println("Heading: " + heading);
 		
-		new MotorStressTest(serverIP, serverPort, logFileName, mobilityPlane, testStartDelay, speed, duration, heading);
+		new MotorStressTest(serverIP, serverPort, mobilityPlane, testStartDelay, speed, duration, heading);
 	}
 }

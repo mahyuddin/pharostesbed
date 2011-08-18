@@ -1,6 +1,7 @@
 package pharoslabut.experiment;
 
 import pharoslabut.io.*;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
@@ -31,19 +32,19 @@ public class PharosExpClient {
 		ExpConfig expConfig = ExpConfigReader.readExpConfig(expConfigFileName);
 		try {
 			
-			log("Setting local time on each robot...");
+			Logger.log("Setting local time on each robot...");
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
-				log("\tSending SetTimeMsg to " + currRobot.getName());
+				Logger.log("\tSending SetTimeMsg to " + currRobot.getName());
 				
 				SetTimeMsg msg = new SetTimeMsg();
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), msg);
 			}
 			
-			log("Sending each robot their motion scripts...");
+			Logger.log("Sending each robot their motion scripts...");
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
-				log("\tSending motion script to robot " + currRobot.getName());
+				Logger.log("\tSending motion script to robot " + currRobot.getName());
 				
 				MotionScript script = new MotionScript(currRobot.getMotionScript());
 				MotionScriptMsg msg = new MotionScriptMsg(script);
@@ -53,7 +54,7 @@ public class PharosExpClient {
 			// Pause to ensure each robot receives their motion script.
 			// This is to prevent out-of-order messages.
 			int startTime = 5;
-			log("Starting experiment in " + startTime + "...");
+			Logger.log("Starting experiment in " + startTime + "...");
 			while (startTime-- > 0) {
 				synchronized(this) { 
 					try {
@@ -62,7 +63,7 @@ public class PharosExpClient {
 						e.printStackTrace();
 					}
 				}
-				if (startTime > 0) log(startTime + "...");
+				if (startTime > 0) Logger.log(startTime + "...");
 			}
 			
 			
@@ -74,7 +75,7 @@ public class PharosExpClient {
 			for (int i=0; i < expConfig.numRobots(); i++) {
 				RobotExpSettings currRobot = expConfig.getRobot(i);
 				
-				log("Sending StartExpMsg to robot " + currRobot.getName() + "...");
+				Logger.log("Sending StartExpMsg to robot " + currRobot.getName() + "...");
 				sender.sendMessage(currRobot.getIPAddress(), currRobot.getPort(), sem);
 				
 				// Update the delay between each robot.
@@ -84,19 +85,19 @@ public class PharosExpClient {
 				sem = new StartExpMsg(expConfig.getExpName(), ExpType.FOLLOW_GPS_MOTION_SCRIPT, delay);
 			}
 		} catch(Exception e) {
-			logErr("Problem while communicating with the robots...");
+			Logger.logErr("Problem while communicating with the robots...");
 			e.printStackTrace();
 		}
 	}
 	
-	private void logErr(String msg) {
-		System.err.println("PharosExpClient: " + msg);
-	}
-	
-	private void log(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println("PharosExpClient: " + msg);
-	}
+//	private void logErr(String msg) {
+//		System.err.println("PharosExpClient: " + msg);
+//	}
+//	
+//	private void log(String msg) {
+//		if (System.getProperty ("PharosMiddleware.debug") != null) 
+//			System.out.println("PharosExpClient: " + msg);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);

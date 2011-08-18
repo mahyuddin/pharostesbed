@@ -3,7 +3,8 @@ package pharoslabut.sensors;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 import playerclient3.Position2DInterface;
 import playerclient3.structures.position2d.PlayerPosition2dData;
@@ -35,10 +36,10 @@ public class Position2DBuffer implements Runnable {
 	 */
 	private boolean running = false;
 	
-	/**
-	 * The file logger for saving debug data.
-	 */
-	private FileLogger flogger;
+//	/**
+//	 * The file logger for saving debug data.
+//	 */
+//	private FileLogger flogger;
 	
 	/**
 	 * The constructor.
@@ -54,11 +55,11 @@ public class Position2DBuffer implements Runnable {
 	 */
 	public synchronized void start() {
 		if (!running) {
-			log("Start: starting...");
+			Logger.log("starting...");
 			running = true;
 			new Thread(this).start();
 		} else
-			log("Start: already started...");
+			Logger.log("already started...");
 	}
 	
 	/**
@@ -66,10 +67,10 @@ public class Position2DBuffer implements Runnable {
 	 */
 	public synchronized void stop() {
 		if (running) {
-			log("Stop: stopping...");
+			Logger.log("stopping...");
 			running = false;
 		} else
-			log("Stop: already stopped...");
+			Logger.log("already stopped...");
 	}
 	
     /**
@@ -108,21 +109,21 @@ public class Position2DBuffer implements Runnable {
     	}
     }
 	
-	/**
-	 * Sets the file logger.  If the file logger is not null, this component
-	 * logs compass data to a file.
-	 * 
-	 * @param flogger The file logger.  This may be null.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger.  If the file logger is not null, this component
+//	 * logs compass data to a file.
+//	 * 
+//	 * @param flogger The file logger.  This may be null.
+//	 */
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Removes expired compass readings.
 	 */
 	public void run() {
-		log("run: thread starting...");
+		Logger.log("thread starting...");
 		while(running) {
 			
 			// If new Position2D data is available, get it!
@@ -141,14 +142,14 @@ public class Position2DBuffer implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		log("run: thread terminating...");
+		Logger.log("thread terminating...");
 	}
 	
-	private void log(String msg) {
-		String result = "Position2DBuffer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null) 
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "Position2DBuffer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null) 
+//			flogger.log(result);
+//	}
 }

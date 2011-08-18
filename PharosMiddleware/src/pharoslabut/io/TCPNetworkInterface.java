@@ -3,7 +3,8 @@ package pharoslabut.io;
 import java.io.*;
 import java.net.*;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 public class TCPNetworkInterface extends NetworkInterface {
 	
@@ -30,18 +31,6 @@ public class TCPNetworkInterface extends NetworkInterface {
      * Creates a UDPNetworkInterface that listens on a specific port.
      * 
      * @param port The port on which to listen.
-     * @param flogger the file logger.
-     */
-	public TCPNetworkInterface(int port, FileLogger flogger) {
-		setLogger(flogger);
-		this.port = port;
-		openSocket();
-	}
-	
-	/**
-     * Creates a UDPNetworkInterface that listens on a specific port.
-     * 
-     * @param port The port on which to listen.
      */
 	public TCPNetworkInterface(int port) {
 		this.port = port;
@@ -58,10 +47,10 @@ public class TCPNetworkInterface extends NetworkInterface {
 					ss = new ServerSocket(port);
 				else
 					ss = new ServerSocket(0); // use any free port
-				log("Server socket listening on port " + getLocalPort());
+				Logger.log("Server socket listening on port " + getLocalPort());
 			} catch (IOException e) {
 				//e.printStackTrace();
-				log("openSocket: ERROR: Unable to open server socket, waiting a couple seconds before trying again...");
+				Logger.logErr("Unable to open server socket, waiting a couple seconds before trying again...");
 				try {
 					synchronized(this) { wait(1000*2); }
 				} catch (InterruptedException e1) {
@@ -84,7 +73,7 @@ public class TCPNetworkInterface extends NetworkInterface {
 	public boolean sendMessage(InetAddress address, int port, Message m) {
         // open a TCP socket to the destination host
         try {
-			log("sendMessage: Opening TCP socket to " + address + ":" + port);
+        	Logger.log("Opening TCP socket to " + address + ":" + port);
             Socket socket = new Socket(address, port);
             socket.setTcpNoDelay(true);
             
@@ -94,12 +83,14 @@ public class TCPNetworkInterface extends NetworkInterface {
             ObjectOutputStream oos = new ObjectOutputStream(os);
 //            ObjectInputStream ois = new ObjectInputStream(is);
             
-			log("sendMessage: Sending the object to the destination.");
+            Logger.log("Sending the object to the destination.");
             oos.writeObject(m);
             oos.flush();
             os.flush();
             
-			log("sendMessage: Closing the socket to the destination host.");
+            Logger.log("Closing the socket to the destination host.");
+            socket.shutdownOutput();
+			socket.shutdownInput();
             socket.close();
             
         } catch(Exception e) {
@@ -140,9 +131,9 @@ public class TCPNetworkInterface extends NetworkInterface {
 					try {   // continue to loop until an IOException is thrown
 						while(true) {
 							Socket s = null;
-							log("TCPReceiver: Waiting for a connection on port " + getLocalPort());
+							Logger.log("Waiting for a connection on port " + getLocalPort());
 							if ((s = ss.accept()) != null) {
-								log("TCPReceiver: Connection accepted, passing to client handler.");
+								Logger.log("Connection accepted, passing to client handler.");
 								s.setTcpNoDelay(true);
 								new ClientHandler(s);
 							}
@@ -163,7 +154,7 @@ public class TCPNetworkInterface extends NetworkInterface {
 				ss = null;
 			}
 			
-			log("TCPReceiver: thread exiting...");
+			Logger.log("thread exiting...");
 		}
 	}
 	
@@ -211,7 +202,7 @@ public class TCPNetworkInterface extends NetworkInterface {
 		 */
 		public void run() {
 			try {
-				log("ClientHandler: Reading in object...");
+				Logger.log("Reading in object...");
 				Object o = in.readObject();
 				
 				if (o!= null && o instanceof Message) {
@@ -230,17 +221,17 @@ public class TCPNetworkInterface extends NetworkInterface {
 		}
     }
 	
-	private void log(String msg) {
-		log(msg, true);
-	}
-	
-	private void log(String msg, boolean isDebugMsg) {
-		String result = "TCPNetworkInterface: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg) {
-			System.out.println(result);
-			System.out.flush();
-		}
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		log(msg, true);
+//	}
+//	
+//	private void log(String msg, boolean isDebugMsg) {
+//		String result = "TCPNetworkInterface: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null || !isDebugMsg) {
+//			System.out.println(result);
+//			System.out.flush();
+//		}
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

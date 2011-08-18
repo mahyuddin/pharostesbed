@@ -17,10 +17,10 @@ public abstract class NetworkInterface {
 	 */
 	private Vector<MessageReceiver> rcvrs = new Vector<MessageReceiver>();
 	
-	/**
-	 * The file logger for recording debug data.
-	 */
-	protected FileLogger flogger = null;
+//	/**
+//	 * The file logger for recording debug data.
+//	 */
+//	protected FileLogger flogger = null;
 	
 	/**
 	 * Returns the local port on which the network interface is listening for packets.
@@ -44,14 +44,14 @@ public abstract class NetworkInterface {
 	 */
 	public abstract void stop();
 	
-	/**
-	 * Sets the file logger.
-	 * 
-	 * @param flogger the file logger.
-	 */
-	public void setLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger.
+//	 * 
+//	 * @param flogger the file logger.
+//	 */
+//	public void setLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Registers a message receiver.

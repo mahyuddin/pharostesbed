@@ -25,7 +25,6 @@ import pharoslabut.logger.*;
 public class ProgramEntryGUI implements ActionListener {
 
 	private CmdExec cmdExec;
-	private FileLogger flogger;
 	private ProgramTextArea textArea;
 	private JButton submitButton;
 	private JFrame frame;
@@ -61,9 +60,8 @@ public class ProgramEntryGUI implements ActionListener {
 	 * 
 	 * @param cmdExec The command executor.
 	 */
-	public ProgramEntryGUI(CmdExec cmdExec, FileLogger flogger) {
+	public ProgramEntryGUI(CmdExec cmdExec) {
 		this.cmdExec = cmdExec;
-		this.flogger = flogger;
 		
 		cppData = new CPPData();
 		cppTable = new CPPTable(this, cppData);
@@ -211,7 +209,7 @@ public class ProgramEntryGUI implements ActionListener {
 					throw new ParseException("Unable to take snapshot on line " + lineno + "...");
 				else {
 					// Display the image...
-					SnapshotFrame sf = new SnapshotFrame(img, flogger);
+					SnapshotFrame sf = new SnapshotFrame(img);
 					sf.waitTillClosed();
 				}
 			} catch(Exception e) {
@@ -220,7 +218,7 @@ public class ProgramEntryGUI implements ActionListener {
 		}
 		
 		public void run() {
-			log("Begin executing program...");
+			Logger.log("Begin executing program...");
 
 			Vector<Command> program = new Vector<Command>(); 
 
@@ -290,7 +288,7 @@ public class ProgramEntryGUI implements ActionListener {
 			}
 			
 			running = false;
-			log("ProgramExecutor thread exiting...");
+			Logger.log("ProgramExecutor thread exiting...");
 			textArea.setExecutionLine(1);
 		}
 	}
@@ -374,7 +372,7 @@ public class ProgramEntryGUI implements ActionListener {
 	 * @return The parsed command or null if there was no command in the specified line.
 	 */
 	private Command parseLine(int lineno, String lineOfCode) throws ParseException {
-		log("Parsing line " + lineno + ": " + lineOfCode);
+		Logger.log("Parsing line " + lineno + ": " + lineOfCode);
 		
 		// Ignore comments
 		if (lineOfCode.startsWith("//"))
@@ -471,11 +469,11 @@ public class ProgramEntryGUI implements ActionListener {
 		cppTableMI.setState(false);
 	}
 	
-	private void log(String msg) {
-		String result = "ProgramEntryGUI: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "ProgramEntryGUI: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

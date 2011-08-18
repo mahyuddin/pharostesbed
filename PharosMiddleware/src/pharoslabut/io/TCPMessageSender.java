@@ -2,7 +2,7 @@ package pharoslabut.io;
 
 import java.io.*;
 import java.net.*;
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.exceptions.*;
 
 /**
@@ -23,11 +23,6 @@ public class TCPMessageSender implements MessageSender {
      * The amount of time to wait before retransmitting a message.
      */
     public static final long RETRY_DELAY_MS = 1000;
-    
-    /**
-     * The file logger for debugging purposes.
-     */
-	private FileLogger flogger = null;
 	
 	/**
 	 * This is a singleton class and this is the reference to the single instance
@@ -47,13 +42,6 @@ public class TCPMessageSender implements MessageSender {
      */
     public static TCPMessageSender getSender() {
     	return tcpMsgSndr;
-    }
-    
-    /**
-     * Sets the file logger.
-     */
-    public void setFileLogger(FileLogger flogger) {
-    	this.flogger = flogger;
     }
     
     /**
@@ -78,21 +66,6 @@ public class TCPMessageSender implements MessageSender {
     	new Thread(new SendingThread(address, port, msg)).start();
     }
 	
-    private void logErr(String msg) {
-    	String result = "TCPMessageSender: ERROR: " + msg;
-    	System.err.println(result);
-    	if (flogger != null)
-    		flogger.log(result);
-    }
-
-	private void log(String msg) {
-		String result = "TCPMessageSender: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
 	private class SendingThread implements Runnable {
 		InetAddress address;
 		int port;
@@ -110,21 +83,21 @@ public class TCPMessageSender implements MessageSender {
 	    	String errMsg = null;
 	    	
 	    	while (!success && numTries++ < MAX_RETRIES) {
-	    		log("run: Sending message, attempt " + numTries + " of " + MAX_RETRIES + "..." 
+	    		Logger.log("Sending message, attempt " + numTries + " of " + MAX_RETRIES + "..." 
 	    				+ "\n\tDestination: " + address  + ":" + port
 	    				+ "\n\tMessage to send: " + msg);
 	    		    		
 	    		Socket socket = null;
 	    		
 	    		try {
-	    			log("run: Opening connection to " + address + ":" + port);
+	    			Logger.log("Opening connection to " + address + ":" + port);
 	    			socket = new Socket(address, port);
 	    			socket.setTcpNoDelay(true);
-	    			log("run: Connection established...");
+	    			Logger.log("Connection established...");
 	    		} catch(IOException ioe) {
 	    			ioe.printStackTrace();
 	    			errMsg = ioe.getMessage();
-	    			logErr("run: IOException when creating connection to " + address + ":" + port + ", error message: " + errMsg);
+	    			Logger.logErr("IOException when creating connection to " + address + ":" + port + ", error message: " + errMsg);
 	    			continue;
 	    		}
 	    		
@@ -133,15 +106,15 @@ public class TCPMessageSender implements MessageSender {
 	    				OutputStream os = socket.getOutputStream();
 	    				ObjectOutputStream oos = new ObjectOutputStream(os);
 	    				
-	    				log("run: Sending " + msg + "...");
+	    				Logger.log("Sending " + msg + "...");
 	    				oos.writeObject(msg);
 	    				oos.flush();
 	    				os.flush();
-	    				log("run: Message was sent.");
+	    				Logger.log("Message was sent.");
 	    			} catch(IOException ioe) {
 	    				ioe.printStackTrace();
 	        			errMsg = ioe.getMessage();
-	        			logErr("run: IOException when sending, error message: " + errMsg);
+	        			Logger.logErr("IOException when sending, error message: " + errMsg);
 	        			try {
 							socket.close();
 						} catch (IOException e) {
@@ -151,45 +124,45 @@ public class TCPMessageSender implements MessageSender {
 	    			}
 	    			
 	    			if (msg instanceof AckedMsg) {
-	    				log("run: Message is an AckedMsg, waiting for ack...");
+	    				Logger.log("Message is an AckedMsg, waiting for ack...");
 	    				InputStream is;
 						try {
 							is = socket.getInputStream();
 							ObjectInputStream ois = new ObjectInputStream(is);
-							log("run: Waiting for ack...");
+							Logger.log("Waiting for ack...");
 		    				Object ack = ois.readObject();
 		    				if (ack instanceof PharosAckMsg) {
-		    					log("run: ack received!");
+		    					Logger.log("ack received!");
 		    					success = true;
 		    				} else
-		    					logErr("run: Received object not a PharosAckMsg");
+		    					Logger.logErr("Received object not a PharosAckMsg");
 						} catch (IOException e) {
 							errMsg = e.getMessage();
-							logErr("run: Got IOException while waiting for ack.");
+							Logger.logErr("Got IOException while waiting for ack.");
 							e.printStackTrace();
 						} catch (ClassNotFoundException e) {
 							errMsg = e.getMessage();
-							logErr("run: Got ClassNotFoundException while waiting for ack.");
+							Logger.logErr("Got ClassNotFoundException while waiting for ack.");
 							e.printStackTrace();
 						}
 	    			} else {
-	    				log("run: Message was not an AckedMsg, assuming transmission was successful.");
+	    				Logger.log("Message was not an AckedMsg, assuming transmission was successful.");
 	    				success = true;
 	    			}
 
 	    			try {
-	    				log("run: Closing the socket to the destination host...");
+	    				Logger.log("Closing the socket to the destination host...");
 	    				socket.shutdownOutput();
 	    				socket.shutdownInput();
 						socket.close();
 					} catch (IOException e) {
-						logErr("run: Got IOException while closing socket.");
+						Logger.logErr("Got IOException while closing socket.");
 						e.printStackTrace();
 					}
 	    		}
 	    		
 	    		if (!success && numTries < MAX_RETRIES) {
-	    			log("run: Transmission unsuccessful but max retries not reached, pausing for " + RETRY_DELAY_MS + " then retrying.");
+	    			Logger.log("Transmission unsuccessful but max retries not reached, pausing for " + RETRY_DELAY_MS + " then retrying.");
 	    			synchronized(this) {
 	    				try {
 							this.wait(RETRY_DELAY_MS);
@@ -201,26 +174,10 @@ public class TCPMessageSender implements MessageSender {
 	    	}
 	    	
 	    	if (!success) {
-	    		logErr("run: Send Failed!");
-//	    		throw new PharosException(errMsg);
+	    		Logger.logErr("Send Failed!");
 	    	} else {
-	    		log("run: Send success!");
+	    		Logger.log("Send success!");
 	    	}
-		}
-		
-	    private void logErr(String msg) {
-	    	String result = "TCPMessageSender: SendingThread ERROR: " + msg;
-	    	System.err.println(result);
-	    	if (flogger != null)
-	    		flogger.log(result);
-	    }
-
-		private void log(String msg) {
-			String result = "TCPMessageSender: SendingThread: " + msg;
-			if (System.getProperty ("PharosMiddleware.debug") != null)
-				System.out.println(result);
-			if (flogger != null)
-				flogger.log(result);
 		}
 	}
 }
