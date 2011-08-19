@@ -35,15 +35,17 @@ public class M17MoveInLoop implements Position2DListener {
 	 * @param velocity The velocity at which to travel in m/s.
 	 * @param fileName The name of the file in which to log debug info, may be null.
 	 */
-	public M17MoveInLoop(String serverIP, int serverPort, MotionArbiter.MotionType mobilityPlane, double velocity, String fileName) 
+	public M17MoveInLoop(String serverIP, int serverPort, MotionArbiter.MotionType mobilityPlane, 
+			double velocity, String fileName) 
 	{
-		
 		System.setProperty ("PharosMiddleware.debug", "true");
 		
-		if (fileName != null)
+		if (fileName != null) {
 			flogger = new FileLogger(fileName);
-
-		log("Connecting to player server " + serverIP + ":" + serverPort + "...");
+			Logger.setFileLogger(flogger);
+		}
+		
+		Logger.log("Connecting to player server " + serverIP + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
 			client = new PlayerClient(serverIP, serverPort);
@@ -53,58 +55,58 @@ public class M17MoveInLoop implements Position2DListener {
 			System.exit (1);
 		}
 
-		log("Subscribing to motor interface...");
+		Logger.log("Subscribing to motor interface...");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
 			System.err.println("motors is null");
 			System.exit(1);
 		}
 		
-		log("Subscribing to compass interface...");
+		Logger.log("Subscribing to compass interface...");
 		Position2DInterface compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		if (compass == null) {
 			System.err.println("compass is null");
 			System.exit(1);
 		}
 		
-		log("Subscribing to GPS interface...");
+		Logger.log("Subscribing to GPS interface...");
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (gps == null) {
 			System.err.println("gps is null");
 			System.exit(1);
 		}
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		log("Creating MotionArbiter of type " + mobilityPlane + "...");
+		Logger.log("Creating MotionArbiter of type " + mobilityPlane + "...");
 		motors.setMotorPower(1);
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
-		motionArbiter.setFileLogger(flogger);
+//		motionArbiter.setFileLogger(flogger);
 		
-		log("Creating CompassDataBuffer...");
+		Logger.log("Creating CompassDataBuffer...");
 		compassDataBuffer = new CompassDataBuffer(compass);
-		compassDataBuffer.setFileLogger(flogger);
+//		compassDataBuffer.setFileLogger(flogger);
 		compassDataBuffer.start();
 		
-		log("Creating GPSDataBuffer...");
+		Logger.log("Creating GPSDataBuffer...");
 		gpsDataBuffer = new GPSDataBuffer(gps);
-		gpsDataBuffer.setFileLogger(flogger);
+//		gpsDataBuffer.setFileLogger(flogger);
 		
-		log("Resetting the odometer...");
+		Logger.log("Resetting the odometer...");
 		motors.resetOdometry();
 		
-		log("Listening for Position2D events (odmeter data)...");
+		Logger.log("Listening for Position2D events (odmeter data)...");
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
 		
-		log("Creating NavigateCompassGPS object...");
+		Logger.log("Creating NavigateCompassGPS object...");
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-				gpsDataBuffer, flogger);
+				gpsDataBuffer);
 		
 		Location waypoint1 = new Location(30.3861367, -97.7242533);
 		Location waypoint2 = new Location(30.386335, -97.7241217);
@@ -113,29 +115,29 @@ public class M17MoveInLoop implements Position2DListener {
 		
 		
 		for (int i = 0; i < 10; i++) {
-			log("Going to: " + waypoint2);
+			Logger.log("Going to: " + waypoint2);
 			if (!navigatorGPS.go(waypoint2, velocity))
-				log("ERROR: Unable to reach " + waypoint2); 
+				Logger.logErr("Unable to reach " + waypoint2); 
 			else
-				log("SUCCESS!");
+				Logger.log("SUCCESS!");
 
-			log("Going to: " + waypoint4);
+			Logger.log("Going to: " + waypoint4);
 			if (!navigatorGPS.go(waypoint4, velocity))
-				log("ERROR: Unable to reach " + waypoint4); 
+				Logger.logErr("Unable to reach " + waypoint4); 
 			else
-				log("SUCCESS!");
+				Logger.log("SUCCESS!");
 
-			log("Going to: " + waypoint3);
+			Logger.log("Going to: " + waypoint3);
 			if (!navigatorGPS.go(waypoint3, velocity))
-				log("ERROR: Unable to reach " + waypoint3); 
+				Logger.logErr("Unable to reach " + waypoint3); 
 			else
-				log("SUCCESS!");
+				Logger.log("SUCCESS!");
 
-			log("Going to: " + waypoint1);
+			Logger.log("Going to: " + waypoint1);
 			if (!navigatorGPS.go(waypoint1, velocity))
-				log("ERROR: Unable to reach " + waypoint1); 
+				Logger.logErr("Unable to reach " + waypoint1); 
 			else
-				log("SUCCESS!");
+				Logger.log("SUCCESS!");
 		}
 		
 		System.exit(0);
@@ -143,15 +145,15 @@ public class M17MoveInLoop implements Position2DListener {
 
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		log(data.toString());
+		Logger.log(data.toString());
 	}
 	
-	private void log(String msg) {
-		String result = "TestNavigateCompassGPS: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "TestNavigateCompassGPS: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
 		System.err.println("Usage: pharoslabut.missions.M17MoveInLoop <options>\n");

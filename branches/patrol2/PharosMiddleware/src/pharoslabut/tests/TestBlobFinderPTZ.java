@@ -1,36 +1,33 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.*;
-import pharoslabut.sensors.BlobFinderVisualizer;
+//import pharoslabut.sensors.BlobFinderVisualizer;
 
 import playerclient3.*;
-import playerclient3.structures.blobfinder.*;
+//import playerclient3.structures.blobfinder.*;
 import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
- * A small test of the BlobFinder service. Connects to the BlobFinderInterface, and periodically
- * polls it for data.  It prints all of the blob data received to the screen.
+ * A small test of the PtzInterface. Connects to the PtzInterface, and it pan 
+ * and tilt.
  * 
  * @author Chien-Liang Fok
  */
 public class TestBlobFinderPTZ {
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	private PlayerClient client = null;	
-	private BlobfinderInterface bfi = null;
-	private BlobFinderVisualizer visualizer;
+//	private BlobfinderInterface bfi = null;
+//	private BlobFinderVisualizer visualizer;
 		
 	/**
 	 * The constructor.
 	 * 
 	 * @param serverIP The IP address of the robot.
 	 * @param serverPort The port on which the robot is listening.
-	 * @param logFileName The log file in which to save results.
 	 */
-	public TestBlobFinderPTZ(String serverIP, int serverPort, String logFileName) {
-		
-		if (logFileName != null)
-			flogger = new FileLogger(logFileName);
+	public TestBlobFinderPTZ(String serverIP, int serverPort) {
+
 		
 		// connect to player server
 		try {
@@ -56,14 +53,14 @@ public class TestBlobFinderPTZ {
 
 	); */
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
 		if (ptz != null) {
-			log("Doing quick test of PTZ...");
+			Logger.log("Doing quick test of PTZ...");
 			// Do a quick test of PTZ
 			PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
 
@@ -78,9 +75,9 @@ public class TestBlobFinderPTZ {
 //******** see http://pharos.ece.utexas.edu/wiki/index.php/How_to_Make_a_Proteus_Robot_Follow_a_Line_Using_a_CMUCam#Determine_Offset_of_Hardware_and_Change_Configuration_File
 
 		//Begin test	
-			log("Testing Pan....");			
+			Logger.log("Testing Pan....");			
 			for (float pan = (float)-70; pan < 82; pan += 10) {
-				log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
+				Logger.log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
 				ptzCmd.setPan((float) pan);
 				ptz.setPTZ(ptzCmd);
 				pause(1000);
@@ -91,9 +88,9 @@ public class TestBlobFinderPTZ {
 			ptz.setPTZ(ptzCmd);
 			pause(3000);
 		
-			log("Testing Tilt...");		
+			Logger.log("Testing Tilt...");		
 			for (float tilt = (float)-40; tilt < 82; tilt += 10) {
-				log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
+				Logger.log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
 				ptz.setPTZ(ptzCmd);
 				pause(1000);
 			} 
@@ -101,7 +98,7 @@ public class TestBlobFinderPTZ {
 			ptzCmd.setTilt((float) 0);
 			ptz.setPTZ(ptzCmd);
 			pause(3000);
-			log("Test Complete");
+			Logger.log("Test Complete");
 
 
 		}
@@ -124,11 +121,11 @@ public class TestBlobFinderPTZ {
 
 	}
 	
-	private void log(String msg) {
-		System.out.println(msg);
-		if (flogger != null) 
-			flogger.log(msg);
-	}
+//	private void log(String msg) {
+//		System.out.println(msg);
+//		if (flogger != null) 
+//			flogger.log(msg);
+//	}
 
 	private void pause(int duration) {
 		synchronized(this) {
@@ -141,7 +138,7 @@ public class TestBlobFinderPTZ {
 	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestBlobFinderPTZ <options>\n");
+		System.err.println("Usage: " + TestBlobFinderPTZ.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -149,7 +146,6 @@ public class TestBlobFinderPTZ {
 	}
 	
 	public static void main(String[] args) {
-		String logFileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		
@@ -162,7 +158,7 @@ public class TestBlobFinderPTZ {
 					serverPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
-					logFileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -179,8 +175,7 @@ public class TestBlobFinderPTZ {
  
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
-		System.out.println("Log: " + logFileName);
 		
-		new TestBlobFinderPTZ(serverIP, serverPort, logFileName);
+		new TestBlobFinderPTZ(serverIP, serverPort);
 	}
 }

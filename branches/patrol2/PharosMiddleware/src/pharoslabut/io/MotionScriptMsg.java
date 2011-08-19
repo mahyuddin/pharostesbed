@@ -21,4 +21,8 @@ public class MotionScriptMsg implements Message {
 	public MsgType getType() {
 		return MsgType.LOAD_GPS_MOTION_SCRIPT;
 	}
+	
+	public String toString() {
+		return "MotionScriptMsg: " + script;
+	}
 }

@@ -2,7 +2,11 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 
-// TODO Implement this!
+/**
+ * A behavior that makes the robot turn left.
+ * 
+ * @author Noa Agmon
+ */
 public class BehLeftTrun extends Behavior{
 
 	public BehLeftTrun(WorldModel wm, MissionData missiondata) {
@@ -13,16 +17,14 @@ public class BehLeftTrun extends Behavior{
 	@Override
 	public boolean startCondition() {
 		// TODO Auto-generated method stub
-		_wm.setCount(0);
+		_wm.resetCount(); //setCount(0);
 		return true;
 	}
 
 	@Override
 	public boolean stopCondition() {
-		// TODO Auto-generated method stub
-		if(_wm.getCount() < 10)
-		{
-			_wm.setCount(_wm.getCount()+1);
+		if(_wm.getCount() < 10) {
+			_wm.incCount(); //setCount(_wm.getCount()+1);
 			return false;
 		}
 		return true;

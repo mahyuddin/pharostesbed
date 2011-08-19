@@ -3,6 +3,8 @@ package pharoslabut.beacon;
 import java.net.*;
 import java.io.*;
 
+import pharoslabut.logger.Logger;
+
 /**
  * Periodically broadcasts WiFi beacons.  It is used in conjunction
  * with a WiFiBeaconReceiver, which receives the beacons.  
@@ -92,7 +94,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 				DatagramPacket beaconPacket
 				= new DatagramPacket(beaconBytes,  beaconBytes.length, mCastAddr, mCastPort);
 
-				log("Broadcasting Beacon: " + beacon);
+				Logger.log("Broadcasting Beacon: " + beacon);
 
 				// broadcast the beacon
 				mSocket.send(beaconPacket);
@@ -137,13 +139,13 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 //		return null;
 //    }
     
-    protected void log(String msg) {
-    	String result = "WiFiBeaconBroadcaster: " + msg;
-    	System.out.println(result);
-    	if (flogger != null) {
-    		flogger.log(result);
-    	}
-    }
+//    protected void log(String msg) {
+//    	String result = "WiFiBeaconBroadcaster: " + msg;
+//    	System.out.println(result);
+//    	if (flogger != null) {
+//    		flogger.log(result);
+//    	}
+//    }
     
 //    public static final void main(String[] args) {
 //    	String interfaceIP = getPharosIP();

@@ -7,6 +7,7 @@ import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.sensors.camera.axis.*;
 
@@ -19,8 +20,6 @@ import pharoslabut.sensors.camera.axis.*;
 public class SimonSaysServer implements MessageReceiver {
 	public static final int IMAGE_WIDTH = 640;
 	public static final int IMAGE_HEIGHT = 480;
-	
-	private FileLogger flogger = null;
 	
 	/**
      * The connection back to the client.
@@ -49,26 +48,19 @@ public class SimonSaysServer implements MessageReceiver {
 	 * @param pServerPort The port of the server.
 	 * @param port The port on which to listen for demo client messages.
 	 * @param cameraIP The IP address of the camera.
-	 * @param logFile The log file name for recording execution state.
 	 * @param mobilityPlane The type of mobility plane to use.
 	 */
-	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP, String logFile,
+	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP,
 			MotionArbiter.MotionType mobilityPlane) {
 		
-		// Create the file logger if necessary...
-		if (logFile != null) {
-			flogger = new FileLogger(logFile);
-			sender.setFileLogger(flogger);
-		}
-		
 		// TODO: Support multiple types of robots.
-		ri = new CreateRobotInterface(pServerIP, pServerPort, flogger);
+		ri = new CreateRobotInterface(pServerIP, pServerPort);
 		
 		// Create the MCU interface...
-		mcu = new MCUInterface(mcuPort, flogger);
+		mcu = new MCUInterface(mcuPort);
 		
 		String cameraURL = "http://" + cameraIP + "/axis-cgi/jpg/image.cgi?resolution=" + IMAGE_WIDTH + "x" + IMAGE_HEIGHT;
-		camera = new AxisCameraInterface(cameraURL, "root", "longhorn", flogger);
+		camera = new AxisCameraInterface(cameraURL, "root", "longhorn");
 		
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
@@ -92,7 +84,7 @@ public class SimonSaysServer implements MessageReceiver {
 		else if (msg instanceof PlayerControlMsg)
 			handlePlayerControlMsg((PlayerControlMsg)msg);
 		else
-			log("Unkown message: " + msg);
+			Logger.log("Unkown message: " + msg);
 	}
 	
 	private void handlePlayerControlMsg(PlayerControlMsg playerCtrlMsg) {
@@ -102,17 +94,17 @@ public class SimonSaysServer implements MessageReceiver {
 		} else if (playerCtrlMsg.getCmd() == PlayerControlCmd.START) {
 			
 		} else 
-			log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
+			Logger.log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
 	}
 	
 	private void handleCameraPanMsg(CameraPanMsg panMsg) {
-		log("Panning camera to " + panMsg.getPanAngle() + " degrees...");
+		Logger.log("Panning camera to " + panMsg.getPanAngle() + " degrees...");
 		mcu.setCameraPan(panMsg.getPanAngle());
 		sendAck(true, panMsg); // success
 	}
 	
 	private void handleCameraTiltMsg(CameraTiltMsg tiltMsg) {
-		log("Tilting camera to " + tiltMsg.getTiltAngle() + " degrees...");
+		Logger.log("Tilting camera to " + tiltMsg.getTiltAngle() + " degrees...");
 		mcu.setCameraTilt(tiltMsg.getTiltAngle());
 		sendAck(true, tiltMsg); // success
 	}
@@ -136,9 +128,9 @@ public class SimonSaysServer implements MessageReceiver {
 			csm = new CameraSnapshotMsg(true /* successful */);
 			try {
 				csm.setImage(image, IMAGE_WIDTH, IMAGE_HEIGHT);
-				log("Image size: " + csm.getImageSize() + " bytes");
+				Logger.log("Image size: " + csm.getImageSize() + " bytes");
 			} catch (IOException e) {
-				logErr("ERROR: Failed to save image in CameraSnapshotMsg: " + e.getMessage());
+				Logger.logErr("ERROR: Failed to save image in CameraSnapshotMsg: " + e.getMessage());
 				csm.setSuccess(false);
 				e.printStackTrace();
 			}
@@ -147,12 +139,12 @@ public class SimonSaysServer implements MessageReceiver {
 		}
 		
 		// Send resulting CameraSnapshotMsg to client...
-		log("Sending camera snapshot result to client (success=" + csm.getSuccess() + ")...");
+		Logger.log("Sending camera snapshot result to client (success=" + csm.getSuccess() + ")...");
 		try {
 			sender.sendMessage(takeSnapshotMsg.getReplyAddr(), takeSnapshotMsg.getPort(), csm);
 		} catch (PharosException e) {
 			e.printStackTrace();
-			logErr("ERROR: Failed to send CameraSnapshotMsg, error=" + e);
+			Logger.logErr("ERROR: Failed to send CameraSnapshotMsg, error=" + e);
 		}
 	}
 	
@@ -163,9 +155,9 @@ public class SimonSaysServer implements MessageReceiver {
 	 */
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
 		double dist = moveMsg.getDist();
-		log("Moving robot " + dist + " meters...");
+		Logger.log("Moving robot " + dist + " meters...");
 		boolean result = ri.move(dist);
-		log("Done moving robot, sending ack, result = " + result + "...");
+		Logger.log("Done moving robot, sending ack, result = " + result + "...");
 		sendAck(result, moveMsg); // success
 	}
 	
@@ -176,9 +168,9 @@ public class SimonSaysServer implements MessageReceiver {
 	 */
 	private void handleRobotTurnMsg(RobotTurnMsg turnMsg) {
 		double angle = turnMsg.getAngle() / 180 * Math.PI;
-		log("Turning robot " + turnMsg.getAngle() + " degrees...");
+		Logger.log("Turning robot " + turnMsg.getAngle() + " degrees...");
 		boolean result = ri.turn(angle);
-		log("Done turning robot, sending ack, result = " + result + "...");
+		Logger.log("Done turning robot, sending ack, result = " + result + "...");
 		sendAck(result, turnMsg); // success
 	}
 	
@@ -194,31 +186,31 @@ public class SimonSaysServer implements MessageReceiver {
 			sender.sendMessage(am.getReplyAddr(), am.getPort(), cdm);
 		} catch (PharosException e) {
 			e.printStackTrace();
-			logErr("sendAck: ERROR: Failed to send ack for " + am + ", error=" + e);
+			Logger.logErr("Failed to send ack for " + am + ", error=" + e);
 		}
 	}
 	
-	private void logErr(String msg) {
-		String result = "DemoServer: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "DemoServer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "DemoServer: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "DemoServer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println("DemoServer: " + msg);
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.simonsays.SimonSaysServer <options>\n");
+		print("Usage: " + SimonSaysServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
@@ -226,7 +218,7 @@ public class SimonSaysServer implements MessageReceiver {
 		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
 		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
-		print("\t-log <file name>: name of file in which to save results (default DemoServer.log)");
+		print("\t-log <file name>: name of file in which to save results (default SimonSaysServer.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -234,7 +226,7 @@ public class SimonSaysServer implements MessageReceiver {
 		int port = 8887;
 		String pServerIP = "localhost";
 		int pServerPort = 6665;
-		String logFile = "DemoServer.log";
+		String logFile = "SimonSaysServer.log";
 		String mcuPort = "/dev/ttyS0";
 		String cameraIP = "192.168.0.20";
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
@@ -287,6 +279,9 @@ public class SimonSaysServer implements MessageReceiver {
 			System.exit(1);
 		}
 		
-		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, logFile, mobilityPlane);
+		// Create the file logger if necessary...
+		Logger.setFileLogger(new FileLogger(logFile));
+		
+		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, mobilityPlane);
 	}
 }

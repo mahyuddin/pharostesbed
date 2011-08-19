@@ -10,7 +10,8 @@ import java.io.*;
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.beacon.*;
 import pharoslabut.exceptions.*;
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * This is responsible for broadcasting TelosB beacons.
@@ -52,9 +53,9 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 		try {
 			// Get the local node ID
 			moteID = RobotIPAssignments.getID();
-			log("Mote ID = " + moteID);
+			Logger.log("Mote ID = " + moteID);
 		} catch(PharosException e) {
-			log("Unable to get moteID, assuming it is zero");
+			Logger.logErr("Unable to get moteID, assuming it is zero");
 			moteID = 0;
 		}
 		
@@ -199,7 +200,7 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 	@Override
 	protected void sendBeacon() {
 		SendBeaconMsg sbm = new SendBeaconMsg();
-		log("SEND_TELSOB_BCAST\t" + moteID + "\t" + seqno + "\t" + (short)txPower);
+		Logger.log("SEND_TELSOB_BCAST\t" + moteID + "\t" + seqno + "\t" + (short)txPower);
 		
 		try {
 			sbm.set_sndrID(moteID);
@@ -207,7 +208,7 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 			sbm.set_txPwr((short)txPower);
 			moteIF.send(moteID, sbm);
 		} catch(IOException e) {
-			log("Error sending message: " + e.getMessage());
+			Logger.logErr("Error sending message: " + e.getMessage());
 			e.printStackTrace();
 		}
 	}
@@ -225,20 +226,20 @@ public class TelosBeaconBroadcaster extends BeaconBroadcaster {
 //			}
 //		}
 //	}
-	@Override
-	public void setFileLogger(FileLogger flogger)  {
-		this.flogger = flogger;
-		receiver.setFileLogger(flogger);
-	}
+//	@Override
+//	public void setFileLogger(FileLogger flogger)  {
+//		this.flogger = flogger;
+//		receiver.setFileLogger(flogger);
+//	}
 	
-	protected void log(String msg) {
-		String result = "TelosBeaconBroadcaster: " + msg;
-		if (flogger != null) 
-			flogger.log(result);
-		
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-	}
+//	protected void log(String msg) {
+//		String result = "TelosBeaconBroadcaster: " + msg;
+//		if (flogger != null) 
+//			flogger.log(result);
+//		
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//	}
 	
 //	private class SendBeaconTimerTask extends TimerTask {
 //		public SendBeaconTimerTask() {

@@ -14,6 +14,7 @@ import pharoslabut.experiment.ExpType;
 //import pharoslabut.experiment.PharosExpServer;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
 //import pharoslabut.navigate.MotionScriptFollower;
 import pharoslabut.navigate.MotionScriptFollowerDoneListener;
@@ -73,13 +74,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 //	private RelativeMotionScript relMotionScript;
 	private MRPConfData mrpConfdata;
 	
-	private FileLogger flogger = null;
+	private FileLogger debugFileLogger = null;
 	
 	/**
 	 * For communicating with other MRPatrolServers...
 	 */
 	private TCPMessageSender msgSender = TCPMessageSender.getSender();
-	private TCPMessageReceiver msgRcvr;
 
 	/**
 	 * The constructor.  Starts the server running.
@@ -99,6 +99,15 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		this.playerServerPort = playerServerPort;
 		this.pharosServerPort = pharosServerPort;
 		
+		/*
+		 * If we're running in debug mode, start logging debug statements even before the experiment begins.
+		 */
+		if (System.getProperty ("PharosMiddleware.debug") != null) {
+			debugFileLogger = new FileLogger("MRPatrolServer-" + FileLogger.getUniqueNameExtension() + ".log");
+			Logger.setFileLogger(debugFileLogger);
+			Logger.log("Creating a PharosExpServer...");
+		}
+		
 //		this.mCastAddress = mCastAddress;
 //		this.mCastPort = mCastPort;
 		
@@ -109,25 +118,25 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		// Get the robot's name...		
 		try {
 			robotName = pharoslabut.RobotIPAssignments.getName();
-			log("Robot name: " + robotName);
+			Logger.log("Robot name: " + robotName);
 		} catch (PharosException e1) {
-			logErr("Unable to get robot's name, using 'JohnDoe'");
+			Logger.logErr("Unable to get robot's name, using 'JohnDoe'");
 			robotName = "JohnDoe";
 			e1.printStackTrace();
 		}
 		
 		if (!initPharosServer()) {
-			logErr("Failed to initialize the Pharos server!");
+			Logger.logErr("Failed to initialize the Pharos server!");
 			System.exit(1);
 		}
 		
 		if (System.getProperty ("simulateBehave") == null) {
 			if (!createPlayerClient(mobilityPlane)) {
-				logErr("Failed to connect to Player server!");
+				Logger.logErr("Failed to connect to Player server!");
 				System.exit(1);
 			}
 		} else
-			log("Running in simulation mode, not connecting to player server.");
+			Logger.log("Running in simulation mode, not connecting to player server.");
 		
 //		if ((System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null) && !SimulateAll) {
 //			if (!initWiFiBeacons()) {
@@ -153,27 +162,27 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	 * @return true if successful.
 	 */
 	private boolean createPlayerClient(MotionArbiter.MotionType mobilityPlane) {
-		log("createPlayerClient: Creating Player Client");
+		Logger.log("Creating Player Client");
 		try {
-			log("createPlayerClient: Creating player client, conneting to " + playerServerIP + ":" + playerServerPort);
+			Logger.log("Creating player client, conneting to " + playerServerIP + ":" + playerServerPort);
 			client = new PlayerClient(playerServerIP, playerServerPort);
 		} catch(PlayerException e) {
-			log("ERROR: Unable to connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
+			Logger.logErr("Unable to connecting to Player: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			return false;
 		}
 		
-		log("createPlayerClient: Subscribing to motors.");
+		Logger.log("Subscribing to motors.");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("createPlayerClient: motors is null");
+			Logger.logErr("motors is null");
 			return false;
 		} else
-			log("createPlayerClient: Successfully subscribed to motors.");
+			Logger.log("Successfully subscribed to motors.");
 		
 		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
 		// while the Segway RMP 50's compass is on index 2.
-		log("Subscribing to compass.");
+		Logger.log("Subscribing to compass.");
 		Position2DInterface compass;
 		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
 				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
@@ -181,46 +190,46 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		} else
 			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		if (compass == null) {
-			logErr("createPlayerClient: compass is null");
+			Logger.logErr("compass is null");
 			return false;
 		} else
-			log("createPlayerClient: Successfully subscribed to compass.");
+			Logger.log("Successfully subscribed to compass.");
 		
-		log("createPlayerClient: Subscribing to GPS.");
+		Logger.log("Subscribing to GPS.");
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (gps == null) {
-			logErr("gps is null");
+			Logger.logErr("gps is null");
 			return false;
 		} else
-			log("createPlayerClient: Successfully subscribed to GPS.");
+			Logger.log("Successfully subscribed to GPS.");
 		
-		log("createPlayerClient: Subscribing to opaque interface.");
+		Logger.log("Subscribing to opaque interface.");
 		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (oi == null) {
-			logErr("createPlayerClient: opaque interface is null");
+			Logger.logErr("opaque interface is null");
 			return false;
 		} else
-			log("createPlayerClient: Successfully subscribed to opaque interface.");
+			Logger.log("Successfully subscribed to opaque interface.");
 		
 		compassDataBuffer = new CompassDataBuffer(compass);
 		
 		gpsDataBuffer = new GPSDataBuffer(gps);
 		if(gpsDataBuffer == null){
-			logErr("createPlayerClient: failed to create GPS Data Buffer.");
+			Logger.logErr("failed to create GPS Data Buffer.");
 			System.exit(1);
 		} else
-			log("createPlayerClient: Successfully created GPS Data Buffer");
+			Logger.log("Successfully created GPS Data Buffer");
 		
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		oi.addOpaqueListener(this);
 		
-		log("createPlayerClient: Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("createPlayerClient: Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		log("createPlayerClient: Done Creating Player Client");
+		Logger.log("Done Creating Player Client");
 		return true;
 	}
 	
@@ -230,7 +239,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	 * @return true if successful.
 	 */
 	private boolean initPharosServer() {
-		msgRcvr = new TCPMessageReceiver(this, pharosServerPort);
+		new TCPMessageReceiver(this, pharosServerPort);
 		return true;
 	}
 	
@@ -319,7 +328,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	 */
 	@Override
 	public void newMessage(Message msg) {
-		log("newMessage: Received message: " + msg.getType());
+		Logger.log("Received message: " + msg.getType());
 		switch(msg.getType()) {
 //		case SET_TIME:
 //			setSystemTime(((SetTimeMsg)msg).getTime());
@@ -335,41 +344,41 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 //			relMotionScript = relMMsg.getScript();
 //			break;
 		case LOAD_BEHAVIORCONFIG_FILE:
-			log("newMessage: Loading behavior based configuation file...");
+			Logger.log("Loading behavior based configuation file...");
 			MRPConfigMsg behMsg = (MRPConfigMsg)msg; 
-			log("newMessage: Received MRPConfigMsg: " + behMsg);
+			Logger.log("Received MRPConfigMsg: " + behMsg);
 			
 			try {
 				mrpConfdata = new MRPConfData(behMsg);
 			} catch(Exception e) {
-				logErr("newMessage: problem creating MRPConfData out of MRPConfigMsg");
+				Logger.logErr("problem creating MRPConfData out of MRPConfigMsg");
 				e.printStackTrace();
 				System.exit(1);
 			}
 			
 			break;
 		case CUSTOM:
-			log("newMessage: Received custom message: " + msg);
+			Logger.log("Received custom message: " + msg);
 			break;
 		case RESET:
 			reset();
 			break;
 		case STARTEXP:
-			log("newMessage: Starting experiment...");
+			Logger.log("Starting experiment...");
 			StartExpMsg sem = (StartExpMsg)msg;
 			startExp(sem.getExpName(), sem.getExpType(), sem.getDelay());
 			break;
 		case STOPEXP:
-			log("newMessage: Stopping experiment...");
+			Logger.log("Stopping experiment...");
 			stopExp();
 			break;
 		case UPDATE_BEH_MSG:
-			log("newMessage: updated behavior message: " + msg);
+			Logger.log("updated behavior message: " + msg);
 			MultiRobotBehaveMsg mRmsg = (MultiRobotBehaveMsg)msg;
 			manageMRP.updateTeammates(mRmsg.getBehaveName(), mRmsg.getRobotID(), mRmsg.getBehaveID());
 			break;
 		default:
-			log("newMessage: Unknown Message: " + msg);
+			Logger.log("Unknown Message: " + msg);
 		}
 	}
 	
@@ -387,37 +396,26 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	private void startExp(String expName, ExpType expType, int delay) {
 		
 		// Start the file logger
-		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
-		flogger = new FileLogger(fileName);
-		log("startExp: starting experiment\n");
+		String fileName = expName + "-" + robotName + "-MRPatrol-" + FileLogger.getUniqueNameExtension() + ".log"; 
+		FileLogger expFlogger = new FileLogger(fileName);
+		Logger.setFileLogger(expFlogger);
+		
+		Logger.log("Starting experiment at time " + System.currentTimeMillis() + "...");
 		
 		if(gpsDataBuffer == null) {
-			logErr("startExp: gpsDataBuffer is null before setting logger\n");
+			Logger.logErr("gpsDataBuffer is null!");
 			System.exit(1);
 		}
 		
-		log("startExp: Starting the file logger...");
-		if (motionArbiter != null)				motionArbiter.setFileLogger(flogger);
-		if (gpsDataBuffer != null)				gpsDataBuffer.setFileLogger(flogger);
-		if (compassDataBuffer!= null) 			compassDataBuffer.setFileLogger(flogger);
-//		if (wifiBeaconBroadcaster != null)		wifiBeaconBroadcaster.setFileLogger(flogger);
-//		if (wifiBeaconReceiver != null) 		wifiBeaconReceiver.setFileLogger(flogger);
-//		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
-		if (msgSender != null) 					msgSender.setFileLogger(flogger);
-		if (msgRcvr != null)					msgRcvr.setFileLogger(flogger);
-		
-		log("startExp: Starting experiment at time " + System.currentTimeMillis() + "...");
-		
 		// Start the individual components
-		if (compassDataBuffer != null)			compassDataBuffer.start();
-//		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
-
+		if (compassDataBuffer != null)
+			compassDataBuffer.start();
 		if(gpsDataBuffer == null) {
 			System.err.print("gpsDataBuffer is null after setting logger\n");
 			System.exit(1);
 		}
 
-		log("startExp: Pausing " + delay + "ms before starting motion script.");
+		Logger.log("Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
 				try {
@@ -445,17 +443,17 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 //				navigatorRel.start();
 //				break;
 			case RUN_BEHAVIOR_GPS:
-				log("startExp: Starting Behavior-based GPS following experiment...");
+				Logger.log("Starting Behavior-based GPS following experiment...");
 				if (gpsDataBuffer == null) {
-					logErr("startExp: About to Create Manager: GPS Data buffer is NULL!");
+					Logger.logErr("About to Create Manager: GPS Data buffer is NULL!");
 					System.exit(1);
 				}
 				NavigateCompassGPS mynavigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-						gpsDataBuffer, flogger);
+						gpsDataBuffer);
 				
-				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender, flogger);
+				manageMRP = new Manager(mrpConfdata, mynavigatorGPS, msgSender);
 				manageMRP.start();
-				log("startExp: manager created.");
+				Logger.log(" manager created.");
 				break;
 		}
 		
@@ -471,74 +469,30 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	 * Stops the experiment.
 	 */
 	private void stopExp() {
-		flogger.log("PharosServer: Stopping the file logger.");
+		Logger.log("PharosServer: Stopping the file logger.");
 		
-		if (motionArbiter != null) {
-			motionArbiter.setFileLogger(null);
-		}
 		
-//		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
-//		if (wifiBeaconBroadcaster != null) {
-//			wifiBeaconBroadcaster.setFileLogger(null);
-//			wifiBeaconBroadcaster.stop();
-//		}
-//		
-//		flogger.log("PharosServer: Stopping the WiFi beacon receiver.");
-//		if (wifiBeaconReceiver != null) {
-//			wifiBeaconReceiver.setFileLogger(null);
-//		}
-		
-		flogger.log("PharosServer: Stopping the GPS data buffer.");
-		if (gpsDataBuffer != null)	{
-			gpsDataBuffer.setFileLogger(null);
-//			gpsDataBuffer.stop();
-		}
-		
-		flogger.log("PharosServer: Stopping the compass data buffer.");
+		Logger.log("Stopping the compass data buffer.");
 		if (compassDataBuffer != null) {
-			compassDataBuffer.setFileLogger(null);
 			compassDataBuffer.stop();
 		}
 		
-//		flogger.log("PharosServer: Stopping the TelosB signal meter.");
-//		if (telosRadioSignalMeter != null) {
-//			telosRadioSignalMeter.setFileLogger(null);
-//			telosRadioSignalMeter.stop();
-//		}
-		
-		//flogger.log("PharosServer: Stopping the UDP tester.");
-		//udpTest.stop();
-		
-		flogger = null;
+		// Restore the debug file logger since the experiment has stopped.
+		Logger.logDbg("Stopping experiment log file.");
+		Logger.setFileLogger(debugFileLogger);
 	}
 	
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		if (opaqueData.getDataCount() > 0) {
 			String s = new String(opaqueData.getData());
-			log("MCU Message: " + s);
+			Logger.log("MCU Message: " + s);
 		}
 	}
 	
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
-		log("Received beacon: " + be);
-	}
-	
-	
-	private void logErr(String msg) {
-		String result = "MRPatrolServer: ERROR: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "MRPatrolServer: " + msg;
-		//if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
+		Logger.log("Received beacon: " + be);
 	}
 	
 	private static void print(String msg) {
@@ -546,7 +500,7 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.demo.mrpatrol.MrPatrolServer <options>\n");
+		print("Usage: " + MRPatrolServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");

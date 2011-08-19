@@ -6,7 +6,7 @@ import java.net.UnknownHostException;
 import pharoslabut.behavior.MultiRobotBehaveMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * Sends MultiRobotBehaveMsg messages to each team member.  Throttles the rate at 
@@ -49,41 +49,15 @@ public class BehaviorBroadcaster implements Runnable {
 	private boolean done = false;
 	
 	/**
-	 * The FileLogger for logging debug messages.
-	 */
-	private FileLogger flogger = null;
-	
-	/**
-	 * The constructor.
-	 * 
-	 * @param sender The component that sends the message.
-	 * @param wm The world model from which the MultiRobotBehaveMsg should be created.
-	 */
-	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm) {
-		this(sender, wm, null);
-	}
-	
-	/**
 	 * The constructor.
 	 * 
 	 * @param sender The component that sends the message.
 	 * @param wm The world model from which the MultiRobotBehaveMsg should be created. 
-	 * @param flogger The file logger for logging debug messages.
 	 */
-	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm, FileLogger flogger) {
+	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm) {
 		this.sender = sender;
 		this.wm = wm;
-		this.flogger = flogger;
 		new Thread(this).start(); // This has its own thread.
-	}
-	
-	/**
-	 * Sets the file logger for saving debug messages.
-	 * 
-	 * @param flogger The file logger.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
 	}
 	
 	/**
@@ -93,10 +67,10 @@ public class BehaviorBroadcaster implements Runnable {
 	 */
 	public synchronized void sendBehaviorToClients() {
 		if (!doSend) {
-			log("sendBehaviorToClients: Setting doSend to be true.");
+			Logger.log("Setting doSend to be true.");
 			doSend = true;
 		} else
-			log("sendBehaviorToClients: doSend already true, ignoring request.");
+			Logger.log("doSend already true, ignoring request.");
 	}
 	
 	/**
@@ -112,22 +86,22 @@ public class BehaviorBroadcaster implements Runnable {
 	private void doBroadcast() {
 		// Check for fatal error conditions.
 //		if (sender == null) {
-//			logErr("doBroadcast: sender not set, aborting.");
+//			logErr("sender not set, aborting.");
 //			System.exit(1);
 //		}
 //		if (wm == null) {
-//			logErr("doBroadcast: wm not set, aborting.");
+//			logErr("wm not set, aborting.");
 //			System.exit(1);
 //		}
 		
-		log("doBroadcast: Sending behavior to teammates:"
+		Logger.log("Sending behavior to teammates:"
 				+ "\n\tBehavior name " + wm.getCurrentBehaviorName() 
 				+ "\n\tBehavior ID: "+ wm.getCurrentBehaviorID() 
 				+ "\n\tMy index "+ wm.getMyIndex()
 				+ "\n\tMy port "+ wm.getMyPort()+"\n");
 				
 		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(wm.getCurrentBehaviorName(), wm.getCurrentBehaviorID(), wm.getMyIndex());
-		log("doBroadcast: Sending message: " + msg);
+		Logger.log("Sending message: " + msg);
 		
 		// For each team member...
 		for (int i = 0; i < wm.getTeamSize(); i++) {
@@ -138,28 +112,28 @@ public class BehaviorBroadcaster implements Runnable {
 				// Send the message to the team member...
 				String ip = wm.getIp(i);
 				int port = wm.getPort(i);
-				log("doBroadcast: Attempting to send message to " + ip + ":" + port);
+				Logger.log("Attempting to send message to " + ip + ":" + port);
 				
 				InetAddress address = null;
 				try {
 					address = InetAddress.getByName(ip);
 				} catch (UnknownHostException e) {
-					logErr("doBroadcast: UnknownHostException when trying to get InetAddress for " + ip + ", error message: " + e.getMessage());
+					Logger.logErr("UnknownHostException when trying to get InetAddress for " + ip + ", error message: " + e.getMessage());
 					e.printStackTrace();
 					continue;
 				}
 				
 				if (address != null) {
 					try {
-						log("doBroadcast: BEFORE Send: Sending " + wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
+						Logger.log("BEFORE Send: Sending " + wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
 						sender.sendMessage(address, port, msg);
-						log("doBroadcast: AFTER Send: Sent " + wm.getCurrentBehaviorName() + " to Client " + i);
+						Logger.log("AFTER Send: Sent " + wm.getCurrentBehaviorName() + " to Client " + i);
 					} catch (PharosException e) {
-						logErr("doBroadcast: PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
+						Logger.logErr("PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
 						e.printStackTrace();
 					}
 				} else {
-					logErr("doBroadcast: Unable to send message because address was null!");
+					Logger.logErr("Unable to send message because address was null!");
 				}
 			}
 		}
@@ -170,20 +144,20 @@ public class BehaviorBroadcaster implements Runnable {
 	 */
 	public void run() {
 		
-		log("run: Starting broadcast loop...");
+		Logger.log("Starting broadcast loop...");
 		
 		while (!done) {
 			if (doSend) {
-				log("run: doSend true, broadcasting to teammates!");
+				Logger.log("doSend true, broadcasting to teammates!");
 				doSend = false;
 				doBroadcast();  
 			} else
-				log("run: doSend false, not broadcasting during this cycle");
+				Logger.log("doSend false, not broadcasting during this cycle");
 			
 			// Pause for the specified period.
 			synchronized(this) {
 				try {
-					log("run: pausing for " + MIN_BROADCAST_PERIOD + "ms.");
+					Logger.log("pausing for " + MIN_BROADCAST_PERIOD + "ms.");
 					wait(MIN_BROADCAST_PERIOD);
 				} catch (InterruptedException e) {
 					e.printStackTrace();
@@ -191,30 +165,6 @@ public class BehaviorBroadcaster implements Runnable {
 			}
 		}
 		
-		log("run: Thread terminates.");
+		Logger.log("Thread terminates.");
 	}
-		
-
-	private void logErr(String msg) {
-		String result = "BehaviorBroadcaster: ERROR: " + msg;
-
-		System.err.println(result);
-
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
-
-	private void log(String msg) {
-		String result = "BehaviorBroadcaster: " + msg;
-
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-
-		// always log text to file if a FileLogger is present
-		if (flogger != null)
-			flogger.log(result);
-	}
-
 }

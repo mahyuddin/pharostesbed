@@ -1,19 +1,18 @@
 package pharoslabut.behavior.management;
 
-//import java.io.FileNotFoundException;
-//import java.net.InetAddress;
-//import java.net.UnknownHostException;
 import java.util.Vector;
 
 import pharoslabut.behavior.*;
 import pharoslabut.io.*;
-import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.*;
 import pharoslabut.demo.mrpatrol.*;
-//import pharoslabut.exceptions.PharosException;
 
-
-
+/**
+ * Manages a behavior-based experiment.
+ * 
+ * @author Noa Agmon
+ */
 public class Manager implements Runnable {
 	Robot _robot;
 	WorldModel _wm;
@@ -23,7 +22,7 @@ public class Manager implements Runnable {
 	//Server _server;
 	//Client _client;
 //	private MissionData [] _missionData; 
-	protected static FileLogger _flogger = null;
+//	protected static FileLogger _flogger = null;
 	NavigateCompassGPS _NavigateData;
 	/* need to know whether to connect the last behavior to the first, and if so - for how many repeats */
 	private int _CircularRepeats; 
@@ -44,22 +43,21 @@ public class Manager implements Runnable {
 	 * @param mrpConfdata
 	 * @param navigationdata
 	 * @param sender
-	 * @param flogger The file logger for logging debug messages.
 	 */
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, 
-			TCPMessageSender sender, FileLogger flogger)
+			TCPMessageSender sender)
 	{
-		_wm = new WorldModel(mrpConfdata, flogger);
-		broadcaster = new BehaviorBroadcaster(sender, _wm, flogger);
+		_wm = new WorldModel(mrpConfdata);
+		broadcaster = new BehaviorBroadcaster(sender, _wm);
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
 //		_sender = sender;
-		_flogger = flogger;
+//		_flogger = flogger;
 		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
 		
 		
-		log("Manager: numRobots=" + mrpConfdata.GetNumRobots() +
+		Logger.log("numRobots=" + mrpConfdata.GetNumRobots() +
 					", numMissions=" + mrpConfdata.GetNumMissions() + 
 					", Dynamic (loose) coordination=" + _manageDynamic);
 		
@@ -71,9 +69,9 @@ public class Manager implements Runnable {
 		
 		for(int round = 0; round < _CircularRepeats ; round ++){
 			for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){	
-				_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData, _flogger));
+				_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData));
 				_behVect.get(_behVect.size()-1).BehSetIndex(index + round*mrpConfdata.GetNumMissions());
-				log(" behavior index is: "+_behVect.get(_behVect.size()-1).BehGetIndex());
+				Logger.log("Behavior index is: "+_behVect.get(_behVect.size()-1).BehGetIndex());
 				// add the circular behavior nature
 				if(index !=0 || round!=0){
 					_behVect.get(_behVect.size()-2).addNext(_behVect.get(_behVect.size()-1));
@@ -81,11 +79,11 @@ public class Manager implements Runnable {
 			}
 		}
 		
-		log("System circular: "+_CircularRepeats+"behavior vector size is: "+_behVect.size());
+		Logger.log("System circular: "+_CircularRepeats+"behavior vector size is: "+_behVect.size());
 //		if( _CircularRepeats > 0){
 //			_behVect.get(mrpConfdata.GetNumMissions()-1).addNext(_behVect.get(0));
 //		}
-		log("Manager: after _CircularRepeats\n");
+		Logger.log("after _CircularRepeats\n");
 		_current = _behVect.get(0);
 		_currentIndex = 0;
 //		try {
@@ -104,22 +102,22 @@ public class Manager implements Runnable {
 		
 		try{
 			for(int kk=0;kk<_behVect.size();kk++){
-				log("behavior number "+_behVect.get(kk).BehGetIndex());
-				log("next is "+_behVect.get(kk).getNext().BehGetIndex());
+				Logger.log("behavior number "+_behVect.get(kk).BehGetIndex());
+				Logger.log("next is "+_behVect.get(kk).getNext().BehGetIndex());
 			}
 		}catch(Exception e){
-			log("Error: " + e.getMessage());
+			Logger.logErr(e.getMessage());
 		}
 
 		if(mrpConfdata.GetHomePort() !=null){
-			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData, _flogger);
+			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData);
 			_concludeBehave.BehSetIndex(_behVect.size());
 		} else {
 			_concludeBehave = null;
 		}
 
 		
-		log("_behVect: "+ _current.getClass().getName()+_currentIndex);
+		Logger.log("_behVect: "+ _current.getClass().getName()+_currentIndex);
 		_wm.setMyCurrentBehavior((_current.getClass().getName())+_currentIndex, _currentIndex);
 	}
 	
@@ -127,7 +125,7 @@ public class Manager implements Runnable {
 
 	
 	public void updateTeammates(String behavename, int teammateID, int behaveID){
-		log("updateTeammates: new behavior " + behavename + " for teammate " + teammateID + " behaveID " + behaveID);
+		Logger.log("new behavior " + behavename + " for teammate " + teammateID + " behaveID " + behaveID);
 		_wm.setCurrentMsgTime(teammateID);
 		_wm.setTeamCurrentBehavior(behavename, teammateID, behaveID);
 	}
@@ -142,10 +140,10 @@ public class Manager implements Runnable {
 	public void start() {
 		if (!started) {
 			started = true;
-			log("start: starting manager.");
+			Logger.log("starting manager.");
 			new Thread(this).start();
 		} else 
-			log("start: WARNING: trying to start manager multiple times.");
+			Logger.log("WARNING: trying to start manager multiple times.");
 	}
 	
 	/**
@@ -153,28 +151,28 @@ public class Manager implements Runnable {
 	 */
 	public void run()
 	{
-		log("run: running Manager\n");
+		Logger.log("running Manager\n");
 
 		if(!_current.startCondition())
 		{
-			log("run: Program finished (initial start condition is false)");
+			Logger.log("Program finished (initial start condition is false)");
 			return;
 		}
 		//update that we established a connection to all servers, and are now able to continue
 		broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 		
 		//If you want your robot to be synchronized when behavior changed, run this method.
-		waitToTeam();
+		waitForTeam();
 
 //		int numberRounds = _CircularRepeats*_behVect.size();
 		while(_current != null)
 		{
-			log("run: running behavior "+_current.getClass().getName()+_currentIndex);
+			Logger.log("running behavior "+_current.getClass().getName()+_currentIndex);
 
 			//running the action loop
 			while(!_current.stopCondition())
 			{
-				log("run: stop condition false, continue to run behavior "+ _current.BehGetIndex() +"**********");
+				Logger.log("stop condition false, continue to run behavior "+ _current.BehGetIndex() +"**********");
 				synchronized(this) {
 					try {
 						wait(100);
@@ -183,25 +181,25 @@ public class Manager implements Runnable {
 					}
 				}
 				
-				log("run: calling action...");
+				Logger.log("calling action...");
 				_current.action();
 				
-				log("run: calling sendBehaviorToClients...");
+				Logger.log("calling sendBehaviorToClients...");
 				// This will act as keep-alive message
 				broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 				
-				log("run: end of current loop...");
+				Logger.log("end of current loop...");
 			}
-			log("run: End behavior"+ _current.BehGetIndex() +"**********");
+			Logger.log("End behavior"+ _current.BehGetIndex() +"**********");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
 			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
-			log("Sending -- stop" + _current.getClass().getName() + _currentIndex + " to my clients");
-			waitToTeam();
+			Logger.log("Sending -- stop" + _current.getClass().getName() + _currentIndex + " to my clients");
+			waitForTeam();
 			
 			_current = _current.getNext();
 			if(_current == null) {
-				log("run: Finished all behaviors - exiting");
+				Logger.log("Finished all behaviors - exiting");
 				break;
 			}
 
@@ -209,29 +207,29 @@ public class Manager implements Runnable {
 			
 			_wm.setMyCurrentBehavior(_current.getClass().getName()+_currentIndex, _currentIndex);
 			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
-			waitToTeam();
+			waitForTeam();
 			
 //			if(numberRounds<=0)
 //				break;
 //			numberRounds--;
 		}
-		log("run: Finished all listed behaviors. Making sure the robot is stopped...");
+		Logger.log("Finished all listed behaviors. Making sure the robot is stopped...");
 		_NavigateData.stopRobot();
 		
 		if(_concludeBehave!=null){
 			if(_concludeBehave.startCondition() == true){
-				log("run: Entering concluding behavior (start condition true)");
+				Logger.log("Entering concluding behavior (start condition true)");
 				while(!_concludeBehave.stopCondition()){
-					log("run: running conclude behavior");
+					Logger.log("running conclude behavior");
 					_concludeBehave.action();
 				}
 				_NavigateData.stopRobot();
 			}else{
-				log("run: startCondition of concluding behavior is false");
+				Logger.log("startCondition of concluding behavior is false");
 			}
 		}
 		
-		log("run: Program finished");
+		Logger.log("Program finished");
 		System.exit(0);
 	}
 	
@@ -287,8 +285,8 @@ public class Manager implements Runnable {
 	 * Periodically transmits MultiRobotBehaveMsg to the entire team until
 	 * the team is synchronized from this robot's perspective.
 	 */
-	public void waitToTeam() {
-		log("waitToTeam: Waiting for teammates, dynamic = " + _manageDynamic+"\n");
+	public void waitForTeam() {
+		Logger.log("Waiting for teammates, dynamic = " + _manageDynamic+"\n");
 		boolean isSynched;
 		
 		if(_manageDynamic) {
@@ -299,11 +297,11 @@ public class Manager implements Runnable {
 
 		while(!isSynched) {
 			
-			log("waitToTeam: team not yet synched, calling sendBehaviorToClients");
+			Logger.logDbg("Team not yet synched, calling sendBehaviorToClients");
 			// send message to the teammates also while waiting for updates
 			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
 			
-			log("waitToTeam: done calling sendBehaviorToClients, pausing for 100ms before checking if team is synched");
+			Logger.log("Done calling sendBehaviorToClients, pausing for 100ms before checking if team is synched");
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {
@@ -314,7 +312,7 @@ public class Manager implements Runnable {
 			isSynched = _manageDynamic ? _wm.isTeamSynchronizedDynamically() : _wm.isTeamSynchronized() ;
 		}
 		
-		log("waitToTeam: team is synched!");
+		Logger.log("Team is synched!");
 	}
 
 //	private void logErr(String msg) {
@@ -327,15 +325,15 @@ public class Manager implements Runnable {
 //			_flogger.log(result);
 //	}
 	
-	private void log(String msg) {
-		String result = "Manager: " + msg;
-		
-		// only print log text to string if in debug mode
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		
-		// always log text to file if a FileLogger is present
-		if (_flogger != null)
-			_flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "Manager: " + msg;
+//		
+//		// only print log text to string if in debug mode
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		
+//		// always log text to file if a FileLogger is present
+//		if (_flogger != null)
+//			_flogger.log(result);
+//	}
 }

@@ -6,6 +6,7 @@ import pharoslabut.RobotIPAssignments;
 import pharoslabut.beacon.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.*;
 import pharoslabut.navigate.motionscript.MotionScript;
 import pharoslabut.radioMeter.cc2420.*;
@@ -59,7 +60,11 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	private MotionScript gpsMotionScript;
 	private RelativeMotionScript relMotionScript;
 	
-	private FileLogger flogger = null;
+	/**
+	 * This is the file logger that is used for debugging purposes.  It is used when debug mode is enabled
+	 * and there is no experiments running.
+	 */
+	private FileLogger debugFileLogger = null;
 	
 	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
@@ -83,41 +88,50 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
+		/*
+		 * If we're running in debug mode, start logging debug statements even before the experiment begins.
+		 */
+		if (System.getProperty ("PharosMiddleware.debug") != null) {
+			debugFileLogger = new FileLogger("PharosExpServer-" + FileLogger.getUniqueNameExtension() + ".log");
+			Logger.setFileLogger(debugFileLogger);
+			Logger.log("Creating a PharosExpServer...");
+		}
+		
 		// Get the robot's name...		
 		try {
 			robotName = pharoslabut.RobotIPAssignments.getName();
-			log("Robot name: " + robotName);
+			Logger.log("Robot name: " + robotName);
 		} catch (PharosException e1) {
-			logErr("Unable to get robot's name, using 'JohnDoe'");
+			Logger.logErr("Unable to get robot's name, using 'JohnDoe'");
 			robotName = "JohnDoe";
 			e1.printStackTrace();
 		}
 		
 		if (!initPharosServer()) {
-			logErr("Failed to initialize the Pharos server!");
+			Logger.logErr("Failed to initialize the Pharos server!");
 			System.exit(1);
 		}
 		
 		if (!createPlayerClient(mobilityPlane)) {
-			logErr("Failed to connect to Player server!");
+			Logger.logErr("Failed to connect to Player server!");
 			System.exit(1);
 		}
 		
 		if (System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null) {
 			if (!initWiFiBeacons()) {
-				logErr("Failed to initialize the WiFi beaconer!");
+				Logger.logErr("Failed to initialize the WiFi beaconer!");
 				System.exit(1);
 			}
 		} else
-			log("WiFi beacons disabled.");
+			Logger.log("WiFi beacons disabled.");
 		
 		if (System.getProperty ("PharosMiddleware.disableTelosBBeacons") == null) {
 			if (!initTelosBeacons()) {
-				logErr("Failed to initialize TelosB beaconer!");
+				Logger.logErr("Failed to initialize TelosB beaconer!");
 				System.exit(1);
 			}
 		} else
-			log("TelosB beacons disabled.");
+			Logger.log("TelosB beacons disabled.");
 	}
 	
 	/**
@@ -130,21 +144,21 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		try {
 			client = new PlayerClient(playerServerIP, playerServerPort);
 		} catch(PlayerException e) {
-			log("ERROR: Unable to connecting to Player: ");
-			log("    [ " + e.toString() + " ]");
+			Logger.logErr("Unable to connecting to Player: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			return false;
 		}
 		
-		log("Subscribing to motors.");
+		Logger.log("Subscribing to motors.");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("motors is null");
+			Logger.logErr("motors is null");
 			return false;
 		}
 		
 		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
 		// while the Segway RMP 50's compass is on index 2.
-		log("Subscribing to compass.");
+		Logger.log("Subscribing to compass.");
 		Position2DInterface compass;
 		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
 				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
@@ -153,21 +167,21 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		}
 		if (compass == null) {
-			logErr("compass is null");
+			Logger.logErr("compass is null");
 			return false;
 		}
 		
-		log("Subscribing to GPS.");
+		Logger.log("Subscribing to GPS.");
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (gps == null) {
-			logErr("gps is null");
+			Logger.logErr("gps is null");
 			return false;
 		}
 		
-		log("Subscribing to opaque interface.");
+		Logger.log("Subscribing to opaque interface.");
 		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (oi == null) {
-			logErr("opaque interface is null");
+			Logger.logErr("opaque interface is null");
 			return false;
 		}
 		
@@ -176,10 +190,10 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		oi.addOpaqueListener(this);
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
 		return true;
@@ -196,7 +210,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		try {
 			mCastGroupAddress = InetAddress.getByName(mCastAddress);
 		} catch (UnknownHostException uhe) {
-			logErr("initWiFiBeacons: Problems getting multicast address");
+			Logger.logErr("Problems getting multicast address");
 			uhe.printStackTrace();
 			return false;
 		}
@@ -205,7 +219,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		try {
 			pharosIP = RobotIPAssignments.getAdHocIP();
 		} catch (PharosException e1) {
-			logErr("initWiFiBeacons: Unable to get ad hoc IP address: " + e1.getMessage());
+			Logger.logErr("Unable to get ad hoc IP address: " + e1.getMessage());
 			e1.printStackTrace();
 			return false;
 		}
@@ -214,13 +228,13 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		try {
 			pharosNI = RobotIPAssignments.getAdHocNetworkInterface();
 		} catch (PharosException e1) {
-			logErr("initWiFiBeacons: Unable to get ad hoc network interface: " + e1.getMessage());
+			Logger.logErr("Unable to get ad hoc network interface: " + e1.getMessage());
 			e1.printStackTrace();
 			return false;
 		}
 		
 		if (pharosIP == null || pharosNI == null) {
-			logErr("initWiFiBeacons: Unable to get pharos IP or pharos network interface...");
+			Logger.logErr("Unable to get pharos IP or pharos network interface...");
 			return false;
 		}
 		
@@ -233,7 +247,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 			wifiBeaconReceiver.start();
 			return true;
 		} catch (UnknownHostException e) {
-			logErr("initWiFiBeacons: Problem initializing WiFi beacons: " + e.getMessage());
+			Logger.logErr("Problem initializing WiFi beacons: " + e.getMessage());
 			e.printStackTrace();
 		}
 		return false;
@@ -243,7 +257,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		try {
 			telosRadioSignalMeter = new pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster();
 		} catch (TelosBeaconException e) {
-			logErr("initTelosBeacons: Problem initializing TelosB beacons: " + e.getMessage());
+			Logger.logErr("Problem initializing TelosB beacons: " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		}
@@ -262,11 +276,11 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 			Process pr = rt.exec(cmd);
 			int exitVal = pr.waitFor();
 			if (exitVal == 0)
-				log("setSystemTime: Successfully set system time to " + time);
+				Logger.log("Successfully set system time to " + time);
 			else
-				logErr("setSystemTime: Failed to set system time to " + time + ", error code " + exitVal);
+				Logger.logErr("Failed to set system time to " + time + ", error code " + exitVal);
 		} catch(Exception e) {
-			logErr("setSystemTime: Unable to set system time, error: " + e.toString());
+			Logger.logErr("Unable to set system time, error: " + e.toString());
 		}
 	}
 	
@@ -275,18 +289,18 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	 */
 	@Override
 	public void newMessage(Message msg) {
-		log("newMessage: Received message: " + msg);
+		Logger.log("Received message: " + msg);
 		switch(msg.getType()) {
 		case SET_TIME:
 			setSystemTime(((SetTimeMsg)msg).getTime());
 			break;
 		case LOAD_GPS_MOTION_SCRIPT:
-			log("newMessage: Loading GPS-based motion script...");
+			Logger.log("Loading GPS-based motion script...");
 			MotionScriptMsg gpsMSMsg = (MotionScriptMsg)msg;
 			gpsMotionScript = gpsMSMsg.getScript();
 			break;
 		case LOAD_RELATIVE_MOTION_SCRIPT:
-			log("newMessage: Loading relative motion script...");
+			Logger.log("Loading relative motion script...");
 			RelativeMotionScriptMsg relMMsg = (RelativeMotionScriptMsg)msg;
 			relMotionScript = relMMsg.getScript();
 			break;
@@ -294,16 +308,16 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 			reset();
 			break;
 		case STARTEXP:
-			log("newMessage: Starting experiment...");
+			Logger.log("Starting experiment...");
 			StartExpMsg sem = (StartExpMsg)msg;
 			startExp(sem.getExpName(), sem.getExpType(), sem.getDelay());
 			break;
 		case STOPEXP:
-			log("newMessage: Stopping experiment...");
+			Logger.log("Stopping experiment...");
 			stopExp();
 			break;
 		default:
-			log("newMessage: Unknown Message: " + msg);
+			Logger.log("Unknown Message: " + msg);
 		}
 	}
 	
@@ -320,29 +334,21 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	 */
 	private void startExp(String expName, ExpType expType, int delay) {
 		
-		// Start the file logger
+		// Start the file logger and set it in the Logger.
 		String fileName = expName + "-" + robotName + "-Pharos_" + FileLogger.getUniqueNameExtension() + ".log"; 
-		flogger = new FileLogger(fileName);
+		FileLogger expFlogger = new FileLogger(fileName);
+		Logger.setFileLogger(expFlogger);
 		
-		log("startExp: Starting the file logger...");
-		if (motionArbiter != null)				motionArbiter.setFileLogger(flogger);
-		if (gpsDataBuffer != null)				gpsDataBuffer.setFileLogger(flogger);
-		if (compassDataBuffer!= null) 			compassDataBuffer.setFileLogger(flogger);
-		if (wifiBeaconBroadcaster != null)			wifiBeaconBroadcaster.setFileLogger(flogger);
-		if (wifiBeaconReceiver != null) 			wifiBeaconReceiver.setFileLogger(flogger);
-		if (telosRadioSignalMeter != null) 		telosRadioSignalMeter.setFileLogger(flogger);
-		
-		log("startExp: Starting experiment at time " + System.currentTimeMillis() + "...");
+		Logger.log("Starting experiment at time " + System.currentTimeMillis() + "...");
 		
 		// Start the individual components
 		if (compassDataBuffer != null)			compassDataBuffer.start();
-//		if (gpsDataBuffer != null) 				gpsDataBuffer.start();
 		
 		// This is temporary code for mission 14...
 		//flogger.log("PharosServer: Starting UDPRxTx:");
 		//udpTest = new pharoslabut.wifi.UDPRxTx(expName, robotName, 55555, flogger);
 		
-		log("startExp: Pausing " + delay + "ms before starting motion script.");
+		Logger.log("Pausing " + delay + "ms before starting motion script.");
 		if (delay > 0) {
 			synchronized(this) {
 				try {
@@ -353,20 +359,19 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 			}
 		}
 		
-		
 		switch(expType) {
 			case FOLLOW_GPS_MOTION_SCRIPT:
-				log("startExp: Starting GPS-based motion script...");
+				Logger.log("Starting GPS-based motion script...");
 				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-						gpsDataBuffer, flogger);
-				Scooter scooter = new Scooter(motionArbiter, flogger);
+						gpsDataBuffer);
+				Scooter scooter = new Scooter(motionArbiter);
 				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
-						wifiBeaconBroadcaster, telosRadioSignalMeter, flogger);
+						wifiBeaconBroadcaster, telosRadioSignalMeter);
 				wpFollower.start(gpsMotionScript, this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
-				log("startExp: Starting relative motion script...");
-				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript, flogger);
+				Logger.log("Starting relative motion script...");
+				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript);
 				navigatorRel.start();
 				break;
 		}
@@ -383,82 +388,84 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	 * Stops the experiment.
 	 */
 	private void stopExp() {
-		flogger.log("PharosServer: Stopping the file logger.");
+		Logger.log("Stopping the experiment.");
+//		
+//		if (motionArbiter != null) {
+//			motionArbiter.setFileLogger(null);
+//		}
 		
-		if (motionArbiter != null) {
-			motionArbiter.setFileLogger(null);
-		}
-		
-		flogger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+		Logger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
 		if (wifiBeaconBroadcaster != null) {
-			wifiBeaconBroadcaster.setFileLogger(null);
+//			wifiBeaconBroadcaster.setFileLogger(null);
 			wifiBeaconBroadcaster.stop();
 		}
 		
-		flogger.log("PharosServer: Stopping the WiFi beacon receiver.");
-		if (wifiBeaconReceiver != null) {
-			wifiBeaconReceiver.setFileLogger(null);
-		}
+//		Logger.log("PharosServer: Stopping the WiFi beacon receiver.");
+//		if (wifiBeaconReceiver != null) {
+//			wifiBeaconReceiver.setFileLogger(null);
+//		}
 		
-		flogger.log("PharosServer: Stopping the GPS data buffer.");
-		if (gpsDataBuffer != null)	{
-			gpsDataBuffer.setFileLogger(null);
-//			gpsDataBuffer.stop();
-		}
+//		Logger.log("PharosServer: Stopping the GPS data buffer.");
+//		if (gpsDataBuffer != null)	{
+////			gpsDataBuffer.setFileLogger(null);
+////			gpsDataBuffer.stop();
+//		}
 		
-		flogger.log("PharosServer: Stopping the compass data buffer.");
+		Logger.log("PharosServer: Stopping the compass data buffer.");
 		if (compassDataBuffer != null) {
-			compassDataBuffer.setFileLogger(null);
+//			compassDataBuffer.setFileLogger(null);
 			compassDataBuffer.stop();
 		}
 		
-		flogger.log("PharosServer: Stopping the TelosB signal meter.");
+		Logger.log("PharosServer: Stopping the TelosB signal meter.");
 		if (telosRadioSignalMeter != null) {
-			telosRadioSignalMeter.setFileLogger(null);
+//			telosRadioSignalMeter.setFileLogger(null);
 			telosRadioSignalMeter.stop();
 		}
 		
 		//flogger.log("PharosServer: Stopping the UDP tester.");
 		//udpTest.stop();
 		
-		flogger = null;
+		// Restore the debug file logger since the experiment has stopped.
+		Logger.logDbg("Stopping experiment log file.");
+		Logger.setFileLogger(debugFileLogger);
 	}
 	
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {
 		if (opaqueData.getDataCount() > 0) {
 			String s = new String(opaqueData.getData());
-			log("MCU Message: " + s);
+			Logger.log("MCU Message: " + s);
 		}
 	}
 	
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
-		log("Received beacon: " + be);
+		Logger.log("Received beacon: " + be);
 	}
 	
 	
-	private void logErr(String msg) {
-		String result = "PharosServer: ERROR: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "PharosServer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "PharosServer: ERROR: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "PharosServer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);
 	}
 	
 	private static void usage() {
-		print("Usage: pharoslabut.experiment.PharosExpServer <options>\n");
+		print("Usage: " + PharosExpServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");

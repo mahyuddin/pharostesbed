@@ -3,7 +3,13 @@ package pharoslabut.logger.analyzer;
 import java.util.Vector;
 import java.util.Enumeration;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
+/**
+ * Computes the number of neighbors each node has throughout the length of an experiment.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class ConnectivityVsTime {
 	/**
 	 * The window of time over which the received TelosB beacons will be used to 
@@ -11,17 +17,14 @@ public class ConnectivityVsTime {
 	 */
 	public static final long TELOSB_CONNECTIVITY_WINDOW = 5000;
 	
-	private FileLogger flogger = null;
 	private ExpData expData;
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param expDir The directory containing the data from the experiment.
-	 * @param flogger The file logger in which to save log data. This may be null.
 	 */
-	public ConnectivityVsTime(String expDir, FileLogger flogger) {
-		this.flogger = flogger;
+	public ConnectivityVsTime(String expDir) {
 		expData = new ExpData(expDir);
 	}
 	
@@ -45,11 +48,11 @@ public class ConnectivityVsTime {
 				long expStopTime = expData.getExpStopTime();
 
 				if (expStopTime < expStartTime) {
-					logErr("ERROR: Experiment stop time (" + expStopTime + ") earlier than start time (" + expStartTime + ")");
+					Logger.logErr("Experiment stop time (" + expStopTime + ") earlier than start time (" + expStartTime + ")");
 					Enumeration<RobotExpData> e = expData.getRobotEnum();
 					while (e.hasMoreElements()) {
 						currRobot = e.nextElement();	
-						logErr(currRobot.getRobotName() + "\t" + currRobot.getStartTime() + "\t" + currRobot.getStopTime());
+						Logger.logErr(currRobot.getRobotName() + "\t" + currRobot.getStartTime() + "\t" + currRobot.getStopTime());
 					}
 					System.exit(1);
 				}
@@ -69,7 +72,7 @@ public class ConnectivityVsTime {
 				}
 
 				if (dataCount == 0) {
-					logErr("No data for robot " + currRobot.getRobotName() + " in experiment " + expData.getExpName() + ", startTime = " + expStartTime + ", stopTime = " + expData.getExpStopTime());
+					Logger.logErr("No data for robot " + currRobot.getRobotName() + " in experiment " + expData.getExpName() + ", startTime = " + expStartTime + ", stopTime = " + expData.getExpStopTime());
 					System.exit(1);
 				}
 			}
@@ -94,12 +97,12 @@ public class ConnectivityVsTime {
 		gnuPlotLogger.log("replot");
 	}
 	
-	private void logErr(String msg) {
-		String result = "ConnectivityVsTime: " + msg; 
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "ConnectivityVsTime: " + msg; 
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 //	
 //	private void log(String msg) {
 //		ConnectivityVsTime.log(msg, this.flogger);
@@ -127,7 +130,7 @@ public class ConnectivityVsTime {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.logger.analyzer.ConnectivityVsTime <options>\n");
+		print("Usage: " + ConnectivityVsTime.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-expDir <experiment data directory>: The directory containing experiment data (required)");
 		print("\t-log <log file name>: The file in which to log debug statements (default null)");
@@ -139,14 +142,13 @@ public class ConnectivityVsTime {
 		String expDir = null;
 		//String outputFile = null;
 		boolean analyzeTelos = false;
-		FileLogger flogger = null; // for saving debug output
 		
 		// Process the command line arguments...
 		try {
 			for (int i=0; i < args.length; i++) {
 		
 				if (args[i].equals("-log"))
-					flogger = new FileLogger(args[++i], false);
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				else if (args[i].equals("-expDir"))
 					expDir = args[++i];
 				else if (args[i].equals("-debug") || args[i].equals("-d"))
@@ -169,7 +171,7 @@ public class ConnectivityVsTime {
 			System.exit(1);
 		}
 		
-		ConnectivityVsTime analyzer = new ConnectivityVsTime(expDir, flogger);
+		ConnectivityVsTime analyzer = new ConnectivityVsTime(expDir);
 		
 		if (analyzeTelos) {
 			// Perform the actual analysis...

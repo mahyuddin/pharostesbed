@@ -2,6 +2,7 @@ package pharoslabut.tests;
 
 import pharoslabut.logger.CompassLogger;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
@@ -21,7 +22,6 @@ public class CompassCircleTest {
 	public static final int COMPASS_LOG_PERIOD = 100; // in milliseconds
 	
 	private PlayerClient client = null;
-	private FileLogger flogger;
 	
 	/**
 	 * The constructor. 
@@ -37,55 +37,52 @@ public class CompassCircleTest {
 	 * @param getStatusMsgs Whether to subscribe to status messages sent from the Proteus MCU.
 	 */
 	public CompassCircleTest(String serverIP, int serverPort, int time, 
-			String logFileName, boolean showGUI, MotionArbiter.MotionType mobilityPlane, 
+			boolean showGUI, MotionArbiter.MotionType mobilityPlane, 
 			double speed, double turnAngle, boolean getStatusMsgs) 
 	{
 		
-		if (logFileName != null)
-			flogger = new FileLogger(logFileName, false);
-		
 		try {
-			log("Connecting to server " + serverIP + ":" + serverPort);
+			Logger.log("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			logErr("ERROR: could not connect to player server: ");
-			logErr("    [ " + e.toString() + " ]");
+			Logger.logErr("Could not connect to player server: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
-		log("Subscribing to motor interface and creating motion arbiter");
+		Logger.log("Subscribing to motor interface and creating motion arbiter");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("ERROR: motors is null");
+			Logger.logErr("motors is null");
 			System.exit(1);
 		}
 		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
-		motionArbiter.setFileLogger(flogger);
+//		motionArbiter.setFileLogger(flogger);
 		
-		log("Start the robot moving in circles...");
+		Logger.log("Start the robot moving in circles...");
 		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
 		if (motionArbiter.submitTask(circleTask))
-			log("Circular motion task accepted...");
+			Logger.log("Circular motion task accepted...");
 		
 		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
 		// while the Segway RMP 50's compass is on index 2.
-		log("Creating a CompassLogger...");
+		Logger.log("Creating a CompassLogger...");
 		CompassLogger compassLogger;
 		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
 				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
 			compassLogger = new CompassLogger(serverIP, serverPort, 1 /* device index */, 
-					flogger, showGUI, getStatusMsgs);
+					showGUI, getStatusMsgs);
 		} else {
 			compassLogger = new CompassLogger(serverIP, serverPort, 2 /* device index */, 
-						flogger, showGUI, getStatusMsgs);
+						showGUI, getStatusMsgs);
 		}
 		
-		log("Starting to log compass readings...");
+		Logger.log("Starting to log compass readings...");
 		if (compassLogger.start()) {
 			synchronized(this) {
 				try {
 					if (time > 0) {
-						log("logging for " + time + " seconds...");
+						Logger.log("logging for " + time + " seconds...");
 						wait(time*1000);
 					} else {
 						wait(); // wait forever
@@ -94,33 +91,33 @@ public class CompassCircleTest {
 					e.printStackTrace();
 				}
 			}
-			log("Stopping to log compass readings...");
+			Logger.log("Stopping to log compass readings...");
 			compassLogger.stop();
 		} else 
-			logErr("ERROR: Failed to start logging compass data...");
+			Logger.logErr("Failed to start logging compass data...");
 		
-		log("Stopping the robot...");
+		Logger.log("Stopping the robot...");
 		motionArbiter.revokeTask(circleTask); // stop moving in circles
 		
-		log("Done!");
+		Logger.log("Done!");
 	}
 
-	private void logErr(String msg) {
-		String result = "CompassCircleTest: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "CompassCircleTest: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
+//	private void logErr(String msg) {
+//		String result = "CompassCircleTest: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "CompassCircleTest: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.CompassCircleTest <options>\n");
+		System.err.println("Usage: " + CompassCircleTest.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -135,7 +132,6 @@ public class CompassCircleTest {
 	
 	public static void main(String[] args) {
 		int time = 0;
-		String fileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		double speed = 0.6;
@@ -156,7 +152,7 @@ public class CompassCircleTest {
 					time = Integer.valueOf(args[++i]);
 				} 
 				else if (args[i].equals("-log")) {
-					fileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				}
 				else if (args[i].equals("-gui")) {
 					showGUI = true;
@@ -201,13 +197,12 @@ public class CompassCircleTest {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("Time: " + time + "s");
-		System.out.println("Log: " + fileName);
 		System.out.println("ShowGUI: " + showGUI);
 		System.out.println("Mobility Plane: " + mobilityPlane);
 		System.out.println("Speed: " + speed);
 		System.out.println("Turn Angle: " + turnAngle);
 		
-		new CompassCircleTest(serverIP, serverPort, time, fileName, showGUI, mobilityPlane,
+		new CompassCircleTest(serverIP, serverPort, time, showGUI, mobilityPlane,
 				speed, turnAngle, getStatusMsgs);
 	}
 }

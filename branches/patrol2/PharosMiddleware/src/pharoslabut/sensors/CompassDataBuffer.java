@@ -6,6 +6,7 @@ import java.util.Vector;
 
 import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import playerclient3.*;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 
@@ -70,7 +71,7 @@ public class CompassDataBuffer implements Runnable {
 	/**
 	 * The file logger for saving debug data.
 	 */
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 	/**
 	 * The constructor.
@@ -143,19 +144,19 @@ public class CompassDataBuffer implements Runnable {
     			}
 
     		}).start();
-    	} else
-    		log("notifyP2DListeners: No listeners present...");
+    	} //else
+    		//log("notifyP2DListeners: No listeners present...");
     }
 	
-	/**
-	 * Sets the file logger.  If the file logger is not null, this component
-	 * logs compass data to a file.
-	 * 
-	 * @param flogger The file logger.  This may be null.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger.  If the file logger is not null, this component
+//	 * logs compass data to a file.
+//	 * 
+//	 * @param flogger The file logger.  This may be null.
+//	 */
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Returns the median compass measurement.
@@ -174,8 +175,8 @@ public class CompassDataBuffer implements Runnable {
 		
 		long age = System.currentTimeMillis() - lastTimeStamp;
 		if (age > COMPASS_MAX_AGE) {
-			String errorMsg = "getMedian: ERROR: Max age exceeded (" + age + " > " + COMPASS_MAX_AGE + ")"; 
-			log(errorMsg);
+			String errorMsg = "Max age exceeded (" + age + " > " + COMPASS_MAX_AGE + "), no new data"; 
+			Logger.logErr(errorMsg);
 			throw new NoNewDataException(errorMsg);
 		}
 		
@@ -223,7 +224,7 @@ public class CompassDataBuffer implements Runnable {
 			
 			// Update the last time stamp and add a log statement
 			lastTimeStamp = System.currentTimeMillis();
-			log("getNewData: New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
+			Logger.log("New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
 			
 			// Notify the listeners
 			notifyP2DListeners(newData);
@@ -243,7 +244,7 @@ public class CompassDataBuffer implements Runnable {
 			// Check if we've exceeded the max age
 			long age = System.currentTimeMillis() - lastTimeStamp;
 			if (headingBufferSize > 0 && age > COMPASS_MAX_AGE) {
-				log("run: ERROR: max sensor age reached, flushing buffer!");
+				Logger.logErr("Max sensor age reached, flushing buffer!");
 				clearHeadingBuffer();
 			}
 			
@@ -257,11 +258,22 @@ public class CompassDataBuffer implements Runnable {
 		}
 	}
 	
-	private void log(String msg) {
-		String result = "CompassDataBuffer: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null) 
-			flogger.log(result);
+	/** 
+	 * Determinds whether a heading measurement is valid.  It is valid if it
+	 * falls between -pi/2 and +pi/2.
+	 * 
+	 * @param heading The heading measurement.
+	 * @return true if the heading measurement is valid.
+	 */
+	public static final boolean isValid(double heading) {
+		return heading <= Math.PI && heading >= -Math.PI;
 	}
+	
+//	private void log(String msg) {
+//		String result = "CompassDataBuffer: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null) 
+//			flogger.log(result);
+//	}
 }

@@ -1,6 +1,7 @@
 package pharoslabut.beacon;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * The super class of all beacon broadcasters.
@@ -28,7 +29,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     
     protected boolean running = false;
     
-    protected FileLogger flogger;
+//    protected FileLogger flogger;
     
     /**
      * Generates a random value between minPeriod and maxPeriod.
@@ -62,7 +63,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     		
     		return true;
     	} else {
-    		log("ERROR: Tried to start the beacon broadcaster when it was already running.");
+    		Logger.logErr("Tried to start the beacon broadcaster when it was already running.");
     		return false;
     	}
     }
@@ -74,21 +75,21 @@ public abstract class BeaconBroadcaster implements Runnable {
     	running = false;
     }
     
-    /**
-     * Updates the file logger.
-     * 
-     * @param flogger The file logger.
-     */
-    public void setFileLogger(FileLogger flogger) {
-    	this.flogger = flogger;
-    }
+//    /**
+//     * Updates the file logger.
+//     * 
+//     * @param flogger The file logger.
+//     */
+//    public void setFileLogger(FileLogger flogger) {
+//    	this.flogger = flogger;
+//    }
     
     /**
      * Records a message using the file logger.
      * 
      * @param msg The message to record.
      */
-    protected abstract void log(String msg);
+//    protected abstract void log(String msg);
     
     /**
      * Sends a beacon.  This is implemented by subclasses.
@@ -104,7 +105,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     		try {
     			synchronized(this) {
     				long delayPeriod = randPeriod();
-    				log("Time till next beacon = " + delayPeriod);
+    				Logger.logDbg("Time till next beacon = " + delayPeriod);
     				wait(delayPeriod);
     			}
 			} catch (InterruptedException e) {

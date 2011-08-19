@@ -28,18 +28,29 @@ public class FileLogger {
 	}
 	
 	/**
-	 * A constructor.  Includes a time stamp with every line logged.
+	 * A constructor.  Includes a time stamp with every line logged if printTimeStamp = true.
 	 * 
 	 * @param fileName The name of the file in which to log text.
 	 */
 	public FileLogger(String fileName) {
 		int indx = 1;
 		
+		String fileNamePrefix;
+		String fileNamePostfix;
+		if (fileName.contains(".")) {
+			fileNamePrefix = fileName.substring(0, fileName.lastIndexOf('.'));
+			fileNamePostfix = fileName.substring(fileName.lastIndexOf('.'));
+		} else {
+			fileNamePrefix = fileName;
+			fileNamePostfix = "";
+		}
+		
 		String actualFileName = fileName;
 		// If file exists, find an extension number to avoid deleting files
 		File f = new File(actualFileName);
 		while (f.exists()) {
-			actualFileName = fileName + "-" + (indx++);
+			
+			actualFileName = fileNamePrefix + "-" + (indx++) + fileNamePostfix;
 			f = new File(actualFileName);
 		}
 

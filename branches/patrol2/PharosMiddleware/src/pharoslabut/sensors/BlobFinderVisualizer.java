@@ -1,6 +1,7 @@
 package pharoslabut.sensors;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import playerclient3.structures.blobfinder.PlayerBlobfinderBlob;
 import playerclient3.structures.blobfinder.PlayerBlobfinderData;
 
@@ -24,16 +25,11 @@ import javax.swing.*;
 public class BlobFinderVisualizer extends JFrame {
 	private static final long serialVersionUID = 7832971846802654785L;
 	
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	private BlobPanel blobPanel;
 	
 	public BlobFinderVisualizer() {
-		this(null);
-	}
-	
-	public BlobFinderVisualizer(FileLogger flogger) {
-		super("BlobFinder Visualizer");
-		this.flogger = flogger;
+		super("BlobFinder Visualizer");;
 	}
 	 
 	protected void frameInit() {
@@ -73,7 +69,7 @@ public class BlobFinderVisualizer extends JFrame {
 			int numBlobs = data.getBlobs_count();
 			int contextWidth = data.getWidth();
 			int contextHeight = data.getHeight();
-			log("visualizeBlobs: Number of blobs: " + numBlobs + ", contextWidth=" + contextWidth + ", contextHeight=" + contextHeight);
+			Logger.log("Number of blobs: " + numBlobs + ", contextWidth=" + contextWidth + ", contextHeight=" + contextHeight);
 
 			if(numBlobs > 0) {
 				PlayerBlobfinderBlob[] blobListCopy = null;
@@ -89,11 +85,11 @@ public class BlobFinderVisualizer extends JFrame {
 				blobPanel.addBlobs(contextWidth, contextHeight, blobListCopy);
 			}
 			else {
-				log("visualizeBlobs: ERROR: No blobs present...");
+				Logger.logErr("No blobs present...");
 				blobPanel.clearBlobs();
 			}
 		} else {
-			log("visualizeBlobs: ERROR: Blob data is null...");
+			Logger.logErr("Blob data is null...");
 			blobPanel.clearBlobs();
 		}
 	}
@@ -165,7 +161,7 @@ public class BlobFinderVisualizer extends JFrame {
     		blobs.clear();
     		
     		if (blobList == null) {
-    			log("BlobPanel: addBlobs: WARNING: blobList is null");
+    			Logger.log("WARNING: blobList is null");
     			return;
     		}
     		
@@ -173,7 +169,7 @@ public class BlobFinderVisualizer extends JFrame {
     			PlayerBlobfinderBlob blob = blobList[i];
     			if (blob != null) {
     				
-    				log("BlobPanel: addBlobs: Blob[" + i + "] area=" + blob.getArea() + ", color=" + blob.getColor() 
+    				Logger.log("Blob[" + i + "] area=" + blob.getArea() + ", color=" + blob.getColor() 
     						+ ", left=" + blob.getLeft() + ", right=" + blob.getRight()
     						+ ", centroid x=" + blob.getX() + ", centroid y=" + blob.getY()
     						+ ", top=" + blob.getTop() + ", bottom=" + blob.getBottom());
@@ -181,7 +177,7 @@ public class BlobFinderVisualizer extends JFrame {
     				blobs.add(new Blob(blob.getLeft(), height - blob.getTop(), blob.getRight() - blob.getLeft(),
     						blob.getTop() - blob.getBottom(), width, height, new Color(blob.getColor())));
     			} else {
-    				log("BlobPanel: addBlobs: WARNING: blobList[" + i + "] is null, ignoring this blob");
+    				Logger.log("WARNING: blobList[" + i + "] is null, ignoring this blob");
     			}
     		}
     		
@@ -243,10 +239,10 @@ public class BlobFinderVisualizer extends JFrame {
     	}
     }
     
-	private void log(String msg) {
-		String result = "BlobFinderVisualizer: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "BlobFinderVisualizer: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

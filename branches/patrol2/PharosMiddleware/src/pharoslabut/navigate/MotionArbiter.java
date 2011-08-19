@@ -1,7 +1,8 @@
 package pharoslabut.navigate;
 
 import pharoslabut.tasks.MotionTask;
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import playerclient3.Position2DInterface;
 
 /**
@@ -55,7 +56,7 @@ public class MotionArbiter implements Runnable {
 	/**
 	 * For logging debug output to a file.
 	 */
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	
 	/**
 	 * Whether the most recent command sent to the robot was to stop.  
@@ -77,39 +78,29 @@ public class MotionArbiter implements Runnable {
 	}
 	
 	/**
-	 * Creates a MotionArbiter with the specified motion type and no file logger.
-	 * 
-	 * @param motionType The motion type of the robot being controlled.
-	 * @param motors The player proxy for accessing the movement motors.
-	 */
-	public MotionArbiter(MotionType motionType, Position2DInterface motors) {
-		this(motionType, motors, null);
-	}
-	
-	/**
 	 * Creates a MotionArbiter with the specified motion type and file logger.
 	 * 
 	 * @param motionType The motion type of the robot being controlled.
 	 * @param motors The player proxy for accessing the movement motors.
-	 * @param flogger The file logger to use.
+//	 * @param flogger The file logger to use.
 	 */
-	public MotionArbiter(MotionType motionType, Position2DInterface motors, FileLogger flogger) {
+	public MotionArbiter(MotionType motionType, Position2DInterface motors) {
 		this.motionType = motionType;
 		this.motors = motors;
-		this.flogger = flogger;
+//		this.flogger = flogger;
 		
 		motors.setMotorPower(1); // Turn the motors on.  This is needed by the Segway RMP 50s
 		new Thread(this).start(); // The MotionArbiter has its own thread that processes MotionTasks
 	}
 	
-	/**
-	 * Sets the file logger.  This can be null to stop this component from logging data.
-	 * 
-	 * @param flogger The file logger to use.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger.  This can be null to stop this component from logging data.
+//	 * 
+//	 * @param flogger The file logger to use.
+//	 */
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Submit a task to be executed.  If the submitted task has equal or higher
@@ -125,17 +116,17 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null) {
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
-				log("Accepting task " + currTask);
+				Logger.log("Accepting task " + currTask);
 				notifyAll();
 				result = true;
 			} else {
-				log("Discarding task (" + mt + ") since higher priority task (" + currTask + ") is running.");
+				Logger.log("Discarding task (" + mt + ") since higher priority task (" + currTask + ") is running.");
 			}
 		} else {
 			
 			// Always accept the task if there is no current task being executed.
 			currTask = mt;
-			log("Accepting task " + currTask);
+			Logger.log("Accepting task " + currTask);
 			notifyAll();
 			result = true;
 		}
@@ -188,26 +179,26 @@ public class MotionArbiter implements Runnable {
 	 * @param heading The angle in which to turn.
 	 */
 	private void sendMotionCmd(double speed, double heading) {
-		log("Sending motion command velocity=" + speed + ", heading=" + heading);
+		Logger.log("Sending motion command velocity=" + speed + ", heading=" + heading);
 		
 		if (motionType == MotionType.MOTION_TRAXXAS) {
 			motors.setCarCMD(speed, heading);
 		} else {
-			// Both the Segway RMP 50 and Irobot Create use this method
+			// Both the Segway RMP 50 and iRobot Create use this method
 			motors.setSpeed(speed, heading);
 		}
 		
 		isStopped = (speed == MotionTask.STOP_SPEED);
 	}
 	
-	private void log(String msg) {
-		String result = "MotionArbiter: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null) 
-			System.out.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = getClass().getName() + ": " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null) 
+//			System.out.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	/**
 	 * Sits in a loop periodically sending movement commands to the robot.
@@ -231,7 +222,7 @@ public class MotionArbiter implements Runnable {
 				// No point in repeatedly sending a stop motion command
 				// (The robot will by default stop when no command is received)
 				if (motionTask.isStop()) {
-					log("MotionTask is stop, resorting to initial state");
+					Logger.log("MotionTask is stop, resorting to initial state");
 					currTask = null;
 				}
 			} else {

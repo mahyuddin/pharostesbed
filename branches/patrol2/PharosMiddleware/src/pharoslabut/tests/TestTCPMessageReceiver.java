@@ -4,25 +4,25 @@ import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;
 import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 public class TestTCPMessageReceiver implements MessageReceiver {
 
 	/**
 	 * A file logger for recording debug data.
 	 */
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	
 	/**
 	 * The constructor.
 	 */
-	public TestTCPMessageReceiver(int port, String logFileName) {
-		flogger = new FileLogger(logFileName, false);
-		new TCPMessageReceiver(this, port, flogger);
+	public TestTCPMessageReceiver(int port) {
+		new TCPMessageReceiver(this, port);
 	}
 	
 	@Override
 	public void newMessage(Message msg) {
-		log("newMessage: Message Received: " + msg);
+		Logger.log("newMessage: Message Received: " + msg);
 	}
 	
 //    private void logErr(String msg) {
@@ -33,23 +33,22 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 //			flogger.log(result);
 //	}
     
-	private void log(String msg) {
-		String result = "TestTCPMessageReceiver: " + msg;
-		System.out.println(result);
-		
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "TestTCPMessageReceiver: " + msg;
+//		System.out.println(result);
+//		
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
-		System.err.println("Usage: pharoslabut.tests.TestTCPMessageReceiver <options>\n");
+		System.err.println("Usage: " + TestTCPMessageReceiver.class.getName() + " <options>\n");
 		System.err.println("Where <options> include:");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 12345)");
-		System.err.println("\t-log <file name>: name of file in which to save results (default TestTCPMessageReceiver)");
+		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
 	}
 	
 	public static void main(String[] args) {
-		String logFileName = "TestTCPMessageReceiver";
 		int serverPort = 12345;
 		
 		System.setProperty ("PharosMiddleware.debug", "true");
@@ -60,7 +59,7 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 					serverPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-log")) {
-					logFileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], false));
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -76,8 +75,7 @@ public class TestTCPMessageReceiver implements MessageReceiver {
 		}
 		
 		System.out.println("Server port: " + serverPort);
-		System.out.println("Log: " + logFileName);
 		
-		new TestTCPMessageReceiver(serverPort, logFileName);
+		new TestTCPMessageReceiver(serverPort);
 	}
 }

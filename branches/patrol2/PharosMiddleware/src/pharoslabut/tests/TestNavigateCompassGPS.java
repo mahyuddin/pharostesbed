@@ -23,7 +23,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	private GPSDataBuffer gpsDataBuffer;
 	private MotionArbiter motionArbiter;
 	
-	private FileLogger flogger;
+//	private FileLogger flogger;
 	
 	/**
 	 * The constructor.
@@ -39,29 +39,31 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	public TestNavigateCompassGPS(String serverIP, int serverPort, MotionArbiter.MotionType mobilityPlane, 
 			double latitude, double longitude, double velocity, String fileName) 
 	{
-		if (fileName != null)
-			flogger = new FileLogger(fileName);
+		if (fileName != null) {
+			FileLogger flogger = new FileLogger(fileName);
+			Logger.setFileLogger(flogger);
+		}
 
-		log("Connecting to player server " + serverIP + ":" + serverPort + "...");
+		Logger.logDbg("Connecting to player server " + serverIP + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			logErr("could not connect to player server: ");
-			logErr("    [ " + e.toString() + " ]");
+			Logger.logErr("could not connect to player server: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 
-		log("Subscribing to motor interface...");
+		Logger.logDbg("Subscribing to motor interface...");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("motors is null");
+			Logger.logErr("motors is null");
 			System.exit(1);
 		}
 		
 		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
 		// while the Segway RMP 50's compass is on index 2.
-		log("Subscribing to compass interface...");
+		Logger.logDbg("Subscribing to compass interface...");
 		Position2DInterface compass;
 		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
 				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
@@ -70,77 +72,77 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
 		}
 		if (compass == null) {
-			logErr("compass is null");
+			Logger.logErr("compass is null");
 			System.exit(1);
 		}
 		
-		log("Subscribing to GPS interface...");
+		Logger.log("Subscribing to GPS interface...");
 		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (gps == null) {
-			logErr("gps is null");
+			Logger.logErr("gps is null");
 			System.exit(1);
 		}
 		
-		log("Changing Player server mode to PUSH...");
+		Logger.logDbg("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		log("Setting Player Client to run in continuous threaded mode...");
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);
 		
-		log("Creating MotionArbiter of type " + mobilityPlane + "...");
+		Logger.logDbg("Creating MotionArbiter of type " + mobilityPlane + "...");
 		motionArbiter = new MotionArbiter(mobilityPlane, motors);
-		motionArbiter.setFileLogger(flogger);
+//		motionArbiter.setFileLogger(flogger);
 		
-		log("Creating CompassDataBuffer...");
+		Logger.logDbg("Creating CompassDataBuffer...");
 		compassDataBuffer = new CompassDataBuffer(compass);
-		compassDataBuffer.setFileLogger(flogger);
+//		compassDataBuffer.setFileLogger(flogger);
 		compassDataBuffer.start();
 		
-		log("Creating GPSDataBuffer...");
+		Logger.logDbg("Creating GPSDataBuffer...");
 		gpsDataBuffer = new GPSDataBuffer(gps);
-		gpsDataBuffer.setFileLogger(flogger);
+//		gpsDataBuffer.setFileLogger(flogger);
 		
-		log("Resetting the odometer...");
+		Logger.logDbg("Resetting the odometer...");
 		motors.resetOdometry();
 		
-		log("Listening for Position2D events (odmeter data)...");
+		Logger.logDbg("Listening for Position2D events (odmeter data)...");
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
 		
-		log("Creating NavigateCompassGPS object...");
+		Logger.logDbg("Creating NavigateCompassGPS object...");
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-				gpsDataBuffer, flogger);
+				gpsDataBuffer);
 		
 		Location destLoc = new Location(latitude, longitude);
-		log("Going to: " + destLoc + " at " + velocity);
+		Logger.log("Going to: " + destLoc + " at " + velocity);
 		
 		if (!navigatorGPS.go(destLoc, velocity))
-			logErr("Unable to reach " + destLoc); 
+			Logger.logErr("Unable to reach " + destLoc); 
 		else
-			log("SUCCESS!");
+			Logger.log("SUCCESS!");
 		
 		System.exit(0);
 	}
 
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		log(data.toString());
+		Logger.log(data.toString());
 	}
 
-	private void logErr(String msg) {
-		String result = "TestNavigateCompassGPS: ERROR: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "TestNavigateCompassGPS: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "TestNavigateCompassGPS: ERROR: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "TestNavigateCompassGPS: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
 		System.err.println("Usage: pharoslabut.tests.TestNavigateCompassGPS <options>\n");

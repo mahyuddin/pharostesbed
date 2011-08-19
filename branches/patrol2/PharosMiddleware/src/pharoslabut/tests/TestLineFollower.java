@@ -1,6 +1,7 @@
 package pharoslabut.tests;
 
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 
 /**
@@ -18,7 +19,7 @@ public class TestLineFollower {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: pharoslabut.tests.TestLineFollower <options>\n");
+		print("Usage: " + TestLineFollower.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-port <port number>: The Player Server's port number (default 6665)");
@@ -29,7 +30,6 @@ public class TestLineFollower {
 	public static void main(String[] args) {
 		String serverIP = "localhost";
 		int serverPort = 6665;
-		FileLogger flogger = null;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -40,7 +40,7 @@ public class TestLineFollower {
 				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				} else if (args[i].equals("-log")) {
-					flogger = new FileLogger(args[++i]);
+					Logger.setFileLogger(new FileLogger(args[++i]));
 				} else {
 					print("Unknown argument " + args[i]);
 					usage();
@@ -55,7 +55,7 @@ public class TestLineFollower {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		LineFollower lf = new LineFollower(serverIP, serverPort, flogger);
+		LineFollower lf = new LineFollower(serverIP, serverPort);
 		lf.start();
 	}
 }

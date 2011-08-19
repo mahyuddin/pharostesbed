@@ -1,7 +1,8 @@
 package pharoslabut.navigate;
 
 import pharoslabut.tasks.*;
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * Scoots the robot a small distance forward or backward.  This is to induce small
@@ -13,12 +14,10 @@ import pharoslabut.logger.FileLogger;
 public class Scooter implements Runnable {
 
 	private MotionArbiter motionArbiter;
-	private FileLogger flogger;
 	private boolean running = false;
 	
-	public Scooter(MotionArbiter motionArbiter, FileLogger flogger) {
+	public Scooter(MotionArbiter motionArbiter) {
 		this.motionArbiter = motionArbiter;
-		this.flogger = flogger;
 	}
 	
 	public void scoot(int amt) {
@@ -27,7 +26,7 @@ public class Scooter implements Runnable {
 	}
 	
 	public void run() {
-		log("Scooting robot..");
+		Logger.log("Scooting robot..");
 		
 		MotionTask currTask;
 		boolean goForward = true;
@@ -40,13 +39,13 @@ public class Scooter implements Runnable {
 			goForward = !goForward;
 		
 			currTask = new MotionTask(Priority.SECOND, speed, 0); // move forward or backwards
-			log("Submitting: " + currTask);
+			Logger.log("Submitting: " + currTask);
 			motionArbiter.submitTask(currTask);
 		
 			pause(1500);
 			
 			currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-			log("Submitting: " + currTask);
+			Logger.log("Submitting: " + currTask);
 			motionArbiter.submitTask(currTask);
 			
 			pause(1000);
@@ -63,11 +62,11 @@ public class Scooter implements Runnable {
 		}
 	}
 	
-	private void log(String msg) {
-		String result = "Scooter: " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void log(String msg) {
+//		String result = "Scooter: " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 }

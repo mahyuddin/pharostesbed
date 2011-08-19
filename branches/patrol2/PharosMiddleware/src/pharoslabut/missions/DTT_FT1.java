@@ -31,23 +31,24 @@ public class DTT_FT1 implements Position2DListener {
 	public DTT_FT1(String serverIP, int serverPort,	String logFileName, 
 			MotionArbiter.MotionType mobilityPlane, int testStartDelay) 
 	{
-		if (logFileName != null)
+		if (logFileName != null) {
 			flogger = new FileLogger(logFileName);
-		
+			Logger.setFileLogger(flogger);
+		}
 		
 		try {
-			log("Connecting to server " + serverIP + ":" + serverPort);
+			Logger.log("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			logErr("ERROR: Could not connect to player server: ");
-			logErr("    [ " + e.toString() + " ]");
+			Logger.logErr("ERROR: Could not connect to player server: ");
+			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
 		
-		log("Subscribing to motor interface and creating motion arbiter");
+		Logger.log("Subscribing to motor interface and creating motion arbiter");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			logErr("ERROR: motors is null");
+			Logger.logErr("ERROR: motors is null");
 			System.exit(1);
 		} else {
 			// subscribe to MCU debug messages
@@ -55,9 +56,9 @@ public class DTT_FT1 implements Position2DListener {
 			p2db.addPos2DListener(this);
 			p2db.start();
 		}
-		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors, flogger);
+		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		
-		log("Starting motor stress test in " + testStartDelay + " seconds ...");
+		Logger.log("Starting motor stress test in " + testStartDelay + " seconds ...");
 		while (testStartDelay-- > 0) {
 			synchronized(this) { 
 				try {
@@ -66,7 +67,7 @@ public class DTT_FT1 implements Position2DListener {
 					e.printStackTrace();
 				}
 			}
-			if (testStartDelay > 0) log(testStartDelay + "...");
+			if (testStartDelay > 0) Logger.log(testStartDelay + "...");
 		}
 		
 		MotionTask currTask;
@@ -74,50 +75,50 @@ public class DTT_FT1 implements Position2DListener {
 		double speed = 2.0;
 		double heading = 0.0;
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(5000);
 		
 		speed = 2.0;
 		heading = -20.0;
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(1000);
 		
 		speed = 2.0;
 		heading = 0.0;
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(2000);
 		
 		speed = 2.0;
 		heading = 20.0;
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(1000);
 		
 		speed = 2.0;
 		heading = 0.0;
 		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		pause(5000);
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-		log("Submitting motion task: " + currTask);
+		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		
-		log("Test complete!");
+		Logger.log("Test complete!");
 		System.exit(0);
 	}
 	
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		PlayerPose2d pp = data.getPos();
-		log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
+		Logger.log("Odometry Data: x=" + pp.getPx() + ", y=" + pp.getPy() + ", a=" + pp.getPa() + ", vel=" + data.getVel() + ", stall=" + data.getStall());
 	}
 	
 	private void pause(int duration) {
@@ -130,19 +131,19 @@ public class DTT_FT1 implements Position2DListener {
 		}
 	}
 	
-	private void logErr(String msg) {
-		String result = "DTT_FT1: " + msg;
-		System.err.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private void log(String msg) {
-		String result = "MotorStressTest: " + msg;
-		System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		String result = "DTT_FT1: " + msg;
+//		System.err.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private void log(String msg) {
+//		String result = "MotorStressTest: " + msg;
+//		System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	private static void usage() {
 		System.err.println("Usage: pharoslabut.missions.DTT_FT1 <options>\n");
