@@ -2,8 +2,14 @@ package pharoslabut.behavior;
 
 import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.io.*;
-import pharoslabut.io.Message.MsgType;
 
+/**
+ * This message includes the entire world view of the sender.
+ * 
+ * @author Noa Agmon
+ * @author Chien-Liang Fok
+ *
+ */
 public class MultiRobotTableMsg implements AckedMsg  {
 	
 	private int[] _behaviorIDList;
