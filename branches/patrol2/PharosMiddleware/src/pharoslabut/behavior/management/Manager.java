@@ -131,14 +131,14 @@ public class Manager implements Runnable {
 	
 	public void updateTeammates(MultiRobotBehaveMsg msg){
 		Logger.log("new behavior " + msg.getBehaviorName() + " for teammate " + msg.getRobotID() + " behaveID " + msg.getBehaviorID());
-		_wm.setCurrentMsgTime(msg.getRobotID());
 		_wm.setTeamCurrentBehavior(msg.getBehaviorName(), msg.getRobotID(), msg.getBehaviorID());
 	}
 	
 	public void updateTeammatesTable(MultiRobotTableMsg msg){
-		_wm.setCurrentMsgTime(msg.getSenderID());
 		
 		for(int i = 0; i<msg.getTableSize(); i++) {
+			if(i == _wm.getMyIndex())
+				continue;
 			_wm.setTeamCurrentBehavior(msg.getBehaviorName(i), i, msg.getBehaviorID(i));
 			Logger.log("new behavior " + msg.getBehaviorName(i) + " for teammate " + i + " behaveID " + msg.getBehaviorID(i));
 		}

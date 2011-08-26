@@ -12,6 +12,8 @@ import pharoslabut.io.*;
  */
 public class MultiRobotTableMsg implements AckedMsg  {
 	
+	private static final long serialVersionUID = -4838033113752427054L;
+	
 	private int[] _behaviorIDList;
 	private String[] _behaviorNameList;
 	private int _senderRobotID;
@@ -29,9 +31,9 @@ public class MultiRobotTableMsg implements AckedMsg  {
 		return _behaviorNameList[index];
 	}
 	
-	public int getSenderID(){
-		return _senderRobotID;
-	}
+//	public int getSenderID(){
+//		return _senderRobotID;
+//	}
 	public int getBehaviorID(int index){
 		return _behaviorIDList[index];
 	}
@@ -39,10 +41,6 @@ public class MultiRobotTableMsg implements AckedMsg  {
 	public int getTableSize(){
 		return _behaviorIDList.length;
 	}
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -4838033113752427054L;
 	
 	public MsgType getType() {
 		return MsgType.UPDATE_BEH_TABLE_MSG;

@@ -17,7 +17,7 @@ public class WorldModel {
 	int _numBehaviors;
 //	private boolean allmyClientConnected; //all my clients connect
 	
-	final String _outofRange = "OUT_OF_RANGE";
+	final String _outOfRange = "OUT_OF_RANGE";
 	private final int VALIDITY_WINDOW = 1;
 	
 	//the amount of time the robot is waiting for its teammates - after that, it will continue without coordination
@@ -48,6 +48,9 @@ public class WorldModel {
 		_numBehaviors = mrpConfData.GetNumMissions(); // The number of behaviors
 		
 		_wmCurrentBehavior = new String[_wmTeamSize];
+		for(int i=0;i<_wmTeamSize; i++){
+			_wmCurrentBehavior[i] = _outOfRange;
+		}
 		_teamIp = new String[_wmTeamSize];
 		_teamPort = new int[_wmTeamSize];
 		_lastTimeUpdate = new long[_wmTeamSize];
@@ -108,15 +111,29 @@ public class WorldModel {
 	{
 //		boolean wasAccepted = false;
 		
-		if(_wmCurrentBehavior[index].equals(_outofRange)){
-			Logger.log("Behavior of teammate " + index + " BACK IN RANGE");
+		
+		if(beh.equals(_outOfRange)){
+			Logger.log("Got an update out of range of teammate "+ index + " ignoring...");
+			return;
 		}
+
+		if(_wmCurrentBehavior[index].equals(_outOfRange)){
+			Logger.log("Behavior of teammate " + index + " BACK IN RANGE");
+		} else {
+			Logger.log("Teammate " + index + " was already in range.");
+		}
+
+		setCurrentMsgTime(index);
 		
 		if(_wmCurrentIndex[index] > behaveID){
 			Logger.log("Got an old message: new behaveID is " + behaveID + "old behaveID is "+ _wmCurrentIndex[index]);
 		}else{
 			Logger.log("updating teammate "+ index + " behavior " + beh + " ID " + behaveID);
-			
+			boolean isStop = StringParsing.havePrefix(_wmCurrentBehavior[index], "stop");
+			if(isStop && _wmCurrentIndex[index]==behaveID){
+				Logger.log("Received an older message before STOP of teammate "+ index + " ignoring...");
+				return;
+			}
 			_wmCurrentBehavior[index] = beh; 
 			_wmCurrentIndex[index] = behaveID;
 
@@ -139,7 +156,7 @@ public class WorldModel {
 */
 	}
 
-	public synchronized void setTeamOutOfRange(int index){_wmCurrentBehavior[index] = _outofRange;}
+	public synchronized void setTeamOutOfRange(int index){_wmCurrentBehavior[index] = _outOfRange;}
 	
 	public int getTeamSize(){return _wmTeamSize;}
 	public String getMyIp(){return _teamIp[wmMyIndex];}
@@ -227,10 +244,10 @@ public class WorldModel {
 	public synchronized boolean isTeamSynchronizedDynamically()
 	{
 		int i;
-		String behaviorName = _wmCurrentBehavior[wmMyIndex];
+		String myBehaviorName = _wmCurrentBehavior[wmMyIndex];
 		
 		Logger.log("entering dynamic synchronization\n");
-		if(behaviorName == null){
+		if(myBehaviorName == null){
 			System.out.print("current behavior NULL\n");
 			return false;
 		}
@@ -238,12 +255,12 @@ public class WorldModel {
 /*		if(wmTeamSize == 1)
 			return true;
 */		
-		boolean isStop = StringParsing.havePrefix(behaviorName, "stop"); 
-		String behPureName;
-		if(isStop)
-			behPureName = StringParsing.removePrefix(behaviorName,"stop");
+		boolean iAmStopped = StringParsing.havePrefix(myBehaviorName, "stop"); 
+		String myBehPureName;
+		if(iAmStopped)
+			myBehPureName = StringParsing.removePrefix(myBehaviorName,"stop");
 		else
-			behPureName = behaviorName;
+			myBehPureName = myBehaviorName;
 		
 		String teamBeh;
 		boolean isStopTeamMember;
@@ -259,7 +276,7 @@ public class WorldModel {
 			isStopTeamMember = StringParsing.havePrefix(_wmCurrentBehavior[i],"stop");
 			
 			//If team member is out of range - disregard it
-			if(teamBeh.equals(_outofRange)){
+			if(teamBeh.equals(_outOfRange)){
 				Logger.log("Team member " + i + " behavior is marked as OUT_OF_RANGE");
 				continue;
 			}
@@ -270,14 +287,19 @@ public class WorldModel {
 			int mybehaveIndex = getCurrentBehaviorID();
 			int teammateBehaveIndex = getTeamBehaviorID(i);
 			
-			if(isStop == false && behPureName.equals(teamBeh)==false){
+			if(teammateBehaveIndex<mybehaveIndex){
+				Logger.log("Temmate " +  i + " with behavior ID "+ teammateBehaveIndex + ", my behavior ID = "+ mybehaveIndex +  "  ---- Team uncoordinated, WAIT");
+				return false;
+			}
+			
+			if(iAmStopped == false && myBehPureName.equals(teamBeh)==false){
 				//if I'm behind - I should continue. If I'm more advanced - I should wait
 				if(mybehaveIndex<=teammateBehaveIndex)
 					continue;
 				else
 					return false;
 			}
-			if((isStop == true) && (isStopTeamMember == false) && (behPureName.equals(teamBeh))){
+			if((iAmStopped == true) && (isStopTeamMember == false) && (myBehPureName.equals(teamBeh))){
 				//if I'm behind - I should continue. If I'm more advanced - I should wait
 				Logger.log("I'm stopped, my mate is not (on the same behavior) - I wait");
 				return false;
@@ -288,7 +310,7 @@ public class WorldModel {
 	}
 	
 	public synchronized void copyWM(int[] behaviorIDlist, String[] behaviorNameList){
-		for(int i=0; i< _wmTeamSize; i++){
+		for(int i=0; i < _wmTeamSize; i++){
 			behaviorIDlist[i] = _wmCurrentIndex[i];
 			behaviorNameList[i] = _wmCurrentBehavior[i];
 		}
