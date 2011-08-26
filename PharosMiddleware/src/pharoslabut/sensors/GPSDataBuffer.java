@@ -187,7 +187,7 @@ public class GPSDataBuffer {
 		
 		// Remove any expired GPS location measurements...
 		removeExpiredElements();
-		Logger.log("buffer size after clearing expired elements: " + buff.size());
+		//Logger.log("buffer size after clearing expired elements: " + buff.size());
 		
 		if (buff.size() > 0)
 			return buff.get(0).getGpsData();
