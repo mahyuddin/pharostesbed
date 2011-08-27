@@ -56,7 +56,7 @@ public class RobotExpData {
 	/**
 	 * For logging debug messages.
 	 */
-	private FileLogger flogger = null;
+//	private FileLogger flogger = null;
 	
 	/**
 	 * Contains the timestamps of when GPS errors occur.
@@ -99,14 +99,14 @@ public class RobotExpData {
 //		log("End of MotionCmd table.");
 	}
 	
-	/**
-	 * Sets the file logger for saving debug messages into a file.
-	 * 
-	 * @param flogger The file logger to use to save debug messages.
-	 */
-	public void setFileLogger(FileLogger flogger) {
-		this.flogger = flogger;
-	}
+//	/**
+//	 * Sets the file logger for saving debug messages into a file.
+//	 * 
+//	 * @param flogger The file logger to use to save debug messages.
+//	 */
+//	public void setFileLogger(FileLogger flogger) {
+//		this.flogger = flogger;
+//	}
 	
 	/**
 	 * Returns all of the beacons received from the specified robot during
@@ -431,19 +431,22 @@ public class RobotExpData {
 			if (line.contains("Starting experiment at time:")) {
 				String[] tokens = line.split("[: ]");
 				expStartTime = Long.valueOf(tokens[8]);
-				log("readFile: expStartTime = " + expStartTime);
+				Logger.log("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			}
-			else if (line.contains("Starting experiment at time")) {
-				String[] tokens = line.split("[. ]");
-				expStartTime = Long.valueOf(tokens[7]);
-				log("readFile: expStartTime = " + expStartTime);
+			else if (line.contains("Starting experiment at time ")) {
+				String keyStr = "Starting experiment at time ";
+				String startingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = startingLine.split("[.\\s]");
+				expStartTime = Long.valueOf(tokens[0]);
+				Logger.log("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			} 
 			
 			// Record the next waypoint.
 			else if (line.contains("WayPointFollower: Going to") 
-					|| line.contains("MotionScriptFollower: Going to")) 
+					|| (line.contains("MotionScriptFollower:") && line.contains("Going to "))) 
 			{
 				String keyStr = "Going to ";
 				String goingToLine = line.substring(line.indexOf(keyStr) + keyStr.length());
@@ -508,7 +511,7 @@ public class RobotExpData {
 							currEdge.setStartLoc(l);
 					}
 				} else {
-					log("readFile: Rejecting invalid location: " + currLoc);
+					Logger.log("Rejecting invalid location: " + currLoc);
 				}
 			}
 			
@@ -531,7 +534,7 @@ public class RobotExpData {
 							currEdge.setStartHeading(heading);
 					}
 				} else {
-					log("readFile: Rejecting invalid heading: " + heading);
+					Logger.log("Rejecting invalid heading: " + heading);
 				}
 			}
 			// The following is printed by the CompassDataBuffer during Mission 25
@@ -552,7 +555,7 @@ public class RobotExpData {
 							currEdge.setStartHeading(heading);
 					}
 				} else {
-					log("readFile: WARNING: Rejecting invalid heading: " + heading);
+					Logger.log("WARNING: Rejecting invalid heading: " + heading);
 				}
 			}
 			
@@ -595,6 +598,10 @@ public class RobotExpData {
 				// Save the end time of the experiment
 				String[] tokens = line.split("[:= ]");
 				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
+				if (currEdge == null) {
+					Logger.logErr("Arrived at destination but currEdge is null!");
+					System.exit(1);
+				}
 				currEdge.setEndTime(timeStamp);
 				pathEdges.add(currEdge);
 				currEdge = null;
@@ -613,8 +620,8 @@ public class RobotExpData {
 			}
 			
 			// Extract the motion commands being issued by the motion arbiter
-			else if (line.contains("MotionArbiter: Sending motion command")) {
-				String keyStr = "MotionArbiter: Sending motion command";
+			else if (line.contains("MotionArbiter:") && line.contains("Sending motion command")) {
+				String keyStr = "Sending motion command";
 				String headingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
 				
 				String[] tokens = headingLine.split("[=,\\s ]+");
@@ -629,8 +636,8 @@ public class RobotExpData {
 			}
 			
 			// Extract the pause durations
-			else if (line.contains("MotionScriptFollower: Pausing for")) {
-				String keyStr = "MotionScriptFollower: Pausing for";
+			else if (line.contains("MotionScriptFollower:") && line.contains("Pausing for")) {
+				String keyStr = "Pausing for";
 				String pausingLine = line.substring(line.indexOf(keyStr) + keyStr.length());
 				
 				String[] tokens = pausingLine.split("[=,\\s m]+");
@@ -662,12 +669,12 @@ public class RobotExpData {
 		
 		// Do some sanity checks...
 		if (!expStartTimeSet) {
-			logErr("readFile: ERROR: experiment start time not set!");
+			Logger.logErr("experiment start time not set!");
 			System.exit(1);
 		}
 		
 		if (locations.size() == 0) {
-			logErr("readFile: ERROR: robot has no known locations...");
+			Logger.logErr("robot has no known locations...");
 			System.exit(1);
 		}
 		
@@ -842,7 +849,7 @@ public class RobotExpData {
 		
 		// If the desired time is prior to starting the experiment, abort.
 		if (timestamp < expStartTime) {
-			logErr("ERROR: getPathEdge(timestamp): Specified timestamp (" + timestamp + ") prior to start of experiment (" + expStartTime + ")");
+			Logger.logErr("Specified timestamp (" + timestamp + ") prior to start of experiment (" + expStartTime + ")");
 			System.exit(1);
 		}
 		
@@ -864,11 +871,11 @@ public class RobotExpData {
 		
 		// If no edge was found, abort.
 		if (edgeIndx == -1) {
-			logErr("ERROR: getPathEdge(timestamp): Unable to find edge containing timestamp " + timestamp);
+			Logger.logErr("Unable to find edge containing timestamp " + timestamp);
 			System.exit(1);
 		}
 		
-		log("getPathEdge: indx = " + edgeIndx);
+		Logger.log("getPathEdge: indx = " + edgeIndx);
 		
 		return pathEdges.get(edgeIndx);
 	}
@@ -932,7 +939,7 @@ public class RobotExpData {
 		} 
 		
 		if (result == -1) {
-			logErr("getRobotEndTime: Cannot get experiment end time because numEdges and locations are both zero! Log File: " + fileName);
+			Logger.logErr("Cannot get experiment end time because numEdges and locations are both zero! Log File: " + fileName);
 			new Exception().printStackTrace(); // get a stack trace for debugging...
 			System.exit(1);
 		}
@@ -951,7 +958,7 @@ public class RobotExpData {
 			PathEdge lastEdge = getPathEdge(numEdges()-1);
 			return lastEdge.getEndTime();
 		} else {
-			log("getFinalWaypointArrivalTime: WARNING: Robot did not traverse any edges!");
+			Logger.log("WARNING: Robot did not traverse any edges!");
 			System.exit(1);
 		}
 		
@@ -978,12 +985,12 @@ public class RobotExpData {
 	 */
 	public double getSpeed(long time) {
 		if (time < getStartTime()) {
-			log("WARNING: getSpeed: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
+			Logger.log("WARNING: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
 			return 0;
 		}
 		
 		if (time > getStopTime()) {
-			log("WARNING: getSpeed: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
+			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
 			return 0;
 		}
 		
@@ -1003,7 +1010,7 @@ public class RobotExpData {
 			}
 		}
 		
-		logDbg("getSpeed: timestamp = " + time + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		Logger.logDbg("timestamp = " + time + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		GPSLocationState preLoc, postLoc;
 		
@@ -1018,7 +1025,7 @@ public class RobotExpData {
 				preLoc = locations.get(beforeIndx);
 				postLoc = locations.get(beforeIndx + 1);
 			} else {
-				logErr("getSpeed: Unable to get two GPS measurements to estimate speed.");
+				Logger.logErr("Unable to get two GPS measurements to estimate speed.");
 				System.exit(1);
 				preLoc = postLoc = null; // dummy code to prevent compiler from complaining 
 			}
@@ -1035,7 +1042,7 @@ public class RobotExpData {
 		
 		double speed = dist / deltaTime;
 		
-		log("getSpeed: preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
+		Logger.log("preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
 				+ ", deltaTime=" + deltaTime + ", speed=" + speed);
 		
 		return speed;
@@ -1150,7 +1157,7 @@ public class RobotExpData {
 			Location robotLoc = getLocation(timestamp);
 			return pharoslabut.navigate.Navigate.angle(robotLoc, endLoc);
 		} else {	
-			logErr("Could not find path edge covering time " + timestamp 
+			Logger.logErr("Could not find path edge covering time " + timestamp 
 				+ " (" + (timestamp - getStartTime()) + ")");
 			printPathEdges(true);
 			System.exit(1);
@@ -1184,7 +1191,7 @@ public class RobotExpData {
 				return currEdge;
 		}
 		
-		logErr("getRelevantPathEdge: Could not find relevant path edge at time " + timestamp
+		Logger.logErr("Could not find relevant path edge at time " + timestamp
 				+ " (" + (timestamp - getStartTime()) + ")");
 		printPathEdges(true);
 		System.exit(1);
@@ -1210,7 +1217,7 @@ public class RobotExpData {
 			double idealHeading = getIdealHeading(currTime);
 			
 			if (Math.abs(actualHeading - idealHeading) < orientedThreshold) {
-				log("getOrientedLocation: Found oriented location!");
+				Logger.log("Found oriented location!");
 				result = new LocationState(currTime, getLocation(currTime));
 			}
 			
@@ -1218,7 +1225,7 @@ public class RobotExpData {
 		}
 		
 		if (result == null) {
-			logErr("Unable to find oriented location along edge " + pathEdge.getSeqNo() + ", threshold=" + orientedThreshold);
+			Logger.logErr("Unable to find oriented location along edge " + pathEdge.getSeqNo() + ", threshold=" + orientedThreshold);
 			System.exit(1);
 		}
 		
@@ -1226,7 +1233,7 @@ public class RobotExpData {
 	}
 	
 	private void printPathEdges(boolean isError) {
-		log("Start Time\tDelta Start Time\tEnd Time\tDelta End Time\tStart Location\tEnd Location");
+		Logger.log("Start Time\tDelta Start Time\tEnd Time\tDelta End Time\tStart Location\tEnd Location");
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge e = pathEdges.get(i);
 			String result = e.getStartTime() 
@@ -1237,9 +1244,9 @@ public class RobotExpData {
 				+ "\t" + e.getEndLocation();
 
 			if (isError)
-				logErr(result);
+				Logger.logErr(result);
 			else
-				log(result);
+				Logger.log(result);
 		}
 	}
 	
@@ -1259,14 +1266,14 @@ public class RobotExpData {
 			
 			// Check if the relevant time is prior to the first motion command.
 			if (indx == 0 && timestamp <  currCmd.time) {
-				log("getRelevantMotionCmdIndx: WARNING: timestamp before that of first motion command (" 
+				Logger.log("WARNING: timestamp before that of first motion command (" 
 						+ timestamp + " < " + currCmd.time + "), assuming first command is relevant...");
 				return 0;
 			}
 			
 			// Check if the timestamp falls between the current and next motion commands
 			else if (currCmd.time <= timestamp && timestamp < nxtCmd.time) {
-				log("getRelevantMotionCmdIndx: Found relevant motion command at index " + indx);
+				Logger.log("Found relevant motion command at index " + indx);
 				return indx;
 			}
 			
@@ -1277,7 +1284,27 @@ public class RobotExpData {
 			
 		}
 		
-		logErr("getRelevantMotionCmdIndx: Failed to find relevant motion task, timestamp = " + timestamp);
+		if (motionCmds.size() == 0) {
+			Logger.logErr("No motion commands!");
+			System.exit(1);
+		}
+		
+		// The following is debugging code...
+		String firstCmdTime;
+		String lastCmdTime;
+		if (motionCmds.size() > 0) {
+			firstCmdTime = "Timestamp of first motion command: " + motionCmds.get(0).time;
+			lastCmdTime = "Timestamp of last motion command: " + motionCmds.get(motionCmds.size()-1).time;
+		} else {
+			firstCmdTime = "No first motion command!";
+			lastCmdTime = "No last motion command!";
+		}
+		
+		Logger.logErr("Failed to find relevant motion task, timestamp = " + timestamp
+				+ "\n\t" + firstCmdTime
+				+ "\n\t" + lastCmdTime);
+		
+		new Exception().printStackTrace();
 		System.exit(1); // fatal error
 		return -1; // should never get here
 	}
@@ -1302,12 +1329,12 @@ public class RobotExpData {
 	 */
 	public double getHeading(long timestamp) {
 		if (timestamp < getStartTime()) {
-			log("getHeading: WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			Logger.log("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartHeading();
 		}
 		
 		if (timestamp > getStopTime()) {
-			log("getHeading: WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndHeading();
 		}
 		
@@ -1328,7 +1355,7 @@ public class RobotExpData {
 			}
 		}
 		
-		log("getHeading: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		Logger.log("timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		if (beforeIndx == afterIndx)
 			return headings.get(beforeIndx).getHeading();
@@ -1336,7 +1363,7 @@ public class RobotExpData {
 			HeadingState bHeading = headings.get(beforeIndx);
 			HeadingState aHeading = headings.get(afterIndx);
 			
-			return getInterpolatedHeading(bHeading, aHeading, timestamp, flogger);
+			return getInterpolatedHeading(bHeading, aHeading, timestamp);
 		}
 	}
 	
@@ -1351,7 +1378,7 @@ public class RobotExpData {
 	 * @return The interpolated heading.
 	 */
 	public static double getInterpolatedHeading(HeadingState bHeading, 
-			HeadingState aHeading, long timestamp, FileLogger flogger) 
+			HeadingState aHeading, long timestamp) 
 	{
 		Location preHeading = new Location(bHeading.getHeading(), bHeading.getTimestamp());
 		Location postHeading = new Location(aHeading.getHeading(), aHeading.getTimestamp());
@@ -1368,12 +1395,12 @@ public class RobotExpData {
 	 */
 	public Location getLocation(long timestamp) {
 		if (timestamp < getStartTime()) {
-			log("WARNING: getLocation: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			Logger.log("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartLocation();
 		}
 		
 		if (timestamp > getStopTime()) {
-			log("WARNING: getLocation: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
@@ -1394,7 +1421,7 @@ public class RobotExpData {
 			}
 		}
 		
-		logDbg("getLocation: timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		Logger.logDbg("timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		if (beforeIndx == afterIndx)
 			return new Location(locations.get(beforeIndx).getLoc());
@@ -1405,7 +1432,7 @@ public class RobotExpData {
 			return getInterpolatedLoc(
 					bLoc.getLocation().latitude(), bLoc.getLocation().longitude(), bLoc.getTimestamp(),
 					aLoc.getLocation().latitude(), aLoc.getLocation().longitude(), aLoc.getTimestamp(),
-					timestamp, flogger);
+					timestamp);
 		}
 	
 	}
@@ -1424,11 +1451,11 @@ public class RobotExpData {
 	 * @param lon2 The longitude of the robot after the desired time.
 	 * @param time2 The timestamp of the location of the robot after the desired time.
 	 * @param timestamp The time at which to interpolate the robot's location.
-	 * @param flogger The file logger for recording debug statements.
+//	 * @param flogger The file logger for recording debug statements.
 	 * @return The location of the robot at the specified timestamp.
 	 */
 	public static Location getInterpolatedLoc(double lat1, double lon1, long time1,
-		double lat2, double lon2, long time2, long timestamp, FileLogger flogger) 
+		double lat2, double lon2, long time2, long timestamp) 
 	{
 		// Now we need to interpolate.  Create two lines both with time as the x axis.
 		// One line has the longitude as the Y-axis while the other has the latitude.
@@ -1444,10 +1471,10 @@ public class RobotExpData {
 		
 		Location result = new Location(interpLat, interpLon);
 		
-		logDbg("getInterpolatedLoc:\n"
+		Logger.logDbg("Interpolated location:\n"
 			+ "\tBefore Location @ " + time1 + ": (" + lat1 + ", " + lon1 + ")\n"
 			+ "\tAfter Location @ " + time2 + ": (" +  lat2 + ", " + lon2 + ")\n"
-			+ "\tInterpolated Location @ " + timestamp + ": " + result, flogger);
+			+ "\tInterpolated Location @ " + timestamp + ": " + result);
 		
 		return result;
 	}
@@ -1588,53 +1615,53 @@ public class RobotExpData {
 		}
 	}
 	
-	private void logErr(String msg) {
-		// Add the name of the calling method to the beginning of the message.
-		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
-		String callingMethodName = stackTraceElements[2].getMethodName();
-		
-		String result = getClass().getName() + ": " + callingMethodName + ": ERROR: " + msg;
-		System.err.println(result);
-		System.err.flush();
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private static void log(String msg, FileLogger flogger) {
-		String result = RobotExpData.class.getName() + ": " + msg; 
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
-	
-	private static void logDbg(String msg, FileLogger flogger) {
-		if (ENABLE_DEBUG_STATEMENTS)
-			log(msg, flogger);
-	}
-	
-	/**
-	 * This only logs statements when ENABLE_DEBUG_STATEMENTS is true.
-	 * 
-	 * @param msg the message to log.
-	 */
-	private void logDbg(String msg) {
-		if (ENABLE_DEBUG_STATEMENTS)
-			log(msg);
-	}
-	
-	/**
-	 * Logs debug statements.
-	 * 
-	 * @param msg the message to log.
-	 */
-	private void log(String msg) {
-		String result = getClass().getName() + ": " + msg;
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println(result);
-		if (flogger != null)
-			flogger.log(result);
-	}
+//	private void logErr(String msg) {
+//		// Add the name of the calling method to the beginning of the message.
+//		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+//		String callingMethodName = stackTraceElements[2].getMethodName();
+//		
+//		String result = getClass().getName() + ": " + callingMethodName + ": ERROR: " + msg;
+//		System.err.println(result);
+//		System.err.flush();
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private static void log(String msg, FileLogger flogger) {
+//		String result = RobotExpData.class.getName() + ": " + msg; 
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
+//	
+//	private static void logDbg(String msg, FileLogger flogger) {
+//		if (ENABLE_DEBUG_STATEMENTS)
+//			log(msg, flogger);
+//	}
+//	
+//	/**
+//	 * This only logs statements when ENABLE_DEBUG_STATEMENTS is true.
+//	 * 
+//	 * @param msg the message to log.
+//	 */
+//	private void logDbg(String msg) {
+//		if (ENABLE_DEBUG_STATEMENTS)
+//			log(msg);
+//	}
+//	
+//	/**
+//	 * Logs debug statements.
+//	 * 
+//	 * @param msg the message to log.
+//	 */
+//	private void log(String msg) {
+//		String result = getClass().getName() + ": " + msg;
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println(result);
+//		if (flogger != null)
+//			flogger.log(result);
+//	}
 	
 	/**
 	 * Calculates the time since the robot start time.
@@ -1715,43 +1742,43 @@ public class RobotExpData {
 			print("GPS timestamp calibration OK!");
 		}
 		
-		print("Robot start time: " + red.getStartTime());
-		
-		boolean testGetLocation = false;
-		if (testGetLocation) {
-			// Check whether the getLocation method is OK
-			print("Evaluating RobotExpData.getLocation(long timestamp)...");
-			print("\tExperiment start time: " + red.getStartTime());
-			String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
-			FileLogger flogger = new FileLogger(testGetLocFileName, false);
-
-			//int pathEdgeToCheck = 15;
-
-			flogger.log("type,latitude,longitude,name,color");
-			long currTime = red.getStartTime();
-			//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
-			boolean firstLoc = true;
-			while (currTime < red.getStopTime()) {
-				//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
-				Location currLoc = red.getLocation(currTime);
-				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
-				if (firstLoc) {
-					line += ",getLocation,blue";
-					firstLoc = false;
-				}
-				flogger.log(line);
-				currTime += 1000;
-			}
-
-			flogger.log("type,latitude,longitude");
-			locs = red.getGPSHistory().elements();
-			//locs = red.getPathEdge(pathEdgeToCheck).getLocationsEnum();
-			while (locs.hasMoreElements()) {
-				GPSLocationState currLoc = locs.nextElement();
-				flogger.log("W," + currLoc.getLocation().latitude() + "," + currLoc.getLocation().longitude());
-			}
-
-			print("\tEvaluation script saved to " + testGetLocFileName + ", upload it to GPSVisualizer to visualize...");
-		}
+//		print("Robot start time: " + red.getStartTime());
+//		
+//		boolean testGetLocation = false;
+//		if (testGetLocation) {
+//			// Check whether the getLocation method is OK
+//			print("Evaluating RobotExpData.getLocation(long timestamp)...");
+//			print("\tExperiment start time: " + red.getStartTime());
+//			String testGetLocFileName = "RobotExpData-TestGetLocation.txt";
+//			FileLogger flogger = new FileLogger(testGetLocFileName, false);
+//
+//			//int pathEdgeToCheck = 15;
+//
+//			flogger.log("type,latitude,longitude,name,color");
+//			long currTime = red.getStartTime();
+//			//long currTime = red.getPathEdge(pathEdgeToCheck).getStartTime();
+//			boolean firstLoc = true;
+//			while (currTime < red.getStopTime()) {
+//				//while (currTime < red.getPathEdge(pathEdgeToCheck).getEndTime()) {
+//				Location currLoc = red.getLocation(currTime);
+//				String line = "T," + currLoc.latitude() + "," + currLoc.longitude();
+//				if (firstLoc) {
+//					line += ",getLocation,blue";
+//					firstLoc = false;
+//				}
+//				flogger.log(line);
+//				currTime += 1000;
+//			}
+//
+//			flogger.log("type,latitude,longitude");
+//			locs = red.getGPSHistory().elements();
+//			//locs = red.getPathEdge(pathEdgeToCheck).getLocationsEnum();
+//			while (locs.hasMoreElements()) {
+//				GPSLocationState currLoc = locs.nextElement();
+//				flogger.log("W," + currLoc.getLocation().latitude() + "," + currLoc.getLocation().longitude());
+//			}
+//
+//			print("\tEvaluation script saved to " + testGetLocFileName + ", upload it to GPSVisualizer to visualize...");
+//		}
 	}
 }

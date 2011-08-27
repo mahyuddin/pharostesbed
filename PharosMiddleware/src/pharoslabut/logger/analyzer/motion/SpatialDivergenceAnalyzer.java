@@ -17,11 +17,11 @@ import org.jfree.ui.ApplicationFrame;
 import org.jfree.ui.RectangleEdge;
 import org.jfree.ui.RefineryUtilities;
 
-import pharoslabut.logger.*;
-import pharoslabut.logger.analyzer.Line;
+//import pharoslabut.logger.*;
+//import pharoslabut.logger.analyzer.Line;
 import pharoslabut.logger.analyzer.PathEdge;
 import pharoslabut.logger.analyzer.RobotExpData;
-import pharoslabut.navigate.Location;
+//import pharoslabut.navigate.Location;
 
 
 /**

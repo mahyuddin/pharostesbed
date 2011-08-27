@@ -22,14 +22,24 @@ public class Move extends Instruction {
 	private double speed;
 	
 	/**
+	 * The name of the waypoint.
+	 */
+	private String waypointName;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param dest The destination location.
 	 * @param speed The speed in meters per second at which to move.
 	 */
-	public Move(Location dest, double speed) {
+	public Move(Location dest, double speed, String waypointName) {
 		this.dest = dest;
 		this.speed = speed;
+		this.waypointName = waypointName;
+	}
+	
+	public String getWaypointName() {
+		return waypointName;
 	}
 	
 	public Location getDest() {
@@ -62,7 +72,7 @@ public class Move extends Instruction {
 	}
 	
 	public String toString() {
-		return "MOVE to " + dest + " at " + speed + "m/s";
+		return "MOVE to " + dest + " at " + speed + "m/s (name = " + getWaypointName() + ")";
 	}
 
 }

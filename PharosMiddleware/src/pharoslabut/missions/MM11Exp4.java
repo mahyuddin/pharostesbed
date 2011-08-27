@@ -102,7 +102,7 @@ public class MM11Exp4 {
 			return RobotExpData.getInterpolatedLoc(
 					bLoc.loc.latitude(), bLoc.loc.longitude(), bLoc.timestamp,
 					aLoc.loc.latitude(), aLoc.loc.longitude(), aLoc.timestamp,
-					timestamp, flogger);
+					timestamp);
 		}
 	}
 	
