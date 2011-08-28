@@ -1470,12 +1470,12 @@ public class RobotExpData {
 	 */
 	public Location getLocation(long timestamp) {
 		if (timestamp < getStartTime()) {
-			Logger.log("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartLocation();
 		}
 		
 		if (timestamp > getStopTime()) {
-			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
