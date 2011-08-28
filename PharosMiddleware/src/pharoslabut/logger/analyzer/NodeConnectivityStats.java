@@ -47,6 +47,11 @@ public class NodeConnectivityStats {
 	private int totalConnections;
 	
 	/**
+	 * The total number of times a node is removed from the neighbor list.
+	 */
+	private int totalDisconnections;
+	
+	/**
 	 * The average time a node remains in the neighbor list.
 	 */
 	private double averageConnectionDuration;
@@ -97,11 +102,11 @@ public class NodeConnectivityStats {
 		Vector<WiFiBeaconRx> rxEvents = robotData.getWiFiBeaconRxs();
 		
 		/*
-		 * Initialize the number of total connections to be zero.
-		 * We will increment this each time a neighbor is added to the
+		 * Initialize the number of total connections and disconnection to be zero.
+		 * We will increment these each time a neighbor is added to or removed from the
 		 * neighbor list.
 		 */
-		totalConnections = 0;
+		totalConnections = totalDisconnections = 0;
 		
 		/*
 		 * Maintain a list of connection durations.  This will be used to calculate the average connection duration.
@@ -126,6 +131,7 @@ public class NodeConnectivityStats {
 			// First remove the disconnected nodes and update the list of connection durations.
 			Vector<Long> removedDurations = nbrList.clearDisconnected(currBeaconEvent.getTimestamp());
 			connectionDuration.addAll(removedDurations);
+			totalDisconnections += removedDurations.size();
 			
 			// Next, if the beacon does not belong to the local robot,
 			// add or update the beacon's sender in the list
@@ -139,6 +145,7 @@ public class NodeConnectivityStats {
 		Logger.logDbg("Determining the final state of the neighbor list at the end of the experiment.");
 		Vector<Long> removedDurations = nbrList.clearDisconnected(robotData.getStopTime());
 		connectionDuration.addAll(removedDurations);
+		totalDisconnections += removedDurations.size();
 		
 		// Calculate the average connection duration
 		long totalConnDur = 0;
@@ -151,6 +158,7 @@ public class NodeConnectivityStats {
 		numUniqueNeighbors = nbrList.numUniqueNbrs();
 		
 		// Calculate the average size of the neighbor list.
+		Logger.logDbg("Calculating the average size of the neighbor list.");
 		long totalNbrListSize = 0;
 		int countNbrListSize = 0;
 		for (long currTime = robotData.getStartTime(); currTime < robotData.getStopTime(); currTime += samplingInterval) {
@@ -264,7 +272,7 @@ public class NodeConnectivityStats {
 			for (int i=0; i < list.size(); i++) {
 				NbrListElement currNbr = list.get(i);
 				if (currNbr.ownsBeacon(beaconEvent)) {
-					Logger.logDbg("Updating last received time of " + currNbr + " to be " + beaconEvent.getTimestamp());
+//					Logger.logDbg("Updating last received time of " + currNbr + " to be " + beaconEvent.getTimestamp());
 					currNbr.timeLastUpdated = beaconEvent.getTimestamp();
 					found = true; // The neighbor was already in the list and will remain in the list.
 				}
@@ -339,6 +347,7 @@ public class NodeConnectivityStats {
 		}
 		
 		log("Total Connections: " + totalConnections, flogger);
+		log("Total Disconnections: " + totalDisconnections, flogger);
 		log("Average Connection Duration: " + averageConnectionDuration, flogger);
 		log("Average Neighbor List Size: " + averageNeighbors, flogger);
 		log("Total Unique Neighbors: " + numUniqueNeighbors, flogger);
