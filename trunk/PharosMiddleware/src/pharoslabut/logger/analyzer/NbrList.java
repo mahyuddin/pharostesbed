@@ -70,6 +70,21 @@ public class NbrList {
 	}
 	
 	/**
+	 * Checks whether this neighbor list contains a node with the specified ID.
+	 * 
+	 * @param nodeID The specified ID.
+	 * @return true if a node with the specified ID is in the list.
+	 */
+	public boolean contains(int nodeID) {
+		for (int i=0; i < list.size(); i++) {
+			NbrListElement currNbr = list.get(i);
+			if (currNbr.getNodeID() == nodeID)
+				return true;
+		}
+		return false;
+	}
+	
+	/**
 	 * 
 	 * @return The number of neighbors in the neighbor list.
 	 */
