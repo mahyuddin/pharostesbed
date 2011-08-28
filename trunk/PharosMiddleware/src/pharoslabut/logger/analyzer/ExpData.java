@@ -3,6 +3,8 @@ package pharoslabut.logger.analyzer;
 import java.util.*;
 import java.io.*;
 
+import pharoslabut.logger.Logger;
+
 /**
  * Organizes the data recorded during an experiment.  An experiment
  * consists of one or more robots following motion scripts.
@@ -29,12 +31,12 @@ public class ExpData {
 			//log("Analyzing token " + tokens[i]);
 			if (tokens[i].matches("M\\d+-Exp\\d+")) {
 				expName = tokens[i];
-				log("Found experiment name \"" + expName + "\", expDir = " + expDir);
+				Logger.logDbg("Found experiment name \"" + expName + "\", expDir = " + expDir);
 			}
 		}
 		
 		if (expName == null) {
-			logErr("Unable to determine experiment name, expDir = " + expDir);
+			Logger.logErr("Unable to determine experiment name, expDir = " + expDir);
 			System.exit(1);
 		}
 		
@@ -53,7 +55,9 @@ public class ExpData {
 		    System.exit(1);
 		} else {
 		    for (int i=0; i<logFiles.length; i++) {
-		        robots.add(new RobotExpData(expDir + "/" + logFiles[i]));
+		    	String robotFileName = expDir + "/" + logFiles[i];
+		    	Logger.logDbg("Reading robot log " + robotFileName);
+		        robots.add(new RobotExpData(robotFileName));
 		    }
 		}
 	}
@@ -148,7 +152,7 @@ public class ExpData {
 			if (robots.get(i).getRobotID() == robotID) 
 				return robots.get(i);
 		}
-		log("ERROR: Unable to find robot with ID " + robotID);
+		Logger.logErr("Unable to find robot with ID " + robotID);
 		return null;
 	}
 	
@@ -171,14 +175,22 @@ public class ExpData {
 		return robots.elements();
 	}
 	
-	private void logErr(String msg) {
-		System.err.println("ExpData: " + msg);
+	/**
+	 * 
+	 * @return The number of robots in the experiment.
+	 */
+	public int getNumRobots() {
+		return robots.size();
 	}
 	
-	private void log(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("ExpData: " + msg);
-	}
+//	private void logErr(String msg) {
+//		System.err.println("ExpData: " + msg);
+//	}
+//	
+//	private void log(String msg) {
+//		if (System.getProperty ("PharosMiddleware.debug") != null)
+//			System.out.println("ExpData: " + msg);
+//	}
 	
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
