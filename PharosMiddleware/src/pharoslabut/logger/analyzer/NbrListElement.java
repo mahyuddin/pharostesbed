@@ -2,6 +2,8 @@ package pharoslabut.logger.analyzer;
 
 import java.net.InetAddress;
 
+import pharoslabut.RobotIPAssignments;
+
 /**
  * An element within a neighbor list.
  * 
@@ -26,6 +28,10 @@ public class NbrListElement {
 	public boolean ownsBeacon(WiFiBeaconRx beacon) {
 		return beacon.getBeacon().getAddress().equals(ipAddress) 
 			&& beacon.getBeacon().getPort() == port;
+	}
+	
+	public int getNodeID() {
+		return RobotIPAssignments.getID(ipAddress);
 	}
 	
 	public String toString() {
