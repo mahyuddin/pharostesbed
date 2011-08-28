@@ -5,24 +5,27 @@ package pharoslabut.logger.analyzer;
 //import java.io.FilenameFilter;
 //import java.net.InetAddress;
 //import java.util.Enumeration;
+import java.awt.Color;
 import java.text.DecimalFormat;
 import java.util.Enumeration;
 import java.util.Vector;
 
-//import org.jfree.chart.ChartFactory;
-//import org.jfree.chart.ChartPanel;
-//import org.jfree.chart.JFreeChart;
-//import org.jfree.chart.plot.PlotOrientation;
-//import org.jfree.chart.plot.XYPlot;
-//import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-//import org.jfree.chart.title.LegendTitle;
-//import org.jfree.data.xy.XYSeries;
-//import org.jfree.data.xy.XYSeriesCollection;
-//import org.jfree.ui.ApplicationFrame;
-//import org.jfree.ui.RectangleEdge;
-//import org.jfree.ui.RefineryUtilities;
-//
-//import pharoslabut.beacon.WiFiBeacon;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYErrorRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.LegendTitle;
+import org.jfree.data.xy.XYIntervalSeries;
+import org.jfree.data.xy.XYIntervalSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RefineryUtilities;
+
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.util.AverageStatistic;
@@ -196,15 +199,15 @@ public class ExpConnectivityStats {
 	private void printResults(boolean saveToFile) {
 		FileLogger flogger = null;
 		if (saveToFile) {
-			String fileName;
-			if (expData.getNumRobots() > 0) {
-				RobotExpData robotData = expData.getRobot(0);
-				fileName = robotData.getMissionName() + "-" + robotData.getExpName() + "-ConnStats.txt";
-			} else {
-				Logger.logErr("Could not determine mission name or experiment number because no robots present.");
-				System.exit(1);// should never get there
-				fileName = "ConnStats.txt"; 
-			}
+			String fileName = expData.getMissionName() + "-" + expData.getExpName() + "-ConnStats.txt";
+//			if (expData.getNumRobots() > 0) {
+//				RobotExpData robotData = expData.getRobot(0);
+//				fileName = robotData.getMissionName() + "-" + robotData.getExpName() + "-ConnStats.txt";
+//			} else {
+//				Logger.logErr("Could not determine mission name or experiment number because no robots present.");
+//				System.exit(1);// should never get there
+//				fileName = "ConnStats.txt"; 
+//			}
 			Logger.log("Saving data to " + fileName);
 			flogger = new FileLogger(fileName, false);
 		}
@@ -227,8 +230,182 @@ public class ExpConnectivityStats {
 		log("Average Relative Mobility: " + getAverageRelativeMobility(), flogger);
 	}
 	
+	/**
+	 * Plots the experiment connectivity statistics on charts for easy visualization.
+	 */
 	private void showChart() {
+		// Create the various data series...
+		XYSeries numPartitionSeries = new XYSeries("Number of partitions");
+		XYIntervalSeries avgPartitionSizeSeries = new XYIntervalSeries("Average partition size");
+		XYSeries numDisconnectedSeries = new XYSeries("Number of disconnected nodes");
+		XYIntervalSeries relativeMobilitySeries = new XYIntervalSeries("Relative mobility");
+
+		long expStartTime = expData.getExpStartTime();
 		
+		// Fill in the data series
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			double currTime = (currStat.getTimestamp() - expStartTime) / 1000.0; // in seconds
+			
+			numPartitionSeries.add(currTime, currStat.getNumPartitions());
+			
+			double avgPartitionSize = currStat.getAvgPartitionSize().getAverage();
+			double avgPartitionSizeConf95 = currStat.getAvgPartitionSize().getConf95();
+			avgPartitionSizeSeries.add(currTime, currTime, currTime, avgPartitionSize, avgPartitionSize-avgPartitionSizeConf95, avgPartitionSize+avgPartitionSizeConf95);
+			
+			numDisconnectedSeries.add(currTime, currStat.getNumDisconnected());
+			
+			double avgRelMobility = currStat.getRelativeMobility().getAverage();
+			double avgRelMobilityConf95 = currStat.getRelativeMobility().getConf95();
+			relativeMobilitySeries.add(currTime, currTime, currTime, avgRelMobility, avgRelMobility - avgRelMobilityConf95, avgRelMobility + avgRelMobilityConf95);
+		}
+
+		// Create data sets for each series
+		XYSeriesCollection numPartitionDataSet = new XYSeriesCollection();
+		numPartitionDataSet.addSeries(numPartitionSeries);
+		
+		XYIntervalSeriesCollection avgPartitionSizeDataSet = new XYIntervalSeriesCollection();
+		avgPartitionSizeDataSet.addSeries(avgPartitionSizeSeries);
+		
+		XYSeriesCollection numDisconnectedDataSet = new XYSeriesCollection();
+		numDisconnectedDataSet.addSeries(numDisconnectedSeries);
+		
+		XYIntervalSeriesCollection relativeMobilityDataSet = new XYIntervalSeriesCollection();
+		relativeMobilityDataSet.addSeries(relativeMobilitySeries);
+		
+		
+		// Create the charts
+		JFreeChart numPartitionChart = ChartFactory.createXYLineChart(
+				"Number of Partitions vs. Time",                       // chart title
+				"Time (s)",                                            // x axis label
+				"Num. Partitions",                                     // y axis label
+				numPartitionDataSet,                                   // the heading data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+		
+		JFreeChart avgPartitionSizeChart = ChartFactory.createXYLineChart(
+				"Avg. Partition Size vs. Time",                        // chart title
+				"Time (s)",                                            // x axis label
+				"Avg. Parition Size",                                  // y axis label
+				avgPartitionSizeDataSet,                               // the heading data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+		
+		JFreeChart numDisconnectedChart = ChartFactory.createXYLineChart(
+				"Number of Disconnected Nodes vs. Time",               // chart title
+				"Time (s)",                                            // x axis label
+				"Num. Disconnected Nodes",                             // y axis label
+				numDisconnectedDataSet,                                // the heading data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+		
+		JFreeChart relativeMobilityChart = ChartFactory.createXYLineChart(
+				"Relative Mobility vs. Time",                          // chart title
+				"Time (s)",                                            // x axis label
+				"Rel. Mobility (m/s)",                             // y axis label
+				relativeMobilityDataSet,                               // the heading data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+       
+        
+        // Place the legend on top of the chart just below the title.
+//        LegendTitle headingLegend = headingChart.getLegend();
+//        headingLegend.setPosition(RectangleEdge.TOP);
+//        LegendTitle speedLegend = speedChart.getLegend();
+//        speedLegend.setPosition(RectangleEdge.TOP);
+        
+		numPartitionChart.setBackgroundPaint(Color.white);
+		avgPartitionSizeChart.setBackgroundPaint(Color.white);
+		numDisconnectedChart.setBackgroundPaint(Color.white);
+		relativeMobilityChart.setBackgroundPaint(Color.white);
+        
+        // Configure when to display lines an when to display the shapes that indicate data points
+        XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+        renderer1.setSeriesLinesVisible(0, true); // display the heading as a line
+        renderer1.setSeriesShapesVisible(0, false);
+//        renderer1.setSeriesPaint(0, Color.BLACK);
+//        renderer1.setSeriesLinesVisible(1, true); // display the headingCmd as a line
+//        renderer1.setSeriesShapesVisible(1, false);
+//        renderer1.setSeriesPaint(1, Color.RED);
+//        renderer1.setSeriesLinesVisible(2, false); // display the begin edge traversal points as blue dots
+//        renderer1.setSeriesShapesVisible(2, true);
+//        renderer1.setSeriesPaint(2, Color.BLUE);
+//        renderer1.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-3,-3,6,6));
+//        renderer1.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+//        renderer1.setSeriesShapesVisible(3, true);
+//        renderer1.setSeriesPaint(3, Color.GREEN.darker());
+//        renderer1.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+        
+        XYErrorRenderer xyerrorrenderer = new XYErrorRenderer();
+        xyerrorrenderer.setSeriesLinesVisible(0, true); // display the heading as a line
+        xyerrorrenderer.setSeriesShapesVisible(0, false);
+        xyerrorrenderer.setDrawXError(false);
+        xyerrorrenderer.setDrawYError(true);
+        
+        final XYPlot numPartitionPlot = numPartitionChart.getXYPlot();
+        final XYPlot avgPartitionSizePlot = avgPartitionSizeChart.getXYPlot();
+        final XYPlot numDisconnectedPlot = numDisconnectedChart.getXYPlot();
+		final XYPlot relativeMobilityPlot = relativeMobilityChart.getXYPlot();
+        numPartitionPlot.setRenderer(0, renderer1);
+        avgPartitionSizePlot.setRenderer(0, xyerrorrenderer);
+        numDisconnectedPlot.setRenderer(0, renderer1);
+        relativeMobilityPlot.setRenderer(0, xyerrorrenderer);
+        
+//        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
+//        renderer2.setSeriesLinesVisible(0, true); // display the speed as a line
+//        renderer2.setSeriesShapesVisible(0, false);
+//        renderer2.setSeriesPaint(0, Color.BLACK);
+//        renderer2.setSeriesLinesVisible(1, true); // display the speedCmd as a line
+//        renderer2.setSeriesShapesVisible(1, false);
+//        renderer2.setSeriesPaint(1, Color.RED);
+//        renderer2.setSeriesLinesVisible(2, false); // display the waypoints as points
+//        renderer2.setSeriesShapesVisible(2, true);
+//        renderer2.setSeriesPaint(2, Color.BLUE);
+//        renderer2.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+//        renderer2.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+//        renderer2.setSeriesShapesVisible(3, true);
+//        renderer2.setSeriesPaint(3, Color.GREEN);
+//        renderer2.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+//        
+//        final XYPlot speedPlot = speedChart.getXYPlot();
+//        speedPlot.setRenderer(0, renderer2);
+        
+        // Place the charts in their own panels.
+        ChartPanel numPartitionChartPanel = new ChartPanel(numPartitionChart);
+        ChartPanel avgPartitionSizeChartPanel = new ChartPanel(avgPartitionSizeChart);
+        ChartPanel numDisconnectedChartPanel = new ChartPanel(numDisconnectedChart);
+        ChartPanel relativeMobilityChartPanel = new ChartPanel(relativeMobilityChart);
+        
+        numPartitionChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+        avgPartitionSizeChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+        numDisconnectedChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+        relativeMobilityChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+       
+        // Place both chart panels within a single panel with two rows.
+        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(4,1));
+        chartsPanel.add(numPartitionChartPanel);
+        chartsPanel.add(avgPartitionSizeChartPanel);
+        chartsPanel.add(numDisconnectedChartPanel);
+        chartsPanel.add(relativeMobilityChartPanel);
+       
+        // Create a frame for the chart, then display it.
+        ApplicationFrame appFrame = new ApplicationFrame("Network Partition and Node Mobility Statistics for " + expData.getMissionName() + " " + expData.getExpName());
+        appFrame.setContentPane(chartsPanel);
+        appFrame.pack();
+		RefineryUtilities.centerFrameOnScreen(appFrame);
+		appFrame.setVisible(true);
 	}
 	
 	/**
