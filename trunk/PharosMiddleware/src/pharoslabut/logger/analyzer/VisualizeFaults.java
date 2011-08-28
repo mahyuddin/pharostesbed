@@ -5,9 +5,22 @@ import java.util.Vector;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.navigate.Location;
 
+/**
+ * Generates a CSV file that can be submitted to GPSVisualizer.com to see
+ * the routes taken by the robots and where the GPS and compass failed.
+ * 
+ * @author Chien-Liang Fok
+ *
+ */
 public class VisualizeFaults {
 
 	
+	/**
+	 * The constructor.
+	 * 
+	 * @param logFileName The name of the log file.
+	 * @param robotColor The color of the robot.
+	 */
 	public VisualizeFaults(String logFileName, String robotColor) {
 		RobotExpData robotData = new RobotExpData(logFileName);
 		
