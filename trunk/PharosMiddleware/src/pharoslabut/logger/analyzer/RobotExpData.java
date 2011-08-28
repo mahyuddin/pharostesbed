@@ -75,6 +75,16 @@ public class RobotExpData {
 	private Vector<MotionCmd> motionCmds = new Vector<MotionCmd>();
 	
 	/**
+	 * Holds the times when a WiFi beacon was transmitted.
+	 */
+	private Vector<WiFiBeaconTx> wifiBeaconTxs = new Vector<WiFiBeaconTx>();
+	
+	/**
+	 * Holds the times when a WiFi beacon was received.
+	 */
+	private Vector<WiFiBeaconRx> wifiBeaconRxs = new Vector<WiFiBeaconRx>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the robot's experiment log file.
@@ -559,7 +569,7 @@ public class RobotExpData {
 				}
 			}
 			
-			// Extract when the TelosB transmitted a broadcast.
+			// Extract when the TelosB transmitted a beacon.
 			else if (line.contains("RadioSignalMeter: SEND_BCAST") 
 					|| line.contains("TelosBeaconBroadcaster: SEND_TELSOB_BCAST")) {
 				// The format of this line is:
@@ -573,7 +583,7 @@ public class RobotExpData {
 				
 			}
 			
-			// Extract when a TelosB message was received.
+			// Extract when a TelosB beacon was received.
 			else if (line.contains("RadioSignalMeter: RADIO_CC2420_RECEIVE")
 					|| line.contains("TelosBeaconReceiver: RADIO_CC2420_RECEIVE")) {
 				// The format of this line is:
@@ -592,17 +602,55 @@ public class RobotExpData {
 						Integer.valueOf(tokens[10])); // moteTimestamp
 				telosBRxHist.add(rxRec);
 			}
+			
+			// Extract when a WiFi beacon was broadcasted.
+			else if (line.contains("WiFiBeaconBroadcaster: Broadcasting Beacon:") // valid for log files up to and including Mission 26
+					|| (line.contains("pharoslabut.beacon.WiFiBeaconBroadcaster") && line.contains("Broadcasting Beacon:"))) // valid for missions 27 and above
+			{
+				String keyStr = "Broadcasting Beacon:";
+				String broadcastLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				String[] tokens = broadcastLine.split("[\\(\\):, ]");
+				String ipAddress = tokens[2];
+				int port = Integer.valueOf(tokens[3]);
+				int seqno = Integer.valueOf(tokens[4]);
+				
+				WiFiBeaconTx beaconTx = new WiFiBeaconTx(ipAddress, port, seqno, timestamp);
+				wifiBeaconTxs.add(beaconTx);
+				
+			}
+			
+			// Extract when a WiFi beacon was received.
+			else if (line.contains("BeaconReciever: Received beacon:") // valid for log files up to and including Mission 26
+					|| (line.contains("pharoslabut.beacon.WiFiBeaconReceiver") && line.contains("Received beacon:"))) // valid for missions 27 and above
+			{
+				String keyStr = "Received beacon:";
+				String rcvLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				String[] tokens = rcvLine.split("[\\(\\):, ]");
+				String ipAddress = tokens[2];
+				int port = Integer.valueOf(tokens[3]);
+				int seqno = Integer.valueOf(tokens[4]);
+				
+				WiFiBeaconRx beaconRx = new WiFiBeaconRx(ipAddress, port, seqno, timestamp);
+				wifiBeaconRxs.add(beaconRx);
+			}
 
 			// Extract when the current waypoint was reached.
-			else if (line.contains("Arrived at destination")) {
+			else if (line.contains("NavigateCompassGPS:") && line.contains("Arrived at destination")) {
 				// Save the end time of the experiment
-				String[] tokens = line.split("[:= ]");
-				long timeStamp = Long.valueOf(tokens[0].substring(1, tokens[0].length()-1));
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
 				if (currEdge == null) {
 					Logger.logErr("Arrived at destination but currEdge is null!");
 					System.exit(1);
 				}
-				currEdge.setEndTime(timeStamp);
+				
+				currEdge.setEndTime(timestamp);
 				pathEdges.add(currEdge);
 				currEdge = null;
 			}
@@ -648,8 +696,10 @@ public class RobotExpData {
 				
 				if (currEdge != null)
 					currEdge.addPauseTime(pauseTime);
+				else if (pathEdges.size() > 0)
+					pathEdges.get(pathEdges.size()-1).addPauseTime(pauseTime);
 				else
-					Logger.logDbg("WARNING: discarding pause time because currEdge not defined!");
+					Logger.logDbg("WARNING: discarding pause time because currEdge not defined and there were not previous edges!");
 			}
 		} // end while...
 		
