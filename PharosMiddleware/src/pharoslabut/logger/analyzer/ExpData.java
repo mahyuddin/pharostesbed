@@ -63,13 +63,32 @@ public class ExpData {
 	}
 	
 	/**
-	 * Returns the name of the experiment.  The experiment name is of the form
-	 * Mxx-Expyy where 'xx' and 'yy' are integers.
-	 * 
 	 * @return the name of the experiment.
 	 */
 	public String getExpName() {
-		return expName;
+//		return expName;
+		if (getNumRobots() > 0) {
+			RobotExpData robotData = getRobot(0);
+			return robotData.getExpName();
+		} else {
+			Logger.logErr("Could not determine experiment name because no robots present.");
+			System.exit(1);// should never get there
+			return null;
+		}
+	}
+
+	/**
+	 * @return the name of the mission.
+	 */
+	public String getMissionName() {
+		if (getNumRobots() > 0) {
+			RobotExpData robotData = getRobot(0);
+			return robotData.getMissionName();
+		} else {
+			Logger.logErr("Could not determine mission name because no robots present.");
+			System.exit(1);// should never get there
+			return null;
+		}
 	}
 	
 	/**
