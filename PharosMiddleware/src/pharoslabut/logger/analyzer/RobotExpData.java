@@ -442,7 +442,7 @@ public class RobotExpData {
 			if (line.contains("Starting experiment at time:")) {
 				String[] tokens = line.split("[: ]");
 				expStartTime = Long.valueOf(tokens[8]);
-				Logger.log("expStartTime = " + expStartTime);
+				Logger.logDbg("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			}
 			else if (line.contains("Starting experiment at time ")) {
@@ -451,7 +451,7 @@ public class RobotExpData {
 				
 				String[] tokens = startingLine.split("[.\\s]");
 				expStartTime = Long.valueOf(tokens[0]);
-				Logger.log("expStartTime = " + expStartTime);
+				Logger.logDbg("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			} 
 			
