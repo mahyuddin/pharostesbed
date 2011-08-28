@@ -59,6 +59,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     	    this.maxPeriod = maxPeriod;
     	    this.txPower = txPower;
     	        
+    	    Logger.log("Starting to beacon, minPeriod = " + minPeriod + ", maxPeriod = " + maxPeriod + ", tx power = " + txPower);
     		new Thread(this).start();
     		
     		return true;
@@ -74,22 +75,6 @@ public abstract class BeaconBroadcaster implements Runnable {
     public void stop() {
     	running = false;
     }
-    
-//    /**
-//     * Updates the file logger.
-//     * 
-//     * @param flogger The file logger.
-//     */
-//    public void setFileLogger(FileLogger flogger) {
-//    	this.flogger = flogger;
-//    }
-    
-    /**
-     * Records a message using the file logger.
-     * 
-     * @param msg The message to record.
-     */
-//    protected abstract void log(String msg);
     
     /**
      * Sends a beacon.  This is implemented by subclasses.

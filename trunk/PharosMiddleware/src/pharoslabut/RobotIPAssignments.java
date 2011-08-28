@@ -95,6 +95,17 @@ public class RobotIPAssignments implements java.io.Serializable {
 	}
 	
 	/**
+	 * Returns the ID of the robot, which is the last octal of the robot's ad hoc IP address.
+	 * 
+	 * @param address The IP address of the robot.
+	 * @return the ID of the robot.
+	 */
+	public static int getID(InetAddress address) {
+		byte[] addressBytes = address.getAddress();
+		return addressBytes[3];
+	}
+	
+	/**
 	 * Returns the robot's name given its ID.
 	 * 
 	 * @param id The id of the robot, which is the last octal of the robot's IP address
