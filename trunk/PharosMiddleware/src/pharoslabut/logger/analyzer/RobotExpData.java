@@ -1060,12 +1060,12 @@ public class RobotExpData {
 	 */
 	public double getSpeed(long time) {
 		if (time < getStartTime()) {
-			Logger.log("WARNING: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
+			Logger.logDbg("WARNING: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
 			return 0;
 		}
 		
 		if (time > getStopTime()) {
-			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
+			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
 			return 0;
 		}
 		
@@ -1117,7 +1117,7 @@ public class RobotExpData {
 		
 		double speed = dist / deltaTime;
 		
-		Logger.log("preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
+		Logger.logDbg("preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
 				+ ", deltaTime=" + deltaTime + ", speed=" + speed);
 		
 		return speed;
@@ -1404,12 +1404,12 @@ public class RobotExpData {
 	 */
 	public double getHeading(long timestamp) {
 		if (timestamp < getStartTime()) {
-			Logger.log("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
 			return getStartHeading();
 		}
 		
 		if (timestamp > getStopTime()) {
-			Logger.log("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
 			return getEndHeading();
 		}
 		
@@ -1430,7 +1430,7 @@ public class RobotExpData {
 			}
 		}
 		
-		Logger.log("timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		Logger.logDbg("timestamp = " + timestamp + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		if (beforeIndx == afterIndx)
 			return headings.get(beforeIndx).getHeading();

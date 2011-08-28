@@ -5,6 +5,7 @@ package pharoslabut.logger.analyzer;
 //import java.io.FilenameFilter;
 //import java.net.InetAddress;
 //import java.util.Enumeration;
+import java.text.DecimalFormat;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -24,6 +25,7 @@ import java.util.Vector;
 //import pharoslabut.beacon.WiFiBeacon;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.util.AverageStatistic;
 
 /**
  * Analyzes a node's experiment log file and computes connectivity statistics.
@@ -96,6 +98,7 @@ public class ExpConnectivityStats {
 		
 		calcStats();
 		printResults(saveToFile);
+		showChart();
 	}
 	
 	/**
@@ -142,10 +145,9 @@ public class ExpConnectivityStats {
 			
 			expConnStats.add(expConnStat);
 			
-			Logger.log("Number of partitions: " + expConnStat.numPartitions());
-			Logger.log("Partition size: " + expConnStat.avgPartitionSize());
-			Logger.log("Number disconnected: " + expConnStat.numDisconnected());
-			
+//			Logger.log("Number of partitions: " + expConnStat.numPartitions());
+//			Logger.log("Partition size: " + expConnStat.avgPartitionSize());
+//			Logger.log("Number disconnected: " + expConnStat.numDisconnected());
 		}
 	}
 	
@@ -207,26 +209,103 @@ public class ExpConnectivityStats {
 			flogger = new FileLogger(fileName, false);
 		}
 		
-//		log("Total Connections: " + totalConnections, flogger);
-//		log("Total Disconnections: " + totalDisconnections, flogger);
-//		log("Average Connection Duration: " + averageConnectionDuration, flogger);
-//		log("Average Neighbor List Size: " + averageNeighbors, flogger);
-//		log("Total Unique Neighbors: " + numUniqueNeighbors, flogger);
+		long expStartTime = expData.getExpStartTime();
+		
+		// Print a table that includes the statistics for each data sample
+		log("Time (ms)\tExperiment Time (ms)\tNumber of Partitions\tAvg. Partition Size\tNumber Disconnected Nodes\tRelative Mobility (m/s)", flogger);
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			log(currStat.getTimestamp() + "\t" + (currStat.getTimestamp() - expStartTime) + "\t" + currStat.getNumPartitions() 
+					+ "\t" + currStat.getAvgPartitionSize() + "\t" + currStat.getNumDisconnected() + "\t" + currStat.getRelativeMobility(), flogger);
+		}
+		
+		// Print the overall experiment statistics
+		log("Overall global statistics:", flogger);
+		log("Average Number of Partitions: " + getAverageNumberOfParitions(), flogger);
+		log("Average Parition Size: " + getAverageParitionSize(), flogger);
+		log("Average Number of Disconnected Nodes: " + getAverageDisconnectedNodes(), flogger);
+		log("Average Relative Mobility: " + getAverageRelativeMobility(), flogger);
 	}
+	
+	private void showChart() {
+		
+	}
+	
+	/**
+	 * @return the average number of partitions and its 95% confidence interval.
+	 */
+	public AverageStatistic getAverageNumberOfParitions() {
+		Vector<Double> partitionCount = new Vector<Double>();
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			double numPartitions = currStat.getNumPartitions();
+			partitionCount.add(numPartitions);
+		}
+		return new AverageStatistic(partitionCount);
+	}
+	
+	/**
+	 * @return the average partition size and its 95% confidence interval.
+	 */
+	public AverageStatistic getAverageParitionSize() {
+		Vector<Double> partitionSize = new Vector<Double>();
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			AverageStatistic numPartitions = currStat.getAvgPartitionSize();
+			partitionSize.add(numPartitions.getAverage());
+		}
+		return new AverageStatistic(partitionSize);
+	}
+	
+	/**
+	 * @return the average number of disconnected nodes and its 95% confidence interval.
+	 */
+	public AverageStatistic getAverageDisconnectedNodes() {
+		Vector<Double> disconnectedCount = new Vector<Double>();
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			double numPartitions = currStat.getNumDisconnected();
+			disconnectedCount.add(numPartitions);
+		}
+		return new AverageStatistic(disconnectedCount);
+	}
+	
+	/**
+	 * @return the average relative mobility and its 95% confidence interval.
+	 */
+	public AverageStatistic getAverageRelativeMobility() {
+		Vector<Double> relativeMobilities = new Vector<Double>();
+		for (int i=0; i < expConnStats.size(); i++) {
+			ExpConnStat currStat = expConnStats.get(i);
+			AverageStatistic rm = currStat.getRelativeMobility();
+			relativeMobilities.add(rm.getAverage());
+		}
+		return new AverageStatistic(relativeMobilities);
+	}
+	
+	
 	
 	/**
 	 * Contains the experiment connection statistics at a particular snapshot 
 	 * in time.
 	 */
 	private class ExpConnStat {
-		long timestamp;
-		Vector<Partition> partitions = new Vector<Partition>();
+		private long timestamp;
+		private Vector<Partition> partitions = new Vector<Partition>();
 		
 		/**
 		 * The constructor.
 		 */
 		public ExpConnStat(long timestamp) {
 			this.timestamp = timestamp;
+		}
+		
+		/**
+		 * 
+		 * @return The timestamp.
+		 */
+		public long getTimestamp() {
+			return timestamp;
 		}
 		
 		/**
@@ -257,7 +336,7 @@ public class ExpConnectivityStats {
 		/**
 		 * @return The number of partitions.
 		 */
-		public int numPartitions() {
+		public int getNumPartitions() {
 			return partitions.size();
 		}
 		
@@ -265,12 +344,15 @@ public class ExpConnectivityStats {
 		 * 
 		 * @return The average partition size.
 		 */
-		public double avgPartitionSize() {
-			double totalSize = 0;
+		public AverageStatistic getAvgPartitionSize() {
+			Vector<Double> partitionSizes = new Vector<Double>();
+			
 			for (int i=0; i < partitions.size(); i++) {
-				totalSize += partitions.get(i).size();
+				double partitionSize = partitions.get(i).size();
+				partitionSizes.add(partitionSize);
 			}
-			return totalSize / partitions.size();
+			
+			return new AverageStatistic(partitionSizes);
 		}
 		
 		/**
@@ -278,7 +360,7 @@ public class ExpConnectivityStats {
 		 * @return The number of disconnected nodes.  This is the number of partitions
 		 * consisting of only on node.
 		 */
-		public int numDisconnected() {
+		public int getNumDisconnected() {
 			int result = 0;
 			for (int i=0; i < partitions.size(); i++) {
 				if (partitions.get(i).size() == 1)
@@ -291,10 +373,31 @@ public class ExpConnectivityStats {
 		 * 
 		 * @return The sum of all the relative velocities between every pair of nodes.
 		 */
-		public double getRelativeMobility() {
-			double result = 0;
-			//TODO
+		public AverageStatistic getRelativeMobility() {
+			Vector<Double> relativeMobilities = new Vector<Double>();
 			
+			Vector<NodeState> allNodes = getAllNodes();
+			for (int i=0; i < allNodes.size() - 1; i++) {
+				NodeState referenceNode = allNodes.get(i);
+				
+				for (int j=i+1; j < allNodes.size(); j++) {
+					NodeState otherNode = allNodes.get(j);
+					double relativeSpeed = referenceNode.getRelativeSpeed(otherNode);
+					relativeMobilities.add(relativeSpeed);
+				}
+			}
+			
+			return new AverageStatistic(relativeMobilities);
+		}
+		
+		/**
+		 * @return  all nodes in the experiment
+		 */
+		private Vector<NodeState> getAllNodes() {
+			Vector<NodeState> result = new Vector<NodeState>();
+			for (int i=0; i < partitions.size(); i++) {
+				result.addAll(partitions.get(i).getNodes());
+			}
 			return result;
 		}
 	}
@@ -331,6 +434,14 @@ public class ExpConnectivityStats {
 			for (int i=0; i < nodes.size(); i++) {
 				addNode(nodes.get(i));
 			}
+		}
+		
+		/**
+		 * 
+		 * @return The nodes in this partition.
+		 */
+		public Vector<NodeState> getNodes() {
+			return nodeState;
 		}
 		
 		/**
@@ -390,8 +501,45 @@ public class ExpConnectivityStats {
 			return nbrList.contains(nodeID);
 		}
 		
+		/**
+		 * 
+		 * @return The ID of the node.
+		 */
 		public int getID() {
 			return nodeID;
+		}
+		
+		/**
+		 * Returns the change in latitude of the robot's motion.
+		 * This is analogous to the "Y" component of a vector.
+		 * 
+		 * @return The change in latitude of the robot's velocity.
+		 */
+		public double getLatitudeComponent() {
+			return speed * Math.cos(heading);
+		}
+		
+		/**
+		 * Returns the change in longitude of the robot's motion.
+		 * This is analogous to the "X" component of a vector.
+		 * 
+		 * @return The change in longitude of the robot's velocity.
+		 */
+		public double getLongitudeComponent() {
+			return speed * Math.sin(heading);
+		}
+		
+		/**
+		 * Returns the relative speed in m/s between this node and another node.
+		 * 
+		 * @param otherNode The other node with which to compare.
+		 * @return The relative speed between this node and the other node in meters per second.
+		 */
+		public double getRelativeSpeed(NodeState otherNode) {
+			double deltaLatitude = getLatitudeComponent() + otherNode.getLatitudeComponent();
+			double deltaLongitude = getLongitudeComponent() + otherNode.getLongitudeComponent();
+			double relativeSpeed = Math.sqrt(Math.pow(deltaLatitude, 2) + Math.pow(deltaLongitude, 2));
+			return relativeSpeed;
 		}
 	}
 	

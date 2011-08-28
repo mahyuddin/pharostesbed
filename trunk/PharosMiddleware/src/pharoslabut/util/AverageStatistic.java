@@ -1,5 +1,6 @@
 package pharoslabut.util;
 
+import java.text.DecimalFormat;
 import java.util.Vector;
 
 /**
@@ -17,6 +18,16 @@ public class AverageStatistic {
 	 * The 95% confidence interval.
 	 */
 	private double conf95;
+	
+	/**
+	 * The number of decimal places to print.
+	 */
+	private int numDecimalPlaces = 2;
+	
+	public AverageStatistic(double average, double conf95, int numDecimalPlaces) {
+		this(average, conf95);
+		this.numDecimalPlaces = numDecimalPlaces;
+	}
 	
 	public AverageStatistic(double average, double conf95) {
 		this.average = average;
@@ -37,6 +48,13 @@ public class AverageStatistic {
 	}
 	
 	public String toString() {
-		return average + " ± " + conf95;
+		String format = "#.";
+		for (int i=0; i < numDecimalPlaces; i++) {
+			format += "#";
+		}
+		
+		DecimalFormat df = new DecimalFormat(format);
+		
+		return df.format(average) + " ± " + df.format(conf95);
 	}
 }
