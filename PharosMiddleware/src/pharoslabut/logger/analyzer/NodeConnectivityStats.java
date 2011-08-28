@@ -121,20 +121,22 @@ public class NodeConnectivityStats {
 		// times a node is added to the neighbor list.
 		for (int i=0; i < rxEvents.size(); i++) {
 			
-			WiFiBeaconRx currBeacon = rxEvents.get(i);
+			WiFiBeaconRx currBeaconEvent = rxEvents.get(i);
 			
 			// First remove the disconnected nodes and update the list of connection durations.
-			Vector<Long> removedDurations = nbrList.clearDisconnected(currBeacon.getTimestamp());
+			Vector<Long> removedDurations = nbrList.clearDisconnected(currBeaconEvent.getTimestamp());
 			connectionDuration.addAll(removedDurations);
 			
-			// Next, add or update the beacon's sender in the list
-			if (nbrList.update(currBeacon)) {
-				totalConnections++;
+			// Next, if the beacon does not belong to the local robot,
+			// add or update the beacon's sender in the list
+			if (currBeaconEvent.getSenderID() != robotData.getRobotID()) {
+				if (nbrList.update(currBeaconEvent))
+					totalConnections++;
 			}
 		}
 		
 		// Determine the final state of the neighbor list at the end of the experiment.
-		Logger.log("Determining the final state of the neighbor list at the end of the experiment.");
+		Logger.logDbg("Determining the final state of the neighbor list at the end of the experiment.");
 		Vector<Long> removedDurations = nbrList.clearDisconnected(robotData.getStopTime());
 		connectionDuration.addAll(removedDurations);
 		
@@ -239,7 +241,7 @@ public class NodeConnectivityStats {
 				// If the neighbor is expired, remove it from the list.
 				if (currTime - currNbr.timeLastUpdated > disconnectionInterval) {
 					long duration = currNbr.timeLastUpdated + disconnectionInterval - currNbr.timeAdded;
-					Logger.log("Removing " + currNbr + ", connection duration = " + duration);
+					Logger.logDbg("Removing " + currNbr + ", connection duration = " + duration);
 					result.add(duration);
 					list.remove(i--);
 				}
@@ -262,7 +264,7 @@ public class NodeConnectivityStats {
 			for (int i=0; i < list.size(); i++) {
 				NbrListElement currNbr = list.get(i);
 				if (currNbr.ownsBeacon(beaconEvent)) {
-					Logger.log("Updating last received time of " + currNbr + " to be " + beaconEvent.getTimestamp());
+					Logger.logDbg("Updating last received time of " + currNbr + " to be " + beaconEvent.getTimestamp());
 					currNbr.timeLastUpdated = beaconEvent.getTimestamp();
 					found = true; // The neighbor was already in the list and will remain in the list.
 				}
@@ -271,7 +273,7 @@ public class NodeConnectivityStats {
 			// If the neighbor is not in the list, add it!
 			if (!found) {
 				NbrListElement newNbr = new NbrListElement(beaconEvent);
-				Logger.log("Adding " + newNbr);
+				Logger.logDbg("Adding " + newNbr);
 				list.add(newNbr);
 				updateUniqueList(newNbr, beaconEvent);
 				return true; // a new neighbor was added to the list

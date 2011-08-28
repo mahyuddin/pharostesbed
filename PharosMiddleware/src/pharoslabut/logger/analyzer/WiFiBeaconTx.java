@@ -1,5 +1,7 @@
 package pharoslabut.logger.analyzer;
 
+import pharoslabut.beacon.WiFiBeacon;
+
 /**
  * Records the transmission of a WiFi beacon.
  * 
@@ -8,34 +10,52 @@ package pharoslabut.logger.analyzer;
 public class WiFiBeaconTx {
 
 	private long timestamp;
-	private String IPaddress;
-	private int port;
-	private int seqno;
+	private WiFiBeacon beacon;
 	
-	public WiFiBeaconTx(String IPaddress, int port, int seqno, long timestamp) {
+	/**
+	 * The constructor.
+	 * 
+	 * @param IPaddress The IP address of the sender.
+	 * @param port The multicast port through which the beacon was sent.
+	 * @param seqno The sequence number of the beacon.
+	 * @param timestamp The timestamp of the transmission.
+	 */
+	public WiFiBeaconTx(WiFiBeacon beacon, long timestamp) {
+		this.beacon = beacon;
 		this.timestamp = timestamp;
-		this.port = port;
-		this.seqno = seqno;
-		this.timestamp = timestamp;
+		
 	}
 	
+	/**
+	 * 
+	 * @return the ID of the sender. 
+	 */
+	public int getSenderID() {
+		return beacon.getSenderID();
+	}
+	
+	/**
+	 * 
+	 * @return The timestamp of the transmission.
+	 */
 	public long getTimestamp() {
 		return timestamp;
 	}
 	
-	public String getIPAddress() {
-		return IPaddress;
+	/**
+	 * 
+	 * @return The IP address of the sender.
+	 */
+	public WiFiBeacon getBeacon() {
+		return beacon;
 	}
 	
-	public int getPort() {
-		return port;
-	}
-	
-	public int getSeqno() {
-		return seqno;
-	}
-	
-	public String toString() {
-		return getClass().getName() + ": " + IPaddress + ", port = " + port + ", seqno = " + seqno + ", timestamp = " + timestamp;
+	/**
+	 * Recalibrates the time based on the GPS timestamps.
+	 * 
+	 * @param calibrator The time calibrator.
+	 */
+	public void calibrateTime(TimeCalibrator calibrator) {
+		timestamp = calibrator.getCalibratedTime(timestamp);
 	}
 }

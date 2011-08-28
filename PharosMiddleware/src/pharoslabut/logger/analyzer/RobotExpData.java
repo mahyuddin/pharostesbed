@@ -3,6 +3,7 @@ package pharoslabut.logger.analyzer;
 import java.io.*;
 import java.util.*;
 
+import pharoslabut.beacon.WiFiBeacon;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
@@ -615,9 +616,9 @@ public class RobotExpData {
 				String[] tokens = broadcastLine.split("[\\(\\):, ]");
 				String ipAddress = tokens[2];
 				int port = Integer.valueOf(tokens[3]);
-				int seqno = Integer.valueOf(tokens[4]);
+				long seqno = Long.valueOf(tokens[4]);
 				
-				WiFiBeaconTx beaconTx = new WiFiBeaconTx(ipAddress, port, seqno, timestamp);
+				WiFiBeaconTx beaconTx = new WiFiBeaconTx(new WiFiBeacon(ipAddress, port, seqno), timestamp);
 				wifiBeaconTxs.add(beaconTx);
 				
 			}
@@ -634,9 +635,9 @@ public class RobotExpData {
 				String[] tokens = rcvLine.split("[\\(\\):, ]");
 				String ipAddress = tokens[2];
 				int port = Integer.valueOf(tokens[3]);
-				int seqno = Integer.valueOf(tokens[4]);
+				long seqno = Long.valueOf(tokens[4]);
 				
-				WiFiBeaconRx beaconRx = new WiFiBeaconRx(ipAddress, port, seqno, timestamp);
+				WiFiBeaconRx beaconRx = new WiFiBeaconRx(new WiFiBeacon(ipAddress, port, seqno), timestamp);
 				wifiBeaconRxs.add(beaconRx);
 			}
 
@@ -810,6 +811,30 @@ public class RobotExpData {
 		for (int i=0; i < motionCmds.size(); i++) {
 			motionCmds.get(i).calibrateTime(calibrator);
 		}
+		
+		for (int i=0; i < wifiBeaconRxs.size(); i++) {
+			wifiBeaconRxs.get(i).calibrateTime(calibrator);
+		}
+		
+		for (int i=0; i < wifiBeaconTxs.size(); i++) {
+			wifiBeaconTxs.get(i).calibrateTime(calibrator);
+		}
+	}
+	
+	/**
+	 * 
+	 * @return The beacon reception events.
+	 */
+	public Vector<WiFiBeaconRx> getWiFiBeaconRxs() {
+		return wifiBeaconRxs;
+	}
+	
+	/**
+	 * 
+	 * @return The beacon transmission events.
+	 */
+	public Vector<WiFiBeaconTx> getWiFiBeaconTxs() {
+		return wifiBeaconTxs;
 	}
 	
 	/**
