@@ -56,21 +56,22 @@ public class Stats {
 	}
 	
 	/**
+	 * Calculates the sample standard deviation of a population.
 	 * 
-	 * @param v A vector of doubles.
+	 * @param population The population over which to calculate the sample standard deviation.
 	 * @return The population standard deviation.
 	 */
-	public static double getSampleStdDev(Vector<Double> v) {
-		double avg = getAvg(v);
+	public static double getSampleStdDev(Vector<Double> population) {
+		double avg = getAvg(population);
 		
 		double diffSqrd = 0;
-		Enumeration<Double> e = v.elements();
+		Enumeration<Double> e = population.elements();
 		while (e.hasMoreElements()) {
 			double currVal = e.nextElement();
 			diffSqrd += Math.pow(currVal - avg, 2);
 		}
 		
-		return Math.sqrt(diffSqrd/(v.size()-1));
+		return Math.sqrt(diffSqrd/(population.size()-1));
 	}
 	
 	/**
@@ -82,5 +83,15 @@ public class Stats {
 	 */
 	public static double getConf95(double stdev, int popSize) {
 		return stdev / Math.sqrt(popSize) * 1.96;	
+	}
+	
+	/**
+	 * Calculates the 95% confidence interval of a population.
+	 * 
+	 * @param population The population over which to calculate the 95% confidence interval.
+	 * @return The 95% confidence interval.
+	 */
+	public static double getConf95(Vector<Double> population) {
+		return getConf95(getSampleStdDev(population), population.size());
 	}
 }
