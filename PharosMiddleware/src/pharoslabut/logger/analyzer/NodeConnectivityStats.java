@@ -175,162 +175,20 @@ public class NodeConnectivityStats {
 	 * @return The size of the neighbor list at the specified time.
 	 */
 	private int getNbrListSize(long currTime) {
-		Vector<WiFiBeaconRx> rxEvents = robotData.getWiFiBeaconRxs();
-		NbrList list = new NbrList(disconnectionInterval);
+		NbrList nbrList = NbrList.getNbrList(robotData, currTime, disconnectionInterval);
+//		
+//		Vector<WiFiBeaconRx> rxEvents = robotData.getWiFiBeaconRxs();
+//		NbrList list = new NbrList(disconnectionInterval);
+//		
+//		for (int i=0; i < rxEvents.size(); i++) {
+//			WiFiBeaconRx currRxEvent = rxEvents.get(i);
+//			if (currRxEvent.getTimestamp() < currTime)
+//				list.update(currRxEvent);
+//		}
+//		
+//		list.clearDisconnected(currTime);
 		
-		for (int i=0; i < rxEvents.size(); i++) {
-			WiFiBeaconRx currRxEvent = rxEvents.get(i);
-			if (currRxEvent.getTimestamp() < currTime)
-				list.update(currRxEvent);
-		}
-		
-		list.clearDisconnected(currTime);
-		
-		return list.size();
-	}
-	
-	private class NbrList {
-		
-		/**
-		 * The internal representation of the neighbor list.
-		 */
-		private Vector<NbrListElement> list = new Vector<NbrListElement>();
-		
-		/**
-		 * The disconnection interval in milliseconds.
-		 */
-		private long disconnectionInterval;
-		
-		/**
-		 * Maintain a list of unique neighbors ever added to the neighbor list.  
-		 * This is used to calculate the number of unique neighbors ever encountered by this node.
-		 */
-		private Vector<NbrListElement> uniqueNbrs = new Vector<NbrListElement>();
-		
-		/**
-		 * The constructor.
-		 * 
-		 * @param disconnectionInterval The expiration interval for removing disconnected neighbors.
-		 */
-		public NbrList(long disconnectionInterval) {
-			this.disconnectionInterval = disconnectionInterval;
-		}
-		
-		/**
-		 * 
-		 * @return The number of unique neighbors encountered by this robot
-		 * during this experiment.
-		 */
-		public int numUniqueNbrs() {
-			return uniqueNbrs.size();
-		}
-		
-		/**
-		 * 
-		 * @return The number of neighbors in the neighbor list.
-		 */
-		public int size() {
-			return list.size();
-		}
-		
-		/**
-		 * Removes all expired elements.
-		 * 
-		 * @param currTime The current time.
-		 * @return A list of durations that removed neighbors resided in the list.
-		 */
-		public Vector<Long> clearDisconnected(long currTime) {
-			Vector<Long> result = new Vector<Long>();
-			
-			// For each neighbor in the neighbor list.
-			for (int i=0; i < list.size(); i++) {
-				NbrListElement currNbr = list.get(i);
-				
-				// If the neighbor is expired, remove it from the list.
-				if (currTime - currNbr.timeLastUpdated > disconnectionInterval) {
-					long duration = currNbr.timeLastUpdated + disconnectionInterval - currNbr.timeAdded;
-					Logger.logDbg("Removing " + currNbr + ", connection duration = " + duration);
-					result.add(duration);
-					list.remove(i--);
-				}
-			}
-			
-			return result;
-		}
-		
-		/**
-		 * Updates the last update time of a neighbor, or adds the neighbor to the 
-		 * neighbor list if it does not exist.
-		 * 
-		 * @param beaconEvent The beacon event.
-		 * @return true if a new neighbor was added to the list
-		 */
-		public boolean update(WiFiBeaconRx beaconEvent) {
-			boolean found = false;
-			
-			// For each neighbor in the neighbor list.
-			for (int i=0; i < list.size(); i++) {
-				NbrListElement currNbr = list.get(i);
-				if (currNbr.ownsBeacon(beaconEvent)) {
-//					Logger.logDbg("Updating last received time of " + currNbr + " to be " + beaconEvent.getTimestamp());
-					currNbr.timeLastUpdated = beaconEvent.getTimestamp();
-					found = true; // The neighbor was already in the list and will remain in the list.
-				}
-			}
-			
-			// If the neighbor is not in the list, add it!
-			if (!found) {
-				NbrListElement newNbr = new NbrListElement(beaconEvent);
-				Logger.logDbg("Adding " + newNbr);
-				list.add(newNbr);
-				updateUniqueList(newNbr, beaconEvent);
-				return true; // a new neighbor was added to the list
-			} else
-				return false; // no new neighbor was added to the list
-		}
-		
-		/**
-		 * Adds the specified neighbor to the uniqueNbrs vector if it does not
-		 * already exist in this vector.
-		 * 
-		 * @param nbr The neighbor to add.
-		 * @param the beacon event that the neighbor sent.
-		 */
-		private void updateUniqueList(NbrListElement nbr, WiFiBeaconRx beaconEvent) {
-			boolean exists = false;
-			
-			for (int i=0; i < uniqueNbrs.size(); i++) {
-				NbrListElement currNbr = uniqueNbrs.get(i);
-				if (currNbr.ownsBeacon(beaconEvent))
-					exists = true;
-			}
-			
-			if (!exists)
-				uniqueNbrs.add(nbr);
-		}
-	}
-	
-	private class NbrListElement {
-		long timeAdded;
-		long timeLastUpdated;
-		InetAddress ipAddress;
-		int port;
-		
-		public NbrListElement(WiFiBeaconRx beacon) {
-			this.ipAddress = beacon.getBeacon().getAddress();
-			this.port = beacon.getBeacon().getPort();
-			this.timeAdded = beacon.getTimestamp();
-			this.timeLastUpdated = beacon.getTimestamp(); // initially the last updated time is the current time
-		}
-		
-		public boolean ownsBeacon(WiFiBeaconRx beacon) {
-			return beacon.getBeacon().getAddress().equals(ipAddress) 
-				&& beacon.getBeacon().getPort() == port;
-		}
-		
-		public String toString() {
-			return ipAddress + ":" + port;
-		}
+		return nbrList.size();
 	}
 	
 	private void printResults(boolean saveToFile) {
