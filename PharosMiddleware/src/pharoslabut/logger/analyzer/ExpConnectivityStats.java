@@ -28,6 +28,7 @@ import org.jfree.ui.RefineryUtilities;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.navigate.Location;
 import pharoslabut.util.AverageStatistic;
 
 /**
@@ -123,7 +124,7 @@ public class ExpConnectivityStats {
 				RobotExpData robotData = e.nextElement();
 				NbrList nbrList = NbrList.getNbrList(robotData, currTime, disconnectionInterval);
 				NodeState currNodeState = new NodeState(robotData.getRobotID(), nbrList, 
-						robotData.getSpeed(currTime), robotData.getHeading(currTime));
+						robotData.getSpeed(currTime), robotData.getHeading(currTime), robotData.getLocation(currTime));
 				nodeStates.add(currNodeState);
 			}
 			
@@ -215,11 +216,12 @@ public class ExpConnectivityStats {
 		long expStartTime = expData.getExpStartTime();
 		
 		// Print a table that includes the statistics for each data sample
-		log("Time (ms)\tExperiment Time (ms)\tNumber of Partitions\tAvg. Partition Size\tNumber Disconnected Nodes\tRelative Mobility (m/s)", flogger);
+		log("Time (ms)\tExperiment Time (ms)\tNumber of Partitions\tAvg. Partition Size\tNumber Disconnected Nodes\tRelative Mobility (m/s)\tSeparation Distance (m)", flogger);
 		for (int i=0; i < expConnStats.size(); i++) {
 			ExpConnStat currStat = expConnStats.get(i);
 			log(currStat.getTimestamp() + "\t" + (currStat.getTimestamp() - expStartTime) + "\t" + currStat.getNumPartitions() 
-					+ "\t" + currStat.getAvgPartitionSize() + "\t" + currStat.getNumDisconnected() + "\t" + currStat.getRelativeMobility(), flogger);
+					+ "\t" + currStat.getAvgPartitionSize() + "\t" + currStat.getNumDisconnected() + "\t" + currStat.getRelativeMobility()
+					+ "\t" + currStat.getSeparationDistance(), flogger);
 		}
 		
 		// Print the overall experiment statistics
@@ -239,6 +241,7 @@ public class ExpConnectivityStats {
 		XYIntervalSeries avgPartitionSizeSeries = new XYIntervalSeries("Average partition size");
 		XYSeries numDisconnectedSeries = new XYSeries("Number of disconnected nodes");
 		XYIntervalSeries relativeMobilitySeries = new XYIntervalSeries("Relative mobility");
+		XYIntervalSeries separationDistanceSeries = new XYIntervalSeries("Separation Distance");
 
 		long expStartTime = expData.getExpStartTime();
 		
@@ -258,6 +261,10 @@ public class ExpConnectivityStats {
 			double avgRelMobility = currStat.getRelativeMobility().getAverage();
 			double avgRelMobilityConf95 = currStat.getRelativeMobility().getConf95();
 			relativeMobilitySeries.add(currTime, currTime, currTime, avgRelMobility, avgRelMobility - avgRelMobilityConf95, avgRelMobility + avgRelMobilityConf95);
+			
+			double avgSepDist = currStat.getSeparationDistance().getAverage();
+			double avgSepDistConf95 = currStat.getSeparationDistance().getConf95();
+			separationDistanceSeries.add(currTime, currTime, currTime, avgSepDist, avgSepDist - avgSepDistConf95, avgSepDist + avgSepDistConf95);
 		}
 
 		// Create data sets for each series
@@ -273,13 +280,16 @@ public class ExpConnectivityStats {
 		XYIntervalSeriesCollection relativeMobilityDataSet = new XYIntervalSeriesCollection();
 		relativeMobilityDataSet.addSeries(relativeMobilitySeries);
 		
+		XYIntervalSeriesCollection separationDistDataSet = new XYIntervalSeriesCollection();
+		separationDistDataSet.addSeries(separationDistanceSeries);
+		
 		
 		// Create the charts
 		JFreeChart numPartitionChart = ChartFactory.createXYLineChart(
 				"Number of Partitions vs. Time",                       // chart title
 				"Time (s)",                                            // x axis label
 				"Num. Partitions",                                     // y axis label
-				numPartitionDataSet,                                   // the heading data
+				numPartitionDataSet,                                   // the number of partitions data
 				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
 				false,                                                 // include legend
 				true,                                                  // tooltips
@@ -290,7 +300,7 @@ public class ExpConnectivityStats {
 				"Avg. Partition Size vs. Time",                        // chart title
 				"Time (s)",                                            // x axis label
 				"Avg. Parition Size",                                  // y axis label
-				avgPartitionSizeDataSet,                               // the heading data
+				avgPartitionSizeDataSet,                               // the partition size data
 				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
 				false,                                                 // include legend
 				true,                                                  // tooltips
@@ -301,7 +311,7 @@ public class ExpConnectivityStats {
 				"Number of Disconnected Nodes vs. Time",               // chart title
 				"Time (s)",                                            // x axis label
 				"Num. Disconnected Nodes",                             // y axis label
-				numDisconnectedDataSet,                                // the heading data
+				numDisconnectedDataSet,                                // the disconnected data
 				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
 				false,                                                 // include legend
 				true,                                                  // tooltips
@@ -311,8 +321,19 @@ public class ExpConnectivityStats {
 		JFreeChart relativeMobilityChart = ChartFactory.createXYLineChart(
 				"Relative Mobility vs. Time",                          // chart title
 				"Time (s)",                                            // x axis label
-				"Rel. Mobility (m/s)",                             // y axis label
-				relativeMobilityDataSet,                               // the heading data
+				"Rel. Mobility (m/s)",                                 // y axis label
+				relativeMobilityDataSet,                               // the relative mobility data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+		
+		JFreeChart separationDistChart = ChartFactory.createXYLineChart(
+				"Separation Distance vs. Time",                        // chart title
+				"Time (s)",                                            // x axis label
+				"Separation Distance (m)",                             // y axis label
+				separationDistDataSet,                                 // the separation distance data
 				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
 				false,                                                 // include legend
 				true,                                                  // tooltips
@@ -330,6 +351,7 @@ public class ExpConnectivityStats {
 		avgPartitionSizeChart.setBackgroundPaint(Color.white);
 		numDisconnectedChart.setBackgroundPaint(Color.white);
 		relativeMobilityChart.setBackgroundPaint(Color.white);
+		separationDistChart.setBackgroundPaint(Color.white);
         
         // Configure when to display lines an when to display the shapes that indicate data points
         XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
@@ -351,17 +373,20 @@ public class ExpConnectivityStats {
         XYErrorRenderer xyerrorrenderer = new XYErrorRenderer();
         xyerrorrenderer.setSeriesLinesVisible(0, true); // display the heading as a line
         xyerrorrenderer.setSeriesShapesVisible(0, false);
-        xyerrorrenderer.setDrawXError(false);
+        xyerrorrenderer.setDrawXError(false); // draw only Y error bars
         xyerrorrenderer.setDrawYError(true);
         
         final XYPlot numPartitionPlot = numPartitionChart.getXYPlot();
         final XYPlot avgPartitionSizePlot = avgPartitionSizeChart.getXYPlot();
         final XYPlot numDisconnectedPlot = numDisconnectedChart.getXYPlot();
 		final XYPlot relativeMobilityPlot = relativeMobilityChart.getXYPlot();
+		final XYPlot separationDistPlot = separationDistChart.getXYPlot();
+		
         numPartitionPlot.setRenderer(0, renderer1);
         avgPartitionSizePlot.setRenderer(0, xyerrorrenderer);
         numDisconnectedPlot.setRenderer(0, renderer1);
         relativeMobilityPlot.setRenderer(0, xyerrorrenderer);
+        separationDistPlot.setRenderer(0, xyerrorrenderer);
         
 //        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
 //        renderer2.setSeriesLinesVisible(0, true); // display the speed as a line
@@ -387,18 +412,21 @@ public class ExpConnectivityStats {
         ChartPanel avgPartitionSizeChartPanel = new ChartPanel(avgPartitionSizeChart);
         ChartPanel numDisconnectedChartPanel = new ChartPanel(numDisconnectedChart);
         ChartPanel relativeMobilityChartPanel = new ChartPanel(relativeMobilityChart);
+        ChartPanel separationDistChartPanel = new ChartPanel(separationDistChart);
         
         numPartitionChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
         avgPartitionSizeChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
         numDisconnectedChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
         relativeMobilityChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
-       
+        separationDistChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+        
         // Place both chart panels within a single panel with two rows.
-        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(4,1));
+        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(5,1));
         chartsPanel.add(numPartitionChartPanel);
         chartsPanel.add(avgPartitionSizeChartPanel);
         chartsPanel.add(numDisconnectedChartPanel);
         chartsPanel.add(relativeMobilityChartPanel);
+        chartsPanel.add(separationDistChartPanel);
        
         // Create a frame for the chart, then display it.
         ApplicationFrame appFrame = new ApplicationFrame("Network Partition and Node Mobility Statistics for " + expData.getMissionName() + " " + expData.getExpName());
@@ -548,7 +576,7 @@ public class ExpConnectivityStats {
 		
 		/**
 		 * 
-		 * @return The sum of all the relative velocities between every pair of nodes.
+		 * @return The average relative velocities between every pair of nodes.
 		 */
 		public AverageStatistic getRelativeMobility() {
 			Vector<Double> relativeMobilities = new Vector<Double>();
@@ -565,6 +593,27 @@ public class ExpConnectivityStats {
 			}
 			
 			return new AverageStatistic(relativeMobilities);
+		}
+		
+		/**
+		 * 
+		 * @return The average distances between every pair of nodes.
+		 */
+		public AverageStatistic getSeparationDistance() {
+			Vector<Double> relativeDistances = new Vector<Double>();
+			
+			Vector<NodeState> allNodes = getAllNodes();
+			for (int i=0; i < allNodes.size() - 1; i++) {
+				NodeState referenceNode = allNodes.get(i);
+				
+				for (int j=i+1; j < allNodes.size(); j++) {
+					NodeState otherNode = allNodes.get(j);
+					double relativeDist = referenceNode.getRelativeDistance(otherNode);
+					relativeDistances.add(relativeDist);
+				}
+			}
+			
+			return new AverageStatistic(relativeDistances);
 		}
 		
 		/**
@@ -649,6 +698,7 @@ public class ExpConnectivityStats {
 		private int nodeID;
 		private NbrList nbrList;
 		private double speed, heading;
+		private Location location;
 		
 		/**
 		 * The constructor.
@@ -656,12 +706,14 @@ public class ExpConnectivityStats {
 		 * @param nodeID The ID of the node.
 		 * @param speed The speed at which the node is moving in meters per second.
 		 * @param heading The heading of the node in radians (-PI to PI with 0 degrees due north and -PI/2 due East)
+		 * @param location The location of the robot.
 		 */
-		public NodeState(int nodeID, NbrList nbrList, double speed, double heading) {
+		public NodeState(int nodeID, NbrList nbrList, double speed, double heading, Location location) {
 			this.nodeID = nodeID;
 			this.nbrList = nbrList;
 			this.speed = speed;
 			this.heading = heading;
+			this.location = location;
 		}
 		
 //		public NbrList getNbrList() {
@@ -707,6 +759,14 @@ public class ExpConnectivityStats {
 		}
 		
 		/**
+		 * 
+		 * @return The location of this node.
+		 */
+		public Location getLocation() {
+			return location;
+		}
+		
+		/**
 		 * Returns the relative speed in m/s between this node and another node.
 		 * 
 		 * @param otherNode The other node with which to compare.
@@ -717,6 +777,16 @@ public class ExpConnectivityStats {
 			double deltaLongitude = getLongitudeComponent() + otherNode.getLongitudeComponent();
 			double relativeSpeed = Math.sqrt(Math.pow(deltaLatitude, 2) + Math.pow(deltaLongitude, 2));
 			return relativeSpeed;
+		}
+		
+		/**
+		 * Returns the distance between this node and another node.
+		 * 
+		 * @param otherNode The other node with which to compare.
+		 * @return The distance between this node and the other node in meters per second.
+		 */
+		public double getRelativeDistance(NodeState otherNode) {
+			return location.distanceTo(otherNode.getLocation());
 		}
 	}
 	
