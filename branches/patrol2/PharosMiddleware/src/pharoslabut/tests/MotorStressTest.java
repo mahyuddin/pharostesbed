@@ -11,7 +11,8 @@ import playerclient3.structures.*;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 
 /**
- * Stresses the motor of the Proteus robot by sending it a velocity step function.
+ * Stresses the motor of the Proteus robot by making it move at varying speeds.
+ * It initially starts slowly but ramps up the speed to the max speed.
  * 
  * @author Chien-Liang Fok
  */
@@ -25,20 +26,22 @@ public class MotorStressTest implements Position2DListener {
 	 * @param serverPort The port on which the robot is listening.
 	 * @param mobilityPlane The type of mobility plane being used.
 	 * @param testStartDelay The number of seconds to wait before starting the test.
-	 * @param speed The speed in m/s at which to move.
+	 * @param maxSpeed The maximum speed in m/s at which to move.
+	 * @param minSpeed The minimum speed in m/s at which to move.
+	 * @param speedStep The steps in which to incrementally increase the speed being tested.
 	 * @param duration The duration in milliseconds to move.
 	 * @param heading The heading in which to turn in radians.
 	 */
 	public MotorStressTest(String serverIP, int serverPort,
 			MotionArbiter.MotionType mobilityPlane, int testStartDelay,
-			double speed, int duration, double heading) 
+			double minSpeed, double maxSpeed, double speedStep, int duration, double heading) 
 	{
 		
 		try {
 			Logger.logDbg("Connecting to server " + serverIP + ":" + serverPort);
 			client = new PlayerClient(serverIP, serverPort);
 		} catch(PlayerException e) {
-			Logger.logErr("ERROR: Could not connect to player server: ");
+			Logger.logErr("Could not connect to player server: ");
 			Logger.logErr("    [ " + e.toString() + " ]");
 			System.exit (1);
 		}
@@ -46,7 +49,7 @@ public class MotorStressTest implements Position2DListener {
 		Logger.logDbg("Subscribing to motor interface and creating motion arbiter");
 		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (motors == null) {
-			Logger.logErr("ERROR: motors is null");
+			Logger.logErr("Motors is null");
 			System.exit(1);
 		} else {
 			// subscribe to MCU debug messages
@@ -56,7 +59,12 @@ public class MotorStressTest implements Position2DListener {
 		}
 		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
 		
-		Logger.logDbg("Starting motor stress test in " + testStartDelay + " seconds ...");
+		MotionTask currTask;
+		
+//		Logger.log("Stopping the motor.");
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		
+		Logger.log("Starting motor stress test in " + testStartDelay + " seconds ...");
 		while (testStartDelay-- > 0) {
 			synchronized(this) { 
 				try {
@@ -68,40 +76,38 @@ public class MotorStressTest implements Position2DListener {
 			if (testStartDelay > 0) Logger.log(testStartDelay + "...");
 		}
 		
-		MotionTask currTask;
 		
-		currTask = new MotionTask(Priority.SECOND, speed, heading);
-		Logger.log("Submitting motion task: " + currTask);
-		motionArbiter.submitTask(currTask);
-		pause(duration);
-		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-		Logger.log("Submitting motion task: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
-		Logger.log("Pausing 5s before moving in reverse...");
-		pause(5000);
-		
-		currTask = new MotionTask(Priority.SECOND, -1 * speed, heading);
-		Logger.log("Submitting motion task: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
-		pause(duration);
+		Logger.log("Performing motor stress test in forward direction.");
+		for (double currSpeed = minSpeed; currSpeed <= maxSpeed; currSpeed += speedStep) {
+			currTask = new MotionTask(Priority.SECOND, currSpeed, heading);
+			Logger.log("Moving the robot at " + currSpeed + "m/s with heading " + heading + " for " + duration + "ms.");
+			motionArbiter.submitTask(currTask);
+			pause(duration);
+			
+//			currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+//			Logger.log("Stopping the robot.");
+//			motionArbiter.submitTask(currTask);
+//			pause(3000);
+		}
 		
 		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-		Logger.log("Submitting motion task: " + currTask);
-		motionArbiter.submitTask(currTask);
-		
-		/*currTask = new MotionTask(Priority.SECOND, -speedStep, 0);
-		log("Submitting: " + currTask);
+		Logger.log("Stopping the robot before testing reverse direction.");
 		motionArbiter.submitTask(currTask);
 		pause(3000);
 		
-		// Stop the robot
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_VELOCITY, MotionTask.STOP_HEADING);
-		log("Submitting: " + currTask);
-		motionArbiter.submitTask(currTask);*/
+		Logger.log("Performing motor stress test in reverse direction.");
+		for (double currSpeed = minSpeed; currSpeed <= maxSpeed; currSpeed += speedStep) {
+			currTask = new MotionTask(Priority.SECOND, -1*currSpeed, heading);
+			Logger.log("Moving the robot at " + (-1*currSpeed) + "m/s with heading " + heading + " for " + duration + "ms.");
+			motionArbiter.submitTask(currTask);
+			pause(duration);
+		}
 		
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		Logger.log("Stopping the robot.");
+		motionArbiter.submitTask(currTask);
+//		pause(3000);
+
 		Logger.log("Test complete!");
 		System.exit(0);
 	}
@@ -144,8 +150,10 @@ public class MotorStressTest implements Position2DListener {
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
 		System.err.println("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		System.err.println("\t-testStartDelay <delay in seconds>: The number of seconds to wait before starting the test (default 4)");
-		System.err.println("\t-speed: the speed at which to move the robot in m/s (default 2)");
-		System.err.println("\t-duration: how long to move the robot in milliseconds (default 2000)");
+		System.err.println("\t-minSpeed: the minimum speed at which to move the robot in m/s (default 0.5)");
+		System.err.println("\t-maxSpeed: the maximum speed at which to move the robot in m/s (default 3.5)");
+		System.err.println("\t-speedStep: The steps in which to incrementally increase the speed being tested. (default 0.5)");
+		System.err.println("\t-duration: how long to move the robot at each speed in milliseconds (default 5000)");
 		System.err.println("\t-heading: the heading in which to turn (default 0)");
 	}
 	
@@ -153,8 +161,10 @@ public class MotorStressTest implements Position2DListener {
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		int testStartDelay = 4;
-		double speed = 2;
-		int duration = 2000;
+		double minSpeed = 0.5;
+		double maxSpeed = 3.5;
+		double speedStep = 0.5;
+		int duration = 5000;
 		double heading = 0;
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
@@ -186,8 +196,8 @@ public class MotorStressTest implements Position2DListener {
 						System.exit(1);
 					}
 				}
-				else if (args[i].equals("-speed")) {
-					speed = Double.valueOf(args[++i]);
+				else if (args[i].equals("-maxSpeed")) {
+					maxSpeed = Double.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-duration")) {
 					duration = Integer.valueOf(args[++i]);
@@ -210,10 +220,12 @@ public class MotorStressTest implements Position2DListener {
 		System.out.println("Server port: " + serverPort);
 		System.out.println("Mobility Plane: " + mobilityPlane);
 		System.out.println("Test start delay: " + testStartDelay);
-		System.out.println("Speed: " + speed);
+		System.out.println("Min Speed: " + minSpeed);
+		System.out.println("Max Speed: " + maxSpeed);
+		System.out.println("Speed step: " + speedStep);
 		System.out.println("Duration: " + duration);
 		System.out.println("Heading: " + heading);
 		
-		new MotorStressTest(serverIP, serverPort, mobilityPlane, testStartDelay, speed, duration, heading);
+		new MotorStressTest(serverIP, serverPort, mobilityPlane, testStartDelay, minSpeed, maxSpeed, speedStep, duration, heading);
 	}
 }

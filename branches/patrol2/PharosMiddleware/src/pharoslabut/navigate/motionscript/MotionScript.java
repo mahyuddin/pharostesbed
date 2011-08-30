@@ -126,8 +126,13 @@ public class MotionScript implements java.io.Serializable {
 								double latitude = Double.valueOf(elem[1]);
 								double longitude = Double.valueOf(elem[2]);
 								double speed = Double.valueOf(elem[3]);
+								String waypointName;
+								if (elem.length > 4)
+									waypointName = elem[4];
+								else 
+									waypointName = "";
 								Location dest = new Location(latitude, longitude);
-								instructions.add(new Move(dest, speed));
+								instructions.add(new Move(dest, speed, waypointName));
 							}
 							else if (line.contains("PAUSE")) {
 								String[] elem = line.split("[\\s]+");

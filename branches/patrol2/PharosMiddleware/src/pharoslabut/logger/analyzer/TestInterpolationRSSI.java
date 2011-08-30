@@ -4,6 +4,7 @@ import java.util.*;
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 
 /**
  * Evaluates the accuracy of the RSSI interpolation.
@@ -48,7 +49,8 @@ public class TestInterpolationRSSI {
 		
 		this.flogger = new FileLogger("TestInterpolationRSSI-" + rcvrName + "-" + sndrName + ".txt", false);
 		
-		rcvrData.setFileLogger(flogger);
+		Logger.setFileLogger(flogger);
+//		rcvrData.setFileLogger(flogger);
 		
 		log("Actual RSSI of beacons received by " + rcvrData.getRobotName() + " from " + sndrData.getRobotName() + ":");
 

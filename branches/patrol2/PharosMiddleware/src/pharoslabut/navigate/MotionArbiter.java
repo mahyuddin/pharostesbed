@@ -116,17 +116,17 @@ public class MotionArbiter implements Runnable {
 		if (currTask != null) {
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
-				Logger.log("Accepting task " + currTask);
+				Logger.logDbg("Accepting task " + currTask);
 				notifyAll();
 				result = true;
 			} else {
-				Logger.log("Discarding task (" + mt + ") since higher priority task (" + currTask + ") is running.");
+				Logger.logDbg("Discarding task (" + mt + ") since higher priority task (" + currTask + ") is running.");
 			}
 		} else {
 			
 			// Always accept the task if there is no current task being executed.
 			currTask = mt;
-			Logger.log("Accepting task " + currTask);
+			Logger.logDbg("Accepting task " + currTask);
 			notifyAll();
 			result = true;
 		}
@@ -179,7 +179,7 @@ public class MotionArbiter implements Runnable {
 	 * @param heading The angle in which to turn.
 	 */
 	private void sendMotionCmd(double speed, double heading) {
-		Logger.log("Sending motion command velocity=" + speed + ", heading=" + heading);
+		Logger.logDbg("Sending motion command velocity=" + speed + ", heading=" + heading);
 		
 		if (motionType == MotionType.MOTION_TRAXXAS) {
 			motors.setCarCMD(speed, heading);
@@ -222,7 +222,7 @@ public class MotionArbiter implements Runnable {
 				// No point in repeatedly sending a stop motion command
 				// (The robot will by default stop when no command is received)
 				if (motionTask.isStop()) {
-					Logger.log("MotionTask is stop, resorting to initial state");
+					Logger.logDbg("MotionTask is stop, resorting to initial state");
 					currTask = null;
 				}
 			} else {
