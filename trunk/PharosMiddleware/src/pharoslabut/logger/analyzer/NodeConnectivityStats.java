@@ -1,9 +1,27 @@
 package pharoslabut.logger.analyzer;
 
 //import java.awt.Color;
-import java.net.InetAddress;
+import java.awt.Color;
+import java.io.File;
+//import java.io.IOException;
+//import java.net.InetAddress;
 //import java.util.Enumeration;
+import java.util.Enumeration;
 import java.util.Vector;
+
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+//import org.jfree.chart.renderer.xy.XYErrorRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+//import org.jfree.data.xy.XYIntervalSeries;
+//import org.jfree.data.xy.XYIntervalSeriesCollection;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.ApplicationFrame;
+import org.jfree.ui.RefineryUtilities;
 
 //import org.jfree.chart.ChartFactory;
 //import org.jfree.chart.ChartPanel;
@@ -21,6 +39,7 @@ import java.util.Vector;
 //import pharoslabut.beacon.WiFiBeacon;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.util.AverageStatistic;
 
 /**
  * Analyzes a node's experiment log file and computes connectivity statistics.
@@ -41,6 +60,8 @@ public class NodeConnectivityStats {
 	
 	private RobotExpData robotData;
 	
+	private ExpData expData;
+	
 	/**
 	 * The total number of times a node is added to the neighbor list.
 	 */
@@ -54,14 +75,16 @@ public class NodeConnectivityStats {
 	/**
 	 * The average time a node remains in the neighbor list.
 	 */
-	private double averageConnectionDuration;
+	private AverageStatistic averageConnectionDuration;
 	
 	/**
 	 * The average size of the neighbor list.
 	 * This is the average of the instantaneous size of the neighbor list
 	 * at every sampling interval.
 	 */
-	private double averageNeighbors;
+	private AverageStatistic averageNeighbors;
+	
+	private Vector<NeighborListState> nbrListStates = new Vector<NeighborListState>();
 	
 	/**
 	 * The total number of unique nodes ever added to the neighbor list.
@@ -94,8 +117,16 @@ public class NodeConnectivityStats {
 		this.disconnectionInterval = disconnectionInterval;
 		robotData = new RobotExpData(logFileName);
 		
+		// Get the experiment info.  This is needed to get the start time of the experiment.
+		File f = new File(logFileName);
+		String path = f.getAbsolutePath();
+		path = path.substring(0, path.lastIndexOf('/'));
+		expData = new ExpData(path);
+		
 		calcStats();
 		printResults(saveToFile);
+		
+		showChart();
 	}
 	
 	private void calcStats() {
@@ -148,24 +179,25 @@ public class NodeConnectivityStats {
 		totalDisconnections += removedDurations.size();
 		
 		// Calculate the average connection duration
-		long totalConnDur = 0;
-		for (int i=0; i < connectionDuration.size(); i++) {
-			totalConnDur += connectionDuration.get(i);
+		Vector<Double> tempVec = new Vector<Double>();
+		Enumeration<Long> e = connectionDuration.elements(); // Convert the connection duration vector into a vector of doubles.
+		while (e.hasMoreElements()) {
+			tempVec.add((double)e.nextElement());
 		}
-		averageConnectionDuration = totalConnDur / (double)connectionDuration.size();
+		averageConnectionDuration = new AverageStatistic(tempVec);
 		
 		// Calculate the number of unique neighbors
 		numUniqueNeighbors = nbrList.numUniqueNbrs();
 		
 		// Calculate the average size of the neighbor list.
 		Logger.logDbg("Calculating the average size of the neighbor list.");
-		long totalNbrListSize = 0;
-		int countNbrListSize = 0;
-		for (long currTime = robotData.getStartTime(); currTime < robotData.getStopTime(); currTime += samplingInterval) {
-			totalNbrListSize += getNbrListSize(currTime);
-			countNbrListSize++;
+		tempVec = new Vector<Double>();
+		for (long currTime = expData.getExpStartTime(); currTime < expData.getExpStopTime(); currTime += samplingInterval) {
+			int nbrListSize = getNbrListSize(currTime);
+			tempVec.add((double)nbrListSize);
+			nbrListStates.add(new NeighborListState(currTime, nbrListSize));
 		}
-		averageNeighbors = totalNbrListSize / (double)countNbrListSize;
+		averageNeighbors = new AverageStatistic(tempVec);
 	}
 	
 	/**
@@ -204,11 +236,116 @@ public class NodeConnectivityStats {
 			flogger = new FileLogger(fileName, false);
 		}
 		
+		// Get the start time of the experiment.
+		long startTime = expData.getExpStartTime();
+		
+		log("Time (ms)\tExperiment Time (ms)\tNeighbor List Size", flogger);
+		for (int i=0; i < nbrListStates.size(); i++) {
+			NeighborListState nbrListState = nbrListStates.get(i);
+			log(nbrListState.timestamp + "\t" + (nbrListState.timestamp - startTime) + "\t" + nbrListState.size, flogger);
+		}
+		
+		log("Overall per-node statistics:", flogger);
 		log("Total Connections: " + totalConnections, flogger);
 		log("Total Disconnections: " + totalDisconnections, flogger);
-		log("Average Connection Duration: " + averageConnectionDuration, flogger);
+		log("Average Connection Duration (ms): " + averageConnectionDuration, flogger);
 		log("Average Neighbor List Size: " + averageNeighbors, flogger);
 		log("Total Unique Neighbors: " + numUniqueNeighbors, flogger);
+	}
+	
+	/**
+	 * Plots the experiment connectivity statistics on charts for easy visualization.
+	 */
+	private void showChart() {
+		// Create the various data series...
+		XYSeries numNbrsSeries = new XYSeries("Number of Neighbors");
+
+		long expStartTime = expData.getExpStartTime();
+		
+		// Fill in the data series
+		for (int i=0; i < nbrListStates.size(); i++) {
+			NeighborListState nbrListState = nbrListStates.get(i);
+			numNbrsSeries.add((nbrListState.timestamp - expStartTime) / 1000.0, nbrListState.size);
+			
+		}
+
+		// Create data sets for each series
+		XYSeriesCollection numNbrsDataSet = new XYSeriesCollection();
+		numNbrsDataSet.addSeries(numNbrsSeries);
+		
+		
+		// Create the charts
+		JFreeChart numNeighborsChart = ChartFactory.createXYLineChart(
+				"Number of Neighbors vs. Time",                        // chart title
+				"Time (s)",                                            // x axis label
+				"Num. Neighbors",                                      // y axis label
+				numNbrsDataSet,                                        // the number of neighbors data
+				PlotOrientation.VERTICAL,                              // plot orientation (y axis is vertical)
+				false,                                                 // include legend
+				true,                                                  // tooltips
+				false                                                  // urls
+		);
+		
+		
+       
+        
+        // Place the legend on top of the chart just below the title.
+//        LegendTitle headingLegend = headingChart.getLegend();
+//        headingLegend.setPosition(RectangleEdge.TOP);
+//        LegendTitle speedLegend = speedChart.getLegend();
+//        speedLegend.setPosition(RectangleEdge.TOP);
+        
+		numNeighborsChart.setBackgroundPaint(Color.white);
+        
+        // Configure when to display lines an when to display the shapes that indicate data points
+        XYLineAndShapeRenderer renderer1 = new XYLineAndShapeRenderer();
+        renderer1.setSeriesLinesVisible(0, true); // display the heading as a line
+        renderer1.setSeriesShapesVisible(0, false);
+        
+//        XYErrorRenderer xyerrorrenderer = new XYErrorRenderer();
+//        xyerrorrenderer.setSeriesLinesVisible(0, true); // display the heading as a line
+//        xyerrorrenderer.setSeriesShapesVisible(0, false);
+//        xyerrorrenderer.setDrawXError(false); // draw only Y error bars
+//        xyerrorrenderer.setDrawYError(true);
+//        
+        final XYPlot numNeighborsPlot = numNeighborsChart.getXYPlot();
+		
+        numNeighborsPlot.setRenderer(0, renderer1);
+        
+//        XYLineAndShapeRenderer renderer2 = new XYLineAndShapeRenderer();
+//        renderer2.setSeriesLinesVisible(0, true); // display the speed as a line
+//        renderer2.setSeriesShapesVisible(0, false);
+//        renderer2.setSeriesPaint(0, Color.BLACK);
+//        renderer2.setSeriesLinesVisible(1, true); // display the speedCmd as a line
+//        renderer2.setSeriesShapesVisible(1, false);
+//        renderer2.setSeriesPaint(1, Color.RED);
+//        renderer2.setSeriesLinesVisible(2, false); // display the waypoints as points
+//        renderer2.setSeriesShapesVisible(2, true);
+//        renderer2.setSeriesPaint(2, Color.BLUE);
+//        renderer2.setSeriesShape(2, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+//        renderer2.setSeriesLinesVisible(3, false); // display the begin edge traversal points as green dots
+//        renderer2.setSeriesShapesVisible(3, true);
+//        renderer2.setSeriesPaint(3, Color.GREEN);
+//        renderer2.setSeriesShape(3, new java.awt.geom.Ellipse2D.Double(-5,-5,10,10));
+//        
+//        final XYPlot speedPlot = speedChart.getXYPlot();
+//        speedPlot.setRenderer(0, renderer2);
+        
+        // Place the charts in their own panels.
+        ChartPanel numNeighborsChartPanel = new ChartPanel(numNeighborsChart);
+        
+        numNeighborsChartPanel.setPreferredSize(new java.awt.Dimension(1200, 200));
+        
+        // Place both chart panels within a single panel with two rows.
+        javax.swing.JPanel chartsPanel = new javax.swing.JPanel(new java.awt.GridLayout(1,1));
+        chartsPanel.add(numNeighborsChartPanel);
+       
+        // Create a frame for the chart, then display it.
+        ApplicationFrame appFrame = new ApplicationFrame("Per Node Statistics for " + expData.getMissionName() + " " + expData.getExpName() + " " + robotData.getRobotName());
+        appFrame.setContentPane(chartsPanel);
+        appFrame.pack();
+		RefineryUtilities.centerFrameOnScreen(appFrame);
+		appFrame.setVisible(true);
 	}
 	
 	/**
@@ -221,6 +358,16 @@ public class NodeConnectivityStats {
 		System.out.println(msg);
 		if (flogger != null)
 			flogger.log(msg);
+	}
+	
+	private class NeighborListState {
+		long timestamp;
+		int size;
+		
+		public NeighborListState(long timestamp, int size) {
+			this.timestamp = timestamp;
+			this.size = size;
+		}
 	}
 	
 	private static void print(String msg) {
