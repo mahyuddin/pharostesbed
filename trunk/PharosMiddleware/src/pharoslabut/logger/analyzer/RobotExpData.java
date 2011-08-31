@@ -428,7 +428,7 @@ public class RobotExpData {
 	 * @throws NumberFormatException
 	 * @throws IOException
 	 */
-	private void readFile() throws NumberFormatException, IOException {
+	protected void readFile() throws NumberFormatException, IOException {
 		File file = new File(fileName);
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		String line = null;
