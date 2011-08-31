@@ -210,7 +210,7 @@ public class Manager implements Runnable {
 			}
 			Logger.log(", End behavior, "+ _current.BehGetIndex() +", **********");
 			// Print the relative index of the behavior - with respect to the entire team (want it to be uniform throughout the team)
-			int relative_behavior = _current.BehGetIndex()%(_behVect.size()/_CircularRepeats) + ((_behVect.size()/_CircularRepeats)*_wm.getMyIndex());
+			int relative_behavior = (_current.BehGetIndex() + _wm.getMyIndex()*_behVect.size()/(_CircularRepeats * _wm.getTeamSize())) % (_behVect.size()/_CircularRepeats) ;
 			Logger.log(", End Relative behavior ," + relative_behavior + ", xxxxx ");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);

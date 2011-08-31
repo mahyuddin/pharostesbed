@@ -156,7 +156,10 @@ public class WorldModel {
 */
 	}
 
-	public synchronized void setTeamOutOfRange(int index){_wmCurrentBehavior[index] = _outOfRange;}
+	private synchronized void setTeamOutOfRange(int index){
+		_wmCurrentBehavior[index] = _outOfRange;
+		Logger.log("Setting teammate "+ index + " OUT_OF_RANGE");
+	}
 	
 	public int getTeamSize(){return _wmTeamSize;}
 	public String getMyIp(){return _teamIp[wmMyIndex];}
