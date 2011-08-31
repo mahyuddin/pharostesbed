@@ -382,7 +382,9 @@ interrupt 9 void sendDataInterrupt(void) {
 
 	_int9Count++;
 	if (_int9Count % 10 == 0) { // 20ms * 10 = 200ms (5Hz)
+		1
 		TaskHandler_postTask(&Command_sendData);
+	0
 	}
 	
 	/*

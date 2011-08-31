@@ -133,4 +133,9 @@ public class PlayerMsgHdr {
     public synchronized void setSize (int newSize) {
         this.size = newSize;
     }
+    
+    public String toString() {
+    	return null;//this.getClass().getName() + ": type=" + getType() + ", subtype=" + getSubtype() + ", timestamp=" + getTimestamp()
+    	//	+ ", seq=" + getSeq() + ", size=" + getSize();
+    }
 }

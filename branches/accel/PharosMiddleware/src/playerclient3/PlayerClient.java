@@ -842,6 +842,8 @@ public class PlayerClient extends Thread implements PlayerConstants {
         try {
             // Read the Player header
             header = readHeader ();
+            
+            //System.out.println("Received header: " + header);
 
             if (isDebugging)
                 logger.log (Level.FINEST, "[PlayerClient][Debug] Type = " +

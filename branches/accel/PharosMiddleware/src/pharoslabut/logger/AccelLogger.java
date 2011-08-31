@@ -95,7 +95,7 @@ public class AccelLogger implements Runnable {
 		if (!logging) {
 			logging = true;
 			
-			log("Time (ms)\tDelta Time (ms)\tGPS Quality\tLatitude\tLongitude\tAltitude\tGPS Time (s)\tGPS Time(us)\tGPS Error Vertical\tGPS Error Horizontal");
+			log("Time (ms)\tDelta Time (ms)\tX-Axis\tY-Axis\tZ-Axis\n");
 			
 			startTime = System.currentTimeMillis();
 			
@@ -150,6 +150,8 @@ public class AccelLogger implements Runnable {
 					+ (accelData.getZ_axis());
 
 					log(result);
+				} else {
+					logDbg("run: new data equals old data.");
 				}
 				
 				oldData = accelData;
