@@ -171,7 +171,7 @@ public class AccelDataBuffer {
 		if (accel.isDataReady()) {
 			PlayerAccelData newData = accel.getData();
 			buff.add(0, new AccelDataWrapper(newData)); // add new data to the front of the buffer
-			log("getCurrLoc: New Accel Data: " + newData + ", buffer size=" + buff.size());
+			//log("getCurrAccel: New Accel Data: " + newData + ", buffer size=" + buff.size());
 			
 //			// Estimate the robot's speed
 //			if (buff.size() > 1) {
@@ -186,7 +186,7 @@ public class AccelDataBuffer {
 		
 		// Remove any expired GPS location measurements...
 		removeExpiredElements();
-		log("getCurrLoc: buffer size after clearing expired elements: " + buff.size());
+		//log("getCurrLoc: buffer size after clearing expired elements: " + buff.size());
 		
 		if (buff.size() > 0)
 			return buff.get(0).getAccelData();

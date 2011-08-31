@@ -46,17 +46,17 @@ public class AccelInterface extends PlayerDevice {
                     acceldata = new PlayerAccelData ();
                     
                     // Buffer for reading voltages_count
-                    byte[] buffer = new byte[2];
+                    byte[] buffer = new byte[36];
 
                     // Read voltages_count
-                    is.readFully (buffer, 0, 2);
+                    is.readFully (buffer, 0, 36);
 
                     // Begin decoding the XDR buffer
                     XdrBufferDecodingStream xdr = new XdrBufferDecodingStream (buffer);
                     xdr.beginDecoding ();         
-                    acceldata.setX_axis  (xdr.xdrDecodeShort ());
-                    acceldata.setY_axis  (xdr.xdrDecodeShort ());
-                    acceldata.setZ_axis  (xdr.xdrDecodeShort ());
+                    acceldata.setX_axis  (xdr.xdrDecodeFloat ());
+                    acceldata.setY_axis  (xdr.xdrDecodeFloat ());
+                    acceldata.setZ_axis  (xdr.xdrDecodeFloat ());
                     xdr.endDecoding   ();
                     xdr.close ();
 

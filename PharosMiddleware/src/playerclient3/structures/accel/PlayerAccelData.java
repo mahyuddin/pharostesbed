@@ -35,31 +35,31 @@ import playerclient3.structures.*;
  */
 public class PlayerAccelData implements PlayerConstants {
 	 	
-	private short x_axis;
-	private short y_axis;
-	private short z_axis;
+	private float x_axis;
+	private float y_axis;
+	private float z_axis;
 	//X
-	 public synchronized short getX_axis () {
+	 public synchronized float getX_axis () {
 	        return this.x_axis;
 	    }
 
-    public synchronized void setX_axis (short newX_axis) {
+    public synchronized void setX_axis (float newX_axis) {
 	        this.x_axis = newX_axis;
 	    }
     //Y
-	 public synchronized short getY_axis () {
+	 public synchronized float getY_axis () {
 		        return this.y_axis;
 		    }
 
-	   public synchronized void setY_axis (short newY_axis) {
+	   public synchronized void setY_axis (float newY_axis) {
 		        this.y_axis = newY_axis;
 		    }
 	   //Z
-		 public synchronized short getZ_axis () {
+		 public synchronized float getZ_axis () {
 			        return this.z_axis;
 			    }
 
-	    public synchronized void setZ_axis (short newZ_axis) {
+	    public synchronized void setZ_axis (float newZ_axis) {
 			        this.z_axis = newZ_axis;
 			    }
 }
