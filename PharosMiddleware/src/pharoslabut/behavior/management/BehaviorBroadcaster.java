@@ -4,7 +4,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import pharoslabut.behavior.MultiRobotBehaveMsg;
+import pharoslabut.behavior.MultiRobotTableMsg;
 import pharoslabut.exceptions.PharosException;
+import pharoslabut.io.Message;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.Logger;
 
@@ -21,6 +23,7 @@ import pharoslabut.logger.Logger;
  */
 public class BehaviorBroadcaster implements Runnable {
 	
+	private boolean _broadcastTable;
 	/**
 	 * The minimum period between broadcasting MultiRobotBehaveMsg to each team member.
 	 * Its units is milliseconds.
@@ -54,9 +57,10 @@ public class BehaviorBroadcaster implements Runnable {
 	 * @param sender The component that sends the message.
 	 * @param wm The world model from which the MultiRobotBehaveMsg should be created. 
 	 */
-	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm) {
+	public BehaviorBroadcaster(TCPMessageSender sender, WorldModel wm, boolean bt) {
 		this.sender = sender;
 		this.wm = wm;
+		this._broadcastTable = bt;
 		new Thread(this).start(); // This has its own thread.
 	}
 	
@@ -99,8 +103,13 @@ public class BehaviorBroadcaster implements Runnable {
 				+ "\n\tBehavior ID: "+ wm.getCurrentBehaviorID() 
 				+ "\n\tMy index "+ wm.getMyIndex()
 				+ "\n\tMy port "+ wm.getMyPort()+"\n");
-				
-		MultiRobotBehaveMsg	msg = new MultiRobotBehaveMsg(wm.getCurrentBehaviorName(), wm.getCurrentBehaviorID(), wm.getMyIndex());
+		
+		Message msg;
+		if(_broadcastTable){
+			msg = new MultiRobotTableMsg(wm);
+		}else{
+			msg = new MultiRobotBehaveMsg(wm);
+		}
 		Logger.log("Sending message: " + msg);
 		
 		// For each team member...
@@ -127,7 +136,7 @@ public class BehaviorBroadcaster implements Runnable {
 					try {
 						Logger.log("BEFORE Send: Sending " + wm.getCurrentBehaviorName() + " to Client " + i + " at " + address + ":" + port + "\n");		
 						sender.sendMessage(address, port, msg);
-						Logger.log("AFTER Send: Sent " + wm.getCurrentBehaviorName() + " to Client " + i);
+						Logger.log("AFTER Send: Sent " + wm.getCurrentBehaviorName() + " to Client " + i);						
 					} catch (PharosException e) {
 						Logger.logErr("PharosException when trying to send message to " + address + ":" + port + ", error message: " + e.getMessage());
 						e.printStackTrace();

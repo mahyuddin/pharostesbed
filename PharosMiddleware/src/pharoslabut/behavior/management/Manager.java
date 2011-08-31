@@ -27,6 +27,7 @@ public class Manager implements Runnable {
 	/* need to know whether to connect the last behavior to the first, and if so - for how many repeats */
 	private int _CircularRepeats; 
 	private boolean _manageDynamic;
+	private boolean _synchTable;
 	Behavior _concludeBehave;
 	private boolean started = false;
 	
@@ -47,19 +48,23 @@ public class Manager implements Runnable {
 	public Manager(MRPConfData mrpConfdata, NavigateCompassGPS navigationdata, 
 			TCPMessageSender sender)
 	{
-		_wm = new WorldModel(mrpConfdata);
-		broadcaster = new BehaviorBroadcaster(sender, _wm);
+		
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
 //		_sender = sender;
 //		_flogger = flogger;
 		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
-		
+		_synchTable = mrpConfdata.SynchTableWithPeers();
+
+		_wm = new WorldModel(mrpConfdata);
+		broadcaster = new BehaviorBroadcaster(sender, _wm, _synchTable);
+
 		
 		Logger.log("numRobots=" + mrpConfdata.GetNumRobots() +
 					", numMissions=" + mrpConfdata.GetNumMissions() + 
-					", Dynamic (loose) coordination=" + _manageDynamic);
+					", Dynamic (loose) coordination=" + _manageDynamic +
+					", synchronize table  = " + _synchTable );
 		
 		// Initialize the IP and ports for all teammates
 		for(int index = 0; index < mrpConfdata.GetNumRobots(); index++) {
@@ -124,11 +129,24 @@ public class Manager implements Runnable {
 	
 
 	
-	public void updateTeammates(String behavename, int teammateID, int behaveID){
-		Logger.log("new behavior " + behavename + " for teammate " + teammateID + " behaveID " + behaveID);
-		_wm.setCurrentMsgTime(teammateID);
-		_wm.setTeamCurrentBehavior(behavename, teammateID, behaveID);
+	public void updateTeammates(MultiRobotBehaveMsg msg){
+		Logger.log("new behavior " + msg.getBehaviorName() + " for teammate " + msg.getRobotID() + " behaveID " + msg.getBehaviorID());
+		_wm.setTeamCurrentBehavior(msg.getBehaviorName(), msg.getRobotID(), msg.getBehaviorID());
 	}
+	
+	public void updateTeammatesTable(MultiRobotTableMsg msg){
+		
+		for(int i = 0; i<msg.getTableSize(); i++) {
+			if(i == _wm.getMyIndex())
+				continue;
+			_wm.setTeamCurrentBehavior(msg.getBehaviorName(i), i, msg.getBehaviorID(i));
+			Logger.log("new behavior " + msg.getBehaviorName(i) + " for teammate " + i + " behaveID " + msg.getBehaviorID(i));
+		}
+
+//		_wm.setCurrentMsgTime(msg.getRobotID());
+//		_wm.setTeamCurrentBehavior(msg.getBehaveName(), msg.getRobotID(), msg.getBehaveID());
+	}
+	
 	
 	/**
 	 * Starts the manager running.  Creates a new thread for the manager so the
@@ -190,7 +208,10 @@ public class Manager implements Runnable {
 				
 				Logger.log("end of current loop...");
 			}
-			Logger.log("End behavior"+ _current.BehGetIndex() +"**********");
+			Logger.log(", End behavior, "+ _current.BehGetIndex() +", **********");
+			// Print the relative index of the behavior - with respect to the entire team (want it to be uniform throughout the team)
+			int relative_behavior = (_current.BehGetIndex() + _wm.getMyIndex()*_behVect.size()/(_CircularRepeats * _wm.getTeamSize())) % (_behVect.size()/_CircularRepeats) ;
+			Logger.log(", End Relative behavior ," + relative_behavior + ", xxxxx ");
 			
 			_wm.setMyCurrentBehavior("stop"+(_current.getClass().getName())+_currentIndex, _currentIndex);
 			broadcaster.sendBehaviorToClients(); // sendBehaviorToClients();
