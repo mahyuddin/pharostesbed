@@ -24,9 +24,9 @@ public class AnalyzeWaypointVisitLatency {
 	 * 
 	 * @param expDir The directory containing the log files generated during a MRPatrol experiment.
 	 * @param saveToFileName The name of the file in which to save data (may be null).
-	 * @param printDetails Whether to print the details of each visit.
+	 * @param verbose Whether to print the details of each visit.
 	 */
-	public AnalyzeWaypointVisitLatency(String expDir, String saveToFileName, boolean printDetails) {
+	public AnalyzeWaypointVisitLatency(String expDir, String saveToFileName, boolean verbose) {
 		
 		// First get all of the experiment data.
 		expData = new MRPatrolExpData(expDir);
@@ -70,7 +70,7 @@ public class AnalyzeWaypointVisitLatency {
 		if (saveToFileName != null)
 			flogger = new FileLogger(saveToFileName, false);
 		
-		if (printDetails) {
+		if (verbose) {
 			for (int i=0; i < waypointStates.size(); i++) {
 				WaypointState currWaypoint = waypointStates.get(i);
 				log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
@@ -135,7 +135,7 @@ public class AnalyzeWaypointVisitLatency {
 		System.out.println("Usage: " + AnalyzeWaypointVisitLatency.class.getName()  + " <options>\n");
 		System.out.println("Where <options> include:");
 		System.out.println("\t-expDir <dir name>: The directory containing the log files generated during a MRPatrol experiment. (required)");
-		System.out.println("\t-printDetails: Print the details of each time a waypoint was visited.");
+		System.out.println("\t-verbose: Print the details of each time a waypoint was visited.");
 		System.out.println("\t-save <file name>: Save the idle times a text file. (optional)");
 		System.out.println("\t-debug or -d: Enable debug mode");
 	}
@@ -143,7 +143,7 @@ public class AnalyzeWaypointVisitLatency {
 	public static void main(String[] args) {
 		String expDir = null;
 		String saveToFileName = null;
-		boolean printDetails = false;
+		boolean verbose = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -157,8 +157,8 @@ public class AnalyzeWaypointVisitLatency {
 				else if (args[i].equals("-expDir")) {
 					expDir = args[++i];
 				}
-				else if (args[i].equals("-printDetails")) {
-					printDetails = true;
+				else if (args[i].equals("-verbose")) {
+					verbose = true;
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -189,7 +189,7 @@ public class AnalyzeWaypointVisitLatency {
 		System.out.println("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new AnalyzeWaypointVisitLatency(expDir, saveToFileName, printDetails);
+			new AnalyzeWaypointVisitLatency(expDir, saveToFileName, verbose);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
