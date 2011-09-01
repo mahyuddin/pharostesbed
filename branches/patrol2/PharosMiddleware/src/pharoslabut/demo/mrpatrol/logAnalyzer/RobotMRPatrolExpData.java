@@ -141,13 +141,14 @@ public class RobotMRPatrolExpData extends RobotExpData {
 	 * @param waypoint The waypoint.
 	 * @return the times when the waypoint was visited.
 	 */
-	public Vector<Long> getVisitationTimes(Location waypoint) {
-		Vector<Long> result = new Vector<Long>();
+	public Vector<VisitationState> getVisitationTimes(Location waypoint) {
+		Vector<VisitationState> result = new Vector<VisitationState>();
 		
 		for (int i=0; i < behaviors.size(); i++) {
 			BehGotoGPSCoordState currBehavior = behaviors.get(i);
 			if (currBehavior.getDest().equals(waypoint)) {
-				result.add(currBehavior.getStopTime());
+				VisitationState vs = new VisitationState(getRobotName(), getRobotID(), currBehavior.getStopTime());
+				result.add(vs);
 			}
 		}
 		

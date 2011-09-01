@@ -74,12 +74,12 @@ public class MRPatrolExpData {
 	 * @param waypoint The waypoint.
 	 * @return the times when the waypoint was visited.
 	 */
-	public Vector<Long> getVisitationTimes(Location waypoint) {
-		Vector<Long> visitationTimes = new Vector<Long>();
+	public Vector<VisitationState> getVisitationTimes(Location waypoint) {
+		Vector<VisitationState> visitationTimes = new Vector<VisitationState>();
 		
 		for (int i=0; i < robots.size(); i++) {
 			RobotMRPatrolExpData currRobot = robots.get(i);
-			Vector<Long> robotVisitTimes = currRobot.getVisitationTimes(waypoint);
+			Vector<VisitationState> robotVisitTimes = currRobot.getVisitationTimes(waypoint);
 			visitationTimes.addAll(robotVisitTimes);
 		}
 		

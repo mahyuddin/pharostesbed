@@ -373,13 +373,18 @@ public class RobotExpData {
 	 */
 	public String getRobotName() {
 		String[] tokens = tokenizeFileName();
-		if (tokens.length > 2) {
-			if (tokens.length == 5)
-				return tokens[3];
-			else
-				return tokens[2];
-		} else
-			return null;
+		
+		if (fileName.contains("MRPatrol")) {
+			return tokens[2];
+		} else {
+			if (tokens.length > 2) {
+				if (tokens.length == 5)
+					return tokens[3];
+				else
+					return tokens[2];
+			} else
+				return null;
+		}
 	}
 	
 	/**

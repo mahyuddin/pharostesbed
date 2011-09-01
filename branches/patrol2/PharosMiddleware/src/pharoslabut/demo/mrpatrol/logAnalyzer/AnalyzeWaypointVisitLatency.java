@@ -24,8 +24,9 @@ public class AnalyzeWaypointVisitLatency {
 	 * 
 	 * @param expDir The directory containing the log files generated during a MRPatrol experiment.
 	 * @param saveToFileName The name of the file in which to save data (may be null).
+	 * @param printDetails Whether to print the details of each visit.
 	 */
-	public AnalyzeWaypointVisitLatency(String expDir, String saveToFileName) {
+	public AnalyzeWaypointVisitLatency(String expDir, String saveToFileName, boolean printDetails) {
 		
 		// First get all of the experiment data.
 		expData = new MRPatrolExpData(expDir);
@@ -48,14 +49,14 @@ public class AnalyzeWaypointVisitLatency {
 			Location currWaypoint = waypoints.get(i);
 			
 			// Get the times it was visited...
-			Vector<Long> visitationTimes = expData.getVisitationTimes(currWaypoint);
+			Vector<VisitationState> visitationTimes = expData.getVisitationTimes(currWaypoint);
 			Collections.sort(visitationTimes); // sort it in ascending order
 			
 			// Compute the idle times between visits
 			Vector<Long> idleTimes = new Vector<Long>();
 			for (int j=0; j < visitationTimes.size()-1; j++) {
-				long currVisitTime = visitationTimes.get(j);
-				long nextVisitTime = visitationTimes.get(j+1);
+				long currVisitTime = visitationTimes.get(j).getTimestamp();
+				long nextVisitTime = visitationTimes.get(j+1).getTimestamp();
 				long idleTime = nextVisitTime - currVisitTime;
 				idleTimes.add(idleTime);
 			}
@@ -69,6 +70,26 @@ public class AnalyzeWaypointVisitLatency {
 		if (saveToFileName != null)
 			flogger = new FileLogger(saveToFileName, false);
 		
+		if (printDetails) {
+			for (int i=0; i < waypointStates.size(); i++) {
+				WaypointState currWaypoint = waypointStates.get(i);
+				log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
+				
+				log("Visit number\tTime (ms)\tTime since Last Visit (ms)\tRobotID", flogger);
+				for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
+					if (j > 0)
+						log(j + "\t" + currWaypoint.visitationTimes.get(j).getTimestamp() + "\t" + currWaypoint.idleTimes.get(j-1) 
+								+ "\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
+								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
+					else
+						log(j + "\t" + currWaypoint.visitationTimes.get(j).getTimestamp()
+								+ "\t\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
+								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
+				}
+				log("", flogger); // add new line after each table.
+			}	
+		}
+		
 		log("WaypointID\tWaypoint\tAverage Idle Time (ms)", flogger);
 		for (int i=0; i < waypointStates.size(); i++) {
 			WaypointState currWaypoint = waypointStates.get(i);
@@ -78,10 +99,10 @@ public class AnalyzeWaypointVisitLatency {
 	
 	private class WaypointState {
 		Location waypoint;
-		Vector<Long> visitationTimes;
+		Vector<VisitationState> visitationTimes;
 		Vector<Long> idleTimes;
 		
-		public WaypointState(Location waypoint, Vector<Long> visitationTimes, Vector<Long> idleTimes) {
+		public WaypointState(Location waypoint, Vector<VisitationState> visitationTimes, Vector<Long> idleTimes) {
 			this.waypoint = waypoint;
 			this.visitationTimes = visitationTimes;
 			this.idleTimes = idleTimes;
@@ -114,6 +135,7 @@ public class AnalyzeWaypointVisitLatency {
 		System.out.println("Usage: " + AnalyzeWaypointVisitLatency.class.getName()  + " <options>\n");
 		System.out.println("Where <options> include:");
 		System.out.println("\t-expDir <dir name>: The directory containing the log files generated during a MRPatrol experiment. (required)");
+		System.out.println("\t-printDetails: Print the details of each time a waypoint was visited.");
 		System.out.println("\t-save <file name>: Save the idle times a text file. (optional)");
 		System.out.println("\t-debug or -d: Enable debug mode");
 	}
@@ -121,6 +143,7 @@ public class AnalyzeWaypointVisitLatency {
 	public static void main(String[] args) {
 		String expDir = null;
 		String saveToFileName = null;
+		boolean printDetails = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -133,6 +156,9 @@ public class AnalyzeWaypointVisitLatency {
 				}
 				else if (args[i].equals("-expDir")) {
 					expDir = args[++i];
+				}
+				else if (args[i].equals("-printDetails")) {
+					printDetails = true;
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -163,7 +189,7 @@ public class AnalyzeWaypointVisitLatency {
 		System.out.println("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new AnalyzeWaypointVisitLatency(expDir, saveToFileName);
+			new AnalyzeWaypointVisitLatency(expDir, saveToFileName, printDetails);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
