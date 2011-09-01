@@ -21,7 +21,7 @@ public class RobotExpData {
 	/**
 	 * The name of the robot's experiment log file.
 	 */
-	private String fileName;
+	protected String fileName;
 	
 	/**
 	 *  The start time of the experiment. It is when the PharosServer
@@ -747,7 +747,7 @@ public class RobotExpData {
 	 * offset needed to calibrate the log timestamps to match the GPS timestamps.
 	 * The GPS timestamps are assumed to be accurate to within 1 second.
 	 */
-	private void calibrateTime() {
+	protected void calibrateTime() {
 		// First gather all of the location data...
 		Vector<GPSLocationState> locs = getGPSHistory();
 		
