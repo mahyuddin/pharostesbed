@@ -746,8 +746,10 @@ public class RobotExpData {
 	 * Compares the GPS timestamps with the log timestamps to determine the 
 	 * offset needed to calibrate the log timestamps to match the GPS timestamps.
 	 * The GPS timestamps are assumed to be accurate to within 1 second.
+	 * 
+	 * @return The time calibrator.  This can be used by subclasses.
 	 */
-	protected void calibrateTime() {
+	protected TimeCalibrator calibrateTime() {
 		// First gather all of the location data...
 		Vector<GPSLocationState> locs = getGPSHistory();
 		
@@ -826,6 +828,8 @@ public class RobotExpData {
 		for (int i=0; i < wifiBeaconTxs.size(); i++) {
 			wifiBeaconTxs.get(i).calibrateTime(calibrator);
 		}
+		
+		return calibrator;
 	}
 	
 	/**

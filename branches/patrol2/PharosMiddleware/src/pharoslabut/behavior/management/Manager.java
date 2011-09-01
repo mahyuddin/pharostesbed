@@ -185,7 +185,7 @@ public class Manager implements Runnable {
 //		int numberRounds = _CircularRepeats*_behVect.size();
 		while(_current != null)
 		{
-			Logger.log("running behavior "+_current.getClass().getName()+_currentIndex);
+			Logger.log("running behavior " + _current.getClass().getName() + _currentIndex);
 
 			//running the action loop
 			while(!_current.stopCondition())
