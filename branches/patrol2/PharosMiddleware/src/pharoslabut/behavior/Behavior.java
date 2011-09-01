@@ -64,5 +64,8 @@ public abstract class Behavior {
 		return _behaveIndex;
 	}
 
+	public String toString() {
+		return getClass().getName();
+	}
 	
 }

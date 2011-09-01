@@ -39,9 +39,9 @@ public class MissionData {
 		this.velocity = velocity;
 	}
 
-	public void SetLatitude(double latitude){this.latitude = latitude;}
-	public void SetLongitude(double longitude){this.longitude = longitude;}
-	public void SetVelocity(double velocity){this.velocity = velocity;}
+//	public void SetLatitude(double latitude){this.latitude = latitude;}
+//	public void SetLongitude(double longitude){this.longitude = longitude;}
+//	public void SetVelocity(double velocity){this.velocity = velocity;}
 	
 	public double GetLatitude(){return latitude;}
 	public double GetLongitude(){return longitude;}

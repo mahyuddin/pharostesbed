@@ -84,7 +84,7 @@ public class Manager implements Runnable {
 			}
 		}
 		
-		Logger.log("System circular: "+_CircularRepeats+"behavior vector size is: "+_behVect.size());
+		Logger.log("System circular: " + _CircularRepeats + " behavior vector size is: " + _behVect.size());
 //		if( _CircularRepeats > 0){
 //			_behVect.get(mrpConfdata.GetNumMissions()-1).addNext(_behVect.get(0));
 //		}
@@ -186,7 +186,7 @@ public class Manager implements Runnable {
 //		int numberRounds = _CircularRepeats*_behVect.size();
 		while(_current != null)
 		{
-			Logger.log("running behavior " + _current.getClass().getName() + _currentIndex);
+			Logger.log("running behavior " + _currentIndex + ": " + _current);
 
 			//running the action loop
 			while(!_current.stopCondition())

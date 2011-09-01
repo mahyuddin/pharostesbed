@@ -41,7 +41,7 @@ public class BehGotoGPSCoord extends Behavior {
 			_stopAtEndBehavior = false;
 		}
 		
-		Logger.log("Constructor behavior; latitude = "+ _md.GetLatitude()+ "longitude = "+ _md.GetLongitude());
+		Logger.log("Constructor behavior; latitude = "+ _md.GetLatitude() + "longitude = "+ _md.GetLongitude());
 
 		_navigatorGPS = navigateData;
 		
@@ -167,5 +167,9 @@ public class BehGotoGPSCoord extends Behavior {
 //		if (_flogger != null)
 //			_flogger.log(result);
 //	}
+	
+	public String toString() {
+		return getClass().getName() + ": dest = " + _destLoc + ", stopAtEndBehavior = " + _stopAtEndBehavior;
+	}
 
 }
