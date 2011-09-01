@@ -106,15 +106,16 @@ public class Manager implements Runnable {
 //		
 		
 		try{
-			for(int kk=0;kk<_behVect.size();kk++){
-				Logger.log("behavior number "+_behVect.get(kk).BehGetIndex());
-				Logger.log("next is "+_behVect.get(kk).getNext().BehGetIndex());
+			for(int kk = 0; kk < _behVect.size(); kk++){
+				Logger.log("behavior number " + _behVect.get(kk).BehGetIndex());
+				if (kk < _behVect.size()-1)
+					Logger.log("next is " + _behVect.get(kk).getNext().BehGetIndex());
 			}
 		}catch(Exception e){
 			Logger.logErr(e.getMessage());
 		}
 
-		if(mrpConfdata.GetHomePort() !=null){
+		if(mrpConfdata.GetHomePort() != null){
 			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData);
 			_concludeBehave.BehSetIndex(_behVect.size());
 		} else {
