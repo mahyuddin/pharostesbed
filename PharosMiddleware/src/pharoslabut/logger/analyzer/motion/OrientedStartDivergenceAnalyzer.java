@@ -29,7 +29,7 @@ import pharoslabut.navigate.Location;
 //import pharoslabut.navigate.motionscript.MotionScript;
 
 /**
- * Analyzes the motion divergence exhibit by a Proteus robot as it follows
+ * Analyzes the oriented start motion divergence exhibit by a Proteus robot as it follows
  * a GPS-based motion script.
  * 
  * @author Chien-Liang Fok
@@ -39,23 +39,13 @@ public class OrientedStartDivergenceAnalyzer {
 	private static OrientedStartDivergenceAnalyzer analyzer = new OrientedStartDivergenceAnalyzer();
 	
 	/**
-	 * The period at which to calculate divergence in milliseconds.
-	 */
-	private long samplingInterval;
-	
-	/**
-	 * The robot's experiment data.
-	 */
-	private RobotExpData robotData;
-	
-	/**
 	 * The maximum heading error in radians before the robot is considered "oriented".  
 	 * This is used to calculate the oriented start divergence, see: 
 	 * http://pharos.ece.utexas.edu/wiki/index.php/How_to_Analyze_Motion_Divergence_when_a_Robot_Follows_GPS_Waypoints#Oriented_Start_Divergence
 	 */
-	private double orientedThreshold;
+	//private double orientedThreshold;
 	
-	Vector<SpatialDivergence> osDivs;  // oriented start divergence
+	//Vector<SpatialDivergence> osDivs;  // oriented start divergence
 	
 	/**
 	 * The constructor.
