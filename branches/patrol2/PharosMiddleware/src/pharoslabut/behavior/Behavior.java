@@ -7,23 +7,24 @@ import pharoslabut.behavior.management.WorldModel;
  * A top-level super-clas for all behaviors.
  * 
  * @author Noa Agmon
+ * @author Chien-Liang Fok
  */
 public abstract class Behavior {
 	
 	protected Vector<Behavior> _nextVector = new Vector<Behavior>();
 	protected WorldModel _wm;
-	protected MissionData _misssiondata;
+//	protected MissionData _misssiondata;
 	protected int _behaveIndex;
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param wm The world model of this node.
-	 * @param md The mission data.
+//	 * @param md The mission data.
 	 */
-	public Behavior(WorldModel wm, MissionData md) {
+	public Behavior(WorldModel wm) {
 		_wm = wm;
-		_misssiondata = md;
+//		_misssiondata = md;
 	}
 	public abstract boolean startCondition();
 	public abstract boolean stopCondition();
@@ -41,7 +42,9 @@ public abstract class Behavior {
 	{
 		_nextVector.add(beh);
 	}
-	/*returning the first behavior that its start condition is true.
+	
+	/**
+	 * Returning the first behavior that its start condition is true.
 	 * This is simple sequential decision making. Can make more sophisticated decisions - 
 	 * then in would be wise to move the getNext() function to the behavior itself 
 	 * (making this an abstract function) 

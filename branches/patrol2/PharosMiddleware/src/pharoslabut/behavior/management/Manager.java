@@ -73,8 +73,10 @@ public class Manager implements Runnable {
 		}
 		
 		for(int round = 0; round < _CircularRepeats ; round ++){
-			for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){	
-				_behVect.add(new BehGotoGPSCoord(_wm, mrpConfdata.GetMissionData(index), _NavigateData));
+			for(int index = 0; index < mrpConfdata.GetNumMissions(); index++){
+				MissionData md = mrpConfdata.GetMissionData(index);
+				
+				_behVect.add(new BehGotoGPSCoord(_wm, md.getDest(), md.getVelocity(), _NavigateData));
 				_behVect.get(_behVect.size()-1).BehSetIndex(index + round*mrpConfdata.GetNumMissions());
 				Logger.log("Behavior index is: "+_behVect.get(_behVect.size()-1).BehGetIndex());
 				// add the circular behavior nature
@@ -115,8 +117,9 @@ public class Manager implements Runnable {
 			Logger.logErr(e.getMessage());
 		}
 
-		if(mrpConfdata.GetHomePort() != null){
-			_concludeBehave = new BehGotoGPSCoord(_wm, mrpConfdata.GetHomePort(), _NavigateData);
+		if(mrpConfdata.GetHomePort() != null) {
+			MissionData md = mrpConfdata.GetHomePort();
+			_concludeBehave = new BehGotoGPSCoord(_wm, md.getDest(), md.getVelocity(), _NavigateData);
 			_concludeBehave.BehSetIndex(_behVect.size());
 		} else {
 			_concludeBehave = null;

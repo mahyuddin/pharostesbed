@@ -1,5 +1,7 @@
 package pharoslabut.behavior;
 
+import pharoslabut.navigate.Location;
+
 /**
  * This class holds a latitude, longitude and velocity.
  * It is used while processing the experiment configuration specifications.
@@ -43,9 +45,14 @@ public class MissionData {
 //	public void SetLongitude(double longitude){this.longitude = longitude;}
 //	public void SetVelocity(double velocity){this.velocity = velocity;}
 	
-	public double GetLatitude(){return latitude;}
-	public double GetLongitude(){return longitude;}
-	public double GetVelocity(){return velocity;}
+//	public double GetLatitude(){return latitude;}
+//	public double GetLongitude(){return longitude;}
 	
+	public Location getDest() {
+		return new Location(latitude, longitude);
+	}
 	
+	public double getVelocity(){
+		return velocity;
+	}
 }

@@ -5,9 +5,9 @@ import pharoslabut.behavior.management.WorldModel;
 // TODO Implement this!
 public class BehMoveForward extends Behavior{
 	
-	public BehMoveForward(WorldModel wm, MissionData missiondata) {
+	public BehMoveForward(WorldModel wm) {
 		// TODO Auto-generated constructor stub
-		super(wm, missiondata);
+		super(wm);
 	}
 
 	@Override
