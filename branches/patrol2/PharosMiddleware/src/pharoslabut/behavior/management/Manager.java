@@ -52,8 +52,6 @@ public class Manager implements Runnable {
 		_behVect = new Vector<Behavior>();
 		_CircularRepeats = mrpConfdata.CircularRepeat();
 		_NavigateData = navigationdata;
-//		_sender = sender;
-//		_flogger = flogger;
 		_manageDynamic = mrpConfdata.IsDynamicCoordinated();
 		_synchTable = mrpConfdata.SynchTableWithPeers();
 
