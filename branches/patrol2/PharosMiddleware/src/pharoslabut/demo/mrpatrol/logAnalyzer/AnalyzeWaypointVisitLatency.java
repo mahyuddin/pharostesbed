@@ -30,6 +30,8 @@ public class AnalyzeWaypointVisitLatency {
 		// First get all of the experiment data.
 		expData = new MRPatrolExpData(expDir);
 		
+		Logger.log("Analyzing log files in " + expData.getExpDirName());
+		
 		// Next, get the waypoints
 		Vector<Location> waypoints = expData.getWayPoints();
 		
@@ -62,7 +64,7 @@ public class AnalyzeWaypointVisitLatency {
 			waypointStates.add(new WaypointState(currWaypoint, visitationTimes, idleTimes));
 		}
 		
-		// print the results
+		// Print the results
 		FileLogger flogger = null;
 		if (saveToFileName != null)
 			flogger = new FileLogger(saveToFileName, false);

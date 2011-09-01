@@ -16,6 +16,7 @@ import pharoslabut.navigate.Location;
  */
 public class MRPatrolExpData {
 	Vector<RobotMRPatrolExpData> robots = new Vector<RobotMRPatrolExpData>();
+	String expDir;
 	
 	/**
 	 * The constructor.
@@ -23,6 +24,8 @@ public class MRPatrolExpData {
 	 * @param expDir The directory containing the experiment data.
 	 */
 	public MRPatrolExpData(String expDir) {
+	
+		this.expDir = new File(expDir).getAbsolutePath();
 		
 		// Get all of the robot logs from the experiment.
 		FilenameFilter filter = new FilenameFilter() {
@@ -44,6 +47,10 @@ public class MRPatrolExpData {
 		        robots.add(new RobotMRPatrolExpData(robotFileName));
 		    }
 		}
+	}
+	
+	public String getExpDirName() {
+		return expDir;
 	}
 	
 	/**

@@ -129,7 +129,7 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		for (int i=0; i < behaviors.size(); i++) {
 			BehGotoGPSCoordState currBehavior = behaviors.get(i);
 			Location dest = currBehavior.getDest();
-			if (!result.contains(dest));
+			if (!result.contains(dest))
 				result.add(dest);
 		}
 		return result;
@@ -187,6 +187,13 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		String fileName = "BehaveMission29-EXP1-LONESTAR-MRPatrol-20110830070525.log";
 		RobotMRPatrolExpData robotExpData = new RobotMRPatrolExpData(fileName);
 		System.out.println(robotExpData.toString());
+		
+		System.out.println("Waypoints: ");
+		Vector<Location> waypoints = robotExpData.getWayPoints();
+		for (int i=0; i < waypoints.size(); i++) {
+			Location l = waypoints.get(i);
+			System.out.println(i + "\t" + l);
+		}
 	}
 
 }
