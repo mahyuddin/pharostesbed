@@ -9,13 +9,12 @@ import pharoslabut.navigate.Location;
 import pharoslabut.util.AverageStatistic;
 
 /**
- * Analyzes the latencies of visiting each waypoint.
- * It generates a table containing times between each visit of each waypoint.
+ * Analyzes the idle times of each waypoint.  The idle time is the time between robot visits.
+ * It generates a table containing the idle timesof each waypoint.
  * 
  * @author Chien-Liang Fok
- *
  */
-public class AnalyzeWaypointVisitLatency {
+public class AnalyzeWaypointIdleTime {
 
 	private MRPatrolExpData expData;
 	
@@ -26,7 +25,7 @@ public class AnalyzeWaypointVisitLatency {
 	 * @param saveToFileName The name of the file in which to save data (may be null).
 	 * @param verbose Whether to print the details of each visit.
 	 */
-	public AnalyzeWaypointVisitLatency(String expDir, String saveToFileName, boolean verbose) {
+	public AnalyzeWaypointIdleTime(String expDir, String saveToFileName, boolean verbose) {
 		
 		// First get all of the experiment data.
 		expData = new MRPatrolExpData(expDir);
@@ -132,7 +131,7 @@ public class AnalyzeWaypointVisitLatency {
 	}
 	
 	private static void usage() {
-		System.out.println("Usage: " + AnalyzeWaypointVisitLatency.class.getName()  + " <options>\n");
+		System.out.println("Usage: " + AnalyzeWaypointIdleTime.class.getName()  + " <options>\n");
 		System.out.println("Where <options> include:");
 		System.out.println("\t-expDir <dir name>: The directory containing the log files generated during a MRPatrol experiment. (required)");
 		System.out.println("\t-verbose: Print the details of each time a waypoint was visited.");
@@ -189,7 +188,7 @@ public class AnalyzeWaypointVisitLatency {
 		System.out.println("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new AnalyzeWaypointVisitLatency(expDir, saveToFileName, verbose);
+			new AnalyzeWaypointIdleTime(expDir, saveToFileName, verbose);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
