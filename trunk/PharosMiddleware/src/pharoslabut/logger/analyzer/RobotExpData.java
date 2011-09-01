@@ -86,6 +86,13 @@ public class RobotExpData {
 	private Vector<WiFiBeaconRx> wifiBeaconRxs = new Vector<WiFiBeaconRx>();
 	
 	/**
+	 * This is a protected constructor that does not take any parameters. It is used
+	 * by subclasses.
+	 */
+	protected RobotExpData() {
+	}
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the robot's experiment log file.
