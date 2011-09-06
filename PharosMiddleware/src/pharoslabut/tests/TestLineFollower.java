@@ -41,6 +41,9 @@ public class TestLineFollower {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				} else if (args[i].equals("-log")) {
 					Logger.setFileLogger(new FileLogger(args[++i]));
+				} else if (args[i].equals("-h")) {
+					usage();
+					System.exit(0);
 				} else {
 					print("Unknown argument " + args[i]);
 					usage();
