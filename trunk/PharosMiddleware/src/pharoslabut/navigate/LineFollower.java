@@ -33,7 +33,7 @@ public class LineFollower implements Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = .65;		//modified by sushen
+	public static final double MAX_SPEED = 0.6;		//modified by sushen
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
@@ -43,14 +43,15 @@ public class LineFollower implements Runnable {
 	/**
 	 * The maximum turn angle of the robot in degrees.
 	 */
-	public static final double MAX_TURN_ANGLE = 40;
+	public static final double MAX_TURN_ANGLE = 30;
 	public int turnSign;
 	
 
 	/**-------------------------------------------------------------------------------added by sushen--------
 	* The maximum pan angle of the camera (neither in degrees nor radians)
 	*/
-	public static final double MAX_PAN = 14;
+	public static final double PAN_STEP = 7;
+	public static final double MAX_PAN = 40;
 	//public static final double PAN_OFFSET = 0;		//implemented in robot driver through configuration file because 
 	//public static final double TILT_OFFSET = 50;		//each robot might need different offsets, see wiki on how to change config file and drivers.
 	//private boolean panFlag = false;
@@ -78,6 +79,7 @@ public class LineFollower implements Runnable {
 	double angle = 0;
 	double speed = 0;
 	double pan = 0;  // ----------------------------------------------------------------added by sushen--------
+	double panOld = 0;
 	
 	/**
 	 * A reference to the thread performing the line following task.  It is null initially, but
@@ -216,13 +218,45 @@ public class LineFollower implements Runnable {
 	 */
 	private double getMaxTurnAngle(double divergencePct) {
 		Logger.log("getMaxTurnAgle: " + divergencePct);
+		if (divergencePct < .05)
+			return MAX_TURN_ANGLE * 0.05;
 		if (divergencePct < .10)
-			return MAX_TURN_ANGLE * 0.1;
+			return MAX_TURN_ANGLE * 0.10;
+		if (divergencePct < .15)
+			return MAX_TURN_ANGLE * 0.15;
 		if (divergencePct < .20)
-			return MAX_TURN_ANGLE * 0.2;
+			return MAX_TURN_ANGLE * 0.20;
+		if (divergencePct < .25)
+			return MAX_TURN_ANGLE * 0.25;
 		if (divergencePct < .30)
-			return MAX_TURN_ANGLE * 0.3;
+			return MAX_TURN_ANGLE * 0.30;
+		if (divergencePct < .35)
+			return MAX_TURN_ANGLE * 0.35;
 		if (divergencePct < .40)
+			return MAX_TURN_ANGLE * 0.40;
+		if (divergencePct < .45)
+			return MAX_TURN_ANGLE * 0.45;
+		if (divergencePct < .50)
+			return MAX_TURN_ANGLE * 0.50;
+		if (divergencePct < .55)
+			return MAX_TURN_ANGLE * 0.55;
+		if (divergencePct < .60)
+			return MAX_TURN_ANGLE * 0.60;
+		if (divergencePct < .65)
+			return MAX_TURN_ANGLE * 0.65;
+		if (divergencePct < .70)
+			return MAX_TURN_ANGLE * 0.70;
+		if (divergencePct < .75)
+			return MAX_TURN_ANGLE * 0.75;
+		if (divergencePct < .80)
+			return MAX_TURN_ANGLE * 0.80;
+		if (divergencePct < .85)
+			return MAX_TURN_ANGLE * 0.85;
+		if (divergencePct < .90)
+			return MAX_TURN_ANGLE * 0.90;
+		if (divergencePct < .95)
+			return MAX_TURN_ANGLE * 0.95;
+/*		if (divergencePct < .40)
 			return MAX_TURN_ANGLE * 0.45;	//modified by sushen
 		if (divergencePct < .50)
 			return MAX_TURN_ANGLE * 0.6;	//modified by sushen
@@ -230,7 +264,7 @@ public class LineFollower implements Runnable {
 			return MAX_TURN_ANGLE * 0.75;	//modified by sushen
 		if (divergencePct < .70)
 			return MAX_TURN_ANGLE * 0.9;	//modified by sushen
-		return MAX_TURN_ANGLE;
+*/		return MAX_TURN_ANGLE;
 	}
 	
 	/**
@@ -258,13 +292,10 @@ public class LineFollower implements Runnable {
 		double divergence = Math.abs(blob.getX() - midPoint);  // blob.getX() returns the centroid's X coordinate
 		double divergencePct = divergence / midPoint;
 		Logger.log("divergencePct = " + divergencePct);
-		
-		
-		angle = turnSign * getMaxTurnAngle(divergencePct) * divergencePct;
 			
 		/*//-----------------------------------------------------added by sushen---------------------------------
 		if(divergencePct > 0.7 && panFlag == false){ 
-			pan = turnSign * MAX_PAN * divergencePct;
+			pan = turnSign * PAN_STEP * divergencePct;
 			panFlag = true;
 			oldSign = turnSign;
 		}
@@ -274,20 +305,45 @@ public class LineFollower implements Runnable {
 		}*/
 
 		//-----------------------------------------alternative method than above----------------------------------
-		if(divergencePct < 0.6)
-			pan = 0;
-		else {pan = turnSign * MAX_PAN * divergencePct;}
+//		if(divergencePct < 0.6)
+//			pan = 0;
+//		else {pan = turnSign * PAN_STEP * divergencePct;}
+		pan = panOld + ( turnSign * divergencePct * PAN_STEP );
+		if ( pan > MAX_PAN ) {
+			pan = MAX_PAN;
+		}
+		if( pan < (MAX_PAN * -1) ) {
+			pan = MAX_PAN * -1;
+		}
+		Logger.log("panOld=" + panOld + " pan=" + pan + " divergencePct=" + divergencePct);
+		panOld = pan;
+		
 		//--------------------------------------------------------------------------------------------------------
-
+		
+//		angle = turnSign * getMaxTurnAngle(divergencePct) * divergencePct;
+		angle = MAX_TURN_ANGLE * ( (pan/MAX_PAN) + (turnSign*divergencePct) );
+//		angle = MAX_TURN_ANGLE * pan / MAX_PAN;
+		Logger.log(":::: pan share=" + pan/MAX_PAN*MAX_TURN_ANGLE + " div share=" + MAX_TURN_ANGLE*turnSign*divergencePct );
+		if ( angle > MAX_TURN_ANGLE ) {
+			Logger.log("BUG: angle > MAX_TURN_ANGLE. angle=" + angle );
+			angle = MAX_TURN_ANGLE;
+		}
+		if ( angle < (MAX_TURN_ANGLE * -1) ) {
+			Logger.log("BUG: angle > MAX_TURN_ANGLE. angle=" + angle );
+			angle = MAX_TURN_ANGLE * -1;
+		}
 		/*/ Make the speed proportional to the degree to which the heading is off. 
 		speed = MAX_SPEED * (1 - divergencePct);
 		if (speed < MIN_SPEED)
 			speed = MIN_SPEED;
 		*/
 		//---------------------------------------------------------------------------Alternate method added by sushen -------------
-		speed = ((MAX_SPEED - MIN_SPEED) * (1 - divergencePct)) + MIN_SPEED;
-		if(divergencePct > 0.6)
-			speed = MIN_SPEED;
+		speed = MIN_SPEED + ( (MAX_SPEED - MIN_SPEED) * (1 - Math.abs(angle/MAX_TURN_ANGLE)) );
+//speed = 0.65;
+//		speed = ((MAX_SPEED - MIN_SPEED) * (1 - divergencePct)) + MIN_SPEED;
+//		if(angle > (0.6*MAX_TURN_ANGLE) )
+//			speed = MIN_SPEED;
+//			angle = turnSign * MAX_TURN_ANGLE;
 	}
 	
 	/**
@@ -365,7 +421,12 @@ public class LineFollower implements Runnable {
 				if(blobListCopy != null && blobListCopy.length > 0 && blobListCopy[0] != null) {
 					noBlobs = 0; //-------------------------------------------------------------------------------added by sushen ------
 					int midPoint = data.getWidth()/2;
-					adjustHeadingAndSpeed(blobListCopy[0], midPoint);
+					if( (blobListCopy[0].getArea() < 200) ) {
+						Logger.log("BLOB HEIGHT " + blobListCopy[0].getArea());
+						adjustHeadingAndSpeed(blobListCopy[0], midPoint);
+					} else {
+						return;
+					}
 				} else {
 					Logger.logErr("No primary blob, stopping robot...");
 					speed = angle = 0;					
