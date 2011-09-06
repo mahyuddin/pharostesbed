@@ -3,7 +3,6 @@ package pharoslabut.demo.autoIntersection;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
-import pharoslabut.navigate.LineFollowerEvent;
 //import pharoslabut.navigate.LineFollowerEventListener;
 import pharoslabut.sensors.*;
 import playerclient3.structures.blobfinder.PlayerBlobfinderData;
