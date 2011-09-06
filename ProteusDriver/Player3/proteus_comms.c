@@ -212,9 +212,9 @@ result_t proteus_open(proteus_comm_t* r) {
 	 */
 	cfmakeraw(&term); 
 	
-	// Set 57600 baud
-	cfsetispeed(&term, B57600); 
-	cfsetospeed(&term, B57600);
+	// Set 115200 baud
+	cfsetispeed(&term, B115200); 
+	cfsetospeed(&term, B115200);
 	
 	/*
 	 * Apply the changes to the serial port.
