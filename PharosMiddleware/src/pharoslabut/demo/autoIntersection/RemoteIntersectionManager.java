@@ -18,7 +18,7 @@ import pharoslabut.logger.*;
  * @author Chien-Liang Fok
  * @author Seth Gee
  */
-public class RemoteIntersectionManager implements LineFollowerEventListener, MessageReceiver {
+public class RemoteIntersectionManager implements MessageReceiver {
 	
 	/**
 	 * Maximum amount of time in milliseconds between entering the intersection and
@@ -130,7 +130,7 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 			System.exit(1); // fatal error
 		}
 		
-		lf.addListener(this);
+//		lf.addListener(this);
 	
 		networkInterface = new TCPNetworkInterface(); //new UDPNetworkInterface(); // robot listens on any available port
 		networkInterface.registerMsgListener(this);
@@ -304,24 +304,24 @@ public class RemoteIntersectionManager implements LineFollowerEventListener, Mes
 		clientMgr.remoteIntersectionMgrDone(success);
 	}
 	
-	@Override
-	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
-		if (isRunning) {
-			switch(lfe.getType()) {
-			// APPROACHING and ERROR events are handled by the ClientManager
-			case ENTERING:
-				doEntering();
-				break;
-			case EXITING:
-				doExiting();
-				break;
-			default:
-				Logger.logErr("Unexpected LineFollower event (" + lfe + "), aborting...");
-				doHalt(false);
-			}
-		} else
-			Logger.log("Ignoring event because not running: " + lfe);
-	}
+//	@Override
+//	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
+//		if (isRunning) {
+//			switch(lfe.getType()) {
+//			// APPROACHING and ERROR events are handled by the ClientManager
+//			case ENTERING:
+//				doEntering();
+//				break;
+//			case EXITING:
+//				doExiting();
+//				break;
+//			default:
+//				Logger.logErr("Unexpected LineFollower event (" + lfe + "), aborting...");
+//				doHalt(false);
+//			}
+//		} else
+//			Logger.log("Ignoring event because not running: " + lfe);
+//	}
 	
 	/**
 	 * Handles ReservationTimeMsg messages from the server.
