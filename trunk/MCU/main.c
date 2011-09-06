@@ -32,7 +32,7 @@ void main(void) {
 	Servo_init();
 	Tach_init();
 	Compass_init();
-	SerialDriver_init(57600);
+	SerialDriver_init(115200);
 	ADC0_Init(); // enable IR sensors
 	Command_init();
 	
