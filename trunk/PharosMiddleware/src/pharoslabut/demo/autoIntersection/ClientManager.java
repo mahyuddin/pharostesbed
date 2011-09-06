@@ -4,8 +4,9 @@ package pharoslabut.demo.autoIntersection;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.LineFollowerEvent;
-import pharoslabut.navigate.LineFollowerEventListener;
+//import pharoslabut.navigate.LineFollowerEventListener;
 import pharoslabut.sensors.*;
+import playerclient3.structures.blobfinder.PlayerBlobfinderData;
 
 /**
  * The top-level class of the autonomous intersection
@@ -13,7 +14,7 @@ import pharoslabut.sensors.*;
  * 
  * @author Chien-Liang Fok
  */
-public class ClientManager implements LineFollowerEventListener  {
+public class ClientManager implements BlobDataConsumer  {
 
 	/**
 	 * Defines the possible states that the client manager can be in.
@@ -37,7 +38,7 @@ public class ClientManager implements LineFollowerEventListener  {
 		li = new LaneIdentifier("/dev/ttyS1");
 		
 		// This class is a listener for line follower events.
-		lf.addListener(this);
+		lf.addBlobDataConsumer(this);
 		
 		// Start the line follower.  This starts the robot moving following the line.
 		currState = ClientManagerState.FOLLOW_LINE;
@@ -93,31 +94,31 @@ public class ClientManager implements LineFollowerEventListener  {
 		return li.getCurrentLane();
 	}
 	
-	/**
-	 * This implements the LineFollowerEventListener interface.
-	 * It is called whenever the LineFollower generates an event.
-	 */
-	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
-		
-		// If the LineFollower fails, abort!
-		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
-			Logger.log("Received error from the LineFollower, aborting demo...");
-			currState = ClientManagerState.IDLE;
-			lf.stop(); // There was an error, stop!
-		}
-		
-		// The only time the ClientManager is interested in a LineFollowerEvent
-		// is if it is in the FOLLOW_LINE state.
-		else if (currState == ClientManagerState.FOLLOW_LINE) {
-			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
-				Logger.log("Robot is approaching intersection, activating RemoteIntersectionManager...");
-				currState = ClientManagerState.REMOTE_TRAVERSAL;
-				rim.start(getLaneSpecs());
-			} else
-				Logger.log("Discarding unexpected event from LineFollower: " + lfe);
-		} else
-			Logger.log("Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
-	}
+//	/**
+//	 * This implements the LineFollowerEventListener interface.
+//	 * It is called whenever the LineFollower generates an event.
+//	 */
+//	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
+//		
+//		// If the LineFollower fails, abort!
+//		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
+//			Logger.log("Received error from the LineFollower, aborting demo...");
+//			currState = ClientManagerState.IDLE;
+//			lf.stop(); // There was an error, stop!
+//		}
+//		
+//		// The only time the ClientManager is interested in a LineFollowerEvent
+//		// is if it is in the FOLLOW_LINE state.
+//		else if (currState == ClientManagerState.FOLLOW_LINE) {
+//			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
+//				Logger.log("Robot is approaching intersection, activating RemoteIntersectionManager...");
+//				currState = ClientManagerState.REMOTE_TRAVERSAL;
+//				rim.start(getLaneSpecs());
+//			} else
+//				Logger.log("Discarding unexpected event from LineFollower: " + lfe);
+//		} else
+//			Logger.log("Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
+//	}
 	
 //	/**
 //	 * Logs a debug message.  This message is only printed when debug mode is enabled.
@@ -202,5 +203,11 @@ public class ClientManager implements LineFollowerEventListener  {
 		print("Server port: " + serverPort);
 		
 		new ClientManager(serverIP, serverPort, playerServerIP, playerServerPort);
+	}
+
+	@Override
+	public void newBlobData(PlayerBlobfinderData blobData) {
+		// TODO Auto-generated method stub
+		
 	}
 }
