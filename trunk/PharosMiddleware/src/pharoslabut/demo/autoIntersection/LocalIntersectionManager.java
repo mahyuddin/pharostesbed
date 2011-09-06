@@ -3,8 +3,6 @@ package pharoslabut.demo.autoIntersection;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
-import pharoslabut.navigate.LineFollowerEvent;
-import pharoslabut.navigate.LineFollowerEventListener;
 
 import playerclient3.*;
 import playerclient3.structures.PlayerConstants;
@@ -15,8 +13,9 @@ import playerclient3.structures.ir.PlayerIrData;
  * without a server.
  * 
  * @author Seth Gee
+ * @author Chien-Liang Fok
  */
-public class LocalIntersectionManager implements LineFollowerEventListener, Runnable {
+public class LocalIntersectionManager implements IntersectionEventListener, Runnable {
 
 	/**
 	 * This component is responsible for making the robot follow the line,
@@ -81,8 +80,7 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 		
 		// Uncomment these lines when ready to enable IR sensors.
 		try{
-			// TODO replace with ranger interface
-			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+			RangerInterface ir = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
 			//ir.addIRListener(this);
 		} catch (PlayerException e) { 
 			Logger.logErr("Could not connect to IR proxy.");
@@ -109,19 +107,18 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 	}
 	
 	@Override
-	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
+	public void newIntersectionEvent(IntersectionEvent lfe) {
 		if (isRunning) {
 			switch(lfe.getType()) {
 			// The APPROACHING event is now handled by the ClientManager
 			case APPROACHING:
-//				doApproaching();
 				break;
-			
+				
 //			By the time this method is called, the robot should already be at the entrance 
 //			to the intersection
 			case ENTERING:
-//			doEntering();
 				break;
+			
 			case EXITING:
 				reachedExit = true;
 				break;
@@ -130,9 +127,8 @@ public class LocalIntersectionManager implements LineFollowerEventListener, Runn
 			case ERROR:
 				Logger.logErr("Logger.log(Received error from line follower!  Aborting demo.");
 				lf.stop(); // There was an error, stop!
-//				break;
 			default:
-				Logger.log("Logger.log(Unexpected event from line follower (discarding): " + lfe);
+				Logger.log("Logger.log(Discarding unexpected intersection event: " + lfe);
 			}
 		} else
 			Logger.log("Logger.log(Ignoring event because not running: " + lfe);
