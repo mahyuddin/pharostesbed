@@ -19,7 +19,7 @@ import pharoslabut.logger.Logger;
  * @author Michael Hanna
  * @author Chien-Liang Fok
  */
-public class ServerIntersectionManager extends Thread implements MessageReceiver {
+public class AutoIntersectionServer extends Thread implements MessageReceiver {
 
     private long nextAvailableETC;
     public LinkedList<Robot> robotsGrantedAccess;
@@ -42,7 +42,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
      */
-    public ServerIntersectionManager(int serverPort)
+    public AutoIntersectionServer(int serverPort)
     {
     	
     	Logger.log("Starting intersection manager on port " + serverPort + "...");
@@ -242,7 +242,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
     
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: " + ServerIntersectionManager.class.getName() + " <options>\n");
+		print("Usage: " + AutoIntersectionServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-port <port number>: The port on which to listen (default 6665)");
 		print("\t-ways <number of ways>: the number of ways in the intersection (default 4)");
@@ -295,7 +295,7 @@ public class ServerIntersectionManager extends Thread implements MessageReceiver
 			TwoLaneFourWayIntersectionSpecs is = new TwoLaneFourWayIntersectionSpecs(intersectionWidth);
 		}
 		    	
-        Thread sim = new ServerIntersectionManager(serverPort);
+        Thread sim = new AutoIntersectionServer(serverPort);
         sim.start();
 
         java.awt.EventQueue.invokeLater(new Runnable() {

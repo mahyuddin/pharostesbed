@@ -52,7 +52,7 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	 * It coordinates the line follower, remote intersection manager, and 
 	 * local intersection manager.
 	 */
-	private ClientManager clientMgr;
+	private AutoIntersectionClient clientMgr;
 	
 	/**
 	 * This component is responsible for making the robot follow the line,
@@ -109,7 +109,7 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	 * class fail to navigate the intersection.
 	 */
 	public RemoteIntersectionManager(LineFollower lf, String serverIP, int serverPort, 
-			ClientManager clientMgr) 
+			AutoIntersectionClient clientMgr) 
 	{
 		this.lf = lf;
 		try {
