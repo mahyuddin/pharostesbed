@@ -25,8 +25,9 @@ public class TestBlobFinderPTZ {
 	 * 
 	 * @param serverIP The IP address of the robot.
 	 * @param serverPort The port on which the robot is listening.
+	 * @param reset Whether to reset the pan and tilt to their zero positions.
 	 */
-	public TestBlobFinderPTZ(String serverIP, int serverPort) {
+	public TestBlobFinderPTZ(String serverIP, int serverPort, boolean reset) {
 
 		
 		// connect to player server
@@ -60,47 +61,50 @@ public class TestBlobFinderPTZ {
 		client.runThreaded(-1, -1);
 		
 		if (ptz != null) {
-			Logger.log("Doing quick test of PTZ...");
-			// Do a quick test of PTZ
 			PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
-
-			//Initialize angles
-		
 			ptzCmd.setPan((float) 0);
 			ptzCmd.setTilt((float) 0);
-			ptz.setPTZ(ptzCmd);
-			pause(1000);
-
-			//*************these test values will not work if offsets for LineFollower are implemented*****//
-//******** see http://pharos.ece.utexas.edu/wiki/index.php/How_to_Make_a_Proteus_Robot_Follow_a_Line_Using_a_CMUCam#Determine_Offset_of_Hardware_and_Change_Configuration_File
-
-		//Begin test	
-			Logger.log("Testing Pan....");			
-			for (float pan = (float)-70; pan < 82; pan += 10) {
-				Logger.log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
-				ptzCmd.setPan((float) pan);
+			
+			if (reset) {
+				Logger.log("Resetting position of the camera.");
 				ptz.setPTZ(ptzCmd);
 				pause(1000);
+			} else {
+				Logger.log("Doing quick test of PTZ...");
+				// Do a quick test of PTZ
+				ptz.setPTZ(ptzCmd);
+				pause(1000);
+
+				//*************these test values will not work if offsets for LineFollower are implemented*****//
+				//******** see http://pharos.ece.utexas.edu/wiki/index.php/How_to_Make_a_Proteus_Robot_Follow_a_Line_Using_a_CMUCam#Determine_Offset_of_Hardware_and_Change_Configuration_File
+
+				//Begin test	
+				Logger.log("Testing Pan....");			
+				for (float pan = (float)-70; pan < 82; pan += 10) {
+					Logger.log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
+					ptzCmd.setPan((float) pan);
+					ptz.setPTZ(ptzCmd);
+					pause(1000);
+				}
+
+
+				ptzCmd.setPan((float) 0);
+				ptz.setPTZ(ptzCmd);
+				pause(3000);
+
+				Logger.log("Testing Tilt...");		
+				for (float tilt = (float)-40; tilt < 82; tilt += 10) {
+					Logger.log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
+					ptz.setPTZ(ptzCmd);
+					pause(1000);
+				} 
+
+				ptzCmd.setTilt((float) 0);
+				ptz.setPTZ(ptzCmd);
+				pause(3000);
+				Logger.log("Test Complete");
+
 			}
-
-
-			ptzCmd.setPan((float) 0);
-			ptz.setPTZ(ptzCmd);
-			pause(3000);
-		
-			Logger.log("Testing Tilt...");		
-			for (float tilt = (float)-40; tilt < 82; tilt += 10) {
-				Logger.log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
-				ptz.setPTZ(ptzCmd);
-				pause(1000);
-			} 
-
-			ptzCmd.setTilt((float) 0);
-			ptz.setPTZ(ptzCmd);
-			pause(3000);
-			Logger.log("Test Complete");
-
-
 		}
 		
 /*		boolean done = false;
@@ -143,11 +147,13 @@ public class TestBlobFinderPTZ {
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
+		System.err.println("\t-reset: Reset the pan and tilt of the camera to zero");
 	}
 	
 	public static void main(String[] args) {
 		String serverIP = "localhost";
 		int serverPort = 6665;
+		boolean reset = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -159,7 +165,11 @@ public class TestBlobFinderPTZ {
 				}
 				else if (args[i].equals("-log")) {
 					Logger.setFileLogger(new FileLogger(args[++i], false));
-				} else if (args[i].equals("-h")) {
+				} 
+				else if (args[i].equals("-reset")) {
+					reset = true;
+				}
+				else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
 				} else {
@@ -176,6 +186,6 @@ public class TestBlobFinderPTZ {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		
-		new TestBlobFinderPTZ(serverIP, serverPort);
+		new TestBlobFinderPTZ(serverIP, serverPort, reset);
 	}
 }
