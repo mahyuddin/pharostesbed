@@ -13,7 +13,7 @@ import playerclient3.structures.blobfinder.PlayerBlobfinderData;
  * 
  * @author Chien-Liang Fok
  */
-public class ClientManager implements BlobDataConsumer  {
+public class AutoIntersectionClient implements BlobDataConsumer  {
 
 	/**
 	 * Defines the possible states that the client manager can be in.
@@ -27,7 +27,7 @@ public class ClientManager implements BlobDataConsumer  {
 	private LocalIntersectionManager lim;
 	private LaneIdentifier li;
 	
-	public ClientManager(String serverIP, int port, String playerIP, int playerPort) {
+	public AutoIntersectionClient(String serverIP, int port, String playerIP, int playerPort) {
 		
 //		this.flogger = flogger;
 		
@@ -149,8 +149,9 @@ public class ClientManager implements BlobDataConsumer  {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: " + ClientManager.class.getName() + " <options>\n");
+		print("Usage: " + AutoIntersectionClient.class.getName() + " <options>\n");
 		print("Where <options> include:");
+		print("-type <intersection management type>: The type of intersection management to evaluate (centralized, adhoc, auto, default auto)");
 		print("\t-server <ip address>: The IP address of the intersection server (required)");
 		print("\t-port <port number>: The port on which the intersection server is listening (required)");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
@@ -201,7 +202,7 @@ public class ClientManager implements BlobDataConsumer  {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		new ClientManager(serverIP, serverPort, playerServerIP, playerServerPort);
+		new AutoIntersectionClient(serverIP, serverPort, playerServerIP, playerServerPort);
 	}
 
 	@Override

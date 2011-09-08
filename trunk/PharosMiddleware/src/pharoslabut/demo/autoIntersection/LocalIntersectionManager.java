@@ -50,7 +50,7 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	 * It coordinates the line follower, remote intersection manager, and 
 	 * local intersection manager.
 	 */
-	private ClientManager clientMgr;
+	private AutoIntersectionClient clientMgr;
 	
 	
 	/**
@@ -70,7 +70,7 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	 * @param clientmgr The client manager that should be notified should this
 	 * class fail to navigate the intersection.
 	 */
-	public LocalIntersectionManager(LineFollower lf, ClientManager clientMgr) {
+	public LocalIntersectionManager(LineFollower lf, AutoIntersectionClient clientMgr) {
 		this.lf = lf;
 		this.clientMgr = clientMgr;
 		this.isRunning = true; 
