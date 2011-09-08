@@ -7,6 +7,7 @@ import playerclient3.structures.*;
 import pharoslabut.logger.*;
 //import pharoslabut.navigate.LineFollowerEvent.LineFollowerEventType;
 import pharoslabut.sensors.BlobDataConsumer;
+import pharoslabut.sensors.ProteusOpaqueInterface;
 
 import java.util.*;
 
@@ -73,6 +74,7 @@ public class LineFollower implements Runnable {
 	private PlayerClient client = null;	
 	private BlobfinderInterface bfi = null;
 	private PtzInterface ptz = null;
+	private ProteusOpaqueInterface poi = null;
 	
 	private boolean done = false;
 	
@@ -97,22 +99,27 @@ public class LineFollower implements Runnable {
 	 */
 	public LineFollower(String serverIP, int serverPort) {
 		// connect to player server
-		try{
+		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
 		Logger.log("Created robot client.");
 		
 		// connect to blobfinder
-		try{
+		try {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { Logger.logErr("Could not connect to blob finder proxy."); System.exit(1);}
 		Logger.log("Created BlobFinder.");
 		
 		//set up pos. 2d proxy
-		try{
+		try {
 			p2di = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { Logger.logErr("Could not connect to position 2d proxy."); System.exit(1);}
 		Logger.logDbg("Created Position2dProxy.");
+		
+		// connect to opaque interface.
+		try {
+			poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to opaque interface."); System.exit(1);}
 		
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
 
@@ -134,6 +141,14 @@ public class LineFollower implements Runnable {
 	 */
 	public PlayerClient getPlayerClient() {
 		return client;
+	}
+	
+	/**
+	 * 
+	 * @return The opaque interface
+	 */
+	public ProteusOpaqueInterface getOpaqueInterface() {
+		return poi;
 	}
 	
 	/**
