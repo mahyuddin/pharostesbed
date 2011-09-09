@@ -38,6 +38,8 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
 	//for testing of robot's ability to wait for 10 secs every other traversal
 	private boolean testingFlag = false;
 	
+	IntersectionDetectorDisplay display = new IntersectionDetectorDisplay();
+	
     /**
      * default constructor
      * sets nextAvailableETC to a dummy low value to make the intersection available at initialization
@@ -149,6 +151,10 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
             	e.printStackTrace(); }
         }
     }
+    
+    private void handleAutoIntDebugMsg(AutoIntDebugMsg msg) {
+    	display.updateText(msg.getIE().getType().toString());
+    }
 
     /**
      * Handles incoming messages.
@@ -160,6 +166,9 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
     		handleRequestAccessMsg( (RequestAccessMsg) msg );
     	else if (msg instanceof ExitingMsg)
     		handleExitingMsg((ExitingMsg) msg );
+    	else if (msg instanceof AutoIntDebugMsg) {
+    		handleAutoIntDebugMsg((AutoIntDebugMsg)msg);
+    	}
     	else
     		Logger.log("RECEIVER: Unknown message " + msg);
 	}
@@ -211,30 +220,6 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
 		}
 	}
 	
-//	/**
-//	 * Logs a debug message.  This message is only printed when debug mode is enabled.
-//	 * 
-//	 * @param msg The message to log.
-//	 */
-//	private void log(String msg) {
-//		log(msg, true);
-//	}
-//	
-//	/**
-//	 * Logs a message.
-//	 * 
-//	 * @param msg  The message to log.
-//	 * @param isDebugMsg Whether the message is a debug message.
-//	 */
-//	private void log(String msg, boolean isDebugMsg) {
-//		String result = "ServerIntersectionManager: " + msg;
-//		LogPanel.appendLog(result);
-//		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
-    
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
 			System.out.println(msg);
