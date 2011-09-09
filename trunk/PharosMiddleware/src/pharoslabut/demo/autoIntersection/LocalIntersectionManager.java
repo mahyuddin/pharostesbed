@@ -24,9 +24,9 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	private LineFollower lf;
 	
 	/**
-	 * For logging debug messages.
+	 * This detects the intersection.
 	 */
-//	private FileLogger flogger;
+	private IntersectionDetector detector;
 	
 	/**
 	 * Keeps track of whether the LocalIntersectionManager is running.
@@ -56,12 +56,12 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	/**
 	 * Holds the latest IR range data.
 	 */
-	PlayerIrData irData;
+//	PlayerIrData irData;
 	
 	/**
 	 * Records when the latest IR data was received.
 	 */
-	long irDataTimeStamp;
+//	long irDataTimeStamp;
 	
 	/**
 	 * The constructor.
@@ -70,22 +70,23 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	 * @param clientmgr The client manager that should be notified should this
 	 * class fail to navigate the intersection.
 	 */
-	public LocalIntersectionManager(LineFollower lf, AutoIntersectionClient clientMgr) {
+	public LocalIntersectionManager(LineFollower lf, IntersectionDetector detector, AutoIntersectionClient clientMgr) {
 		this.lf = lf;
+		this.detector = detector;
 		this.clientMgr = clientMgr;
 		this.isRunning = true; 
 		
 		// Connect to the IR sensors...
 		PlayerClient client = lf.getPlayerClient();
 		
-		// Uncomment these lines when ready to enable IR sensors.
-		try{
-			RangerInterface ir = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
-			//ir.addIRListener(this);
-		} catch (PlayerException e) { 
-			Logger.logErr("Could not connect to IR proxy.");
-			System.exit(1);
-		}
+//		// Uncomment these lines when ready to enable IR sensors.
+//		try{
+//			RangerInterface ir = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
+//			//ir.addIRListener(this);
+//		} catch (PlayerException e) { 
+//			Logger.logErr("Could not connect to IR proxy.");
+//			System.exit(1);
+//		}
 	}
 	
 	/**
@@ -149,17 +150,17 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 			// If IR sensors detect obstacle, call lf.stop()
 			// If all clear, call lf.go()
 			// Make use of member variables "irData" and "irDataTimeStamp"
-			float ranges[] = irData.getRanges();
-			Logger.log("ranges are: " + ranges[0] + ", " + ranges[1] + ", " + ranges[2]);
-			
-			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {
-				Logger.log("Stopping robot because obstacle detected using IR range data.");
-				lf.stop();
-			}
-			else {
-				reachedExit = true; 
-				lf.start();
-			}
+//			float ranges[] = irData.getRanges();
+//			Logger.log("ranges are: " + ranges[0] + ", " + ranges[1] + ", " + ranges[2]);
+//			
+//			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {
+//				Logger.log("Stopping robot because obstacle detected using IR range data.");
+//				lf.stop();
+//			}
+//			else {
+//				reachedExit = true; 
+//				lf.start();
+//			}
 		}
 		
 		// After it is done...

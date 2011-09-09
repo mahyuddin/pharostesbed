@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection;
 
+import java.io.Serializable;
+
 /**
  * This is generated when the robot detects that it is entering or 
  * leaving the intersection.
@@ -7,7 +9,9 @@ package pharoslabut.demo.autoIntersection;
  * @author Chien-Liang Fok
  *
  */
-public class IntersectionEvent {
+public class IntersectionEvent implements Serializable {
+
+	private static final long serialVersionUID = -6535896318270525624L;
 
 	public enum IntersectionEventType {APPROACHING, ENTERING, EXITING, ERROR};
 	
