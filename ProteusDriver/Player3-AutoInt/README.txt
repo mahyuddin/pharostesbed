@@ -1,4 +1,4 @@
-This is the driver for the Pharos Robot used by Player Server that is specific to the Autonomous Intersection demo.  
+This is the driver for the Pharos Robot used by Player Server that is specific to the Autonomous Intersection demo.  The main difference between this driver and the generic driver is the support for intersection detection events from the MCU. 
 
 See:  http://pharos.ece.utexas.edu/wiki/index.php/Autonomous_Intersection
 
