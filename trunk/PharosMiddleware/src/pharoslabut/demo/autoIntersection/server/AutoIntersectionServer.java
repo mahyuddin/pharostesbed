@@ -233,7 +233,7 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
 		print("\t-ways <number of ways>: the number of ways in the intersection (default 4)");
 		print("\t-lanes <number of lanes>: the number of lanes in each way of the the intersection (default 2)");
 		print("\t-width <Intersection width>: the width of the intersection in cm (default 150cm)");
-		print("\t-log <log file name>: The name of the file in which to save debug output (default ServerIntersectionManager.log)");
+		print("\t-log <log file name>: The name of the file in which to save debug output (default AutoIntersectionServer.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -244,7 +244,7 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
      */
     public static void main(String [] args) {
 		int serverPort = 6665;
-		String logFileName = "ServerIntersectionManager.log";
+		String logFileName = "AutoIntersectionServer.log";
 		nWays = 4;
 		nLanes = 2;
 		intersectionWidth = 150;
