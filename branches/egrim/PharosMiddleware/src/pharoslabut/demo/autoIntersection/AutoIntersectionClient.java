@@ -13,35 +13,100 @@ import playerclient3.structures.blobfinder.PlayerBlobfinderData;
  * 
  * @author Chien-Liang Fok
  */
-public class ClientManager implements BlobDataConsumer  {
-
+public class AutoIntersectionClient implements IntersectionEventListener, Runnable {
+	
+	/**
+	 * Defines the types of intersection management.
+	 */
+	public static enum IntersectionManagementType {CENTRALIZED, ADHOC, AUTO};
+	
 	/**
 	 * Defines the possible states that the client manager can be in.
 	 */
 	public static enum ClientManagerState {IDLE, FOLLOW_LINE, REMOTE_TRAVERSAL, LOCAL_TRAVERSAL};
     
+	private IntersectionManagementType mgrType;
 	private ClientManagerState currState = ClientManagerState.IDLE;
-//	private FileLogger flogger;
 	private LineFollower lf;
 	private RemoteIntersectionManager rim;
 	private LocalIntersectionManager lim;
 	private LaneIdentifier li;
+	private IntersectionEvent ie = null;
 	
-	public ClientManager(String serverIP, int port, String playerIP, int playerPort) {
+	/**
+	 * Whether this client should continue to run.
+	 */
+	private boolean done = false;
+	
+	/**
+	 * This detects the intersection.
+	 */
+	private IntersectionDetector detector;
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param mgrType The type of intersection management beign tested.
+	 */
+	public AutoIntersectionClient(IntersectionManagementType mgrType) {
+		this.mgrType = mgrType;
+		new Thread(this).start();
+	}
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param mgrType The type of intersection management beign tested.
+	 * @param serverIP The intersection server's IP address.
+	 * @param port The intersection server's IP port.
+	 * @param playerIP The Player Server's IP address.
+	 * @param playerPort The Player Server's port.
+	 */
+	public AutoIntersectionClient(IntersectionManagementType mgrType, String serverIP, int port, String playerIP, int playerPort) {
+		this(mgrType);
 		
-//		this.flogger = flogger;
-		
+		// Create the line follower
+		Logger.log("Creating the line follower.");
 		lf = new LineFollower(playerIP, playerPort);
-		rim = new RemoteIntersectionManager(lf, serverIP, port, this);
-		lim = new LocalIntersectionManager(lf, this);
+		
+		// Create the lane identifier
+		Logger.log("Creating the lane identifier.");
 		li = new LaneIdentifier("/dev/ttyS1");
 		
-		// This class is a listener for line follower events.
-		lf.addBlobDataConsumer(this);
+		// Create the intersection detector.
+		Logger.log("Creating the intersection detector.");
+		detector = new IntersectionDetectorIR(lf.getOpaqueInterface());
+		detector.addIntersectionEventListener(this);
 		
-		// Start the line follower.  This starts the robot moving following the line.
+		// Creating the managers
+		switch(mgrType) {
+		case CENTRALIZED:
+			rim = new RemoteIntersectionManager(lf, detector, serverIP, port, this);
+			break;
+		case ADHOC:
+			lim = new LocalIntersectionManager(lf, detector, this);
+			break;
+		case AUTO:
+			// Auto switches between centralized and ad hoc management
+			rim = new RemoteIntersectionManager(lf, detector, serverIP, port, this);
+			lim = new LocalIntersectionManager(lf, detector, this);
+		}
+		
+		// Start the line follower.  This starts the robot following the line.
+		Logger.log("Starting the line follower.");
 		currState = ClientManagerState.FOLLOW_LINE;
 		lf.start();
+	}
+	
+	@Override
+	public void newIntersectionEvent(IntersectionEvent ie) {
+		Logger.log("INTERSECTION EVENT: " + ie);
+		this.ie = ie;
+		
+		Logger.logDbg("Calling notify on this.");
+		synchronized(this) {
+			this.notifyAll();
+		}
 	}
 	
 	/**
@@ -52,7 +117,7 @@ public class ClientManager implements BlobDataConsumer  {
 	 */
 	public void remoteIntersectionMgrDone(boolean success) {
 		if (success) {
-			Logger.log("Success!  Returning to FOLLOW_LINE state...");
+			Logger.log("Success! Returning to FOLLOW_LINE state...");
 			currState = ClientManagerState.FOLLOW_LINE;
 		} else {
 			Logger.log("Fail!");
@@ -86,61 +151,37 @@ public class ClientManager implements BlobDataConsumer  {
 		}
 	}
 	
+	public void run() {
+		Logger.log("Thread starting.");
+		
+		while(!done) {
+			if (ie == null) {
+				Logger.log("Waiting for next intersection event to occur.");
+				try {
+					synchronized(this) {
+						wait();
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if (ie != null) {
+				Logger.log("Detected IntersectionEvent " + ie + ", sending it to the server.");
+				IntersectionEvent currIE = ie;
+				rim.sendToServer(currIE);
+			} else {
+				Logger.log("Thread awoken but Intersection Event was null!");
+			}
+		}
+	}
+	
 	/**
 	 * @return The specifications of the lane that the robot is traversing.
 	 */
 	private LaneSpecs getLaneSpecs() {
 		return li.getCurrentLane();
 	}
-	
-//	/**
-//	 * This implements the LineFollowerEventListener interface.
-//	 * It is called whenever the LineFollower generates an event.
-//	 */
-//	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
-//		
-//		// If the LineFollower fails, abort!
-//		if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.ERROR) {
-//			Logger.log("Received error from the LineFollower, aborting demo...");
-//			currState = ClientManagerState.IDLE;
-//			lf.stop(); // There was an error, stop!
-//		}
-//		
-//		// The only time the ClientManager is interested in a LineFollowerEvent
-//		// is if it is in the FOLLOW_LINE state.
-//		else if (currState == ClientManagerState.FOLLOW_LINE) {
-//			if (lfe.getType() == LineFollowerEvent.LineFollowerEventType.APPROACHING) {
-//				Logger.log("Robot is approaching intersection, activating RemoteIntersectionManager...");
-//				currState = ClientManagerState.REMOTE_TRAVERSAL;
-//				rim.start(getLaneSpecs());
-//			} else
-//				Logger.log("Discarding unexpected event from LineFollower: " + lfe);
-//		} else
-//			Logger.log("Ignoring LineFollowerEvent " + lfe + " because not in FOLLOW_LINE state");
-//	}
-	
-//	/**
-//	 * Logs a debug message.  This message is only printed when debug mode is enabled.
-//	 * 
-//	 * @param msg The message to log.
-//	 */
-//	private void log(String msg) {
-//		log(msg, true);
-//	}
-//	
-//	/**
-//	 * Logs a message.
-//	 * 
-//	 * @param msg  The message to log.
-//	 * @param isDebugMsg Whether the message is a debug message.
-//	 */
-//	private void log(String msg, boolean isDebugMsg) {
-//		String result = "ClientManager: " + msg;
-//		if (!isDebugMsg || System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -149,8 +190,9 @@ public class ClientManager implements BlobDataConsumer  {
 	
 	private static void usage() {
 		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: " + ClientManager.class.getName() + " <options>\n");
+		print("Usage: " + AutoIntersectionClient.class.getName() + " <options>\n");
 		print("Where <options> include:");
+		print("-type <intersection management type>: The type of intersection management to evaluate (centralized, adhoc, auto, default auto)");
 		print("\t-server <ip address>: The IP address of the intersection server (required)");
 		print("\t-port <port number>: The port on which the intersection server is listening (required)");
 		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
@@ -160,6 +202,8 @@ public class ClientManager implements BlobDataConsumer  {
 	}
 	
 	public static void main(String[] args) {
+		IntersectionManagementType mgrType = IntersectionManagementType.AUTO;
+		
 		String serverIP = null;
 		int serverPort = -1;
 		
@@ -168,7 +212,15 @@ public class ClientManager implements BlobDataConsumer  {
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-server")) {
+				if (args[i].equals("-type")) {
+					String type = args[++i];
+					if (type.equals("auto"))
+						mgrType = IntersectionManagementType.AUTO;
+					else if (type.equals("adhoc"))
+						mgrType = IntersectionManagementType.ADHOC;
+					else if (type.equals("centralized"))
+						mgrType = IntersectionManagementType.CENTRALIZED;
+				} else if (args[i].equals("-server")) {
 					serverIP = args[++i];
 				} else if (args[i].equals("-port")) {
 					serverPort = Integer.valueOf(args[++i]);
@@ -201,12 +253,6 @@ public class ClientManager implements BlobDataConsumer  {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		new ClientManager(serverIP, serverPort, playerServerIP, playerServerPort);
-	}
-
-	@Override
-	public void newBlobData(PlayerBlobfinderData blobData) {
-		// TODO Auto-generated method stub
-		
+		new AutoIntersectionClient(mgrType, serverIP, serverPort, playerServerIP, playerServerPort);
 	}
 }

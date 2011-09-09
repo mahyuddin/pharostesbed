@@ -15,15 +15,14 @@ import playerclient3.PlayerClient;
  */
 public class ProteusOpaqueInterface extends OpaqueInterface {
 
-	private Vector<ProteusOpaqueListener> listeners;
+	private Vector<ProteusOpaqueListener> listeners = new Vector<ProteusOpaqueListener>();
 	
 	/**
 	 * The constructor.
 	 * @param pc
 	 */
 	public ProteusOpaqueInterface(PlayerClient pc) {
-		super(pc);
-		listeners = new Vector<ProteusOpaqueListener>();
+		super(pc); 
 	}
 	
 	public synchronized void readData (PlayerMsgHdr header) { 

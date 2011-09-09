@@ -3,27 +3,53 @@ package pharoslabut.demo.autoIntersection;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
-import pharoslabut.tests.TestLineFollower;
+//import pharoslabut.tests.TestLineFollower;
 
 /**
  * Evaluates the intersection detector.
+ * 
+ * To execute this tester:
+ * $ java pharoslabut.demo.autoIntersection.TestIntersectionDetector
  * 
  * @author Chien-Liang Fok
  * @see pharoslabut.demo.autoIntersection.IntersectionDetector
  */
 public class TestIntersectionDetector implements IntersectionEventListener {
+	public static enum IntersectionDetectorType {BLOB, CRICKET, IR};
 
-	public TestIntersectionDetector(String serverIP, int serverPort) {
+	private IntersectionDetectorDisplay display = null;
+	
+	public TestIntersectionDetector(String serverIP, int serverPort, String serialPort, 
+			IntersectionDetectorType detectorType, boolean showGUI) {
 		LineFollower lf = new LineFollower(serverIP, serverPort);
-		IntersectionDetector id = new IntersectionDetector();
-		lf.addBlobDataConsumer(id);
+
+		if (detectorType == IntersectionDetectorType.BLOB) {
+			Logger.log("Testing the BlobFinder-based intersection detector.");
+			IntersectionDetectorBlobFinder id = new IntersectionDetectorBlobFinder();
+			id.addIntersectionEventListener(this);
+			lf.addBlobDataConsumer(id);
+		} 
+		else if (detectorType == IntersectionDetectorType.CRICKET) {
+			Logger.log("Testing the Cricket-based intersection detector.");
+			IntersectionDetectorCricket id = new IntersectionDetectorCricket(serialPort);
+			id.addIntersectionEventListener(this);
+		}
+		else if (detectorType == IntersectionDetectorType.IR) {
+			Logger.log("Testing the IR intersection detector.");
+			IntersectionDetectorIR id = new IntersectionDetectorIR(lf.getOpaqueInterface());
+			id.addIntersectionEventListener(this);
+		}
+		
+		if (showGUI)
+			display = new IntersectionDetectorDisplay();
 		lf.start();
 	}
 	
 	@Override
 	public void newIntersectionEvent(IntersectionEvent ie) {
 		Logger.log("**** INTERSECTION EVENT: " + ie);
-		
+		if (display != null)
+			display.updateText(ie.getType().toString());
 	}
 	
 	private static void print(String msg) {
@@ -38,12 +64,19 @@ public class TestIntersectionDetector implements IntersectionEventListener {
 		print("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-port <port number>: The Player Server's port number (default 6665)");
 		print("\t-log <log file name>: The name of the file in which to save debug output (default null)");
+		print("\t-serial <port>: The serial port to which the cricket is attached (default /dev/ttyS1)");
+		print("\t-type <detector type>: The type of detector to use (blob, cricket, ir, default ir)");
+		print("\t-gui: show the GUI.");
 		print("\t-debug: enable debug mode");
 	}
 	
 	public static void main(String[] args) {
 		String serverIP = "localhost";
 		int serverPort = 6665;
+		boolean useBlobFinder = false;
+		String cricketSerialPort = "/dev/ttyS1";
+		IntersectionDetectorType detectorType = IntersectionDetectorType.IR;
+		boolean showGUI = false;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -53,8 +86,22 @@ public class TestIntersectionDetector implements IntersectionEventListener {
 					serverPort = Integer.valueOf(args[++i]);
 				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
+				} else if (args[i].equals("-useBlobFinder")) {
+					useBlobFinder = true;
+				} else if (args[i].equals("-serial")) {
+					cricketSerialPort = args[++i];
+				} else if (args[i].equals("-type")) {
+					String type = args[++i];
+					if (type.contains("IR"))
+						detectorType = IntersectionDetectorType.IR;
+					else if (type.contains("BLOB"))
+						detectorType = IntersectionDetectorType.BLOB;
+					else if (type.contains("CRICKET"))
+						detectorType = IntersectionDetectorType.CRICKET; 
 				} else if (args[i].equals("-log")) {
 					Logger.setFileLogger(new FileLogger(args[++i]));
+				}  else if (args[i].equals("-gui")) {
+					showGUI = true;
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -72,6 +119,6 @@ public class TestIntersectionDetector implements IntersectionEventListener {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		new TestIntersectionDetector(serverIP, serverPort);
+		new TestIntersectionDetector(serverIP, serverPort, cricketSerialPort, detectorType, showGUI);
 	}
 }

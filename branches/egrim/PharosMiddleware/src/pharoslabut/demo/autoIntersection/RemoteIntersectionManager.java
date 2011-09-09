@@ -32,6 +32,11 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	public static int MAXIMUM_REQUESTS = 5;
 	
 	/**
+	 * This detects the intersection.
+	 */
+	private IntersectionDetector detector;
+	
+	/**
 	 * The ID of the robot.  This is unique to each robot and is the wireless ad hoc IP address
 	 * of the robot.  It is of the form "10.11.12.x".
 	 */
@@ -52,7 +57,7 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	 * It coordinates the line follower, remote intersection manager, and 
 	 * local intersection manager.
 	 */
-	private ClientManager clientMgr;
+	private AutoIntersectionClient clientMgr;
 	
 	/**
 	 * This component is responsible for making the robot follow the line,
@@ -108,8 +113,8 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	 * @param clientmgr The client manager that should be notified should this
 	 * class fail to navigate the intersection.
 	 */
-	public RemoteIntersectionManager(LineFollower lf, String serverIP, int serverPort, 
-			ClientManager clientMgr) 
+	public RemoteIntersectionManager(LineFollower lf, IntersectionDetector detector, String serverIP, int serverPort, 
+			AutoIntersectionClient clientMgr) 
 	{
 		this.lf = lf;
 		try {
@@ -134,6 +139,16 @@ public class RemoteIntersectionManager implements MessageReceiver {
 	
 		networkInterface = new TCPNetworkInterface(); //new UDPNetworkInterface(); // robot listens on any available port
 		networkInterface.registerMsgListener(this);
+	}
+	
+	/**
+	 * Sends an IntersectionEvent to the server.
+	 * 
+	 * @param currIE The intersection event to send.
+	 */
+	public void sendToServer(IntersectionEvent currIE) {
+		AutoIntDebugMsg msg = new AutoIntDebugMsg(robotIP, networkInterface.getLocalPort(), currIE);
+		networkInterface.sendMessage(serverIP, serverPort, msg);
 	}
 	
 	/**
