@@ -237,6 +237,7 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 					usage();
 					System.exit(1);
 				}
+				Logger.log("THE SERVER PORT IS " + serverPort);
 			}
 		} catch(Exception e) {
 			e.printStackTrace();
