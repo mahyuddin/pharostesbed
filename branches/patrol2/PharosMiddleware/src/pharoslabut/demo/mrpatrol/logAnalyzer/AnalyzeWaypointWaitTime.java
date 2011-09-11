@@ -9,12 +9,12 @@ import pharoslabut.navigate.Location;
 import pharoslabut.util.AverageStatistic;
 
 /**
- * Analyzes the idle times of each waypoint.  The idle time is the time between robot visits.
- * It generates a table containing the idle timesof each waypoint.
+ * Analyzes the wait time of each waypoint.  The wait time is the duration a robot 
+ * stays at a waypoint waiting for its teammates to arrive at their waypoints.
  * 
  * @author Chien-Liang Fok
  */
-public class AnalyzeWaypointIdleTime {
+public class AnalyzeWaypointWaitTime {
 
 	private MRPatrolExpData expData;
 	
@@ -25,7 +25,7 @@ public class AnalyzeWaypointIdleTime {
 	 * @param saveToFileName The name of the file in which to save data (may be null).
 	 * @param verbose Whether to print the details of each visit.
 	 */
-	public AnalyzeWaypointIdleTime(String expDir, String saveToFileName, boolean verbose) {
+	public AnalyzeWaypointWaitTime(String expDir, String saveToFileName, boolean verbose) {
 		
 		// First get all of the experiment data.
 		expData = new MRPatrolExpData(expDir);
@@ -47,21 +47,18 @@ public class AnalyzeWaypointIdleTime {
 		for (int i=0; i < waypoints.size(); i++) {
 			Location currWaypoint = waypoints.get(i);
 			
-			// Get the times it was visited...
-			Vector<VisitationState> visitationTimes = expData.getVisitationTimes(currWaypoint);
-			Collections.sort(visitationTimes); // sort it in ascending order
+			// Get the wait times...
+			Vector<VisitationState> visits = expData.getVisitationTimes(currWaypoint);
+			Collections.sort(visits); // sort it in ascending order
 			
-			// Compute the idle times between visits
-			Vector<Long> idleTimes = new Vector<Long>();
-			for (int j=0; j < visitationTimes.size()-1; j++) {
-				long currVisitTime = visitationTimes.get(j).getArrivalTime();
-				long nextVisitTime = visitationTimes.get(j+1).getArrivalTime();
-				long idleTime = nextVisitTime - currVisitTime;
-				idleTimes.add(idleTime);
+			// Compute the wait times during each visit
+			Vector<Long> waitTimes = new Vector<Long>();
+			for (int j=0; j < visits.size(); j++) {
+				waitTimes.add(visits.get(j).getWaitTime());
 			}
 			
 			// Save the data in waypointStates
-			waypointStates.add(new WaypointState(currWaypoint, visitationTimes, idleTimes));
+			waypointStates.add(new WaypointState(currWaypoint, visits, waitTimes));
 		}
 		
 		// Print the results
@@ -74,25 +71,23 @@ public class AnalyzeWaypointIdleTime {
 				WaypointState currWaypoint = waypointStates.get(i);
 				log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
 				
-				log("Visit number\tTime (ms)\tTime since Last Visit (ms)\tRobotID", flogger);
+				log("Visit number\tArrival Time (ms)\tDeparture Time (ms)\tWait Time (ms)\tRobotID", flogger);
 				for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
-					if (j > 0)
-						log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime() + "\t" + currWaypoint.idleTimes.get(j-1) 
-								+ "\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
-								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
-					else
-						log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime()
-								+ "\t\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
-								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
+					VisitationState currVisit = currWaypoint.visitationTimes.get(j);
+					log(j + "\t" + currVisit.getArrivalTime() 
+							+ "\t" + currVisit.getArrivalTime() 
+							+ "\t" + currWaypoint.waitTimes.get(j) 
+							+ "\t" + currVisit.getRobotName() 
+							+ " (" + currVisit.getRobotID() + ")", flogger);
 				}
 				log("", flogger); // add new line after each table.
 			}	
 		}
 		
-		log("WaypointID\tWaypoint\tAvg Idle Time (ms)\tAvg Idle Time 95% Conf (ms)\tAvg Idle Time (s)\tAvg Idle Time 95% Conf (s)", flogger);
+		log("WaypointID\tWaypoint\tAvg Wait Time (ms)\tAvg Wait Time 95% Conf (ms)\tAvg Wait Time (s)\tAvg Wait Time 95% Conf (s)", flogger);
 		for (int i=0; i < waypointStates.size(); i++) {
 			WaypointState currWaypoint = waypointStates.get(i);
-			AverageStatistic stat = currWaypoint.getAvgIdleTime();
+			AverageStatistic stat = currWaypoint.getAvgWaitTime();
 			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
 		}
 	}
@@ -100,24 +95,24 @@ public class AnalyzeWaypointIdleTime {
 	private class WaypointState {
 		Location waypoint;
 		Vector<VisitationState> visitationTimes;
-		Vector<Long> idleTimes;
+		Vector<Long> waitTimes;
 		
-		public WaypointState(Location waypoint, Vector<VisitationState> visitationTimes, Vector<Long> idleTimes) {
+		public WaypointState(Location waypoint, Vector<VisitationState> visitationTimes, Vector<Long> waitTimes) {
 			this.waypoint = waypoint;
 			this.visitationTimes = visitationTimes;
-			this.idleTimes = idleTimes;
+			this.waitTimes = waitTimes;
 		}
 		
 		/**
 		 * 
 		 * @return The average idle time.
 		 */
-		public AverageStatistic getAvgIdleTime() {
+		public AverageStatistic getAvgWaitTime() {
 			
-			// Convert the idle times into a vector of doubles
+			// Convert the wait times into a vector of doubles
 			Vector<Double> temp = new Vector<Double>();
-			for (int i=0; i < idleTimes.size(); i++) {
-				temp.add((double)idleTimes.get(i));
+			for (int i=0; i < waitTimes.size(); i++) {
+				temp.add((double)waitTimes.get(i));
 			}
 			
 			// Compute the average and confidence intervals.
@@ -132,7 +127,7 @@ public class AnalyzeWaypointIdleTime {
 	}
 	
 	private static void usage() {
-		System.out.println("Usage: " + AnalyzeWaypointIdleTime.class.getName()  + " <options>\n");
+		System.out.println("Usage: " + AnalyzeWaypointWaitTime.class.getName()  + " <options>\n");
 		System.out.println("Where <options> include:");
 		System.out.println("\t-expDir <dir name>: The directory containing the multi-robot patrol experiment log files. (required)");
 		System.out.println("\t-verbose: Print the details of each waypoint visit.");
@@ -189,7 +184,7 @@ public class AnalyzeWaypointIdleTime {
 		System.out.println("Debug: " + (System.getProperty ("PharosMiddleware.debug") != null));
 		
 		try {
-			new AnalyzeWaypointIdleTime(expDir, saveToFileName, verbose);
+			new AnalyzeWaypointWaitTime(expDir, saveToFileName, verbose);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}

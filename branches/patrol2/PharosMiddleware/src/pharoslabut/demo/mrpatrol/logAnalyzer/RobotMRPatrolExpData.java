@@ -41,6 +41,12 @@ public class RobotMRPatrolExpData extends RobotExpData {
 	private boolean isMultiHop = false;
 	
 	/**
+	 * This is the time at which the robot completes all behaviors.  It
+	 * occurs immediately before the "go to home" behavior.
+	 */
+	private long completionTime = -1;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The robot log file.
@@ -138,6 +144,10 @@ public class RobotMRPatrolExpData extends RobotExpData {
 				isMultiHop = true;
 			}
 			
+			else if (line.contains("Finished all behaviors")) {
+				completionTime = Long.valueOf(line.substring(1,line.indexOf(']')));
+			}
+			
 		}
 		
 		// Remove the last behavior because it's the one that makes the robot go home
@@ -199,7 +209,18 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		for (int i=0; i < behaviors.size(); i++) {
 			BehGotoGPSCoordState currBehavior = behaviors.get(i);
 			if (currBehavior.getDest().equals(waypoint)) {
-				VisitationState vs = new VisitationState(getRobotName(), getRobotID(), currBehavior.getStopTime());
+				
+				long departTime;
+				if (i < behaviors.size() - 1)
+					departTime = behaviors.get(i+1).getStartTime();
+				else {
+					if (completionTime == -1) {
+						Logger.logErr("Unknown completion time.  Cannot compute time when robot departs waypoint.");
+						System.exit(1);
+					}
+					departTime = completionTime; // The completion of the last behavior is the completion time of behavior list.
+				}
+				VisitationState vs = new VisitationState(getRobotName(), getRobotID(), currBehavior.getStopTime(), departTime);
 				result.add(vs);
 			}
 		}
@@ -228,6 +249,8 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		for (int i=0; i < behaviors.size(); i++) {
 			behaviors.get(i).calibrateTime(calibrator);
 		}
+		
+		completionTime = calibrator.getCalibratedTime(completionTime);
 		
 		return calibrator;
 	}

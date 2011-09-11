@@ -9,12 +9,22 @@ public class VisitationState implements Comparable<VisitationState> {
 
 	private String robotName;
 	private int robotID;
-	private long timestamp;
+	private long arrivalTime;
+	private long departTime;
 	
-	public VisitationState(String robotName, int robotID, long timestamp) {
+	/**
+	 * The constructor.
+	 * 
+	 * @param robotName The robot name.
+	 * @param robotID The robot ID.
+	 * @param arrivalTime The time when the robot arrives at this waypoint.
+	 * @param departTime The time when the robot leaves the waypoint.
+	 */
+	public VisitationState(String robotName, int robotID, long arrivalTime, long departTime) {
 		this.robotName = robotName;
 		this.robotID = robotID;
-		this.timestamp = timestamp;
+		this.arrivalTime = arrivalTime;
+		this.departTime = departTime;
 	}
 	
 	public String getRobotName() {
@@ -25,20 +35,28 @@ public class VisitationState implements Comparable<VisitationState> {
 		return robotID;
 	}
 	
-	public long getTimestamp() {
-		return timestamp;
+	public long getArrivalTime() {
+		return arrivalTime;
+	}
+	
+	public long getDepartureTime() {
+		return departTime;
+	}
+	
+	public long getWaitTime() {
+		return getDepartureTime() - getArrivalTime();
 	}
 	
 	public int compareTo(VisitationState vs) {
-		if (timestamp == vs.getTimestamp())
+		if (arrivalTime == vs.getArrivalTime())
 			return 0;
-		else if (timestamp > vs.getTimestamp()) 
+		else if (arrivalTime > vs.getArrivalTime()) 
 			return 1;
 		else
 			return -1;
 	}
 	
 	public String toString() {
-		return getClass().getName() + ": " + robotName + "\t" + robotID + "\t" + timestamp;
+		return getClass().getName() + ": " + robotName + "\t" + robotID + "\t" + arrivalTime + "\t" + departTime;
 	}
 }
