@@ -156,19 +156,32 @@ public class Location implements java.io.Serializable, Comparable {
 	public int compareTo(Object o) {
 		if (o instanceof Location) {
 			Location l = (Location)o;
-			if (l.latitude() < latitude())  // locations that are more north are first
-				return 1;
-			else if (l.latitude() > latitude())
+			if (l.latitude() < latitude())  // locations that are more North are first
+			return 1;
+		else if (l.latitude() > latitude())
+			return -1;
+		else {
+			// The latitudes are equal
+			if (l.longitude() > longitude())  // locations that are more East are first
 				return -1;
-			else {
-				// The latitudes are equal
-				if (l.longitude() > longitude())  // locations that are more east are first
-					return 1;
-				else if (l.longitude() < longitude()) 
-					return -1;
-				else
-					return 0; // they are equal
-			}
+			else if (l.longitude() < longitude()) 
+				return 1;
+			else
+				return 0; // they are equal
+		}
+//			if (l.longitude() < longitude())  // locations that are more East are first
+//				return 1;
+//			else if (l.longitude() > longitude())
+//				return -1;
+//			else {
+//				// The longitudes are equal
+//				if (l.latitude() > latitude())  // locations that are more North are first
+//					return -1;
+//				else if (l.latitude() < latitude()) 
+//					return 1;
+//				else
+//					return 0; // they are equal
+//			}
 		} else
 			return 0;
 	}

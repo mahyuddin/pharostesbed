@@ -21,7 +21,7 @@ public class AnalyzeWaypointIdleTime {
 	/**
 	 * The constructor.
 	 * 
-	 * @param expDir The directory containing the log files generated during a MRPatrol experiment.
+	 * @param expDir The directory containing the experiment log files.
 	 * @param saveToFileName The name of the file in which to save data (may be null).
 	 * @param verbose Whether to print the details of each visit.
 	 */
@@ -89,10 +89,11 @@ public class AnalyzeWaypointIdleTime {
 			}	
 		}
 		
-		log("WaypointID\tWaypoint\tAverage Idle Time (ms)", flogger);
+		log("WaypointID\tWaypoint\tAvg Idle Time (ms)\tAvg Idle Time 95% Conf (ms)\tAvg Idle Time (s)\tAvg Idle Time 95% Conf (s)", flogger);
 		for (int i=0; i < waypointStates.size(); i++) {
 			WaypointState currWaypoint = waypointStates.get(i);
-			log(i + "\t" + currWaypoint.waypoint + "\t" + currWaypoint.getAvgIdleTime(), flogger);
+			AverageStatistic stat = currWaypoint.getAvgIdleTime();
+			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
 		}
 	}
 	
@@ -133,10 +134,10 @@ public class AnalyzeWaypointIdleTime {
 	private static void usage() {
 		System.out.println("Usage: " + AnalyzeWaypointIdleTime.class.getName()  + " <options>\n");
 		System.out.println("Where <options> include:");
-		System.out.println("\t-expDir <dir name>: The directory containing the log files generated during a MRPatrol experiment. (required)");
-		System.out.println("\t-verbose: Print the details of each time a waypoint was visited.");
-		System.out.println("\t-save <file name>: Save the idle times a text file. (optional)");
-		System.out.println("\t-debug or -d: Enable debug mode");
+		System.out.println("\t-expDir <dir name>: The directory containing the multi-robot patrol experiment log files. (required)");
+		System.out.println("\t-verbose: Print the details of each waypoint visit.");
+		System.out.println("\t-save <file name>: Save the idle times into a text file. (optional)");
+		System.out.println("\t-debug or -d: Enable debug mode.");
 	}
 	
 	public static void main(String[] args) {
@@ -175,7 +176,7 @@ public class AnalyzeWaypointIdleTime {
 		}
 		
 		if (expDir == null) {
-			System.err.println("Must specify log file.");
+			System.err.println("Must specify directory containing experiment log files.");
 			usage();
 			System.exit(1);
 		}

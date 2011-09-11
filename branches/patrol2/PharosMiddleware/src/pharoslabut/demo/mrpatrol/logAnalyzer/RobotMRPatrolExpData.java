@@ -23,8 +23,28 @@ import pharoslabut.navigate.Location;
  */
 public class RobotMRPatrolExpData extends RobotExpData {
 
+	/**
+	 * The number of times the robot will patrol the route.
+	 */
+	private int numRounds = -1;
+	
+	/**
+	 * Details on each behavior executed by the robot.
+	 */
 	private Vector<BehGotoGPSCoordState> behaviors = new Vector<BehGotoGPSCoordState>();
 	
+	/**
+	 * Records whether the experiment is multi-hop.  It is multi-hop when the nodes
+	 * share their entire world view when their neighbors, enabling information to be
+	 * spread across multiple hops.
+	 */
+	private boolean isMultiHop = false;
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param fileName The robot log file.
+	 */
 	public RobotMRPatrolExpData(String fileName) {
 		this.fileName = fileName;
 		try {
@@ -103,6 +123,21 @@ public class RobotMRPatrolExpData extends RobotExpData {
 				
 			}
 			
+			// Get the number of rounds.
+			// Example line in log file:
+			// [1314705926069] pharoslabut.behavior.management.Manager: <init>: System circular: 10behavior vector size is: 60
+			// [1315571762200] pharoslabut.behavior.management.Manager: <init>: System circular: 10 behavior vector size is: 120
+			else if (line.contains("pharoslabut.behavior.management.Manager") && line.contains("System circular: ")) {
+				String key = "System circular: ";
+				String circularLine = line.substring(line.indexOf(key) + key.length());
+				String[] tokens = circularLine.split("[(a-z|:|\\s)+]");
+				numRounds = Integer.valueOf(tokens[0]);
+			}
+			
+			else if (line.contains("MultiRobotTableMsg")) {
+				isMultiHop = true;
+			}
+			
 		}
 		
 		// Remove the last behavior because it's the one that makes the robot go home
@@ -132,6 +167,23 @@ public class RobotMRPatrolExpData extends RobotExpData {
 			if (!result.contains(dest))
 				result.add(dest);
 		}
+		
+		// Order the waypoint such that the north-eastern-most waypoint is first.
+		if (result.size() > 0) {
+			int indexOfFirstLoc = 0;
+			for (int i=1; i < result.size(); i++) {
+				if (result.get(i).compareTo(result.get(indexOfFirstLoc)) > 0) {
+					indexOfFirstLoc = i;
+				}
+			}
+			
+			// Shift the waypoints such that the first waypoint is first
+			while (indexOfFirstLoc-- != 0) {
+				Location loc = result.remove(0);
+				result.add(loc);
+			}
+		} else
+			Logger.logErr("No waypoints!");
 		return result;
 	}
 	
@@ -153,6 +205,14 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @return The number of rounds, or -1 if unknown.
+	 */
+	public int getNumRounds() {
+		return numRounds;
 	}
 	
 	/**
@@ -182,6 +242,14 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * @return Whether the experiment involves multi-hop dissemination of 
+	 * world view information.
+	 */
+	public boolean isMultiHop() {
+		return isMultiHop;
 	}
 	
 	public static void main(String[] args) {

@@ -5,7 +5,7 @@ import java.io.FilenameFilter;
 import java.util.Vector;
 
 import pharoslabut.logger.Logger;
-import pharoslabut.logger.analyzer.RobotExpData;
+//import pharoslabut.logger.analyzer.RobotExpData;
 import pharoslabut.navigate.Location;
 
 /**
@@ -27,7 +27,7 @@ public class MRPatrolExpData {
 	
 		this.expDir = new File(expDir).getAbsolutePath();
 		
-		// Get all of the robot logs from the experiment.
+		// Get the robot logs from the experiment.
 		FilenameFilter filter = new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
 		        return !name.startsWith(".") && name.contains("-MRPatrol") && name.contains(".log");
@@ -44,7 +44,9 @@ public class MRPatrolExpData {
 		    for (int i=0; i < logFiles.length; i++) {
 		    	String robotFileName = expDir + "/" + logFiles[i];
 		    	Logger.logDbg("Reading robot log " + robotFileName);
-		        robots.add(new RobotMRPatrolExpData(robotFileName));
+		    	
+		    	// Create a RobotMRPatrolExpData for each robot in experiment, and store it in the robots vector.
+		        robots.add(new RobotMRPatrolExpData(robotFileName));	
 		    }
 		}
 	}
@@ -84,5 +86,17 @@ public class MRPatrolExpData {
 		}
 		
 		return visitationTimes;
+	}
+	
+	/**
+	 * @return The number of rounds in the experiment.
+	 */
+	public int getNumRounds() {
+		if (robots.size() == 0) {
+			Logger.logErr("Unable to get num rounds.  No robot data!");
+			System.exit(1);
+			return -1;
+		} else 
+			return robots.get(0).getNumRounds();
 	}
 }
