@@ -2,7 +2,7 @@ package pharoslabut.navigate;
 
 import playerclient3.structures.gps.PlayerGpsData;
 
-public class Location implements java.io.Serializable {
+public class Location implements java.io.Serializable, Comparable {
 	private static final long serialVersionUID = -2689555631414682934L;
 	private double latitude, longitude, elevation;
 	
@@ -150,6 +150,27 @@ public class Location implements java.io.Serializable {
 		double result = distance(latitude(), longitude(), 
 				targetLoc.latitude(), targetLoc.longitude(), 'K');
 		return result * 1000; // convert to meters
+	}
+	
+	@Override
+	public int compareTo(Object o) {
+		if (o instanceof Location) {
+			Location l = (Location)o;
+			if (l.latitude() < latitude())  // locations that are more north are first
+				return 1;
+			else if (l.latitude() > latitude())
+				return -1;
+			else {
+				// The latitudes are equal
+				if (l.longitude() > longitude())  // locations that are more east are first
+					return 1;
+				else if (l.longitude() < longitude()) 
+					return -1;
+				else
+					return 0; // they are equal
+			}
+		} else
+			return 0;
 	}
 	
 	public String toString() {
