@@ -2,6 +2,7 @@ package pharoslabut.demo.mrpatrol.logAnalyzer;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.util.Collections;
 import java.util.Vector;
 
 import pharoslabut.logger.Logger;
@@ -98,5 +99,14 @@ public class MRPatrolExpData {
 			return -1;
 		} else 
 			return robots.get(0).getNumRounds();
+	}
+	
+	/**
+	 * 
+	 * @return The robots that participated in the experiment, ordered by starting waypoint.
+	 */
+	public Vector<RobotMRPatrolExpData> getRobots() {
+		Collections.sort(robots);
+		return robots;
 	}
 }

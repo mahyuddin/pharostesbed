@@ -21,7 +21,7 @@ import pharoslabut.navigate.Location;
  * @author Chien-Liang Fok
  *
  */
-public class RobotMRPatrolExpData extends RobotExpData {
+public class RobotMRPatrolExpData extends RobotExpData implements Comparable<RobotMRPatrolExpData> {
 
 	/**
 	 * The number of times the robot will patrol the route.
@@ -170,6 +170,8 @@ public class RobotMRPatrolExpData extends RobotExpData {
 	 * as we see that we re-visit a waypoint, we know that we've visited all of the waypoints.
 	 */
 	public Vector<Location> getWayPoints() {
+		
+		// Get the waypoints
 		Vector<Location> result = new Vector<Location>();
 		for (int i=0; i < behaviors.size(); i++) {
 			BehGotoGPSCoordState currBehavior = behaviors.get(i);
@@ -195,6 +197,18 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		} else
 			Logger.logErr("No waypoints!");
 		return result;
+	}
+	
+	public Location getFirstWaypoint() {
+		if (behaviors.size() > 0) {
+			Location result = behaviors.get(0).getDest();
+			return result;
+		} else {
+			Logger.logErr("No behaviors, unable to determing first waypoint");
+			System.exit(1);
+			return null;
+		}
+		
 	}
 	
 	/**
@@ -275,6 +289,33 @@ public class RobotMRPatrolExpData extends RobotExpData {
 		return isMultiHop;
 	}
 	
+	@Override
+	public int compareTo(RobotMRPatrolExpData o) {
+		Location otherFirstWP = o.getFirstWaypoint();
+		return getFirstWaypoint().compareTo(otherFirstWP);
+	}
+	
+	/**
+	 * 
+	 * @return The total run time in milliseconds.
+	 */
+	public long getTotalRunTime() {
+		if (behaviors.size() > 0) {
+			if (completionTime != -1) {
+				BehGotoGPSCoordState firstBeh = behaviors.get(0);
+				return completionTime - firstBeh.getStartTime();
+			} else {
+				Logger.logErr("Unknown completion time.");
+				System.exit(1);
+				return -1;
+			}
+		} else {
+			Logger.logErr("No behaviors.");
+			System.exit(1);
+			return -1;
+		}
+	}
+	
 	public static void main(String[] args) {
 		String fileName = "BehaveMission29-EXP1-LONESTAR-MRPatrol-20110830070525.log";
 		RobotMRPatrolExpData robotExpData = new RobotMRPatrolExpData(fileName);
@@ -287,5 +328,4 @@ public class RobotMRPatrolExpData extends RobotExpData {
 			System.out.println(i + "\t" + l);
 		}
 	}
-
 }
