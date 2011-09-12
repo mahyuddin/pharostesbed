@@ -47,6 +47,16 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 	private long completionTime = -1;
 	
 	/**
+	 * Records when a message is transmitted.
+	 */
+	private Vector <CoordMsgTxEvent> msgTxEvents = new Vector<CoordMsgTxEvent>();
+	
+	/**
+	 * Records when a message is received.
+	 */
+	private Vector <CoordMsgRxEvent> msgRxEvents = new Vector<CoordMsgRxEvent>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The robot log file.
@@ -77,6 +87,11 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 		String line = null;
 		
 		while ((line = br.readLine()) != null) {
+			
+			// Record the fact that this experiment is multi-hop
+			if (line.contains("MultiRobotTableMsg")) {
+				isMultiHop = true;
+			}
 			
 			// Get the destination location of each BehGotoGPSCoord behavior
 			if (line.contains("pharoslabut.behavior.BehGotoGPSCoord:") && line.contains("Constructor behavior;")) {
@@ -126,7 +141,6 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 				
 				BehaviorState behavior = behaviors.get(behaviorNumber);
 				behavior.setBehaviorStopTime(timestamp);
-				
 			}
 			
 			// Get the number of rounds.
@@ -140,14 +154,49 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 				numRounds = Integer.valueOf(tokens[0]);
 			}
 			
-			else if (line.contains("MultiRobotTableMsg")) {
-				isMultiHop = true;
-			}
-			
 			else if (line.contains("Finished all behaviors")) {
 				completionTime = Long.valueOf(line.substring(1,line.indexOf(']')));
 			}
 			
+			// Record the transmission of coordination messages
+			else if (line.contains("pharoslabut.behavior.management.BehaviorBroadcaster: doBroadcast: Attempting to send message to")) {
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				String key = "pharoslabut.behavior.management.BehaviorBroadcaster: doBroadcast: Attempting to send message to";
+				String sndLine = line.substring(line.indexOf(key) + key.length());
+				String[] tokens = sndLine.split(":");
+				
+				String destIP = tokens[0];
+				int destPort = Integer.valueOf(tokens[1]);
+				msgTxEvents.add(new CoordMsgTxEvent(timestamp, destIP, destPort));
+			}
+			
+			// Record the reception of coordination messages.
+			else if (line.contains("pharoslabut.demo.mrpatrol.MRPatrolServer: newMessage: updated behavior message: MultiRobotBehaveMsg:")) {
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+				String key = "pharoslabut.demo.mrpatrol.MRPatrolServer: newMessage: updated behavior message: MultiRobotBehaveMsg:";
+				String sndLine = line.substring(line.indexOf(key) + key.length());
+				String[] tokens = sndLine.split("[=,\\,\\s]");
+				
+				String behaveName = tokens[2];
+				int behaveID = Integer.valueOf(tokens[5]);
+				int robotID = Integer.valueOf(tokens[8]);
+				
+				msgRxEvents.add(new CoordMsgRxEvent(timestamp, behaveName, behaveID, robotID));
+			}
+			else if (line.contains("pharoslabut.demo.mrpatrol.MRPatrolServer: newMessage: updating behavior message: pharoslabut.behavior.MultiRobotTableMsg")) {
+				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				
+//				Logger.log("Adding message received.");
+				
+				// this is just dummy code.  For now, we only want to record the presence of a message reception.
+				msgRxEvents.add(new CoordMsgRxEvent(timestamp, "blah1", 0, 1));
+			} 
+//			else {
+//				if (line.contains("newMessage"))
+//					Logger.log("Ingoring line: " + line);
+//			}
 		}
 		
 		// Remove the last behavior because it's the one that makes the robot go home
@@ -264,9 +313,25 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 			behaviors.get(i).calibrateTime(calibrator);
 		}
 		
+		for (int i=0; i < msgRxEvents.size(); i++) {
+			msgRxEvents.get(i).calibrateTime(calibrator);
+		}
+		
+		for (int i=0; i < msgTxEvents.size(); i++) {
+			msgTxEvents.get(i).calibrateTime(calibrator);
+		}
+		
 		completionTime = calibrator.getCalibratedTime(completionTime);
 		
 		return calibrator;
+	}
+	
+	public Vector<CoordMsgRxEvent> getMsgRx() {
+		return msgRxEvents;
+	}
+	
+	public Vector<CoordMsgTxEvent> getMsgTx() {
+		return msgTxEvents;
 	}
 	
 	public String toString() {
@@ -317,7 +382,9 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 	}
 	
 	public static void main(String[] args) {
-		String fileName = "BehaveMission29-EXP1-LONESTAR-MRPatrol-20110830070525.log";
+		//String fileName = "BehaveMission29-EXP1-LONESTAR-MRPatrol-20110830070525.log";
+		String fileName = "BehaveMission29-EXP3-LONESTAR-MRPatrol-20110830075007.log";
+		
 		RobotMRPatrolExpData robotExpData = new RobotMRPatrolExpData(fileName);
 		System.out.println(robotExpData.toString());
 		
@@ -327,5 +394,8 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 			Location l = waypoints.get(i);
 			System.out.println(i + "\t" + l);
 		}
+		
+		System.out.println("\nNumber of Message Transmissions: " + robotExpData.getMsgTx().size());
+		System.out.println("Number of Message Receiptions: " + robotExpData.getMsgRx().size());
 	}
 }

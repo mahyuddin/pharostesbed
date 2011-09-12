@@ -58,6 +58,30 @@ public class MRPatrolExpData {
 	
 	/**
 	 * 
+	 * @return The total number of coordination messages received throughout the experiment.
+	 */
+	public int getNumMsgRx() {
+		int result = 0;
+		for (int i=0; i < robots.size(); i++) {
+			result += robots.get(i).getMsgRx().size();
+		}
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @return The total number of coordination messages transmitted throughout the experiment.
+	 */
+	public int getNumMsgTx() {
+		int result = 0;
+		for (int i=0; i < robots.size(); i++) {
+			result += robots.get(i).getMsgTx().size();
+		}
+		return result;
+	}
+	
+	/**
+	 * 
 	 * @return The waypoints in the experiment.  The assumption is that in a single loop, a robot does not
 	 * visit the same waypoint twice.  Thus, by looking through the list of BehGotoGPSCoord behaviors, as soon
 	 * as we see that we re-visit a waypoint, we know that we've visited all of the waypoints.
