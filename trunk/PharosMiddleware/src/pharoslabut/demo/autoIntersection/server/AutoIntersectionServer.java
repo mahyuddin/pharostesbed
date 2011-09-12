@@ -153,6 +153,7 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
     }
     
     private void handleAutoIntDebugMsg(AutoIntDebugMsg msg) {
+    	Logger.log("Received AutoIntDebugMsg: " + msg);
     	display.updateText(msg.getIE().getType().toString());
     }
 
@@ -243,7 +244,8 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
      * @throws InterruptedException
      */
     public static void main(String [] args) {
-		int serverPort = 6665;
+		int serverPort = 6665
+				;
 		String logFileName = "AutoIntersectionServer.log";
 		nWays = 4;
 		nLanes = 2;
