@@ -1,8 +1,6 @@
 package pharoslabut.demo.autoIntersection;
 
 //import pharoslabut.logger.FileLogger;
-import java.util.Vector;
-
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 //import pharoslabut.navigate.LineFollowerEventListener;
@@ -33,9 +31,8 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 	private RemoteIntersectionManager rim;
 	private LocalIntersectionManager lim;
 	private LaneIdentifier li;
-//	private IntersectionEvent ie = null;
+	private IntersectionEvent ie = null;
 	
-	private Vector<IntersectionEvent> ieBuffer = new Vector<IntersectionEvent>();
 	/**
 	 * Whether this client should continue to run.
 	 */
@@ -104,7 +101,7 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 	@Override
 	public void newIntersectionEvent(IntersectionEvent ie) {
 		Logger.log("INTERSECTION EVENT: " + ie);
-		ieBuffer.add(ie);
+		this.ie = ie;
 		
 		Logger.logDbg("Calling notify on this.");
 		synchronized(this) {
@@ -158,7 +155,7 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 		Logger.log("Thread starting.");
 		
 		while(!done) {
-			if (ieBuffer.isEmpty()) {
+			if (ie == null) {
 				Logger.log("Waiting for next intersection event to occur.");
 				try {
 					synchronized(this) {
@@ -169,8 +166,7 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 				}
 			}
 			
-			if (!ieBuffer.isEmpty()) {
-				IntersectionEvent ie = ieBuffer.remove(0);
+			if (ie != null) {
 				Logger.log("Detected IntersectionEvent " + ie + ", sending it to the server.");
 				IntersectionEvent currIE = ie;
 				rim.sendToServer(currIE);
@@ -178,7 +174,7 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 				Logger.log("Thread awoken but Intersection Event was null!");
 			}
 			try {
-				Thread.sleep(100);
+				Thread.sleep(200);
 			} catch (InterruptedException e1) {
 				e1.printStackTrace();
 			}
