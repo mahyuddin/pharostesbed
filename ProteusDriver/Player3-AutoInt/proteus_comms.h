@@ -129,10 +129,32 @@ const int ProteusPacketInfo[6] = {
 #endif
 
 // Here are some definitions specific to the autonomous intersection demo
-#define NONE 0
-#define APPROACH 1
-#define ENTRY 2
-#define EXIT 3
+#define THRESHOLD_NONEXIST_MARKER 4000
+#define THRESHOLD_EXIST_MARKER 2000
+
+/**
+ * The number of consecutive distances > THRESHOLD_NONEXIST_MARKER
+ * before we conclude that the marker no longer exists.
+ */
+#define THRESHOLD_NO_MARKER 5
+
+/**
+ * The number of consecutive distances < THRESHOLD_EXIST_MARKER 
+ * before we conclude that the marker actually exists.
+ */
+#define THRESHOLD_MARKER 1
+
+enum {
+   NONE,
+   APPROACHING,
+   ENTERING, 
+   EXITING,
+};
+
+//#define NONE 0
+//#define APPROACH 1
+//#define ENTRY 2
+//#define EXIT 3
 
 //#define TRUE 1
 //#define FALSE 0

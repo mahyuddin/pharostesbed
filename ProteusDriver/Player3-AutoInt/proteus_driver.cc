@@ -601,16 +601,16 @@ void Proteus::Main() {
 					uint8_t intersectionEventMessage[500];
 
 					switch(proteus_dev->intEvent) {
-					case APPROACH:
-						sprintf((char*)intersectionEventMessage, "IE A"); // intersection event approach
+					case APPROACHING:
+						sprintf((char*)intersectionEventMessage, "IE A"); // intersection event approaching
 						publishOpaqueMsg(intersectionEventMessage);
 					break;
-					case ENTRY:
-						sprintf((char*)intersectionEventMessage, "IE E"); // intersection event entry
+					case ENTERING:
+						sprintf((char*)intersectionEventMessage, "IE E"); // intersection event entring
 						publishOpaqueMsg(intersectionEventMessage);
 					break;
-					case EXIT:
-						sprintf((char*)intersectionEventMessage, "IE X"); // intersection event exit
+					case EXITING:
+						sprintf((char*)intersectionEventMessage, "IE X"); // intersection event exiting
 						publishOpaqueMsg(intersectionEventMessage);
 					break;					
 					}

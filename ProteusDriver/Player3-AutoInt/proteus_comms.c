@@ -212,9 +212,9 @@ result_t proteus_open(proteus_comm_t* r) {
 	 */
 	cfmakeraw(&term); 
 	
-	// Set 115200 baud
-	cfsetispeed(&term, B115200); 
-	cfsetospeed(&term, B115200);
+	// Set 57600 baud
+	cfsetispeed(&term, B57600); 
+	cfsetospeed(&term, B57600);
 	
 	/*
 	 * Apply the changes to the serial port.
@@ -485,7 +485,7 @@ void printRxSerialBuff(proteus_comm_t* r) {
 	
 	printf("-----------------------------------------------------------------------------\n");
 	printf("SERIAL BUFFER STATE: size=%i, startIndx=%i, endIndx=%i, data:\n\t",
-	 	rxSerialBufferSize(r), r->rxBuffStartIndx, r->rxBuffEndIndx);
+		rxSerialBufferSize(r), r->rxBuffStartIndx, r->rxBuffEndIndx);
 	for (j = 0; j < buffSize; j++) {
 		printf("0x%.2x ", r->serialRxBuffer[i]);
 		if (j != 0 && j % 10 == 0)
@@ -844,8 +844,12 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 	}
 }
 
-uint16_t prevIRReading = 0xfff;
-uint16_t prevEvent = 0;
+//uint16_t prevIRReading = 0xfff;
+uint16_t prevEvent = NONE;
+uint16_t currEvent = NONE;
+uint16_t countNoMarker = 0;
+uint16_t countMarker = 0;
+char *INTERSECTION_EVENTS[] = {"NONE", "APPROACHING", "ENTERING", "EXITING"};
 
 /**
  * This processes the raw range data from the IR sensor used to detect the intersection.
@@ -854,7 +858,7 @@ result_t processAutoIntPacket(proteus_comm_t* r) {
 	if (rxSerialBufferSize(r) >= PROTEUS_AUTOINT_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
 		uint8_t data; // temporary variable for holding data from the serial Rx buffer.
 		uint16_t irReading = 0;
-		uint16_t avg;
+		//uint16_t avg;
 
 		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
 		popRxSerialBuff(r, NULL); // pop message type
@@ -866,12 +870,66 @@ result_t processAutoIntPacket(proteus_comm_t* r) {
 		irReading += (data & 0x00FF);
 		
 		popRxSerialBuff(r, NULL); // pop PROTEUS_END
+
+		printf("***proteus_comms: AutoIntPacket: IR reading = %i\n", irReading);
 		
-		avg = (prevIRReading + irReading) / 2;
-		prevIRReading = irReading;
+		//avg = (prevIRReading + irReading) / 2;
+		//prevIRReading = irReading;
 
-		printf("***proteus_comms: AutoIntPacket: IR reading = %i, average = %i\n", irReading, avg);
+		//printf("***proteus_comms: AutoIntPacket: IR reading = %i, average = %i\n", irReading, avg);
 
+		if (irReading > THRESHOLD_NONEXIST_MARKER) {
+			countMarker = 0; // reset counter
+                        
+                        if (currEvent != NONE) {
+				// We may no longer be under the overhead marker.
+				// See if we get THRESHOLD_NO_MARKER consecutive 
+				// measurements greater than THRESHOLD_NONEXIST_MARKER
+				if (++countNoMarker > THRESHOLD_NO_MARKER) {
+					// Conclude that we are no longer under an overhead marker
+					prevEvent = currEvent;
+					currEvent = NONE;
+					r->intEvent = currEvent;
+					r->newIntEvent = true;
+					printf("***proteus_comms: AutoIntPacket: current INTERSECTION = %s, previous INTERSECTION=%s\n",
+							INTERSECTION_EVENTS[currEvent], INTERSECTION_EVENTS[prevEvent]);
+				} else {
+        				// We got a distance measurement that might indicate the non-presence of the 
+        				// marker but we need to wait till we get THRESOLD_NO_MARKER consecutive readings
+        				// that are greater than THRESHOLD_NONEXIST_MARKER.
+    				}
+			} else {
+				// This is a duplicate "no marker" signal.  Ingnore it.
+			}
+		} else if (irReading < THRESHOLD_EXIST_MARKER) {
+			countNoMarker = 0; // reset counter
+			if (currEvent == NONE) {
+				// We may be under a marker
+				if (++countMarker > THRESHOLD_MARKER) {
+					// Conclude that we are under a mark
+					currEvent = ((prevEvent + 1) % 4);
+					if (currEvent == NONE) {
+						currEvent++;  // This is so that when we wrap from EXITING to APPROACHING we skip NONE
+					}
+					// inform application of event
+					r->intEvent = currEvent;
+					r->newIntEvent = true;
+					printf("***proteus_comms: AutoIntPacket: current INTERSECTION = %s, previous INTERSECTION=%s\n", 
+							INTERSECTION_EVENTS[currEvent], INTERSECTION_EVENTS[prevEvent]);
+				}
+			} else {
+				// duplicate event.  Ignore it.  Maybe print a debug statement to know we're here
+			}
+		} else {
+			countMarker = 0;
+			countNoMarker = 0;
+		}
+		return SUCCESS;
+	} else {
+		return FAIL;  // else not enough data has arrived yet, wait till next time
+	}
+		
+		/*
 		if (avg > 3500 && avg < 4100) {
 			if (prevEvent != 1) {
 				if (prevEvent == NONE || prevEvent == EXIT) {
@@ -909,11 +967,10 @@ result_t processAutoIntPacket(proteus_comm_t* r) {
 		}
 
 		return SUCCESS;
-	} else {
-		return FAIL;  // else not enough data has arrived yet, wait till next time
-	}
+		*/
 }
 
+/*
 result_t processAutoIntEventPacket(proteus_comm_t* r) {
 	if (rxSerialBufferSize(r) >= PROTEUS_AUTOINT_EVENT_PACKET_SIZE + PROTEUS_PACKET_OVERHEAD) {
 		uint8_t event;
@@ -962,6 +1019,7 @@ result_t processAutoIntEventPacket(proteus_comm_t* r) {
 		return FAIL;  // else not enough data has arrived yet, wait till next time
 	}
 }
+*/
 
 /**
  * Process the serial data received from the MCU.
@@ -1029,11 +1087,12 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
                         case PROTEUS_AUTOINT_PACKET:
+				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processAutoIntPacket(r);
-			case PROTEUS_AUTOINT_EVENT_PACKET:
-				return processAutoIntEventPacket(r);
+//			case PROTEUS_AUTOINT_EVENT_PACKET:
+//				return processAutoIntEventPacket(r);
 			default:
-				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
+				//printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.
 				// Continuously remove bytes until a PROTEUS_END is found or there is nothing
 				// left in the buffer.
@@ -1099,13 +1158,13 @@ result_t proteusReceiveSerialData(proteus_comm_t* r) {
 			} else {
 				int i;
 				
-				//printf("proteus_comms: proteusReceiveSerialData: Received the following bytes:\n\t");
+				printf("proteus_comms: proteusReceiveSerialData: Received the following bytes:\n\t");
 				// save the received data
 				for (i = 0; i < numread; i++) {
 					addToRxSerialBuffer(r, databuf[i]);
-				//	printf("0x%.2x ", databuf[i]);
+					printf("0x%.2x ", databuf[i]);
 				}
-				//printf("\n");
+				printf("\n");
 				
 				//printRxSerialBuff();
 			}
