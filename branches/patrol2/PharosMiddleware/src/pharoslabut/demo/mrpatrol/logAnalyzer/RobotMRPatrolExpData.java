@@ -107,23 +107,44 @@ public class RobotMRPatrolExpData extends RobotExpData implements Comparable<Rob
 				
 				behaviors.add(new BehGotoGPSCoordState(dest));
 			}
+			else if (line.contains("pharoslabut.behavior.BehGotoGPSCoord:") && line.contains("Constructor: dest =")) {
+				
+				String[] tokens = line.split("[\\(\\)\\,=\\s]");
+				
+				double latitude = Double.valueOf(tokens[8]);
+				double longitude = Double.valueOf(tokens[10]);
+				Location dest = new Location(latitude, longitude);
+				
+				behaviors.add(new BehGotoGPSCoordState(dest));
+			}
 			
 			// Get the start time of each behavior
+			
 			else if (line.contains("pharoslabut.behavior.management.Manager: run:") && line.contains("running behavior")) {
 				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				
-				//String keyStr = "pharoslabut.behavior.management.Manager: run: running behavior";
-				String behaviorName = BehGotoGPSCoordState.getBehaviorName();
-				
-				int behaviorNumber = Integer.valueOf(line.substring(line.indexOf(behaviorName) + behaviorName.length()));
-				
-				if (behaviorNumber == 60) {
-					System.out.println("start: Behavior number is 60");
+				if (line.contains("dest")) {
+					// Example line: [1315965953211] pharoslabut.behavior.management.Manager: run: running behavior 0: pharoslabut.behavior.BehGotoGPSCoord: dest = (30.5272239, -97.6318341, 0.0), stopAtEndBehavior = false
+					String keyStr = "running behavior";
+					String behStartLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+					String[] tokens = behStartLine.split("[\\:\\s]");
+					int behaviorNumber = Integer.valueOf(tokens[1]);
+					BehaviorState behavior = behaviors.get(behaviorNumber);
+					behavior.setBehaviorStartTime(timestamp);
+				} else {
+					// Example line: [1314718815402] pharoslabut.behavior.management.Manager: run: running behavior pharoslabut.behavior.BehGotoGPSCoord0
+					String behaviorName = BehGotoGPSCoordState.getBehaviorName();
+					int behaviorNumber = Integer.valueOf(line.substring(line.indexOf(behaviorName) + behaviorName.length()));
+
+//					if (behaviorNumber == 60) {
+//						System.out.println("start: Behavior number is 60");
+//					}
+
+					BehaviorState behavior = behaviors.get(behaviorNumber);
+					behavior.setBehaviorStartTime(timestamp);
 				}
-				
-				BehaviorState behavior = behaviors.get(behaviorNumber);
-				behavior.setBehaviorStartTime(timestamp);
 			}
+			
 			
 			// Get the stop time of each behavior
 			else if (line.contains("pharoslabut.behavior.management.Manager: run:") && line.contains("End behavior")) {
