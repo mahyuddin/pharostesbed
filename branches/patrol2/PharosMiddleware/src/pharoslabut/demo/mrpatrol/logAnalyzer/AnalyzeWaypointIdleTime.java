@@ -15,8 +15,13 @@ import pharoslabut.util.AverageStatistic;
  * @author Chien-Liang Fok
  */
 public class AnalyzeWaypointIdleTime {
-
-	private MRPatrolExpData expData;
+	
+	/**
+	 * The default constructor.
+	 */
+	public AnalyzeWaypointIdleTime() {
+		
+	}
 	
 	/**
 	 * The constructor.
@@ -28,12 +33,8 @@ public class AnalyzeWaypointIdleTime {
 	public AnalyzeWaypointIdleTime(String expDir, String saveToFileName, boolean verbose) {
 		
 		// First get all of the experiment data.
-		expData = new MRPatrolExpData(expDir);
-		
+		MRPatrolExpData expData = new MRPatrolExpData(expDir);
 		Logger.log("Analyzing log files in " + expData.getExpDirName());
-		
-		// Next, get the waypoints
-		Vector<Location> waypoints = expData.getWayPoints();
 		
 //		Logger.logDbg("Number of waypoints: " + waypoints.size());
 //		Logger.logDbg("Waypoints:");
@@ -41,7 +42,54 @@ public class AnalyzeWaypointIdleTime {
 //			Logger.logDbg("\t" + waypoints.get(i));
 //		}
 		
-		Vector<WaypointState> waypointStates = new Vector<WaypointState>();
+		Vector<WaypointIdlenessState> waypointStates = getIdleTimes(expData);
+		
+		// Print the results
+		FileLogger flogger = null;
+		if (saveToFileName != null)
+			flogger = new FileLogger(saveToFileName, false);
+		
+		if (verbose) {
+			printVerbose(waypointStates, flogger);	
+		}
+		
+		log("WaypointID\tWaypoint\tAvg Idle Time (ms)\tAvg Idle Time 95% Conf (ms)\tAvg Idle Time (s)\tAvg Idle Time 95% Conf (s)", flogger);
+		for (int i=0; i < waypointStates.size(); i++) {
+			WaypointIdlenessState currWaypoint = waypointStates.get(i);
+			AverageStatistic stat = currWaypoint.getAvgIdleTime();
+			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
+		}
+	}
+	
+	public void printVerbose(Vector<WaypointIdlenessState> waypointStates, FileLogger flogger) {
+		for (int i=0; i < waypointStates.size(); i++) {
+			WaypointIdlenessState currWaypoint = waypointStates.get(i);
+			log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
+			
+			log("Visit number\tTime (ms)\tTime since Last Visit (ms)\tRobotID", flogger);
+			for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
+				if (j > 0)
+					log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime() + "\t" + currWaypoint.idleTimes.get(j-1) 
+							+ "\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
+							+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
+				else
+					log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime()
+							+ "\t\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
+							+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
+			}
+			log("", flogger); // add new line after each table.
+		}
+	}
+	
+	/**
+	 * Returns the idleness of each waypoint in the experiment.
+	 * 
+	 * @param expData the experiment data.
+	 * @return The idleness of each waypoint in the experiment.
+	 */
+	public Vector<WaypointIdlenessState> getIdleTimes(MRPatrolExpData expData) {
+		Vector<WaypointIdlenessState> waypointStates = new Vector<WaypointIdlenessState>();
+		Vector<Location> waypoints = expData.getWayPoints();
 		
 		// For each waypoint... 
 		for (int i=0; i < waypoints.size(); i++) {
@@ -61,68 +109,10 @@ public class AnalyzeWaypointIdleTime {
 			}
 			
 			// Save the data in waypointStates
-			waypointStates.add(new WaypointState(currWaypoint, visitationTimes, idleTimes));
+			waypointStates.add(new WaypointIdlenessState(currWaypoint, visitationTimes, idleTimes));
 		}
 		
-		// Print the results
-		FileLogger flogger = null;
-		if (saveToFileName != null)
-			flogger = new FileLogger(saveToFileName, false);
-		
-		if (verbose) {
-			for (int i=0; i < waypointStates.size(); i++) {
-				WaypointState currWaypoint = waypointStates.get(i);
-				log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
-				
-				log("Visit number\tTime (ms)\tTime since Last Visit (ms)\tRobotID", flogger);
-				for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
-					if (j > 0)
-						log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime() + "\t" + currWaypoint.idleTimes.get(j-1) 
-								+ "\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
-								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
-					else
-						log(j + "\t" + currWaypoint.visitationTimes.get(j).getArrivalTime()
-								+ "\t\t" + currWaypoint.visitationTimes.get(j).getRobotName() 
-								+ " (" + currWaypoint.visitationTimes.get(j).getRobotID() + ")", flogger);
-				}
-				log("", flogger); // add new line after each table.
-			}	
-		}
-		
-		log("WaypointID\tWaypoint\tAvg Idle Time (ms)\tAvg Idle Time 95% Conf (ms)\tAvg Idle Time (s)\tAvg Idle Time 95% Conf (s)", flogger);
-		for (int i=0; i < waypointStates.size(); i++) {
-			WaypointState currWaypoint = waypointStates.get(i);
-			AverageStatistic stat = currWaypoint.getAvgIdleTime();
-			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
-		}
-	}
-	
-	private class WaypointState {
-		Location waypoint;
-		Vector<VisitationState> visitationTimes;
-		Vector<Long> idleTimes;
-		
-		public WaypointState(Location waypoint, Vector<VisitationState> visitationTimes, Vector<Long> idleTimes) {
-			this.waypoint = waypoint;
-			this.visitationTimes = visitationTimes;
-			this.idleTimes = idleTimes;
-		}
-		
-		/**
-		 * 
-		 * @return The average idle time.
-		 */
-		public AverageStatistic getAvgIdleTime() {
-			
-			// Convert the idle times into a vector of doubles
-			Vector<Double> temp = new Vector<Double>();
-			for (int i=0; i < idleTimes.size(); i++) {
-				temp.add((double)idleTimes.get(i));
-			}
-			
-			// Compute the average and confidence intervals.
-			return new AverageStatistic(temp);
-		}
+		return waypointStates;
 	}
 	
 	private void log(String msg, FileLogger flogger) {

@@ -15,8 +15,8 @@ import pharoslabut.util.AverageStatistic;
  * @author Chien-Liang Fok
  */
 public class AnalyzeWaypointWaitTime {
-
-	private MRPatrolExpData expData;
+	
+	public AnalyzeWaypointWaitTime() {}
 	
 	/**
 	 * The constructor.
@@ -28,12 +28,9 @@ public class AnalyzeWaypointWaitTime {
 	public AnalyzeWaypointWaitTime(String expDir, String saveToFileName, boolean verbose) {
 		
 		// First get all of the experiment data.
-		expData = new MRPatrolExpData(expDir);
+		MRPatrolExpData expData = new MRPatrolExpData(expDir);
 		
 		Logger.log("Analyzing log files in " + expData.getExpDirName());
-		
-		// Next, get the waypoints
-		Vector<Location> waypoints = expData.getWayPoints();
 		
 //		Logger.logDbg("Number of waypoints: " + waypoints.size());
 //		Logger.logDbg("Waypoints:");
@@ -41,7 +38,52 @@ public class AnalyzeWaypointWaitTime {
 //			Logger.logDbg("\t" + waypoints.get(i));
 //		}
 		
-		Vector<WaypointState> waypointStates = new Vector<WaypointState>();
+		Vector<WaypointWaitTimeState> waypointStates = getWaitTimes(expData);
+		
+		// Print the results
+		FileLogger flogger = null;
+		if (saveToFileName != null)
+			flogger = new FileLogger(saveToFileName, false);
+		
+		if (verbose) {
+			printVerbose(waypointStates, flogger);
+		}
+		
+		log("WaypointID\tWaypoint\tAvg Wait Time (ms)\tAvg Wait Time 95% Conf (ms)\tAvg Wait Time (s)\tAvg Wait Time 95% Conf (s)", flogger);
+		for (int i=0; i < waypointStates.size(); i++) {
+			WaypointWaitTimeState currWaypoint = waypointStates.get(i);
+			AverageStatistic stat = currWaypoint.getAvgWaitTime();
+			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
+		}
+	}
+	
+	public void printVerbose(Vector<WaypointWaitTimeState> waypointStates, FileLogger flogger) {
+		for (int i=0; i < waypointStates.size(); i++) {
+			WaypointWaitTimeState currWaypoint = waypointStates.get(i);
+			log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
+
+			log("Visit number\tArrival Time (ms)\tDeparture Time (ms)\tWait Time (ms)\tRobotID", flogger);
+			for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
+				VisitationState currVisit = currWaypoint.visitationTimes.get(j);
+				log(j + "\t" + currVisit.getArrivalTime() 
+						+ "\t" + currVisit.getArrivalTime() 
+						+ "\t" + currWaypoint.waitTimes.get(j) 
+						+ "\t" + currVisit.getRobotName() 
+						+ " (" + currVisit.getRobotID() + ")", flogger);
+			}
+			log("", flogger); // add new line after each table.
+		}
+	}	
+	
+	/**
+	 * 
+	 * @param expData The experiment data.
+	 * @return the wait times at each waypoint.
+	 */
+	public Vector<WaypointWaitTimeState> getWaitTimes(MRPatrolExpData expData) {
+		Vector<Location> waypoints = expData.getWayPoints();
+		
+		Vector<WaypointWaitTimeState> waypointStates = new Vector<WaypointWaitTimeState>();
 		
 		// For each waypoint... 
 		for (int i=0; i < waypoints.size(); i++) {
@@ -58,67 +100,12 @@ public class AnalyzeWaypointWaitTime {
 			}
 			
 			// Save the data in waypointStates
-			waypointStates.add(new WaypointState(currWaypoint, visits, waitTimes));
+			waypointStates.add(new WaypointWaitTimeState(currWaypoint, visits, waitTimes));
 		}
 		
-		// Print the results
-		FileLogger flogger = null;
-		if (saveToFileName != null)
-			flogger = new FileLogger(saveToFileName, false);
-		
-		if (verbose) {
-			for (int i=0; i < waypointStates.size(); i++) {
-				WaypointState currWaypoint = waypointStates.get(i);
-				log("Details for Waypoint " + i + " at " + currWaypoint.waypoint + ":", flogger);
-				
-				log("Visit number\tArrival Time (ms)\tDeparture Time (ms)\tWait Time (ms)\tRobotID", flogger);
-				for (int j=0; j < currWaypoint.visitationTimes.size(); j++) {
-					VisitationState currVisit = currWaypoint.visitationTimes.get(j);
-					log(j + "\t" + currVisit.getArrivalTime() 
-							+ "\t" + currVisit.getArrivalTime() 
-							+ "\t" + currWaypoint.waitTimes.get(j) 
-							+ "\t" + currVisit.getRobotName() 
-							+ " (" + currVisit.getRobotID() + ")", flogger);
-				}
-				log("", flogger); // add new line after each table.
-			}	
-		}
-		
-		log("WaypointID\tWaypoint\tAvg Wait Time (ms)\tAvg Wait Time 95% Conf (ms)\tAvg Wait Time (s)\tAvg Wait Time 95% Conf (s)", flogger);
-		for (int i=0; i < waypointStates.size(); i++) {
-			WaypointState currWaypoint = waypointStates.get(i);
-			AverageStatistic stat = currWaypoint.getAvgWaitTime();
-			log(i + "\t" + currWaypoint.waypoint + "\t" + stat + "\t" + stat.toSecondsString(), flogger);
-		}
+		return waypointStates;
 	}
 	
-	private class WaypointState {
-		Location waypoint;
-		Vector<VisitationState> visitationTimes;
-		Vector<Long> waitTimes;
-		
-		public WaypointState(Location waypoint, Vector<VisitationState> visitationTimes, Vector<Long> waitTimes) {
-			this.waypoint = waypoint;
-			this.visitationTimes = visitationTimes;
-			this.waitTimes = waitTimes;
-		}
-		
-		/**
-		 * 
-		 * @return The average idle time.
-		 */
-		public AverageStatistic getAvgWaitTime() {
-			
-			// Convert the wait times into a vector of doubles
-			Vector<Double> temp = new Vector<Double>();
-			for (int i=0; i < waitTimes.size(); i++) {
-				temp.add((double)waitTimes.get(i));
-			}
-			
-			// Compute the average and confidence intervals.
-			return new AverageStatistic(temp);
-		}
-	}
 	
 	private void log(String msg, FileLogger flogger) {
 		System.out.println(msg);

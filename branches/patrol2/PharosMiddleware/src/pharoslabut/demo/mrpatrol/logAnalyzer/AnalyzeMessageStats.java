@@ -39,7 +39,10 @@ public class AnalyzeMessageStats {
 		int numRx = expData.getNumMsgRx();
 		log("Number of messages transmitted: " + numTx, flogger);
 		log("Number of messages received: " + numRx, flogger);
-		log("Percent lost: " + (numTx - numRx) / (double)numTx * 100, flogger);
+		if (numTx == 0)
+			log("Percent lost: N/A ", flogger);
+		else
+			log("Percent lost: " + (numTx - numRx) / (double)numTx * 100, flogger);
 		
 	}
 
