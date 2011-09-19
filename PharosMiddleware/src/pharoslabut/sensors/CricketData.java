@@ -1,6 +1,9 @@
 package pharoslabut.sensors;
 
-public class CricketData {
+public class CricketData implements java.io.Serializable {
+
+	private static final long serialVersionUID = -1247451264863689710L;
+
 	private double version;
 	private String cricketID;
 	private String spaceID;
