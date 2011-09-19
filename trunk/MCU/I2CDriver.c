@@ -4,7 +4,7 @@
  *
  * Originally written by Chien-Liang Fok on 12/01/2010.
  * Updated by Chien-Liang Fok on 09/19/2011.  Modified to
- * be generic.
+ * be generic.  Added ability to write to slave device.
  */
 
 #include <mc9s12dp512.h>
@@ -22,8 +22,9 @@ uint16_t _i2cBusyCount;
 uint8_t _deviceAddr;
 uint8_t _regAddr; 
 uint16_t _numBytes; // The number of bytes to receive
-uint16_t _numBytesRx; // The number of bytes received
+uint16_t _numBytesRxTx; // The number of bytes received
 uint8_t* _buff;
+bool _doRead;  // Whether we are performing a read operation.
 void(*_funcptr)(void);
 
 /**
@@ -164,9 +165,10 @@ bool I2CDriver_read(uint8_t deviceAddr, uint8_t regAddr,
 		_buff = buff;
 		_funcptr = funcptr;
 		
+		_doRead = TRUE;
 		LED_BLUE2 ^= 1;        // to indicate I2C read activity
 		_i2cBusyCount = 0;
-		_numBytesRx = 0;
+		_numBytesRxTx = 0;
 		
 		// Update the state of this driver
 		_I2C_driver_state = I2C_STATE_ADDRESSING_SLAVE;
@@ -183,7 +185,59 @@ bool I2CDriver_read(uint8_t deviceAddr, uint8_t regAddr,
 		return TRUE;
 	} else {
 		_i2cBusyCount++;
-		if (_i2cBusyCount == 10) {
+		if (_i2cBusyCount == 20) {
+			LED_BLUE2 ^= 1; // to indicate i2c reset condidion
+			LED_RED1 ^= 1;
+			
+			Command_sendMessagePacket("ERROR: I2CDriver: Too busy.");
+			
+			// abort the previous operation.
+			IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);
+			_I2C_driver_state = I2C_STATE_IDLE;
+			_i2cBusyCount = 0;
+		}
+		return FALSE;
+	}
+}
+
+/**
+ * Initiates the process of writing to a device on the I2C bus.
+ *
+ * @param deviceAddr The address of the target device.
+ * @param regAddr The address of the register on the device.
+ * @param numBytes The number of bytes to write.
+ * @param buff The buffer containing the data to send.
+ */
+bool I2CDriver_write(uint8_t deviceAddr, uint8_t regAddr,
+	uint16_t numBytes, uint8_t* buff)
+{
+	if (_I2C_driver_state == I2C_STATE_IDLE) {
+		_deviceAddr = deviceAddr;
+		_regAddr = regAddr;
+		_numBytes = numBytes;
+		_buff = buff;
+		
+		_doRead = FALSE;
+		LED_BLUE2 ^= 1;        // to indicate I2C write activity
+		_i2cBusyCount = 0;
+		_numBytesRxTx = 0;
+		
+		// Update the state of this driver
+		_I2C_driver_state = I2C_STATE_ADDRESSING_SLAVE;
+		
+		// Enable I2C interrupts and set MCU to be 9S12 MCU to be bus master and in transmit mode
+		IBCR |= I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT;
+		
+		/*
+		 * IBDR (I2C Bus Data Register)
+		 *  - in master Tx mode, data is transmitted when it is written to the IBDR, MSB first
+		 *  - in master Rx mode, reading this register initiates a data receive operation
+		 */
+		IBDR = _deviceAddr; // Send the slave address on the I2C bus
+		return TRUE;
+	} else {
+		_i2cBusyCount++;
+		if (_i2cBusyCount == 20) {
 			LED_BLUE2 ^= 1; // to indicate i2c reset condidion
 			LED_RED1 ^= 1;
 			
@@ -214,10 +268,20 @@ void I2C_updateState() {
 		case I2C_STATE_SENDING_REGISTER_ADDRESS:
 			// By now assume the device was successfully addressed and that
 			// the address of the register from which to read was successful.
-			_I2C_driver_state = I2C_STATE_SENDING_READ_BIT;
 			
-			IBCR |= I2C_IBCR_REPEAT_START_BIT; // Send repeated start signal
-			IBDR = _deviceAddr | 0x01; // Send read bit
+			if (_doRead) {
+				// We are performing a read operation. Send the repeat start signal
+				// with the read bit set.  The repeat start signal is the address
+				// of the target address with the read bit set.
+				_I2C_driver_state = I2C_STATE_SENDING_READ_BIT;
+			
+				IBCR |= I2C_IBCR_REPEAT_START_BIT; // Send repeated start signal
+				IBDR = _deviceAddr | 0x01; // Send read bit
+			} else {
+				// We are performing a write operation.  Send the first byte of data.
+				_I2C_driver_state = I2C_STATE_TRANSMITTING_BYTE;
+				IBDR = _buff[_numBytesRxTx];
+			}
 			break;
 		
 		case I2C_STATE_SENDING_READ_BIT:
@@ -229,22 +293,33 @@ void I2C_updateState() {
 			break;
 		case I2C_STATE_RECEIVING_BYTE:
 			// Store the received byte in the buffer.
-			_buff[_numBytesRx++] = IBDR;
+			_buff[_numBytesRxTx++] = IBDR;
 			
 			IBCR |= I2C_IBCR_TXACK_BIT; // Enable Tx Ack
 				
 			// Update the state of this driver
-			if (_numBytes == _numBytesRx) {
-			
-			  // Send the stop bit (disable i2c interrupts, relinquish bus master mode, disable Tx Ack, set to Rx mode)
-			  IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);
-			   
+			if (_numBytes == _numBytesRxTx) {
+				
+				// Send the stop bit (disable i2c interrupts, relinquish bus master mode, disable Tx Ack, set to Rx mode)
+				IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);
+				
 				// return the state of this driver to be idle
 				_I2C_driver_state = I2C_STATE_IDLE;
 				TaskHandler_postTask(_funcptr);
 			} else {
 			}
-			
+			break;
+		case I2C_STATE_TRANSMITTING_BYTE:
+			_numBytesRxTx++;
+			if (_numBytes == _numBytesRxTx) {
+				// Send the stop bit (disable i2c interrupts, relinquish bus master mode, disable Tx Ack, set to Rx mode)
+				IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);
+				
+				// return the state of this driver to be idle
+				_I2C_driver_state = I2C_STATE_IDLE;
+			} else {
+				IBDR = _buff[_numBytesRxTx];
+			}
 			break;
 	}
 }
