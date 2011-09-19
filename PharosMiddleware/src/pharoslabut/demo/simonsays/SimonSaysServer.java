@@ -2,6 +2,12 @@ package pharoslabut.demo.simonsays;
 
 import java.awt.Image;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Vector;
 
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
@@ -9,6 +15,9 @@ import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
+import pharoslabut.sensors.CricketData;
+import pharoslabut.sensors.CricketDataListener;
+import pharoslabut.sensors.CricketInterface;
 import pharoslabut.sensors.camera.axis.*;
 
 /**
@@ -16,10 +25,18 @@ import pharoslabut.sensors.camera.axis.*;
  * These commands include pan, tilt, and taking a snapshot.
  * 
  * @author Chien-Liang Fok
+ * 
  */
-public class SimonSaysServer implements MessageReceiver {
+public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	public static final int IMAGE_WIDTH = 640;
 	public static final int IMAGE_HEIGHT = 480;
+	
+	public static final String cricketSerialPort = "/dev/ttyUSB1";
+	
+	/**
+	 * the list of clients currently connected to this server
+	 */
+	HashMap<InetAddress, Integer> clients = new HashMap<InetAddress, Integer>();
 	
 	/**
      * The connection back to the client.
@@ -62,12 +79,37 @@ public class SimonSaysServer implements MessageReceiver {
 		String cameraURL = "http://" + cameraIP + "/axis-cgi/jpg/image.cgi?resolution=" + IMAGE_WIDTH + "x" + IMAGE_HEIGHT;
 		camera = new AxisCameraInterface(cameraURL, "root", "longhorn");
 		
+		// add listener for cricket mote on USB1
+		CricketInterface ci  = new CricketInterface(cricketSerialPort);
+		ci.registerCricketDataListener(this);
+		
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
 	}
 	
+	@Override
+	public void newCricketData(CricketData cd) {
+		if (!cd.getConnection())
+			return;
+			
+		CricketDataMsg cricketMsg = new CricketDataMsg(cd);
+	
+		// broadcast new CricketData to clients list
+		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
+	    while (iter.hasNext()) {
+	    	Entry<InetAddress, Integer> pair = iter.next();
+		    try {
+		    	sender.sendMessage(pair.getKey(), pair.getValue(), cricketMsg);
+		    }
+		    catch (PharosException e) {
+				e.printStackTrace();
+				Logger.logErr("Failed to send Cricket Msg, " + cd.toString());
+			}
+	    }
+	} 
+	
 	//@Override
-	public void newMessage(Message msg) {
+	public void newMessage(Message msg) {		
 		// This is called whenever a new message is received.
 		if (msg instanceof CameraPanMsg)
 			handleCameraPanMsg((CameraPanMsg)msg);
@@ -92,7 +134,10 @@ public class SimonSaysServer implements MessageReceiver {
 			ri.stopPlayer();
 			sendAck(true, playerCtrlMsg);
 		} else if (playerCtrlMsg.getCmd() == PlayerControlCmd.START) {
-			
+			// signifies that a new client has connected to the server
+			clients.put(playerCtrlMsg.getReplyAddr(), playerCtrlMsg.getPort());
+			Logger.log("Client added: " + playerCtrlMsg.getReplyAddr() + ":" + playerCtrlMsg.getPort());
+			sendAck(true, playerCtrlMsg);
 		} else 
 			Logger.log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
 	}
@@ -284,4 +329,5 @@ public class SimonSaysServer implements MessageReceiver {
 		
 		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, mobilityPlane);
 	}
+
 }
