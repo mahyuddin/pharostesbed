@@ -6,6 +6,10 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import pharoslabut.demo.simonsays.io.PlayerControlCmd;
+import pharoslabut.demo.simonsays.io.PlayerControlMsg;
+import pharoslabut.io.AckableMessage;
+import pharoslabut.io.Message.MsgType;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 //import pharoslabut.io.*;
@@ -45,6 +49,10 @@ public class SimonSaysClient {
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(InetAddress.getByName(serverIP), serverPort);
 			
+			// send an initial PlayerControlMsg with the START cmd, this adds this client to the server's client list
+			cmdExec.sendMsg(new PlayerControlMsg(PlayerControlCmd.START));			
+			
+			System.out.println("about to start GUI...");
 			// Create a GUI for allowing users to interact with the system...
 			// See: http://download.oracle.com/javase/6/docs/api/javax/swing/package-summary.html#threading
 			SwingUtilities.invokeLater(new Runnable() {
