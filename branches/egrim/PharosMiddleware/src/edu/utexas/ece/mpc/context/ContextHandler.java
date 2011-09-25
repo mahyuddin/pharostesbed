@@ -92,7 +92,7 @@ public class ContextHandler {
             }
 
             // Is received summary over the hop limit?
-            if (summary.getHops() >= tau) {
+            if (summary.getHops() > tau) {
                 logDbg("Skipping summary (over the hop limit)");
                 continue;
             }
