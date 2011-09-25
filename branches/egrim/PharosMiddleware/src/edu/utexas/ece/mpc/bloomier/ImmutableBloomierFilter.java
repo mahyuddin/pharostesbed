@@ -73,9 +73,6 @@ public class ImmutableBloomierFilter<K, V> {
                                    long timeoutMs, long hashSeedHint) throws TimeoutException {
         this(m, k, q, valueClass);
 
-        // FIXME
-        System.out.println(map);
-
         OrderAndMatchFinder<K> oamf = new OrderAndMatchFinder<K>(map.keySet(), m, k, q,
                                                                  hashSeedHint);
         OrderAndMatch<K> oam = oamf.find(timeoutMs);
@@ -90,7 +87,7 @@ public class ImmutableBloomierFilter<K, V> {
         create(map, oam);
     }
 
-    protected ImmutableBloomierFilter(int m, int k, int q, Class<V> valueClass, long hashSeed,
+    public ImmutableBloomierFilter(int m, int k, int q, Class<V> valueClass, long hashSeed,
                                       byte[][] table) {
         this(m, k, q, valueClass);
 

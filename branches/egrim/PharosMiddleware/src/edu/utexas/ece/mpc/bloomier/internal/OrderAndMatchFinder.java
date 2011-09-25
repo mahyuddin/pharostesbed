@@ -128,6 +128,8 @@ public class OrderAndMatchFinder<K> {
         }
 
         if (piQueue.isEmpty()) {
+            System.out.printf("Failed: hashSeed=%d remainingKeyCount=%d\n", hashSeed,
+                              remainingKeys.size());
             return false;
         }
 
