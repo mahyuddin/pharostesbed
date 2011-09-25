@@ -172,15 +172,15 @@ public class MotionScript implements java.io.Serializable {
 								int amount = Integer.valueOf(elem[1]);
 								instructions.add(new RcvTelosbBeacons(amount));	
 							}
+							else if (line.contains("CONTEXT_RESET")) {
+							    instructions.add(new ContextReset());
+							}
 							else if (line.contains("CONTEXT")) {
 							    String[] elem = line.split("[\\s]");
 							    int padContextInfoTo = Integer.valueOf(elem[1]);
 							    int tau = Integer.valueOf(elem[2]);
 							    WireSummaryType summaryType = WireSummaryType.valueOf(elem[3]);
 							    instructions.add(new Context(padContextInfoTo, tau, summaryType));
-							}
-							else if (line.contains("CONTEXT_RESET")) {
-							    instructions.add(new ContextReset());
 							}
 							else
 								throw new UnknownInstructionException(line);
