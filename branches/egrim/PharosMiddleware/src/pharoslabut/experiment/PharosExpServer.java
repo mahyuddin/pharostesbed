@@ -567,6 +567,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 					pharosPort = Integer.valueOf(args[++i]);
 				}
 				else {
+					System.err.println("Unknown argument: " + args[i]);
 					usage();
 					System.exit(1);
 				}
