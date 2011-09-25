@@ -1,11 +1,18 @@
 package pharoslabut.beacon;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
+import java.net.NetworkInterface;
+import java.util.Vector;
 
 import pharoslabut.exceptions.PharosException;
-import pharoslabut.logger.*;
+import pharoslabut.logger.Logger;
+import edu.utexas.ece.mpc.context.net.ContextShimmedMulticastSocket;
 
 /**
  * This receives WiFi beacons. When a WiFi beacon is received, each of the WiFiBeaconListeners are
@@ -118,7 +125,7 @@ public class WiFiBeaconReceiver implements Runnable {
         if (bThread == null) {
             try{
             	ni = NetworkInterface.getByName(networkInterfaceName);
-                mSocket = new MulticastSocket(mcastport);
+                mSocket = new ContextShimmedMulticastSocket(mcastport);
                 InetAddress group = InetAddress.getByName(mcastGroupAddress);
                 socketAddr = new InetSocketAddress(group, mcastport);
                 mSocket.joinGroup(socketAddr, ni);

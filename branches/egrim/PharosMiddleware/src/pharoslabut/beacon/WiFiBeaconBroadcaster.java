@@ -1,9 +1,15 @@
 package pharoslabut.beacon;
 
-import java.net.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 
 import pharoslabut.logger.Logger;
+import edu.utexas.ece.mpc.context.net.ContextShimmedMulticastSocket;
 
 /**
  * Periodically broadcasts WiFi beacons.  It is used in conjunction
@@ -38,7 +44,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
         
         try{
         	InetSocketAddress ina = new InetSocketAddress(interfaceIPAddr, mCastPort);
-            mSocket = new MulticastSocket(ina);
+            mSocket = new ContextShimmedMulticastSocket(ina);
         } catch(IOException ioe) {
         	System.err.println("Error creating multicast socket for broadcasting beacons!");
             ioe.printStackTrace();

@@ -1,10 +1,22 @@
 package pharoslabut.navigate;
 
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
-//import pharoslabut.logger.FileLogger;
+import pharoslabut.context.ContextSubsystem;
 import pharoslabut.logger.Logger;
-import pharoslabut.navigate.motionscript.*;
-import pharoslabut.radioMeter.cc2420.*;
+import pharoslabut.navigate.motionscript.Context;
+import pharoslabut.navigate.motionscript.ContextReset;
+import pharoslabut.navigate.motionscript.Instruction;
+import pharoslabut.navigate.motionscript.MotionScript;
+import pharoslabut.navigate.motionscript.Move;
+import pharoslabut.navigate.motionscript.Pause;
+import pharoslabut.navigate.motionscript.RcvTelosbBeacons;
+import pharoslabut.navigate.motionscript.Scoot;
+import pharoslabut.navigate.motionscript.StartBcastTelosB;
+import pharoslabut.navigate.motionscript.StartBcastWiFi;
+import pharoslabut.navigate.motionscript.StopBcastTelosB;
+import pharoslabut.navigate.motionscript.StopBcastWifi;
+import pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster;
+import pharoslabut.radioMeter.cc2420.TelosBeaconReceiver;
 
 /**
  * Follows a motion script.  A motion script consists of a series of instructions
@@ -43,6 +55,7 @@ public class MotionScriptFollower implements Runnable {
 	 * This is responsible for receiving TelosB beacons.
 	 */
 	private TelosBeaconReceiver telosBeaconReceiver;
+    private ContextSubsystem contextSubsystem;
 	
 	/**
 	 * The constructor.
@@ -68,7 +81,16 @@ public class MotionScriptFollower implements Runnable {
 		}
 	}
 	
-	/**
+	public MotionScriptFollower(NavigateCompassGPS navigatorGPS, Scooter scooter2,
+                                WiFiBeaconBroadcaster wifiBeaconBroadcaster,
+                                TelosBeaconBroadcaster telosRadioSignalMeter,
+                                ContextSubsystem contextSubsystem) {
+        this(navigatorGPS, scooter2, wifiBeaconBroadcaster, telosRadioSignalMeter);
+        
+        this.contextSubsystem = contextSubsystem;
+    }
+
+    /**
 	 * Starts the robot following the motion script.
 	 * This method should only be called when the WayPointFoller is stopped.  If it
 	 * is called when the WayPointFollower is running, a false value will be returned.
@@ -222,6 +244,28 @@ public class MotionScriptFollower implements Runnable {
 		}
 	}
 	
+	private boolean handleContextPadding(Context instr) {
+	    if (contextSubsystem != null) {
+	        contextSubsystem.setContextPadding(instr.getContextPadding());
+	        contextSubsystem.setTau(instr.getTau());
+	        contextSubsystem.setSummaryType(instr.getSummaryType());
+	        return true;
+	    } else {
+	        Logger.logErr("Cannot handle context instruction because context subsystem is null");
+	        return false;
+	    }
+	}
+	
+    private boolean handleContextReset(ContextReset instr) {
+        if (contextSubsystem != null) {
+            contextSubsystem.resetAllContext();
+            return true;
+        } else {
+            Logger.logErr("Cannot handle context instruction because context subsystem is null");
+            return false;
+        }
+    }
+
 	public void run() {
 		int instrIndex = 0;
 		
@@ -257,6 +301,12 @@ public class MotionScriptFollower implements Runnable {
 				continueRunning = true; // Tell PharosServer to continue to run until a StopExpMsg is received.
 				running = false; // Tell this MotionScriptFollower to stop running (this is the end fo the script)
 				break;
+            case CONTEXT:
+			    running = handleContextPadding((Context)instr);
+			    break;
+           case CONTEXT_RESET:
+                running = handleContextReset((ContextReset) instr);
+                break;
 			default:
 				Logger.logErr("Unknown instruction: " + instr);
 				running = false;

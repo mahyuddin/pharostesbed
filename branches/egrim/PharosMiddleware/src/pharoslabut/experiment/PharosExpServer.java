@@ -1,23 +1,44 @@
 package pharoslabut.experiment;
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.*;
+import pharoslabut.beacon.WiFiBeacon;
+import pharoslabut.beacon.WiFiBeaconBroadcaster;
+import pharoslabut.beacon.WiFiBeaconEvent;
+import pharoslabut.beacon.WiFiBeaconListener;
+import pharoslabut.beacon.WiFiBeaconReceiver;
+import pharoslabut.context.ContextSubsystem;
 import pharoslabut.exceptions.PharosException;
+import pharoslabut.io.Message;
+import pharoslabut.io.MessageReceiver;
+import pharoslabut.io.MotionScriptMsg;
+import pharoslabut.io.RelativeMotionScriptMsg;
+import pharoslabut.io.SetTimeMsg;
+import pharoslabut.io.StartExpMsg;
+import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
-import pharoslabut.navigate.*;
+import pharoslabut.navigate.MotionArbiter;
+import pharoslabut.navigate.MotionScriptFollower;
+import pharoslabut.navigate.MotionScriptFollowerDoneListener;
+import pharoslabut.navigate.NavigateCompassGPS;
+import pharoslabut.navigate.NavigateRelative;
+import pharoslabut.navigate.RelativeMotionScript;
+import pharoslabut.navigate.Scooter;
 import pharoslabut.navigate.motionscript.MotionScript;
-import pharoslabut.radioMeter.cc2420.*;
+import pharoslabut.radioMeter.cc2420.TelosBeaconBroadcaster;
+import pharoslabut.radioMeter.cc2420.TelosBeaconException;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
-import pharoslabut.io.*;
-
-import playerclient3.*;
+import playerclient3.GPSInterface;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 
 /**
@@ -65,6 +86,8 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 	 * and there is no experiments running.
 	 */
 	private FileLogger debugFileLogger = null;
+
+	private ContextSubsystem contextSubsystem;
 	
 	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
@@ -114,6 +137,11 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		
 		if (!createPlayerClient(mobilityPlane)) {
 			Logger.logErr("Failed to connect to Player server!");
+			System.exit(1);
+		}
+		
+		if (!initContextSubsystem()) {
+			Logger.logErr("Failed to initialize context subsystem!");
 			System.exit(1);
 		}
 		
@@ -204,6 +232,18 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		return true;
 	}
 	
+	private boolean initContextSubsystem() {
+		try {
+			contextSubsystem = new ContextSubsystem(gpsDataBuffer, compassDataBuffer);
+			contextSubsystem.start();
+			return true;
+		} catch (Exception e) {
+			Logger.logErr("Problem initializing context subsystem: " + e.getMessage());
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	private boolean initWiFiBeacons() {
     	// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
@@ -366,7 +406,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 						gpsDataBuffer);
 				Scooter scooter = new Scooter(motionArbiter);
 				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
-						wifiBeaconBroadcaster, telosRadioSignalMeter);
+						wifiBeaconBroadcaster, telosRadioSignalMeter, contextSubsystem);
 				wpFollower.start(gpsMotionScript, this);
 				break;
 			case FOLLOW_RELATIVE_MOTION_SCRIPT:
