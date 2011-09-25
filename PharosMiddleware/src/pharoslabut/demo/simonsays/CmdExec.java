@@ -14,7 +14,7 @@ import pharoslabut.logger.*;
  * This runs on the SimonSaysClient and provides the API for 
  * controlling the robot's movements and its camera. 
  * 
- * @author Chien-Liang Fok 
+ * @author Chien-Liang Fok
  * @see SimonSaysClient
  */
 public class CmdExec implements MessageReceiver {
@@ -107,13 +107,6 @@ public class CmdExec implements MessageReceiver {
 					CmdDoneMsg ackMsg = (CmdDoneMsg)rcvMsg;
 					Logger.log("Ack received, success = " + ackMsg.getSuccess());
 					result = ackMsg.getSuccess(); // success
-				} else if (rcvMsg instanceof CricketDataMsg) {
-					CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
-					Logger.log("Cricket msg received, " + cricketMsg.getCricketData());
-					
-					// TODO do something with cricket data
-					System.out.println("Cricket msg received, " + cricketMsg.getCricketData());
-					
 				} else {
 					Logger.logErr("Ack received but is of wrong type: " + rcvMsg);
 				}

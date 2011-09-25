@@ -12,9 +12,6 @@
 #define COMPASS_ADDRESS 0xC0
 #define COMPASS_REGISTER_ADDRESS 0x02
 
-/**
- * Initializes the compass.
- */
 void Compass_init(void);
 
 /**
@@ -26,10 +23,12 @@ void Compass_init(void);
 void Compass_getHeading(void);
 
 /**
- * This is scheduled to be called by I2CDriver after it finishes obtaining
+ * This is called by I2CDriver after it finishes obtaining
  * a compass sensor reading.
+ * 
+ * @param heading The most recent heading measurement from the compass
  */
-void Compass_headingReady();
+void Compass_headingReady(uint16_t heading);
 
 /**
  * Called by the TaskHandler whenever a PWM calculation needs to be

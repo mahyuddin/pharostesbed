@@ -153,7 +153,6 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
     }
     
     private void handleAutoIntDebugMsg(AutoIntDebugMsg msg) {
-    	Logger.log("Received AutoIntDebugMsg: " + msg);
     	display.updateText(msg.getIE().getType().toString());
     }
 
@@ -234,7 +233,7 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
 		print("\t-ways <number of ways>: the number of ways in the intersection (default 4)");
 		print("\t-lanes <number of lanes>: the number of lanes in each way of the the intersection (default 2)");
 		print("\t-width <Intersection width>: the width of the intersection in cm (default 150cm)");
-		print("\t-log <log file name>: The name of the file in which to save debug output (default AutoIntersectionServer.log)");
+		print("\t-log <log file name>: The name of the file in which to save debug output (default ServerIntersectionManager.log)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -244,9 +243,8 @@ public class AutoIntersectionServer extends Thread implements MessageReceiver {
      * @throws InterruptedException
      */
     public static void main(String [] args) {
-		int serverPort = 6665
-				;
-		String logFileName = "AutoIntersectionServer.log";
+		int serverPort = 6665;
+		String logFileName = "ServerIntersectionManager.log";
 		nWays = 4;
 		nLanes = 2;
 		intersectionWidth = 150;

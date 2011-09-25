@@ -71,40 +71,36 @@ public abstract class IntersectionDetector  {
 	protected void genApproachingEvent() {
 		
 		if (previousEventType != null && previousEventType != IntersectionEventType.EXITING) {
-			Logger.logErr("ERROR! Got unexpected APPROACHING event, previous event = " + previousEventType);
-		}
-//		} else {
-			Logger.log("APPROACHING INTERSECTION!");
+			Logger.logErr("Got unexpected APPROACHING event, previous event = " + previousEventType);
+		} else {
+			Logger.log("APPROACHING Intersection!");
 			previousEventType = IntersectionEventType.APPROACHING;
 			IntersectionEvent lfe = new IntersectionEvent(IntersectionEventType.APPROACHING);
 			notifyListeners(lfe);
-//		}
+		}
 	}
 	
 	protected void genEnteringEvent() {
 		
 		if (previousEventType != IntersectionEventType.APPROACHING) {
-			Logger.logErr("ERROR! Got unexpected ENTERING event, previous event = " + previousEventType);
-			
-		}
-//		} else {
-			Logger.log("ENTERING INTERSECTION!");
+			Logger.logErr("Got unexpected ENTERING event, previous event = " + previousEventType);
+		} else {
+			Logger.log("ENTERING Intersection!");
 			previousEventType = IntersectionEventType.ENTERING;
 			IntersectionEvent lfe = new IntersectionEvent(IntersectionEventType.ENTERING);
 			notifyListeners(lfe);
-//		}
+		}
 	}
 	
 	protected void genExitingEvent() {
 		
 		if (previousEventType != IntersectionEventType.ENTERING) {
-			Logger.logErr("ERROR! Got unexpected EXITING event, previous event = " + previousEventType);
-		}
-//		} else {
-			Logger.log("EXITING INTERSECTION!");
+			Logger.logErr("Got unexpected EXITING event, previous event = " + previousEventType);
+		} else {
+			Logger.log("EXITING Intersection!");
 			previousEventType = IntersectionEventType.EXITING;
 			IntersectionEvent lfe = new IntersectionEvent(IntersectionEventType.EXITING);
 			notifyListeners(lfe);
-//		}
+		}
 	}
 }

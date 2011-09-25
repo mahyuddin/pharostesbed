@@ -44,18 +44,18 @@ public class IntersectionDetectorDisplay extends JLabel {
 	}
 	
 	public void updateText(String msg) {
-//		if (timer != null) {
-//			timer.cancel();
-//			timer = null;
-//		}
+		if (timer != null) {
+			timer.cancel();
+			timer = null;
+		}
 		setText(msg);
-//		timer = new Timer();
-//		timer.schedule(new TimerTask() {
-//			public void run() {
-//				clearText();
-//				timer = null;
-//			}
-//		}, DISPLAY_DURATION);
+		timer = new Timer();
+		timer.schedule(new TimerTask() {
+			public void run() {
+				clearText();
+				timer = null;
+			}
+		}, DISPLAY_DURATION);
 	}
 
 	public Dimension getPreferredSize() {

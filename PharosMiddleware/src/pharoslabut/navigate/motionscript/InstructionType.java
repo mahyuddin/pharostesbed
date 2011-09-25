@@ -11,4 +11,5 @@ public enum InstructionType {
 	WAIT_EXP_STOP,
 	SCOOT,
 	RCV_TELOSB_BEACONS,
+ CONTEXT, CONTEXT_RESET
 }

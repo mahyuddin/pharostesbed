@@ -173,11 +173,6 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 			} else {
 				Logger.log("Thread awoken but Intersection Event was null!");
 			}
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-			}
 		}
 	}
 	

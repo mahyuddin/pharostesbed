@@ -21,13 +21,11 @@
 #include "Tach.h"
 #include "Compass.h"
 #include "adc.h"
-#include "I2CDriver.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
 	Timer_Init(); // TCNT @ 333.3ns, TOF @ 21.84ms
 	LED_Init();
-	I2CDriver_init();
 	
 	MotorControl_init();
 	TaskHandler_init();

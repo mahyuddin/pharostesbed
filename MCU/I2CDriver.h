@@ -26,8 +26,9 @@ enum {
 	I2C_STATE_ADDRESSING_SLAVE,
 	I2C_STATE_SENDING_REGISTER_ADDRESS,
 	I2C_STATE_SENDING_READ_BIT,
-	I2C_STATE_RECEIVING_BYTE,
-	I2C_STATE_TRANSMITTING_BYTE,
+	I2C_STATE_RECEIVING_FIRST_BYTE,
+	I2C_STATE_RECEIVING_SECOND_BYTE,
+	I2C_STATE_FINISH_READ_COMPASS
 };
 
 /**
@@ -37,27 +38,10 @@ enum {
 void I2CDriver_init(void);
 
 /**
- * Initiates the process of reading from a device on the I2C bus.
+ * Initiates the process of reading the compass.
  *
- * @param deviceAddr The address of the target device.
- * @param regAddr The address of the register on the device.
- * @param numBytes The number of bytes to read.
- * @param buff The buffer in which to store the results.
- * @param funcptr A pointer to the function that should be called after
- * reading in the specified number of bytes.
+ * TODO: generalize this driver by using call-back function pointers.
  */
-bool I2CDriver_read(uint8_t deviceAddr, uint8_t regAddr, 
-	uint16_t numBytes, uint8_t* buff, void(*funcptr)(void));
-
-/**
- * Initiates the process of writing to a device on the I2C bus.
- *
- * @param deviceAddr The address of the target device.
- * @param regAddr The address of the register on the device.
- * @param numBytes The number of bytes to write.
- * @param buff The buffer containing the data to send.
- */
-bool I2CDriver_write(uint8_t deviceAddr, uint8_t regAddr,
-	uint16_t numBytes, uint8_t* buff);
+bool I2CDriver_readCompass(void);
 
 #endif /* _I2C_DRIVER_H */
