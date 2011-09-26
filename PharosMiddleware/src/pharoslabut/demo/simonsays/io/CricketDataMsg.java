@@ -1,11 +1,10 @@
 package pharoslabut.demo.simonsays.io;
 
-import java.util.ArrayList;
-
 import pharoslabut.demo.simonsays.SimonSaysClient;
 import pharoslabut.demo.simonsays.SimonSaysServer;
 import pharoslabut.io.Message;
 import pharoslabut.sensors.CricketData;
+import playerclient3.structures.PlayerPoint3d;
 
 /**
  * This message is sent by the SimonSaysServer to the SimonSaysClient with
@@ -19,16 +18,24 @@ public class CricketDataMsg implements Message {
 
 	private static final long serialVersionUID = -7795567339491090483L;
 
+	/**
+	 * the data collected from this cricket beacon
+	 */
 	private CricketData cricketData;
+	/**
+	 * the coordinates of this cricket beacon
+	 */
+	private PlayerPoint3d point;
 	
 	/**
 	 * The constructor.
 	 * 
-	 * @param dist the array of distances calculated by the Cricket mote,
-	 * it has one element for each Cricket beacon that was seen
+	 * @param cd the data values read from this cricket beacon
+	 * @param pt the coordinates (x,y,z) of this cricket beacon
 	 */
-	public CricketDataMsg(CricketData cd) {
+	public CricketDataMsg(CricketData cd, PlayerPoint3d pt) {
 		this.cricketData = cd;
+		this.point = pt;
 	}
 	
 	
@@ -36,7 +43,15 @@ public class CricketDataMsg implements Message {
 	public MsgType getType() {
 		return MsgType.CUSTOM;
 	}
+
 	
+	public PlayerPoint3d getPoint() {
+		return point;
+	}
+
+	public void setPoint(PlayerPoint3d point) {
+		this.point = point;
+	}
 	
 	public CricketData getCricketData() {
 		return cricketData;
