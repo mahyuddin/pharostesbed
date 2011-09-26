@@ -9,6 +9,8 @@ import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
+import pharoslabut.sensors.CricketData;
+import playerclient3.structures.PlayerPoint3d;
 
 /**
  * This runs on the SimonSaysClient and provides the API for 
@@ -107,13 +109,6 @@ public class CmdExec implements MessageReceiver {
 					CmdDoneMsg ackMsg = (CmdDoneMsg)rcvMsg;
 					Logger.log("Ack received, success = " + ackMsg.getSuccess());
 					result = ackMsg.getSuccess(); // success
-				} else if (rcvMsg instanceof CricketDataMsg) {
-					CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
-					Logger.log("Cricket msg received, " + cricketMsg.getCricketData());
-					
-					// TODO do something with cricket data
-					System.out.println("Cricket msg received, " + cricketMsg.getCricketData());
-					
 				} else {
 					Logger.logErr("Ack received but is of wrong type: " + rcvMsg);
 				}
@@ -130,7 +125,20 @@ public class CmdExec implements MessageReceiver {
 	public void newMessage(Message msg) {
 		synchronized(this) {
 			this.rcvMsg = msg;
-			this.notifyAll();
+			
+			if (rcvMsg instanceof CricketDataMsg) {
+				CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
+				CricketData cd = cricketMsg.getCricketData();
+				PlayerPoint3d coords = cricketMsg.getPoint();
+				
+				// TODO do something with cricket data
+				// could add each cricket mote to a set of cricket mote objects, where each obj has a pose, id, and timestamped data value
+					//might want to do this on the server side?
+				Logger.log("Cricket Mote at (" + coords.getPx() + "," + coords.getPy() + ") read dist: " + cd.getDistance());
+			}
+			else {
+				this.notifyAll();
+			}
 		}
 	}
 	
