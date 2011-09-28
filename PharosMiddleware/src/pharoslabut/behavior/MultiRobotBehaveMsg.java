@@ -1,5 +1,6 @@
 package pharoslabut.behavior;
 
+import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.io.*;
 
 /**
@@ -19,21 +20,19 @@ public class MultiRobotBehaveMsg implements AckedMsg {
 		/**
 		 * The constructor.
 		 * 
-		 * @param behavename The name of the behavior being executed.
-		 * @param behaveID The ID of the behavior being executed.
-		 * @param myID The ID of the sender.
+		 * @param wm - world model to extract from it the relevant information.
 		 */
-		public MultiRobotBehaveMsg(String behavename, int behaveID, int myID) {
-			_behaveName = new String(behavename);
-			_behaveID = behaveID;
-			_robotID = myID;
+		public MultiRobotBehaveMsg(WorldModel wm) {
+			_behaveName = new String(wm.getCurrentBehaviorName());
+			_behaveID = wm.getCurrentBehaviorID();
+			_robotID = wm.getMyIndex();
 		}
 		
-		public String getBehaveName() {
+		public String getBehaviorName() {
 			return _behaveName;
 		}
 		
-		public int getBehaveID(){
+		public int getBehaviorID(){
 			return _behaveID;
 		}
 		

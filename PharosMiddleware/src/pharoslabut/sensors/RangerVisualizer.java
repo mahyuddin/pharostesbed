@@ -7,19 +7,6 @@ import playerclient3.structures.ranger.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.ValueAxis;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.Range;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.font.TextAttribute;
@@ -36,16 +23,12 @@ public class RangerVisualizer {
 	private IRPanel irPanel;
 	private boolean isClosed = false;
 	
-	private long startTime = System.currentTimeMillis();
-	
 	private double distFC = 0;
 	private double distFR = 0;
 	private double distFL = 0;
 	private double distRC = 0;
 	private double distRR = 0;
 	private double distRL = 0;
-	
-	GraphPanel graphPanel;
 	
 	public RangerVisualizer() {
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
@@ -95,13 +78,10 @@ public class RangerVisualizer {
     	//window.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
     	window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     	
-    	// Create the IR panel
+    	// Create the table and add it to a scroll pane...
         irPanel = new IRPanel();
         window.getContentPane().add(irPanel, BorderLayout.CENTER);
         
-        // Create the graph panel
-        graphPanel = new GraphPanel();
-        window.getContentPane().add(graphPanel, BorderLayout.EAST);
         
         window.addWindowListener(new WindowAdapter() {
         	public void windowClosed(WindowEvent we) {
@@ -116,7 +96,6 @@ public class RangerVisualizer {
     public void updateDistances(PlayerRangerData rangeData) {
     	int numSensors = rangeData.getRanges_count();
     	if (numSensors == 6) {
-    		double timeS = (System.currentTimeMillis() - startTime) / 1000.0;
     		double[] data = rangeData.getRanges();
     		distFL = data[0];
     		distFC = data[1];
@@ -125,172 +104,9 @@ public class RangerVisualizer {
     		distRC = data[4];
     		distRR = data[5];
     		javax.swing.SwingUtilities.invokeLater(irPanel); // repaints the IR panel
-    		
-    		if (graphPanel != null) {
-    			graphPanel.updateFR(timeS, distFR);
-    			graphPanel.updateFC(timeS, distFC);
-    			graphPanel.updateFL(timeS, distFL);
-    			graphPanel.updateRR(timeS, distRR);
-    			graphPanel.updateRC(timeS, distRC);
-    			graphPanel.updateRL(timeS, distRL);
-    		}
     	} else {
     		Logger.logErr("Expected 6 sensors, instead got " + numSensors);
     	}
-    }
-    
-    private class GraphPanel extends JPanel {
-    	int NUM_ROWS = 6;
-    	int NUM_COLS = 1;
-    	int GRAPH_WIDTH = 350;
-    	
-    	XYSeries dataSeriesRR;
-    	XYSeries dataSeriesRC;
-    	XYSeries dataSeriesRL;
-    	XYSeries dataSeriesFR;
-    	XYSeries dataSeriesFC;
-    	XYSeries dataSeriesFL;
-    	
-    	public GraphPanel() {
-    		setLayout(new GridLayout(NUM_ROWS, NUM_COLS));
-    		
-    		dataSeriesFR = new XYSeries("Front Right");
-    		dataSeriesFC = new XYSeries("Front Center");
-    		dataSeriesFL = new XYSeries("Front Left");
-    		dataSeriesRR = new XYSeries("Rear Right");
-    		dataSeriesRC = new XYSeries("Rear Center");
-    		dataSeriesRL = new XYSeries("Rear Left");
-    		
-    		XYSeriesCollection datasetFR = new XYSeriesCollection();
-            datasetFR.addSeries(dataSeriesFR);
-            
-            XYSeriesCollection datasetFC = new XYSeriesCollection();
-            datasetFC.addSeries(dataSeriesFC);
-            
-            XYSeriesCollection datasetFL = new XYSeriesCollection();
-            datasetFL.addSeries(dataSeriesFL);
-            
-            XYSeriesCollection datasetRR = new XYSeriesCollection();
-            datasetRR.addSeries(dataSeriesRR);
-            
-            XYSeriesCollection datasetRC = new XYSeriesCollection();
-            datasetRC.addSeries(dataSeriesRC);
-            
-            XYSeriesCollection datasetRL = new XYSeriesCollection();
-            datasetRL.addSeries(dataSeriesRL);
-            
-            final JFreeChart chartFR = createChart("Front Right Ranger", datasetFR);
-            final JFreeChart chartFC = createChart("Front Center Ranger", datasetFC);
-            final JFreeChart chartFL = createChart("Front Left Ranger", datasetFL);
-            final JFreeChart chartRR = createChart("Rear Right Ranger", datasetRR);
-            final JFreeChart chartRC = createChart("Rear Center Ranger", datasetRC);
-            final JFreeChart chartRL = createChart("Rear Left Ranger", datasetRL);
-            
-            setFixedDomainRange(chartFR);
-            setFixedDomainRange(chartFC);
-            setFixedDomainRange(chartFL);
-            setFixedDomainRange(chartRR);
-            setFixedDomainRange(chartRC);
-            setFixedDomainRange(chartRL);
-            
-            final ChartPanel chartPanelFR = new ChartPanel(chartFR);
-            chartPanelFR.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            final ChartPanel chartPanelFC = new ChartPanel(chartFC);
-            chartPanelFC.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            final ChartPanel chartPanelFL = new ChartPanel(chartFL);
-            chartPanelFL.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            final ChartPanel chartPanelRR = new ChartPanel(chartRR);
-            chartPanelRR.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            final ChartPanel chartPanelRC = new ChartPanel(chartRC);
-            chartPanelRC.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            final ChartPanel chartPanelRL = new ChartPanel(chartRL);
-            chartPanelRL.setPreferredSize(new java.awt.Dimension(GRAPH_WIDTH, 100));
-            
-            add(chartPanelFR);
-            add(chartPanelFC);
-            add(chartPanelFL);
-            add(chartPanelRR);
-            add(chartPanelRC);
-            add(chartPanelRL);
-    	}
-    	
-    	public void updateFR(double time, double dist) {
-    		dataSeriesFR.add(time, dist);
-    	}
-    	
-    	public void updateFC(double time, double dist) {
-    		dataSeriesFC.add(time, dist);
-    	}
-    	
-    	public void updateFL(double time, double dist) {
-    		dataSeriesFL.add(time, dist);
-    	}
-    	
-    	public void updateRR(double time, double dist) {
-    		dataSeriesRR.add(time, dist);
-    	}
-    	
-    	public void updateRC(double time, double dist) {
-    		dataSeriesRC.add(time, dist);
-    	}
-    	
-    	public void updateRL(double time, double dist) {
-    		dataSeriesRL.add(time, dist);
-    	}
-    }
-    
-    /**
-     * Sets the range domain of the chart to be fixed.
-     * @param chart
-     */
-    private void setFixedDomainRange(JFreeChart chart) {
-    	final XYPlot plot = chart.getXYPlot();
-        ValueAxis axis = plot.getDomainAxis();
-        axis.setAutoRange(true);
-        axis.setFixedAutoRange(60);  // 60 seconds
-    }
-    
-    /**
-     * Creates the chart.
-     * 
-     * @param dataset The dataset.
-     * @return The newly created chart.
-     */
-    private JFreeChart createChart(String title, XYSeriesCollection dataset) {
-    	 // create the chart...
-        final JFreeChart chart = ChartFactory.createXYLineChart(
-            title,      // chart title
-            "Time (s)",                      // x axis label
-            "Distance (m)",                  // y axis label
-            dataset,                         // data
-            PlotOrientation.VERTICAL,
-            false,                     // include legend
-            true,                     // tooltips
-            false                     // urls
-        );
-        
-        chart.setBackgroundPaint(Color.white);
-        
-        // get a reference to the plot for further customization...
-        final XYPlot plot = chart.getXYPlot();
-        plot.setBackgroundPaint(Color.lightGray);
-    //    plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
-        plot.setDomainGridlinePaint(Color.white);
-        plot.setRangeGridlinePaint(Color.white);
-        
-        final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
-        renderer.setSeriesLinesVisible(0, false);
-        renderer.setSeriesShapesVisible(1, false);
-        plot.setRenderer(renderer);
-        
-        final NumberAxis domainAxis = (NumberAxis)plot.getDomainAxis();
-        domainAxis.setRange(new Range(0,140));
-
-        
-//        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-//        rangeAxis.setRange(new Range(-Math.PI, Math.PI));
-        
-        return chart;
     }
     
     /**

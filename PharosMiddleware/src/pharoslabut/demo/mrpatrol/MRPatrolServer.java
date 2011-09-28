@@ -36,6 +36,7 @@ import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 import pharoslabut.behavior.MultiRobotBehaveMsg;
+import pharoslabut.behavior.MultiRobotTableMsg;
 import pharoslabut.behavior.management.*;
 
 // use pharoslabut.experiment.PharosExpServer as an example.
@@ -375,7 +376,12 @@ public class MRPatrolServer implements MessageReceiver, WiFiBeaconListener, Prot
 		case UPDATE_BEH_MSG:
 			Logger.log("updated behavior message: " + msg);
 			MultiRobotBehaveMsg mRmsg = (MultiRobotBehaveMsg)msg;
-			manageMRP.updateTeammates(mRmsg.getBehaveName(), mRmsg.getRobotID(), mRmsg.getBehaveID());
+			manageMRP.updateTeammates(mRmsg);
+			break;
+		case UPDATE_BEH_TABLE_MSG:
+			Logger.log("updating behavior message: " + msg);
+			MultiRobotTableMsg mRTmsg = (MultiRobotTableMsg)msg;
+			manageMRP.updateTeammatesTable(mRTmsg);
 			break;
 		default:
 			Logger.log("Unknown Message: " + msg);

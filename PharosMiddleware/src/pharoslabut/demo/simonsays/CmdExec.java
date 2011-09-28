@@ -9,14 +9,12 @@ import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
-import pharoslabut.sensors.CricketData;
-import playerclient3.structures.PlayerPoint3d;
 
 /**
  * This runs on the SimonSaysClient and provides the API for 
  * controlling the robot's movements and its camera. 
  * 
- * @author Chien-Liang Fok 
+ * @author Chien-Liang Fok
  * @see SimonSaysClient
  */
 public class CmdExec implements MessageReceiver {
@@ -125,20 +123,7 @@ public class CmdExec implements MessageReceiver {
 	public void newMessage(Message msg) {
 		synchronized(this) {
 			this.rcvMsg = msg;
-			
-			if (rcvMsg instanceof CricketDataMsg) {
-				CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
-				CricketData cd = cricketMsg.getCricketData();
-				PlayerPoint3d coords = cricketMsg.getPoint();
-				
-				// TODO do something with cricket data
-				// could add each cricket mote to a set of cricket mote objects, where each obj has a pose, id, and timestamped data value
-					//might want to do this on the server side?
-				Logger.log("Cricket Mote at (" + coords.getPx() + "," + coords.getPy() + ") read dist: " + cd.getDistance());
-			}
-			else {
-				this.notifyAll();
-			}
+			this.notifyAll();
 		}
 	}
 	

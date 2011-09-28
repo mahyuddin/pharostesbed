@@ -29,11 +29,8 @@ package playerclient3.structures;
  *      <li>v3.0 - Player 3.0 supported
  * </ul>
  */
-public class PlayerPoint3d implements java.io.Serializable {
-
-	private static final long serialVersionUID = 2842923117442032280L;
-	
-	private double px;        // X [m]
+public class PlayerPoint3d {
+    private double px;        // X [m]
     private double py;        // Y [m]
     private double pz;        // Z [m]
 

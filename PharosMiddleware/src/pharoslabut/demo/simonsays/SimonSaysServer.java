@@ -1,13 +1,7 @@
 package pharoslabut.demo.simonsays;
 
 import java.awt.Image;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.*;
-import java.util.Map.Entry;
 
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
@@ -15,39 +9,17 @@ import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
-import pharoslabut.sensors.CricketData;
-import pharoslabut.sensors.CricketDataListener;
-import pharoslabut.sensors.CricketInterface;
 import pharoslabut.sensors.camera.axis.*;
-import playerclient3.structures.PlayerPoint3d;
-import playerclient3.structures.position2d.PlayerPosition2dGeom;
 
 /**
  * This server runs on the robot, and accepts camera commands from the client.
  * These commands include pan, tilt, and taking a snapshot.
  * 
  * @author Chien-Liang Fok
- * 
  */
-public class SimonSaysServer implements MessageReceiver, CricketDataListener {
+public class SimonSaysServer implements MessageReceiver {
 	public static final int IMAGE_WIDTH = 640;
 	public static final int IMAGE_HEIGHT = 480;
-	public static String cricketSerialPort = "/dev/ttyUSB1";
-	
-	/**
-	 * the list of Cricket Mote beacons and their corresponding poses (positional coordinates)
-	 */
-	Map<String, PlayerPoint3d> cricketPositions = new HashMap<String, PlayerPoint3d>();
-	
-	/**
-	 * the list of Cricket Mote beacons currently connected to this robot's Cricket Mote Listener
-	 */
-	Map<String, ArrayList<CricketData>> cricketBeacons = Collections.synchronizedMap(new HashMap<String, ArrayList<CricketData>>());
-	
-	/**
-	 * the list of clients currently connected to this server
-	 */
-	HashMap<InetAddress, Integer> clients = new HashMap<InetAddress, Integer>();
 	
 	/**
      * The connection back to the client.
@@ -78,9 +50,8 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 * @param cameraIP The IP address of the camera.
 	 * @param mobilityPlane The type of mobility plane to use.
 	 */
-	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP, 
-			String cricketFile, MotionArbiter.MotionType mobilityPlane) {
-		
+	public SimonSaysServer(String pServerIP, int pServerPort, int port, String mcuPort, String cameraIP,
+			MotionArbiter.MotionType mobilityPlane) {
 		
 		// TODO: Support multiple types of robots.
 		ri = new CreateRobotInterface(pServerIP, pServerPort);
@@ -91,83 +62,12 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		String cameraURL = "http://" + cameraIP + "/axis-cgi/jpg/image.cgi?resolution=" + IMAGE_WIDTH + "x" + IMAGE_HEIGHT;
 		camera = new AxisCameraInterface(cameraURL, "root", "longhorn");
 		
-		// add listener for cricket mote on USB1
-		CricketInterface ci  = new CricketInterface(cricketSerialPort);
-		ci.registerCricketDataListener(this);
-		
-		// create list of cricket beacons and their positions
-		cricketPositions = readCricketFile(cricketFile);
-		
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
 	}
 	
-	
-	
-	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
-		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
-		try {
-			Scanner sc = new Scanner(new BufferedReader(new FileReader(fileName)));
-			while (sc.hasNextLine()) {
-				String cricketId = sc.next();
-				if (cricketId.contains("//") || cricketId.contains("/*") || cricketId.contains("#") || cricketId.contains(";"))
-				{
-					// we've reached a commented line in the file
-					sc.nextLine(); // skip this line
-					continue;
-				}
-				PlayerPoint3d coords = new PlayerPoint3d();
-				coords.setPx(sc.nextDouble());
-				coords.setPy(sc.nextDouble());
-				coords.setPz(sc.nextDouble());
-				sc.nextLine(); // consume the rest of the line
-				// store to hashmap entry
-				beacons.put(cricketId, coords);
-				Logger.logDbg("Cricket Mote " + cricketId + " has coords: (" + coords.getPx() + "," + coords.getPy() + "," + coords.getPz() + ")");
-			}
-		} catch (FileNotFoundException e) {
-			Logger.logErr("Could not find Cricket beacons file: " + fileName);
-			e.printStackTrace();
-		} catch (InputMismatchException e) {
-			Logger.logErr("Error reading Cricket beacons file: " + fileName + ", bad input format.");
-			e.printStackTrace();
-		} catch (NoSuchElementException e) { }
-		
-		return beacons;
-	}	
-	
-	
-	
-	@Override
-	public void newCricketData(CricketData cd) {
-		if (!cd.getConnection())
-			return;
-			
-		ArrayList<CricketData> curList = cricketBeacons.get(cd.getCricketID()); // try to see if this cricket beacon has already connected before
-		if (curList == null) {
-			curList = new ArrayList<CricketData>();
-			Logger.logDbg("Found Cricket Mote " + cd.getCricketID());
-		}
-		curList.add(cd); // probably don't need to store the entire CricketData obj -- distance might suffice
-		cricketBeacons.put(cd.getCricketID(), curList);
-		
-		CricketDataMsg cricketMsg = new CricketDataMsg(cd, cricketPositions.get(cd.getCricketID()));
-		// broadcast new CricketData to clients list
-		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
-	    while (iter.hasNext()) {
-	    	Entry<InetAddress, Integer> pair = iter.next();
-		    try {
-		    	sender.sendMessage(pair.getKey(), pair.getValue(), cricketMsg);
-		    }
-		    catch (PharosException e) {
-				e.printStackTrace();
-				Logger.logErr("Failed to send Cricket Msg, " + cd.toString());
-			}
-	    }
-	} 
-	
 	//@Override
-	public void newMessage(Message msg) {		
+	public void newMessage(Message msg) {
 		// This is called whenever a new message is received.
 		if (msg instanceof CameraPanMsg)
 			handleCameraPanMsg((CameraPanMsg)msg);
@@ -192,10 +92,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 			ri.stopPlayer();
 			sendAck(true, playerCtrlMsg);
 		} else if (playerCtrlMsg.getCmd() == PlayerControlCmd.START) {
-			// signifies that a new client has connected to the server
-			clients.put(playerCtrlMsg.getReplyAddr(), playerCtrlMsg.getPort());
-			Logger.log("Client added: " + playerCtrlMsg.getReplyAddr() + ":" + playerCtrlMsg.getPort());
-			sendAck(true, playerCtrlMsg);
+			
 		} else 
 			Logger.log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
 	}
@@ -332,7 +229,6 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		String logFile = "SimonSaysServer.log";
 		String mcuPort = "/dev/ttyS0";
 		String cameraIP = "192.168.0.20";
-		String cricketFile = "cricketBeacons.txt";
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
 		
 		try {
@@ -354,12 +250,6 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 				}
 				else if (args[i].equals("-cameraIP")) {
 					cameraIP = args[++i];
-				}
-				else if (args[i].equals("-cricketFile")) {
-					cricketFile = args[++i];
-				}
-				else if (args[i].equals("-cricketPort")) {
-					cricketSerialPort = args[++i];
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
@@ -392,7 +282,6 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		// Create the file logger if necessary...
 		Logger.setFileLogger(new FileLogger(logFile));
 		
-		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, cricketFile, mobilityPlane);
+		new SimonSaysServer(pServerIP, pServerPort, port, mcuPort, cameraIP, mobilityPlane);
 	}
-
 }

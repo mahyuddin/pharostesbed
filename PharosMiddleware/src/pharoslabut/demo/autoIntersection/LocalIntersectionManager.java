@@ -3,6 +3,8 @@ package pharoslabut.demo.autoIntersection;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.navigate.LineFollowerEvent;
+import pharoslabut.navigate.LineFollowerEventListener;
 
 import playerclient3.*;
 import playerclient3.structures.PlayerConstants;
@@ -13,9 +15,8 @@ import playerclient3.structures.ir.PlayerIrData;
  * without a server.
  * 
  * @author Seth Gee
- * @author Chien-Liang Fok
  */
-public class LocalIntersectionManager implements IntersectionEventListener, Runnable {
+public class LocalIntersectionManager implements LineFollowerEventListener, Runnable {
 
 	/**
 	 * This component is responsible for making the robot follow the line,
@@ -24,9 +25,9 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	private LineFollower lf;
 	
 	/**
-	 * This detects the intersection.
+	 * For logging debug messages.
 	 */
-	private IntersectionDetector detector;
+//	private FileLogger flogger;
 	
 	/**
 	 * Keeps track of whether the LocalIntersectionManager is running.
@@ -50,18 +51,18 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	 * It coordinates the line follower, remote intersection manager, and 
 	 * local intersection manager.
 	 */
-	private AutoIntersectionClient clientMgr;
+	private ClientManager clientMgr;
 	
 	
 	/**
 	 * Holds the latest IR range data.
 	 */
-//	PlayerIrData irData;
+	PlayerIrData irData;
 	
 	/**
 	 * Records when the latest IR data was received.
 	 */
-//	long irDataTimeStamp;
+	long irDataTimeStamp;
 	
 	/**
 	 * The constructor.
@@ -70,23 +71,23 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	 * @param clientmgr The client manager that should be notified should this
 	 * class fail to navigate the intersection.
 	 */
-	public LocalIntersectionManager(LineFollower lf, IntersectionDetector detector, AutoIntersectionClient clientMgr) {
+	public LocalIntersectionManager(LineFollower lf, ClientManager clientMgr) {
 		this.lf = lf;
-		this.detector = detector;
 		this.clientMgr = clientMgr;
 		this.isRunning = true; 
 		
 		// Connect to the IR sensors...
 		PlayerClient client = lf.getPlayerClient();
 		
-//		// Uncomment these lines when ready to enable IR sensors.
-//		try{
-//			RangerInterface ir = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
-//			//ir.addIRListener(this);
-//		} catch (PlayerException e) { 
-//			Logger.logErr("Could not connect to IR proxy.");
-//			System.exit(1);
-//		}
+		// Uncomment these lines when ready to enable IR sensors.
+		try{
+			// TODO replace with ranger interface
+			IRInterface ir = client.requestInterfaceIR(0, PlayerConstants.PLAYER_OPEN_MODE);
+			//ir.addIRListener(this);
+		} catch (PlayerException e) { 
+			Logger.logErr("Could not connect to IR proxy.");
+			System.exit(1);
+		}
 	}
 	
 	/**
@@ -108,18 +109,19 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 	}
 	
 	@Override
-	public void newIntersectionEvent(IntersectionEvent lfe) {
+	public void newLineFollowerEvent(LineFollowerEvent lfe, LineFollower follower) {
 		if (isRunning) {
 			switch(lfe.getType()) {
 			// The APPROACHING event is now handled by the ClientManager
 			case APPROACHING:
+//				doApproaching();
 				break;
-				
+			
 //			By the time this method is called, the robot should already be at the entrance 
 //			to the intersection
 			case ENTERING:
+//			doEntering();
 				break;
-			
 			case EXITING:
 				reachedExit = true;
 				break;
@@ -128,8 +130,9 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 			case ERROR:
 				Logger.logErr("Logger.log(Received error from line follower!  Aborting demo.");
 				lf.stop(); // There was an error, stop!
+//				break;
 			default:
-				Logger.log("Logger.log(Discarding unexpected intersection event: " + lfe);
+				Logger.log("Logger.log(Unexpected event from line follower (discarding): " + lfe);
 			}
 		} else
 			Logger.log("Logger.log(Ignoring event because not running: " + lfe);
@@ -150,17 +153,17 @@ public class LocalIntersectionManager implements IntersectionEventListener, Runn
 			// If IR sensors detect obstacle, call lf.stop()
 			// If all clear, call lf.go()
 			// Make use of member variables "irData" and "irDataTimeStamp"
-//			float ranges[] = irData.getRanges();
-//			Logger.log("ranges are: " + ranges[0] + ", " + ranges[1] + ", " + ranges[2]);
-//			
-//			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {
-//				Logger.log("Stopping robot because obstacle detected using IR range data.");
-//				lf.stop();
-//			}
-//			else {
-//				reachedExit = true; 
-//				lf.start();
-//			}
+			float ranges[] = irData.getRanges();
+			Logger.log("ranges are: " + ranges[0] + ", " + ranges[1] + ", " + ranges[2]);
+			
+			if(ranges[0] < 1000 || ranges[1] < 2200 || ranges[2] < 1000) {
+				Logger.log("Stopping robot because obstacle detected using IR range data.");
+				lf.stop();
+			}
+			else {
+				reachedExit = true; 
+				lf.start();
+			}
 		}
 		
 		// After it is done...

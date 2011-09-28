@@ -17,7 +17,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
 import pharoslabut.demo.autoIntersection.LaneSpecs;
-import pharoslabut.demo.autoIntersection.server.AutoIntersectionServer;
+import pharoslabut.demo.autoIntersection.server.ServerIntersectionManager;
 
 public class IntersectionPanel extends JPanel implements Runnable {
 
@@ -42,7 +42,7 @@ public class IntersectionPanel extends JPanel implements Runnable {
 	public void paintComponent(Graphics g) {
 	    super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
-		if( (AutoIntersectionServer.getNWays()==4)  &&  (AutoIntersectionServer.getNLanes()==2) ) {
+		if( (ServerIntersectionManager.getNWays()==4)  &&  (ServerIntersectionManager.getNLanes()==2) ) {
 			paint2L4WGUI();
 		}
 		g2.drawImage(intersectionImage, 0, 0, this.getPreferredSize().width, this.getPreferredSize().height, null);

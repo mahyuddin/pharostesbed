@@ -48,6 +48,17 @@ public class AverageStatistic {
 		return conf95;
 	}
 	
+	public String toSecondsString() {
+		String format = "#.";
+		for (int i=0; i < numDecimalPlaces; i++) {
+			format += "#";
+		}
+		
+		DecimalFormat df = new DecimalFormat(format);
+		
+		return df.format(average/1000) + " ± " + df.format(conf95/1000);
+	}
+	
 	public String toString() {
 		String format = "#.";
 		for (int i=0; i < numDecimalPlaces; i++) {

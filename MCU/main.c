@@ -21,20 +21,18 @@
 #include "Tach.h"
 #include "Compass.h"
 #include "adc.h"
-#include "I2CDriver.h"
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
 	Timer_Init(); // TCNT @ 333.3ns, TOF @ 21.84ms
 	LED_Init();
-	I2CDriver_init();
 	
 	MotorControl_init();
 	TaskHandler_init();
 	Servo_init();
 	Tach_init();
 	Compass_init();
-	SerialDriver_init(115200);
+	SerialDriver_init(57600);
 	ADC0_Init(); // enable IR sensors
 	Command_init();
 	

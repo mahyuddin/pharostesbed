@@ -132,7 +132,7 @@ const int ProteusPacketInfo[6] = {
 typedef uint8_t result_t;
 
 
-#define SERIAL_RX_BUFFER_SIZE 1000
+#define SERIAL_RX_BUFFER_SIZE 500
 
 typedef struct {
 	/* Serial port to which the robot is connected */

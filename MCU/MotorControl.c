@@ -138,11 +138,11 @@ void MotorControl_updateSpeed(void) {
 		// All of these are in units of cm/s
 		int16_t currentSpeed = Tach_getVelocity();
 	
-		// Calculate the error in velocity.
-		//  - Positive velocityError --> motor power should be increased.
-		//  - Negative velocityError --> motor power should be decreased.
+		// Calculate the error in velocity.  
+		//   - Negative means we are going too fast,
+		//   - Positive means we are going too slow.
 		int16_t velocityError = _targetSpeed - currentSpeed;
-		
+	
 		if (velocityError > 0) {
 			_currentMotorPower += controlledIncrement(velocityError);
 		} else {
@@ -154,7 +154,6 @@ void MotorControl_updateSpeed(void) {
 			_currentMotorPower = 0;
 			LED_ORANGE2 ^= 1;
 		}
-		// TODO: handle reverse condition (robot going backwards)
 		
 		// clip the power to be within the max
 		if(_currentMotorPower > MAX_SPEED) {

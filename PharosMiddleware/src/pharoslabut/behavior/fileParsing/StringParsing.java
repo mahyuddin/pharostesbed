@@ -133,11 +133,12 @@ public class StringParsing {
 					double velocity = Double.parseDouble(Avalue);
 					missiondata.add(new MissionData(latitude, longitude, velocity));
 				}
-				String newLine = System.getProperty("line.separator");
+//				String newLine = System.getProperty("line.separator");
 				//if(_simulationmode){
 				if(true){
-					for(int i=0;i<nummission;i++)
-			    		System.out.print("Lat: "+missiondata.get(i).GetLatitude()+" long: "+missiondata.get(i).GetLongitude()+" velocity: "+missiondata.get(i).GetVelocity()+newLine);
+					for(int i=0; i < nummission; i++)
+			    		System.out.println("Destination: " + missiondata.get(i).getDest() 
+			    				+ " velocity: " + missiondata.get(i).getVelocity());
 				}
 		  		return true;
 			}
@@ -254,7 +255,7 @@ public static void main(String... aArgs) throws IOException {
     StringParsing test = new StringParsing(copyFileToBuffer(fileName));
 	Vector<Robot> robotData = new Vector<Robot>();
 	Vector<MissionData> missionData = new Vector<MissionData>();
-	String newLine = System.getProperty("line.separator");
+//	String newLine = System.getProperty("line.separator");
 	MissionData homeport;
    
     int numofrobots = Integer.parseInt((test.getParameterValue("TeamSize").trim()));
@@ -262,30 +263,30 @@ public static void main(String... aArgs) throws IOException {
     int myindex = Integer.parseInt((test.getParameterValue("MyIndex").trim()));
     int circular = Integer.parseInt((test.getParameterValue("Circular").trim()));
     
-    System.out.print("circular: "+circular+" my index: "+myindex+newLine);
-    System.out.print("numofbehave: "+numbehave+" numofrobots: "+numofrobots+newLine);
+    System.out.println("circular: " + circular + " my index: " + myindex);
+    System.out.println("numofbehave: " + numbehave + " numofrobots: "+numofrobots);
     
     if(!test.GetMissionData(missionData, numbehave)){
-    	System.out.print("unable to create "+numbehave+" behaviors"+newLine);
+    	System.out.println("unable to create "+numbehave+" behaviors");
     }
     else{
-    	System.out.print("Printing all "+numbehave+" behaviors"+newLine);
+    	System.out.println("Printing all " + numbehave + " behaviors");
     	for(int i=0;i<numbehave;i++){
-    		System.out.print("Lat: "+missionData.get(i).GetLatitude()+" long: "+missionData.get(i).GetLongitude()+" velocity: "+missionData.get(i).GetVelocity()+newLine);	
+    		
+    		System.out.println("Dest: " + missionData.get(i).getDest() + " velocity: " + missionData.get(i).getVelocity());	
     	}
     }
     if(!test.GetRobotData(robotData, numofrobots)){
-      	System.out.print("unable to create "+numofrobots+" robots");	   	
-    }
-    else{
+      	System.out.println("unable to create " + numofrobots + " robots");	   	
+    } else {
     	for(int i=0;i<numofrobots;i++){
-    		System.out.print("IP: "+robotData.get(i).GetIP()+" Port: "+robotData.get(i).GetPort()+newLine);
+    		System.out.println("IP: "+robotData.get(i).GetIP() + " Port: " + robotData.get(i).GetPort());
     	}
     	
     }
     homeport = test.GetHomePort();
     if(homeport!=null){
-    	System.out.println("HOMEPORT: Lat: "+homeport.GetLatitude()+ " Long: "+ homeport.GetLongitude() + "velocity: "+ homeport.GetVelocity());
+    	System.out.println("HOMEPORT: Dest: " + homeport.getDest() + "velocity: "+ homeport.getVelocity());
     }
     	
     test.write();
