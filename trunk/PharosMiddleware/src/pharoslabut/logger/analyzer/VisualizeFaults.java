@@ -3,6 +3,7 @@ package pharoslabut.logger.analyzer;
 import java.util.Vector;
 
 import pharoslabut.logger.FileLogger;
+import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 
 /**
@@ -54,6 +55,7 @@ public class VisualizeFaults {
 		
 		// Add waypoints indicating the locations of GPS sensor Failure
 		Vector<Long> gpsErrors = robotData.getGPSErrors();
+		Logger.logDbg("Including GPS errors: " + gpsErrors.size());
 		if (gpsErrors.size() > 0) {
 			flogger.log("type,latitude,longitude,name,color");
 			for (int i=0; i < gpsErrors.size(); i++) {

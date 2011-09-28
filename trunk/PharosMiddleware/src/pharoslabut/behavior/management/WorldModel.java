@@ -6,18 +6,18 @@ import pharoslabut.logger.Logger;
 
 public class WorldModel {
 
-	private int wmTeamSize; //number of robots
+	private int _wmTeamSize; //number of robots
 	//The name of the behavior that each team member runs(this data fills by communication).
 	//The value of the current robot behavior will be at the end of the array.
-	private String [] wmCurrentBehavior; 
-	private String [] teamIp;
-	private int [] teamPort;
+	private String [] _wmCurrentBehavior; 
+	private String [] _teamIp;
+	private int [] _teamPort;
 	private long [] _lastTimeUpdate;
-	private int [] wmCurrentIndex;
+	private int [] _wmCurrentIndex;
 	int _numBehaviors;
 //	private boolean allmyClientConnected; //all my clients connect
 	
-	final String _outofRange = "OUT_OF_RANGE";
+	final String _outOfRange = "OUT_OF_RANGE";
 	private final int VALIDITY_WINDOW = 1;
 	
 	//the amount of time the robot is waiting for its teammates - after that, it will continue without coordination
@@ -43,18 +43,33 @@ public class WorldModel {
 	 * @param mrpConfData The configuration of the multi-robot patrol experiment.
 	 */
 	WorldModel(MRPConfData mrpConfData) {
-		wmTeamSize = mrpConfData.GetNumRobots(); // The number of robots in the team.
+		_wmTeamSize = mrpConfData.GetNumRobots(); // The number of robots in the team.
 		wmMyIndex = mrpConfData.GetMyindex(); // This robot's index within the team.
 		_numBehaviors = mrpConfData.GetNumMissions(); // The number of behaviors
 		
-		wmCurrentBehavior = new String[wmTeamSize];
-		teamIp = new String[wmTeamSize];
-		teamPort = new int[wmTeamSize];
-		_lastTimeUpdate = new long[wmTeamSize];
-		wmCurrentIndex = new int[wmTeamSize];
+		_wmCurrentBehavior = new String[_wmTeamSize];
+		for(int i=0;i<_wmTeamSize; i++){
+			_wmCurrentBehavior[i] = _outOfRange;
+		}
+		_teamIp = new String[_wmTeamSize];
+		_teamPort = new int[_wmTeamSize];
+		_lastTimeUpdate = new long[_wmTeamSize];
+		_wmCurrentIndex = new int[_wmTeamSize];
 		count=0;
 //		allmyClientConnected = false;
 //		connectToAllServers = false;
+	}
+	public WorldModel(){
+		_wmTeamSize = 0; 
+		wmMyIndex = 0;
+		_numBehaviors = 0;
+		
+		_wmCurrentBehavior = new String[_wmTeamSize];
+		_teamIp = new String[_wmTeamSize];
+		_teamPort = new int[_wmTeamSize];
+		_lastTimeUpdate = new long[_wmTeamSize];
+		_wmCurrentIndex = new int[_wmTeamSize];
+		count=0;
 	}
 	
 	
@@ -64,40 +79,66 @@ public class WorldModel {
 //	public synchronized boolean isConnectToAllServers(){return connectToAllServers;}
 //	public synchronized void setConnectToAllServers(){connectToAllServers = true;}
 	
-	public synchronized void setIp(int index, String ip){teamIp[index] = ip;}
-	public synchronized String getIp(int index){return teamIp[index];}
+	public synchronized void setIp(int index, String ip){_teamIp[index] = ip;}
+	public String getIp(int index){return _teamIp[index];}
 	
-	public synchronized void setPort(int index, int port){teamPort[index] = port;}
-	public synchronized int getPort(int index){return teamPort[index];}
+	public synchronized void setPort(int index, int port){_teamPort[index] = port;}
+	public int getPort(int index){return _teamPort[index];}
 	
-	public synchronized int getCount(){return count;}
+	public int getCount(){return count;}
 	public synchronized void incCount() { count++; }
 	public synchronized void resetCount() { count = 0; }
 //	public synchronized void setCount(int c){count = c;}
 	
-	public void setCurrentMsgTime(int index){_lastTimeUpdate[index] = System.currentTimeMillis();}
+	public synchronized void setCurrentMsgTime(int index){_lastTimeUpdate[index] = System.currentTimeMillis();}
 	public long getLastMsgTime(int index){return _lastTimeUpdate[index];}
 
-	public synchronized String getCurrentBehaviorName(){return wmCurrentBehavior[wmMyIndex];}
-	public synchronized int getCurrentBehaviorID(){return wmCurrentIndex[wmMyIndex];}
-	public synchronized int getTeamBehaviorID(int index){return wmCurrentIndex[index];}
+	public String getCurrentBehaviorName(){return _wmCurrentBehavior[wmMyIndex];}
+	public int getCurrentBehaviorID(){return _wmCurrentIndex[wmMyIndex];}
+	public int getTeamBehaviorID(int index){return _wmCurrentIndex[index];}
+	public String getTeamBehaviorName(int index){return _wmCurrentBehavior[index];}
 
 //	public synchronized void setcurrentBehaviorID(int id){wmCurrentIndex[wmMyIndex] = id;}
 //	public synchronized void setCurrentBehaviorName(String c){
 	public synchronized void setMyCurrentBehavior(String c, int id){
 		System.out.print("Set behavior name: "+c+" in location : "+wmMyIndex+System.getProperty("line.separator"));
-		wmCurrentIndex[wmMyIndex] = id;
-		wmCurrentBehavior[wmMyIndex] = new String(c);
+		_wmCurrentIndex[wmMyIndex] = id;
+		_wmCurrentBehavior[wmMyIndex] = new String(c);
 	}
-	public synchronized int getMyIndex(){return wmMyIndex;}
+	public int getMyIndex(){return wmMyIndex;}
 	
 	public synchronized void setTeamCurrentBehavior(String beh, int index, int behaveID)
 	{
-		boolean wasAccepted = false;
+//		boolean wasAccepted = false;
 		
-		if(wmCurrentBehavior[index].equals(_outofRange)){
-			Logger.log("Behaior of teammate " + index + " BACK IN RANGE");
+		
+		if(beh.equals(_outOfRange)){
+			Logger.log("Got an update out of range of teammate "+ index + " ignoring...");
+			return;
 		}
+
+		if(_wmCurrentBehavior[index].equals(_outOfRange)){
+			Logger.log("Behavior of teammate " + index + " BACK IN RANGE");
+		} else {
+			Logger.log("Teammate " + index + " was already in range.");
+		}
+
+		setCurrentMsgTime(index);
+		
+		if(_wmCurrentIndex[index] > behaveID){
+			Logger.log("Got an old message: new behaveID is " + behaveID + "old behaveID is "+ _wmCurrentIndex[index]);
+		}else{
+			Logger.log("updating teammate "+ index + " behavior " + beh + " ID " + behaveID);
+			boolean isStop = StringParsing.havePrefix(_wmCurrentBehavior[index], "stop");
+			if(isStop && _wmCurrentIndex[index]==behaveID){
+				Logger.log("Received an older message before STOP of teammate "+ index + " ignoring...");
+				return;
+			}
+			_wmCurrentBehavior[index] = beh; 
+			_wmCurrentIndex[index] = behaveID;
+
+		}
+/*
 		for(int validIndices = wmCurrentIndex[index]; validIndices <= wmCurrentIndex[index] + VALIDITY_WINDOW && !wasAccepted; validIndices++) {
 //			int currValidIndex = validIndices % _numBehaviors;
 			if (behaveID == validIndices) {
@@ -112,17 +153,21 @@ public class WorldModel {
 		
 		if (!wasAccepted)
 			Logger.log("Got an old message: new behaveID is " + behaveID + "old behaveID is "+ wmCurrentIndex[index]);
+*/
 	}
 
-	public synchronized void setTeamOutOfRange(int index){wmCurrentBehavior[index] = _outofRange;}
+	private synchronized void setTeamOutOfRange(int index){
+		_wmCurrentBehavior[index] = _outOfRange;
+		Logger.log("Setting teammate "+ index + " OUT_OF_RANGE");
+	}
 	
-	public synchronized int getTeamSize(){return wmTeamSize;}
-	public synchronized String getMyIp(){return teamIp[wmMyIndex];}
-	public synchronized int getMyPort(){return teamPort[wmMyIndex];}
+	public int getTeamSize(){return _wmTeamSize;}
+	public String getMyIp(){return _teamIp[wmMyIndex];}
+	public int getMyPort(){return _teamPort[wmMyIndex];}
 	
 	public synchronized void checkAliveTeam(){
 		long currentTime = System.currentTimeMillis();
-		for (int i=0; i<wmTeamSize; i++){
+		for (int i=0; i<_wmTeamSize; i++){
 			if(i == wmMyIndex)
 				continue;
 			if ((currentTime-_lastTimeUpdate[i]) > MAX_WAITING_PERIOD){
@@ -134,11 +179,11 @@ public class WorldModel {
 	public synchronized boolean isTeamSynchronized()
 	{
 		int i;
-		String behaviorName = wmCurrentBehavior[wmMyIndex];
+		String behaviorName = _wmCurrentBehavior[wmMyIndex];
 //		int teamBehID;
 //		int myBeID = getTeamBehaviorID(wmMyIndex);
 		
-		if(wmTeamSize ==1) {
+		if(_wmTeamSize ==1) {
 			Logger.log("Team is synchronized: only one team member");
 			return true;
 		}
@@ -160,16 +205,16 @@ public class WorldModel {
 		
 		String teamBeh;
 		boolean isStopTeamMember;
-		for(i=0; i < wmTeamSize; i++) {	
-			if(wmCurrentBehavior[i] == null) {
+		for(i=0; i < _wmTeamSize; i++) {	
+			if(_wmCurrentBehavior[i] == null) {
 				Logger.log("Team NOT synchronized: Behavior " + i + " is NULL\n");
 				return false;
 			} else 
-				Logger.log("Behavior " + i + " is " + wmCurrentBehavior[i]);
+				Logger.log("Behavior " + i + " is " + _wmCurrentBehavior[i]);
 
 			
-			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
-			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
+			teamBeh = StringParsing.removePrefix(_wmCurrentBehavior[i], "stop");
+			isStopTeamMember = StringParsing.havePrefix(_wmCurrentBehavior[i],"stop");
 			
 //			teamBehID = getTeamBehaviorID(i);
 			// If team member's behavior ID is smaller than mine - I have to wait for it. 
@@ -202,10 +247,10 @@ public class WorldModel {
 	public synchronized boolean isTeamSynchronizedDynamically()
 	{
 		int i;
-		String behaviorName = wmCurrentBehavior[wmMyIndex];
+		String myBehaviorName = _wmCurrentBehavior[wmMyIndex];
 		
 		Logger.log("entering dynamic synchronization\n");
-		if(behaviorName == null){
+		if(myBehaviorName == null){
 			System.out.print("current behavior NULL\n");
 			return false;
 		}
@@ -213,28 +258,28 @@ public class WorldModel {
 /*		if(wmTeamSize == 1)
 			return true;
 */		
-		boolean isStop = StringParsing.havePrefix(behaviorName, "stop"); 
-		String behPureName;
-		if(isStop)
-			behPureName = StringParsing.removePrefix(behaviorName,"stop");
+		boolean iAmStopped = StringParsing.havePrefix(myBehaviorName, "stop"); 
+		String myBehPureName;
+		if(iAmStopped)
+			myBehPureName = StringParsing.removePrefix(myBehaviorName,"stop");
 		else
-			behPureName = behaviorName;
+			myBehPureName = myBehaviorName;
 		
 		String teamBeh;
 		boolean isStopTeamMember;
-		for(i=0;i<wmTeamSize;i++)
+		for(i=0;i<_wmTeamSize;i++)
 		{	
-			if(wmCurrentBehavior[i] == null) {
+			if(_wmCurrentBehavior[i] == null) {
 				Logger.log("behavior "+i+" NULL\n");
 				return false;
 			} else 
-				Logger.log("Behavior "+i+" is "+wmCurrentBehavior[i]);
+				Logger.log("Behavior "+i+" is "+_wmCurrentBehavior[i]);
 
-			teamBeh = StringParsing.removePrefix(wmCurrentBehavior[i], "stop");
-			isStopTeamMember = StringParsing.havePrefix(wmCurrentBehavior[i],"stop");
+			teamBeh = StringParsing.removePrefix(_wmCurrentBehavior[i], "stop");
+			isStopTeamMember = StringParsing.havePrefix(_wmCurrentBehavior[i],"stop");
 			
 			//If team member is out of range - disregard it
-			if(teamBeh.equals(_outofRange)){
+			if(teamBeh.equals(_outOfRange)){
 				Logger.log("Team member " + i + " behavior is marked as OUT_OF_RANGE");
 				continue;
 			}
@@ -245,14 +290,19 @@ public class WorldModel {
 			int mybehaveIndex = getCurrentBehaviorID();
 			int teammateBehaveIndex = getTeamBehaviorID(i);
 			
-			if(isStop == false && behPureName.equals(teamBeh)==false){
+			if(teammateBehaveIndex<mybehaveIndex){
+				Logger.log("Temmate " +  i + " with behavior ID "+ teammateBehaveIndex + ", my behavior ID = "+ mybehaveIndex +  "  ---- Team uncoordinated, WAIT");
+				return false;
+			}
+			
+			if(iAmStopped == false && myBehPureName.equals(teamBeh)==false){
 				//if I'm behind - I should continue. If I'm more advanced - I should wait
 				if(mybehaveIndex<=teammateBehaveIndex)
 					continue;
 				else
 					return false;
 			}
-			if((isStop == true) && (isStopTeamMember == false) && (behPureName.equals(teamBeh))){
+			if((iAmStopped == true) && (isStopTeamMember == false) && (myBehPureName.equals(teamBeh))){
 				//if I'm behind - I should continue. If I'm more advanced - I should wait
 				Logger.log("I'm stopped, my mate is not (on the same behavior) - I wait");
 				return false;
@@ -260,6 +310,13 @@ public class WorldModel {
 			
 		}
 		return true;
+	}
+	
+	public synchronized void copyWM(int[] behaviorIDlist, String[] behaviorNameList){
+		for(int i=0; i < _wmTeamSize; i++){
+			behaviorIDlist[i] = _wmCurrentIndex[i];
+			behaviorNameList[i] = _wmCurrentBehavior[i];
+		}
 	}
 	
 //	private void logErr(String msg) {
