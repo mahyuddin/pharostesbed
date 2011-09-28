@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import pharoslabut.behavior.MultiRobotBehaveMsg;
+import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.FileLogger;
@@ -34,7 +35,7 @@ public class TestTCPMessageSender {
 		int cntr = 0;
 		while(true) {
 			try {
-				MultiRobotBehaveMsg msg = new MultiRobotBehaveMsg("blah", 0, cntr++);
+				MultiRobotBehaveMsg msg = new MultiRobotBehaveMsg(new WorldModel());
 				Logger.log("Sending " + msg);
 				sndr.sendMessage(address, port, msg);
 			} catch (PharosException e) {
