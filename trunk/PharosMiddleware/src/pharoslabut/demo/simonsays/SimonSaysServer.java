@@ -27,6 +27,7 @@ import playerclient3.structures.position2d.PlayerPosition2dGeom;
  * These commands include pan, tilt, and taking a snapshot.
  * 
  * @author Chien-Liang Fok
+ * @author Kevin Boos
  * 
  */
 public class SimonSaysServer implements MessageReceiver, CricketDataListener {
@@ -103,7 +104,12 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	}
 	
 	
-	
+	/**
+	 * Reads a file with cricket beacons IDs and coordinates in order to associate each beacon with its location instead of ID
+	 * 
+	 * @param fileName the file to read, default is "cricketBeacons.txt"
+	 * @return a map of key-value pairs, where the key is the Cricket beacon ID and the value is the 3-d coordinate of the beacon
+	 */
 	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
 		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
 		try {
