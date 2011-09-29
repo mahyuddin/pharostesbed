@@ -4,6 +4,15 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 //import pharoslabut.tests.TestLineFollower;
+import pharoslabut.sensors.ProteusOpaqueData;
+import pharoslabut.sensors.ProteusOpaqueInterface;
+import pharoslabut.sensors.ProteusOpaqueListener;
+import playerclient3.BlobfinderInterface;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.PtzInterface;
+import playerclient3.structures.PlayerConstants;
 
 /**
  * Evaluates the intersection detector.
@@ -14,15 +23,45 @@ import pharoslabut.navigate.LineFollower;
  * @author Chien-Liang Fok
  * @see pharoslabut.demo.autoIntersection.IntersectionDetector
  */
-public class TestIntersectionDetector implements IntersectionEventListener {
+public class TestIntersectionDetector implements IntersectionEventListener, ProteusOpaqueListener {
 	public static enum IntersectionDetectorType {BLOB, CRICKET, IR};
 
 	private IntersectionDetectorDisplay display = null;
 	
+	/**
+	 * The constructor.
+	 * 
+	 * @param serverIP The IP address of the player server.
+	 * @param serverPort The port of the player server.
+	 * @param serialPort The port on which the cricket mote is listening.
+	 * @param detectorType The type of intersection detector.
+	 * @param showGUI Whether to show the GUI.
+	 */
 	public TestIntersectionDetector(String serverIP, int serverPort, String serialPort, 
-			IntersectionDetectorType detectorType, boolean showGUI) {
-		LineFollower lf = new LineFollower(serverIP, serverPort);
-
+			IntersectionDetectorType detectorType, boolean showGUI) 
+	{
+		PlayerClient client = null;
+		
+		// Connect to the player server.
+		try {
+			client = new PlayerClient(serverIP, serverPort);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
+		Logger.log("Created robot client.");
+		
+		// Connect to the opaque interface and register self as listener.
+		try {
+			ProteusOpaqueInterface poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+			poi.addOpaqueListener(this);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to opaque interface."); System.exit(1);}
+		
+		LineFollower lf = new LineFollower(client);
+		
+		Logger.logDbg("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);	
+		
 		if (detectorType == IntersectionDetectorType.BLOB) {
 			Logger.log("Testing the BlobFinder-based intersection detector.");
 			IntersectionDetectorBlobFinder id = new IntersectionDetectorBlobFinder();
@@ -35,13 +74,14 @@ public class TestIntersectionDetector implements IntersectionEventListener {
 			id.addIntersectionEventListener(this);
 		}
 		else if (detectorType == IntersectionDetectorType.IR) {
-			Logger.log("Testing the IR intersection detector.");
+			Logger.log("Testing the IR-based intersection detector.");
 			IntersectionDetectorIR id = new IntersectionDetectorIR(lf.getOpaqueInterface());
 			id.addIntersectionEventListener(this);
 		}
 		
 		if (showGUI)
 			display = new IntersectionDetectorDisplay();
+		
 		lf.start();
 	}
 	
@@ -50,6 +90,14 @@ public class TestIntersectionDetector implements IntersectionEventListener {
 		Logger.log("**** INTERSECTION EVENT: " + ie);
 		if (display != null)
 			display.updateText(ie.getType().toString());
+	}
+	
+	@Override
+	public void newOpaqueData(ProteusOpaqueData opaqueData) {
+		if (opaqueData.getDataCount() > 0) {
+			String s = new String(opaqueData.getData());
+			Logger.log("MCU Message: " + s);
+		}
 	}
 	
 	private static void print(String msg) {
