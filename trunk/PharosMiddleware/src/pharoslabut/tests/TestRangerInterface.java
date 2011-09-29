@@ -7,12 +7,12 @@ import playerclient3.structures.*;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
- * Tests the IR sensors.  Subscribes to the IR sensors and prints all of the IR
- * range data received.  There are six IR sensors and they are printed in the following
+ * Tests the ranger sensors.  Subscribes to the ranger sensors and prints all of the range
+ * range data received.  There are six IR ranger sensors and they are printed in the following
  * order: FL, FC, FR, RL, RC, RR.
  * 
  * When running this test, be sure the player server is using a configuration with the
- * "ir" and "opaque" interfaces.  For example:
+ * "ranger" and "opaque" interfaces.  For example:
  * 
  * <pre>
  * driver (
