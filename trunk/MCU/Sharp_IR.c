@@ -285,41 +285,68 @@ unsigned short IR_default_tab[256] = {
 221	,  //  254
 216	,  //  255
  };
+ 
+/**
+ * Converts the raw ADC reading into an actual distance
+ * in mm.  Note that this is specific to the short range
+ * IR sensor, and that it is only valid for distances
+ * between 30cm and 85cm.
+ */ 
+unsigned short calibrateShortRangeIR(unsigned char rawADC) {
+  if (rawADC < 41)
+    return 0xFFFF;
+  else if (rawADC < 117)
+    return 35469 / rawADC;
+  else
+    return 0xFFFF;
+}
 
 unsigned short IR_getFL(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_FL);
-  return IR_default_tab[raw]; //front left
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //front left
 }
 
 unsigned short IR_getFC(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_FC);
-  return IR_default_tab[raw]; //front center
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //front center
 }
 
 unsigned short IR_getFR(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_FR);
-  return IR_default_tab[raw]; //front right
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //front right
 }
 
 unsigned short IR_getRR(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_RL);
-  return IR_default_tab[raw]; //rear right
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //rear right
 }
 
 unsigned short IR_getRC(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_RC);
-  return IR_default_tab[raw]; //rear center
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //rear center
 }
 
 unsigned short IR_getRL(void){
   unsigned char raw;
   raw = (unsigned char)ADC0_In(ADC_IR_RR);
-  return IR_default_tab[raw]; //rear left
+  return calibrateShortRangeIR(raw);
+  //return raw;
+  //return IR_default_tab[raw]; //rear left
 }
 
 
