@@ -9,7 +9,9 @@ package pharoslabut.io;
  */
 public interface Message extends java.io.Serializable {
     public static enum MsgType {RESET, STARTEXP, STOPEXP, LOAD_GPS_MOTION_SCRIPT,
-    	LOAD_RELATIVE_MOTION_SCRIPT, SET_TIME, CUSTOM, LOAD_BEHAVIORCONFIG_FILE, UPDATE_BEH_MSG, ACK, UPDATE_BEH_TABLE_MSG};
+    	LOAD_RELATIVE_MOTION_SCRIPT, SET_TIME, CUSTOM, LOAD_BEHAVIORCONFIG_FILE, 
+    	UPDATE_BEH_MSG, ACK, UPDATE_BEH_TABLE_MSG,
+    	LOAD_MRPATROL_SPECS, START_MRPATROL_EXP};
     
     /**
      * Returns the type of the message.  Type possible
