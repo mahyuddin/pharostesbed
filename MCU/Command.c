@@ -233,7 +233,7 @@ void Command_sendIRPacket(void) {
 /**
  * This is called by interrupt 9 at 5Hz (200ms period).
  */
-void Command_sendData() {
+void Command_sendDataFiveHz() {
   //char message[50];
 	//if (sprintf(message, "Command_sendData Called") > 0)
 		  //Command_sendMessagePacket(message);
@@ -247,12 +247,26 @@ void Command_sendData() {
 		if (_interfacesEnabled & COMPASS_INTERFACE)
 			Compass_getHeading();
 			
-		if (_interfacesEnabled & IR_INTERFACE)
-			Command_sendIRPacket();
+		//if (_interfacesEnabled & IR_INTERFACE)
+			//Command_sendIRPacket();
 	} else {
 		LED_GREEN2 = LED_OFF;
 		LED_BLUE2 = LED_OFF;
 	}
+}
+
+/**
+ * This is called by interrupt 9 at 7Hz (140ms period).
+ */
+void Command_sendDataSevenHz() {
+  
+	if (_heartbeatReceived) {
+		if (_interfacesEnabled & IR_INTERFACE)
+			Command_sendIRPacket();
+	}// else {
+	//	LED_GREEN2 = LED_OFF;
+	//	LED_BLUE2 = LED_OFF;
+	//}
 }
 
 void Command_sendStatus() {
@@ -353,7 +367,11 @@ interrupt 9 void sendDataInterrupt(void) {
 
 	_int9Count++;
 	if (_int9Count % 10 == 0) { // 20ms * 10 = 200ms (5Hz)
-		TaskHandler_postTask(&Command_sendData);
+		TaskHandler_postTask(&Command_sendDataFiveHz);
+	}
+	
+	if (_int9Count % 7 == 0) { // 20mc * 7 = 140ms (~7Hz)
+	  TaskHandler_postTask(&Command_sendDataSevenHz);
 	}
 	
 	/*
