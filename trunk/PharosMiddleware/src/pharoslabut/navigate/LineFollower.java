@@ -94,16 +94,9 @@ public class LineFollower implements Runnable {
 	/**
 	 * The constructor.
 	 * 
-	 * @param serverIP The IP address of the server.
-	 * @param serverPort The port of the server.
+	 * @param client The Player client.
 	 */
-	public LineFollower(String serverIP, int serverPort) {
-		// connect to player server
-		try {
-			client = new PlayerClient(serverIP, serverPort);
-		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
-		Logger.log("Created robot client.");
-		
+	public LineFollower(PlayerClient client) {
 		// connect to blobfinder
 		try {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
@@ -116,24 +109,13 @@ public class LineFollower implements Runnable {
 		} catch (PlayerException e) { Logger.logErr("Could not connect to position 2d proxy."); System.exit(1);}
 		Logger.logDbg("Created Position2dProxy.");
 		
-		// connect to opaque interface.
-		try {
-			poi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
-		} catch (PlayerException e) { Logger.logErr("Could not connect to opaque interface."); System.exit(1);}
-		
-		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
-
 		// Connect to PTZ
 		try {
 			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { Logger.logErr("Could not connect to PTZ proxy."); System.exit(1);}
 		Logger.logDbg("Connected to PTZ proxy.");
-
-		Logger.logDbg("Changing Player server mode to PUSH...");
-		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
-		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
-		client.runThreaded(-1, -1);	
+		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
 	}
 	
 	/**
