@@ -3,6 +3,8 @@ package pharoslabut.tests;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
 
 /**
  * Tests the LineFollower service.
@@ -58,7 +60,21 @@ public class TestLineFollower {
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
 		
-		LineFollower lf = new LineFollower(serverIP, serverPort);
+		PlayerClient client = null;
+		
+		// Connect to the player server.
+		try {
+			client = new PlayerClient(serverIP, serverPort);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
+		Logger.log("Created robot client.");
+		
+		LineFollower lf = new LineFollower(client);
 		lf.start();
+		
+		Logger.logDbg("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);	
 	}
 }
