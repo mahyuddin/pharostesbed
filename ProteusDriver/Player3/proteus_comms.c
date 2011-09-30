@@ -548,72 +548,80 @@ result_t processIRPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
 		popRxSerialBuff(r, NULL); // pop PROTEUS IR PACKET
 		
-		// The next 12 bytes are the distance reading for 
+		// The next 6 bytes are the raw ADC readings for 
 		// FL, FC, FR, RL, RC, RR, in that order
 		// The first two bytes are FL
 		
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_fl = distance;
-			r->newIRdata = 1;
-		}
+		popRxSerialBuff(r, &r->ir_fl);
+		popRxSerialBuff(r, &r->ir_fc);
+		popRxSerialBuff(r, &r->ir_fr);
+		popRxSerialBuff(r, &r->ir_rl);
+		popRxSerialBuff(r, &r->ir_rc);
+		popRxSerialBuff(r, &r->ir_rr);
+		r->newIRdata = 1;
+
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+//		//if(distance < 10652 && distance > 215){
+//			r->ir_fl = distance;
+//			r->newIRdata = 1;
+//		//}
 		
 		// The first two bytes are FC
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_fc = distance;
-			r->newIRdata = 1;
-		}
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+		//if(distance < 10652 && distance > 215){
+//			r->ir_fc = distance;
+//			r->newIRdata = 1;
+		//}
 		
 		// The first two bytes are FR
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_fr = distance;
-			r->newIRdata = 1;
-		}
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+		//if(distance < 10652 && distance > 215){
+//			r->ir_fr = distance;
+//			r->newIRdata = 1;
+		//}
 		
 		// The first two bytes are RL
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_rl = distance;
-			r->newIRdata = 1;
-		}
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+		//if(distance < 10652 && distance > 215){
+//			r->ir_rl = distance;
+//			r->newIRdata = 1;
+		//}
 		
 		// The first two bytes are RC
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_rc = distance;
-			r->newIRdata = 1;
-		}
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+		//if(distance < 10652 && distance > 215){
+//			r->ir_rc = distance;
+//			r->newIRdata = 1;
+		//}
 		
 		// The first two bytes are RR
-		popRxSerialBuff(r, &data);
-		distance = ((data << 8) & 0xFF00);
-		popRxSerialBuff(r, &data);
-		distance += (data & 0x00FF);
-		if(distance < 10652 && distance > 215){
-			r->ir_rr = distance;
-			r->newIRdata = 1;
-		}
+//		popRxSerialBuff(r, &data);
+//		distance = ((data << 8) & 0xFF00);
+//		popRxSerialBuff(r, &data);
+//		distance += (data & 0x00FF);
+		//if(distance < 10652 && distance > 215){
+//			r->ir_rr = distance;
+//			r->newIRdata = 1;
+		//}
 		
-		popRxSerialBuff(r, NULL); // pop PROTEUS_END
+//		popRxSerialBuff(r, NULL); // pop PROTEUS_END
 		
-		if (r->newIRdata) {
+		//if (r->newIRdata) {
 			// taking this out... because this massive printing lags the performance of the computer too much
 			/*printf("proteus_comms: processIRPacket: Front Left  : %f mm\n", ((r->newIRdata)?(r->ir_fl):0));
 			printf("proteus_comms: processIRPacket: Front Center: %f mm\n", ((r->newIRdata)?(r->ir_fc):0));
@@ -622,7 +630,7 @@ result_t processIRPacket(proteus_comm_t* r) {
 			printf("proteus_comms: processIRPacket: Rear Center : %f mm\n", ((r->newIRdata)?(r->ir_rc):0));
 			printf("proteus_comms: processIRPacket: Rear Right  : %f mm\n\n", ((r->newIRdata)?(r->ir_rr):0));
 			*/
-		}
+		//}
 		
 		return SUCCESS;
 	} else {
@@ -844,6 +852,38 @@ result_t processTextMessagePacket(proteus_comm_t* r) {
 	}
 }
 
+/**
+ * This is sent from the MCU to indicate errors.
+ */
+result_t processErrorPacket(proteus_comm_t* r) {
+        uint8_t strSize;
+        getRxSerialBuff(r, 2, &strSize); // two byte after the begin message
+
+        if (rxSerialBufferSize(r) >= PROTEUS_ERROR_PACKET_SIZE +  PROTEUS_PACKET_OVERHEAD)
+        {
+                uint8_t data; // temporary variable for holding data from the serial Rx buffer.
+                char textMessage[PROTEUS_MAX_TEXT_MESSAGE_LENGTH] = ""; // temporary buffer for storing the message
+                uint16_t i;
+
+                popRxSerialBuff(r, NULL); // pop PROTEUS_BEGIN
+                popRxSerialBuff(r, NULL); // pop message type
+
+                popRxSerialBuff(r, &data);
+		if (data == PROTEUS_ERROR_I2C_BUS_LOST)
+                	strcpy((char*)r->messageBuffer, "ERROR: I2C Bus Lost.");
+		else if (data == PROTEUS_ERROR_I2C_BUSY)
+			strcpy((char*)r->messageBuffer, "ERROR: I2C Too Busy.");
+
+                r->newMessage = 1; // indicate that a new message was received
+
+                return SUCCESS;
+        } else {
+                //printf("proteus_comms: processErrorPacket: Insufficient data (have %i, need %i)\n", rxSerialBufferSize(),
+                //      strSize + PROTEUS_PACKET_OVERHEAD);
+                //printRxSerialBuff();
+                return FAIL;
+        }
+}
 
 /**
  * Process the serial data received from the MCU.
@@ -890,26 +930,29 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		getRxSerialBuff(r, 1, &msgType); // the message type is the byte after the begin message
 		switch(msgType) {
 			case PROTEUS_ODOMETRY_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
 				return processOdometryPacket(r);
 			case PROTEUS_IR_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
 				return processIRPacket(r);
 			case PROTEUS_COMPASS_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
 				return processCompassPacket(r);
 			case PROTEUS_TACHOMETER_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
 				return processTachPacket(r);
 			case PROTEUS_STATUS_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
 				return processStatusPacket(r);
 			case PROTEUS_MOTOR_SAFETY_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
 				return processMotorSafetyPacket(r);
 			case PROTEUS_TEXT_MESSAGE_PACKET:
-				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
+				printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
+			case PROTEUS_ERROR_PACKET:
+				printf("proteus_comms: proteusProcessRxData: processing error packet!\n");
+				return processErrorPacket(r);
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);
 				// The first byte does not constitute a valid message header.

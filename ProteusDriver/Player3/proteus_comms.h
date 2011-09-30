@@ -56,7 +56,7 @@ enum{
 };
 
 // Message type definitions
-enum{
+enum {
 	ZERO,
 	PROTEUS_ODOMETRY_PACKET,
 	PROTEUS_IR_PACKET,
@@ -67,10 +67,16 @@ enum{
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
 	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ERROR_PACKET,
+};
+
+enum {
+  PROTEUS_ERROR_I2C_BUS_LOST,
+  PROTEUS_ERROR_I2C_BUSY,
 };
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE 5
-#define PROTEUS_IR_PACKET_SIZE 12
+#define PROTEUS_IR_PACKET_SIZE 6
 #define PROTEUS_SONAR_PACKET_SIZE 12
 #define PROTEUS_COMPASS_PACKET_SIZE 3
 #define PROTEUS_OPAQUE_PACKET_SIZE 1
@@ -78,7 +84,7 @@ enum{
 #define PROTEUS_STATUS_PACKET_SIZE 8
 #define PROTEUS_MOTOR_SAFETY_PACKET_SIZE 4
 #define PROTEUS_MAX_TEXT_MESSAGE_LENGTH 100
-
+#define PROTEUS_ERROR_PACKET_SIZE 1
 #define PROTEUS_PACKET_OVERHEAD           3 // one byte each for PROTEUS_BEGIN, MESSAGE_TYPE, and PROTEUS_END
 
 #define MAX_CMD_LEN                      12 
@@ -157,12 +163,12 @@ typedef struct {
 	float steering_angle;
 	
 	uint8_t newIRdata;
-	float ir_fl;			//front left SHARP Infrared rangefinder distance, read
-	float ir_fc;			//front center SHARP Infrared rangefinder distance, read
-	float ir_fr;			//front right SHARP Infrared rangefinder distance, read
-	float ir_rl;			//rear left SHARP Infrared rangefinder distance, read
-	float ir_rc;			//rear center SHARP Infrared rangefinder distance, read
-	float ir_rr;			//rear right SHARP Infrared rangefinder distance, read
+	uint8_t ir_fl;			//front left SHARP Infrared rangefinder distance, read
+	uint8_t ir_fc;			//front center SHARP Infrared rangefinder distance, read
+	uint8_t ir_fr;			//front right SHARP Infrared rangefinder distance, read
+	uint8_t ir_rl;			//rear left SHARP Infrared rangefinder distance, read
+	uint8_t ir_rc;			//rear center SHARP Infrared rangefinder distance, read
+	uint8_t ir_rr;			//rear right SHARP Infrared rangefinder distance, read
 	
 	/*
 	float accelerometer_x;  	//accelerometer x-axis force, read
