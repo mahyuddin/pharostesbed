@@ -1,6 +1,7 @@
 package pharoslabut.sensors;
 
 import pharoslabut.logger.Logger;
+import pharoslabut.util.SimpleTextGUI;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
@@ -76,12 +77,18 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
 	private int countMarker = 0;
 	
 	/**
+	 * For debugging purposes.
+	 */
+	private SimpleTextGUI gui;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param rangerBuffer The source of range information.
 	 */
 	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer) {
 		rangerBuffer.addRangeListener(this);
+		gui = new SimpleTextGUI("Overhead Marker Detector.");
 	}
 
 	/**
@@ -123,6 +130,12 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
 					currState = IRPathLocalizerState.MARKER;
 					numOverheadMarkers++;
 					Logger.log("STATUS CHANGE: MARKER Total markers seen: " + numOverheadMarkers);
+					if (gui != null) {
+						if (numOverheadMarkers == 1)
+							gui.setText(numOverheadMarkers + " Marker");
+						else
+							gui.setText(numOverheadMarkers + " Markers");
+					}
 				}
 			} else {
 				// duplicate event.  Ignore it.  Maybe print a debug statement to know we're here
@@ -132,14 +145,30 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
 			countNoMarker = 0;
 		}
 	}
+	
+	/**
+	 * Converts the raw ADC reading into an actual distance
+	 * in mm.  Note that this is specific to the short range
+	 * IR sensor, and that it is only valid for distances
+	 * between 30cm and 85cm.
+	 */ 
+	double calibrateShortRangeIR(double rawADC) {
+	  if (rawADC < 41)
+	    return 0xFFFF;
+	  else if (rawADC < 117)
+	    return 35469 / rawADC;
+	  else
+	    return 0xFFFF;
+	}
 
 	@Override
 	public void newRangerData(PlayerRangerData rangeData) {
 		int numSensors = rangeData.getRanges_count();
     	if (numSensors >= 6) {
     		double[] data = rangeData.getRanges();
-    		double range = data[5];
+    		double range = calibrateShortRangeIR(data[5]);
     		
+    		Logger.log("Raw ADC = " + data[5] + ", Calibrated Dist = " + range + " mm");
     		processRangeData(range);
     		
     	} else {
