@@ -17,6 +17,7 @@ import playerclient3.structures.PlayerPoint3d;
  * controlling the robot's movements and its camera. 
  * 
  * @author Chien-Liang Fok 
+ * @author Kevin Boos
  * @see SimonSaysClient
  */
 public class CmdExec implements MessageReceiver {
@@ -131,10 +132,11 @@ public class CmdExec implements MessageReceiver {
 				CricketData cd = cricketMsg.getCricketData();
 				PlayerPoint3d coords = cricketMsg.getPoint();
 				
-				// TODO do something with cricket data
-				// could add each cricket mote to a set of cricket mote objects, where each obj has a pose, id, and timestamped data value
-					//might want to do this on the server side?
-				Logger.log("Cricket Mote at (" + coords.getPx() + "," + coords.getPy() + ") read dist: " + cd.getDistance());
+				// pass new cricket data to Trilateration thread
+				double height = coords.getPz();
+				double radius = Math.sqrt(cd.getDistance() * cd.getDistance() - height * height); // pythagorean theorem to find distance along ground
+				Multilateration.newBeaconReading(cd.getCricketID(), System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+				Logger.log("Robot is" + cd.getDistance() + "m from (" + coords.getPx() + "," + coords.getPy() + ")" );;
 			}
 			else {
 				this.notifyAll();

@@ -19,6 +19,7 @@ import pharoslabut.logger.Logger;
  * Be sure the DemoServer is running prior to launching this class.
  * 
  * @author Chien-Liang Fok
+ * @author Kevin Boos
  * @see SimonSaysServer
  */
 public class SimonSaysClient {
@@ -46,13 +47,16 @@ public class SimonSaysClient {
 //				tcpSender = TCPMessageSender.getSender();
 //			}
 			
+			// initialize the Trilateration process
+			new Multilateration(0, 0).start(); // robot's starting coordinates (x,y)
+			
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(InetAddress.getByName(serverIP), serverPort);
 			
 			// send an initial PlayerControlMsg with the START cmd, this adds this client to the server's client list
 			cmdExec.sendMsg(new PlayerControlMsg(PlayerControlCmd.START));			
 			
-			System.out.println("about to start GUI...");
+			System.out.println("starting GUI...");
 			// Create a GUI for allowing users to interact with the system...
 			// See: http://download.oracle.com/javase/6/docs/api/javax/swing/package-summary.html#threading
 			SwingUtilities.invokeLater(new Runnable() {
