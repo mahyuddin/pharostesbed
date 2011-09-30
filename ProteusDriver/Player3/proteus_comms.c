@@ -930,28 +930,28 @@ result_t proteusProcessRxData(proteus_comm_t* r) {
 		getRxSerialBuff(r, 1, &msgType); // the message type is the byte after the begin message
 		switch(msgType) {
 			case PROTEUS_ODOMETRY_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing odometry packet!\n");
 				return processOdometryPacket(r);
 			case PROTEUS_IR_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing IR packet!\n");
 				return processIRPacket(r);
 			case PROTEUS_COMPASS_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing compass packet!\n");
 				return processCompassPacket(r);
 			case PROTEUS_TACHOMETER_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing tachometer packet!\n");
 				return processTachPacket(r);
 			case PROTEUS_STATUS_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing status packet!\n");
 				return processStatusPacket(r);
 			case PROTEUS_MOTOR_SAFETY_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing motor safety packet!\n");
 				return processMotorSafetyPacket(r);
 			case PROTEUS_TEXT_MESSAGE_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing message packet!\n");
 				return processTextMessagePacket(r);
 			case PROTEUS_ERROR_PACKET:
-				printf("proteus_comms: proteusProcessRxData: processing error packet!\n");
+				//printf("proteus_comms: proteusProcessRxData: processing error packet!\n");
 				return processErrorPacket(r);
 			default:
 				printf("proteus_comms: proteusProcessRxData: Unknown message type 0x%.2x\n", msgType);

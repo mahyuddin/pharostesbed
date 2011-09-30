@@ -552,13 +552,13 @@ void Proteus::Main() {
 		 * In this case, it processes all messages that are currently buffered and no more.
 		 * For each message, Proteus::ProcessMessage(...) is called, which is defined below.
 		 */
-		printf("proteus_driver: main: processing messages from player server...\n");
+		//printf("proteus_driver: main: processing messages from player server...\n");
 		this->ProcessMessages(); // should we only process one message at a time by passing a '1' in as a parameter?
 		
-		printf("proteus_driver: main: receiving serial data...\n");
+		//printf("proteus_driver: main: receiving serial data...\n");
 		if (commOK == SUCCESS) { commOK = proteusReceiveSerialData(this->proteus_dev); }
 		
-		printf("proteus_driver: main: processing serial data...\n");
+		//printf("proteus_driver: main: processing serial data...\n");
 		if (commOK == SUCCESS) { 
 			while (proteusProcessRxData(this->proteus_dev) == SUCCESS) {
 				//printf("proteus_driver: main: checking for new data to publish...\n");
