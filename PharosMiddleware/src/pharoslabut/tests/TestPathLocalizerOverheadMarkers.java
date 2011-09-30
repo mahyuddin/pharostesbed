@@ -27,6 +27,7 @@ public class TestPathLocalizerOverheadMarkers {
 		print("Where <options> include:");
 		print("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-port <port number>: The Player Server's port number (default 6665)");
+		print("\t-noLineFollow: Disable the line following behavior.");
 		print("\t-log <log file name>: The name of the file in which to save debug output (default null)");
 		print("\t-debug: enable debug mode");
 	}
@@ -34,6 +35,7 @@ public class TestPathLocalizerOverheadMarkers {
 	public static void main(String[] args) {
 		String serverIP = "localhost";
 		int serverPort = 6665;
+		boolean doLineFollow = true;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -45,6 +47,8 @@ public class TestPathLocalizerOverheadMarkers {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				} else if (args[i].equals("-log")) {
 					Logger.setFileLogger(new FileLogger(args[++i]));
+				} else if (args[i].equals("-noLineFollow"))  {
+					doLineFollow = false;
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -77,13 +81,17 @@ public class TestPathLocalizerOverheadMarkers {
 		Logger.log("Subscribed to the ranger interface.");
 		
 		// Start the PathLocalizerOverheadMarkers
-		PathLocalizerOverheadMarkers pathLocalizer = new PathLocalizerOverheadMarkers(rangerBuffer);
+		//PathLocalizerOverheadMarkers pathLocalizer = 
+		new PathLocalizerOverheadMarkers(rangerBuffer);
 		Logger.log("Created the PathLocalizerOverheadMarkers.");
 		
-		// Start the robot following the line
-		LineFollower lf = new LineFollower(client);
-		lf.start();
-		Logger.log("Started the line follower.");
+		if (doLineFollow) {
+			// Start the robot following the line
+			LineFollower lf = new LineFollower(client);
+			lf.start();
+			Logger.log("Started the line follower.");
+		} else
+			Logger.log("User disabled line following.");
 		
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		Logger.logDbg("Changed Player server mode to PUSH...");
