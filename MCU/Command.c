@@ -159,7 +159,7 @@ void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed
  */
 void Command_sendCompassPacket(uint8_t sensorType, uint16_t compassHeading) {
 	uint8_t outToSerial[MAX_PACKET_LEN];
-	uint16_t indx = 0; // an index into the _outToSerial array
+	uint16_t indx = 0; // an index into the outToSerial array
 	uint16_t i;
 	
 	outToSerial[indx++] = PROTEUS_BEGIN;
@@ -192,6 +192,23 @@ void Command_sendMessagePacket(char* message) {
 	}
 }
 
+void Command_sendErrorPacket(uint8_t errorCode) {
+  uint8_t outToSerial[4];
+  uint16_t indx = 0; // an index into the outToSerial array
+  uint16_t i;
+  
+  outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
+	outToSerial[indx++] = PROTEUS_ERROR_PACKET;  // Identify data as IR packet
+  outToSerial[indx++] = errorCode;
+  outToSerial[indx++] = PROTEUS_END;  // Package END packet 
+	
+	//i should equal PROTEUS_IR_PACKET_SIZE 
+	// Send all of the IR Data through the Serial Port
+	for(i=0; i<indx; i++) {
+		SerialDriver_sendByte(outToSerial[i]);
+	}
+}
+
 /**
  * Function: Command_sendIRPacket()
  * Inputs: None
@@ -215,12 +232,19 @@ void Command_sendIRPacket(void) {
 	
 	outToSerial[indx++] = PROTEUS_BEGIN;  // Package BEGIN packet
 	outToSerial[indx++] = PROTEUS_IR_PACKET;  // Identify data as IR packet
-	indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
+	/*indx = saveTwoBytes(outToSerial, indx, IR_getFL()); // Package Front Left data first 
 	indx = saveTwoBytes(outToSerial, indx, IR_getFC()); // Package Front Center data  
 	indx = saveTwoBytes(outToSerial, indx, IR_getFR()); // Package Front Right data  
 	indx = saveTwoBytes(outToSerial, indx, IR_getRL()); // Package Rear Left data  
 	indx = saveTwoBytes(outToSerial, indx, IR_getRC()); // Package Rear Center data 
-	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data  		
+	indx = saveTwoBytes(outToSerial, indx, IR_getRR()); // Package Rear Right data
+	*/
+	outToSerial[indx++] = IR_getFL();   // Package Front Left data 
+	outToSerial[indx++] = IR_getFC();   // Package Front Center data 
+	outToSerial[indx++] = IR_getFR();   // Package Front Right data  
+	outToSerial[indx++] = IR_getRL();   // Package Rear Left data  
+	outToSerial[indx++] = IR_getRC();   // Package Rear Center data 
+	outToSerial[indx++] = IR_getRR();   // Package Rear Right data 		
 	outToSerial[indx++] = PROTEUS_END;  // Package END packet 
 	
 	//i should equal PROTEUS_IR_PACKET_SIZE 

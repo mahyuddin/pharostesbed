@@ -189,8 +189,9 @@ bool I2CDriver_read(uint8_t deviceAddr, uint8_t regAddr,
 			LED_BLUE2 ^= 1; // to indicate i2c reset condidion
 			LED_RED1 ^= 1;
 			
-			Command_sendMessagePacket("ERROR: I2CDriver: Too busy.");
-			
+			//Command_sendMessagePacket("ERROR: I2CDriver: Too busy.");
+			Command_sendErrorPacket(PROTEUS_ERROR_I2C_BUSY);
+			  
 			// abort the previous operation.
 			IBCR &= ~(/*I2C_IBCR_INTERUPT_ENABLE_BIT |*/ I2C_IBCR_MASTER_MODE_BIT | I2C_IBCR_TX_MODE_BIT | I2C_IBCR_TXACK_BIT);
 			_I2C_driver_state = I2C_STATE_IDLE;
@@ -343,7 +344,8 @@ interrupt 31 void I2CInterruptHandler(void) {
 		
 		// Report the failure to the compass component
 		//Compass_I2C_Read_Failed();
-		Command_sendMessagePacket("ERROR: I2CDriver: Bus Lost.");
+		//Command_sendMessagePacket("ERROR: I2CDriver: Bus Lost.");
+		Command_sendErrorPacket(PROTEUS_ERROR_I2C_BUS_LOST);
 	} else {
 		if ((status & I2C_IBSR_BUS_INTERRUPT_BIT) && _I2C_driver_state != I2C_STATE_IDLE) 
 		{
