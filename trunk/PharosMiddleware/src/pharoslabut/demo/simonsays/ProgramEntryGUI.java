@@ -15,12 +15,14 @@ import pharoslabut.demo.simonsays.io.RobotMoveMsg;
 import pharoslabut.demo.simonsays.io.RobotTurnMsg;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
+import playerclient3.structures.PlayerPoint2d;
 
 /**
  * This class provides a GUI for entering programs to control the robot.
  * 
  * @author Chien-Liang Fok
  * @author Lifan Zhang
+ * @author Kevin Boos
  */
 public class ProgramEntryGUI implements ActionListener {
 
@@ -271,11 +273,11 @@ public class ProgramEntryGUI implements ActionListener {
 							// Do pre-execution tasks if in debug mode...
 							if (debugModeMI.isSelected()) 
 								doDebugPre(currMsg);
-							
+
 							// Execute the command...
 							if (!cmdExec.sendMsg(currMsg))
 								throw new ParseException("Failed to execute instruction on line " + currCmd.getLine());
-							
+						
 							// Do post-execution tasks if in debug mode...
 							if (debugModeMI.isSelected())
 								doDebugPost(currMsg);
@@ -304,8 +306,10 @@ public class ProgramEntryGUI implements ActionListener {
 		else if (msg instanceof CameraTiltMsg)
 			JOptionPane.showMessageDialog(frame, "About to tilt camera, note the current tilt angle.");
 //		else if (msg instanceof CameraTakeSnapshotMsg)
-		else if (msg instanceof RobotMoveMsg)
+		else if (msg instanceof RobotMoveMsg) {
 			JOptionPane.showMessageDialog(frame, "About to move robot, note the robot's current position.");
+			Multilateration.saveCurrentLocation(); // this is the only time that saveCurrentLocation() should be called
+		}
 		else if (msg instanceof RobotTurnMsg)
 			JOptionPane.showMessageDialog(frame, "About to turn robot, note the robot's current heading.");
 //		else if (msg instanceof ResetPlayerMsg)
@@ -331,7 +335,11 @@ public class ProgramEntryGUI implements ActionListener {
 			cppData.add(cpp);
 		}
 		else if (msg instanceof RobotMoveMsg) {
-			double actualDist = getDouble("How many meters did the robot move?");
+			// double actualDist = getDouble("How many meters did the robot move?");
+			// use Euclidean distance formula instead of asking the user
+			PlayerPoint2d curLoc = Multilateration.getCurrentLocation();
+			PlayerPoint2d lastLoc = Multilateration.getLastSavedLocation(); // this is the only time that saveCurrentLocation() should be called
+			double actualDist = Math.sqrt(Math.pow(curLoc.getPx() - lastLoc.getPx(), 2) + Math.pow(curLoc.getPy() - lastLoc.getPy(), 2)); 
 			CPP cpp = new CPP("MOVE", ((RobotMoveMsg)msg).getDist(), actualDist);
 			cppData.add(cpp);
 		}
