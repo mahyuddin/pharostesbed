@@ -29,11 +29,11 @@
 #define ADC_IR_RR 0x82 
 
 //all return units of mm
-unsigned short IR_getFL(void); //front left
-unsigned short IR_getFC(void); //front center
-unsigned short IR_getFR(void); //front right
-unsigned short IR_getRR(void); //rear left
-unsigned short IR_getRC(void); //rear center
-unsigned short IR_getRL(void); //rear right
+unsigned char IR_getFL(void); //front left
+unsigned char IR_getFC(void); //front center
+unsigned char IR_getFR(void); //front right
+unsigned char IR_getRR(void); //rear left
+unsigned char IR_getRC(void); //rear center
+unsigned char IR_getRL(void); //rear right
 
 #endif /* _Sharp_IR_H */

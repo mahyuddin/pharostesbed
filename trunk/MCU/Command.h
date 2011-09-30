@@ -54,7 +54,13 @@ enum {
 	PROTEUS_TACHOMETER_PACKET,
 	PROTEUS_STATUS_PACKET,
 	PROTEUS_MOTOR_SAFETY_PACKET,
-	PROTEUS_TEXT_MESSAGE_PACKET
+	PROTEUS_TEXT_MESSAGE_PACKET,
+	PROTEUS_ERROR_PACKET,
+};
+
+enum {
+  PROTEUS_ERROR_I2C_BUS_LOST,
+  PROTEUS_ERROR_I2C_BUSY,
 };
 
 /**
@@ -80,7 +86,7 @@ typedef struct ProteusCompassPacket {
 
 
 #define PROTEUS_ODOMETRY_PACKET_SIZE      5
-#define PROTEUS_IR_PACKET_SIZE           12
+#define PROTEUS_IR_PACKET_SIZE           6
 #define PROTEUS_SONAR_PACKET_SIZE        12
 #define PROTEUS_OPAQUE_PACKET_SIZE        1
 
@@ -114,6 +120,6 @@ void Command_sendStatus(void);
 void Command_sendIRPacket(void);
 void Command_sendMotorSafetyMsg(int16_t previousMotorPower, int16_t currentSpeed);
 void Command_sendMessagePacket(char* message);
-
+void Command_sendErrorPacket(uint8_t errorCode);
 
 #endif /* _PROTEUS_COMMAND_H */
