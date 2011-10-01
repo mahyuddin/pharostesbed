@@ -151,7 +151,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 				
 				// See if we get THRESHOLD_NO_MARKER consecutive 
 				// measurements greater than THRESHOLD_NONEXIST_MARKER
-				if (++countNoMarker > THRESHOLD_NO_MARKER) {
+				if (++countNoMarker >= THRESHOLD_NO_MARKER) {
 					// Conclude that we are no longer under an overhead marker
 					currState = IRPathLocalizerState.NO_MARKER;
 					Logger.log("STATUS CHANGE: NO_MARKER");
@@ -170,7 +170,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 			
 			if (currState == IRPathLocalizerState.NO_MARKER) {
 				
-				if (++countMarker > THRESHOLD_MARKER) {
+				if (++countMarker >= THRESHOLD_MARKER) {
 					// Conclude that we are under a mark
 					currState = IRPathLocalizerState.MARKER;
 					numOverheadMarkers++;
