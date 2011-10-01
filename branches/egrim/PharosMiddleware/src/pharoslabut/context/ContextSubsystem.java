@@ -81,7 +81,7 @@ public class ContextSubsystem extends Thread implements ContextLoggingDelegate {
         }
         
         Logger.logDbg("Notifying handler of context summary");
-        handler.putLocalSummary(summary);
+        handler.updateLocalSummary(summary);
     }
 
     @Override
@@ -138,7 +138,7 @@ public class ContextSubsystem extends Thread implements ContextLoggingDelegate {
                     }
                 }
 
-                handler.putLocalSummary(summary);
+                handler.updateLocalSummary(summary);
             }
             
 
@@ -212,7 +212,7 @@ public class ContextSubsystem extends Thread implements ContextLoggingDelegate {
     public synchronized void setContextPadding(int padding) {
         if (padding == 0) {
             // Special case, no local context should be sent
-            handler.removeLocalSummary(summary);
+            handler.removeLocalSummary();
         }
         contextPadding = padding;
     }
@@ -231,5 +231,7 @@ public class ContextSubsystem extends Thread implements ContextLoggingDelegate {
 
     public void setSummaryType(WireSummaryType summaryType) {
         handler.setWireSummaryType(summaryType);
+        // Need to store summary again so that the correct wire type is created
+        handler.updateLocalSummary(summary);
     }
 }
