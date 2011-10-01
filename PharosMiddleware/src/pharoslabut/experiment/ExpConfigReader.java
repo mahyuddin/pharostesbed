@@ -32,7 +32,7 @@ public class ExpConfigReader {
 							result.setStartInterval(Integer.valueOf(elem[1]));
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Warning: Syntax error on line " + lineno + " of motion script " + fileName + ":\n" + line);
+							System.err.println("Warning: Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					}
@@ -42,7 +42,7 @@ public class ExpConfigReader {
 							result.setExpName(elem[1]);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Warning: Syntax error on line " + lineno + " of motion script " + fileName + ":\n" + line);
+							System.err.println("Warning: Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("ROBOT")){
@@ -56,7 +56,7 @@ public class ExpConfigReader {
 							result.addRobot(rs);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Warning: Ignoring line " + lineno + " of motion script " + fileName);
+							System.err.println("Warning: Ignoring line " + lineno + " of experiment script " + fileName);
 						}
 					}
 				}
