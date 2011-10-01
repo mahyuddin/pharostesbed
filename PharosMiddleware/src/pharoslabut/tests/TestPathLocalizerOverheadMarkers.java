@@ -74,7 +74,7 @@ public class TestPathLocalizerOverheadMarkers {
 		try {
 			client = new PlayerClient(serverIP, serverPort);
 		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
-		Logger.log("Created robot client.");
+		Logger.log("Created player client.");
 		
 		// Subscribe to the ranger proxy.
 		RangerInterface ri = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
