@@ -5,6 +5,11 @@ import pharoslabut.navigate.LineFollower;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
 import pharoslabut.sensors.PathLocalizerOverheadMarkersListener;
 
+/**
+ * The top-level class of all PatrolDaemons.
+ * 
+ * @author Chien-Liang Fok
+ */
 public abstract class PatrolDaemon implements PathLocalizerOverheadMarkersListener{
 	/**
 	 * The number of markers per round.
@@ -24,12 +29,12 @@ public abstract class PatrolDaemon implements PathLocalizerOverheadMarkersListen
 	/**
 	 * The number of markers seen.
 	 */
-	protected int numMarkersSeen = 0;
+	protected volatile int numMarkersSeen = 0;
 	
 	/**
 	 * Whether the number of markers seen was updated.
 	 */
-	protected boolean numMarkersSeenUpdated = false;
+	protected volatile boolean numMarkersSeenUpdated = false;
 	
 	/**
 	 * Whether the experiment is done.
@@ -78,17 +83,14 @@ public abstract class PatrolDaemon implements PathLocalizerOverheadMarkersListen
 	 * @return True if the experiment is done.
 	 */
 	protected boolean checkDone() {
-		int numMarkersSeen;
-		
-		// grab a copy of the number of markers seen
-		synchronized(this) {
-			numMarkersSeen = this.numMarkersSeen;
-		}
-		
+//		int numMarkersSeen;
+//		
+//		// grab a copy of the number of markers seen
+//		synchronized(this) {
+//			numMarkersSeen = this.numMarkersSeen;
+//		}
 		int numMarkersWhenDone = numMarkersPerRound * numRounds;
-		
 		Logger.logDbg("numMarkersSeen = " + numMarkersSeen + ", numMarkersWhenDone = " + numMarkersWhenDone);
-		
 		return numMarkersSeen >= numMarkersWhenDone;
 	}
 }
