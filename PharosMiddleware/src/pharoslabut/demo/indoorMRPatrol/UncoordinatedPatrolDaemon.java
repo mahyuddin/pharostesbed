@@ -55,6 +55,7 @@ public class UncoordinatedPatrolDaemon extends PatrolDaemon implements Runnable 
 		
 		Logger.log("Experiment completed!");
 		lineFollower.stop();
+		Logger.log("Program exiting.");
 		System.exit(0);
 	}
 }
