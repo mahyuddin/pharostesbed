@@ -2,6 +2,7 @@ package pharoslabut.sensors;
 
 import pharoslabut.logger.Logger;
 import pharoslabut.util.SimpleTextGUI;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
@@ -11,7 +12,7 @@ import playerclient3.structures.ranger.PlayerRangerData;
  * @author Chien-Liang Fok
  *
  */
-public class PathLocalizerOverheadMarkers implements RangerListener {
+public class PathLocalizerOverheadMarkers implements RangerListener, Position2DListener {
 
 	/**
 	 * Defines the possible states that the client manager can be in.
@@ -82,12 +83,18 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
 	private SimpleTextGUI gui;
 	
 	/**
+	 * Recalls the distance since the last marker.
+	 */
+	private double distSinceMarker = 0;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param rangerBuffer The source of range information.
 	 */
-	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer) {
+	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer, Position2DBuffer pos2DBuffer) {
 		rangerBuffer.addRangeListener(this);
+		pos2DBuffer.addPos2DListener(this);
 		gui = new SimpleTextGUI("Overhead Marker Detector.");
 	}
 
@@ -129,7 +136,9 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
 					// Conclude that we are under a mark
 					currState = IRPathLocalizerState.MARKER;
 					numOverheadMarkers++;
-					Logger.log("STATUS CHANGE: MARKER Total markers seen: " + numOverheadMarkers);
+					Logger.log("STATUS CHANGE: MARKER, Total seen: " + numOverheadMarkers + ", dist since last marker: " + distSinceMarker + " mm (" + (distSinceMarker * 0.0393700787) + " in)");
+					
+					distSinceMarker = 0;
 					if (gui != null) {
 						if (numOverheadMarkers == 1)
 							gui.setText(numOverheadMarkers + " Marker");
@@ -175,5 +184,11 @@ public class PathLocalizerOverheadMarkers implements RangerListener {
     		Logger.logErr("Expected at least 6 sensors, instead got " + numSensors);
     	}
 		
+	}
+	
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		Logger.log("New Odometry data: " + data.getPos().getPx());
+		distSinceMarker += data.getPos().getPx();
 	}
 }
