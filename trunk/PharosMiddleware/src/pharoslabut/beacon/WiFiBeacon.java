@@ -33,6 +33,9 @@ public class WiFiBeacon implements java.io.Serializable {
 	
 	/**
 	 * Default constructor for the beacon.
+	 * 
+	 * @param address The address of this host.
+	 * @param port The single-cast port number being used.
 	 */
 	public WiFiBeacon(InetAddress address, int port) {
 		this.address = address;
