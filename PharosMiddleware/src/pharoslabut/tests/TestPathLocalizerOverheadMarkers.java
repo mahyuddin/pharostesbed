@@ -4,9 +4,11 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
+import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.sensors.RangerDataBuffer;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
 import playerclient3.RangerInterface;
 import playerclient3.structures.PlayerConstants;
 
@@ -74,15 +76,24 @@ public class TestPathLocalizerOverheadMarkers {
 		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
 		Logger.log("Created robot client.");
 		
-		// Subscribe to the ranger interface.
+		// Subscribe to the ranger proxy.
 		RangerInterface ri = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
 		RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
 		rangerBuffer.start();
 		Logger.log("Subscribed to the ranger interface.");
 		
+		// Subscribe to Posistion2D proxy.
+		Position2DInterface p2di = null;
+		try {
+			p2di = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to position 2d proxy."); System.exit(1);}
+		Position2DBuffer pos2DBuffer = new Position2DBuffer(p2di);
+		pos2DBuffer.start();
+		Logger.logDbg("Created Position2dProxy.");
+		
 		// Start the PathLocalizerOverheadMarkers
 		//PathLocalizerOverheadMarkers pathLocalizer = 
-		new PathLocalizerOverheadMarkers(rangerBuffer);
+		new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer);
 		Logger.log("Created the PathLocalizerOverheadMarkers.");
 		
 		if (doLineFollow) {
