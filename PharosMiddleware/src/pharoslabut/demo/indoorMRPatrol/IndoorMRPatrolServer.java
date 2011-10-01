@@ -258,7 +258,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		}
 		
 		try {
-			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(pharosIP), indoorMRPatrolServerPort);
+			IndoorMRPatrolBeacon beacon = new IndoorMRPatrolBeacon(InetAddress.getByName(pharosIP), indoorMRPatrolServerPort);
 			wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
 			wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
 
@@ -346,15 +346,15 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		switch(startExpMsg.getExpType()) {
 			case UNCOORDINATED:
 				Logger.log("Patrol type: uncoordinated");
-				new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, startExpMsg.getNumRounds());
+				new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
+						startExpMsg.getNumRounds());
 				break;
 			case LOOSELY:
 				Logger.log("Patrol type: loosely");
 				
-				// TODO
+				new LooselyCoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
+						startExpMsg.getNumRounds(), wifiBeaconBroadcaster, wifiBeaconReceiver);
 				
-//				NavigateRelative navigatorRel = new NavigateRelative(motionArbiter, relMotionScript);
-//				navigatorRel.start();
 				break;
 			case LABELED:
 				Logger.log("Patrol type: labeled");
