@@ -27,12 +27,17 @@ public class ExpConfig {
 	/**
 	 * The number of markers in the patrol path.
 	 */
-	private int numMarkers = 0;
+	private int numMarkers = -1;
 	
 	/**
 	 * The distance between markers along the patrol path.
 	 */
-	private double markerDist = 0;
+	private double markerDist = -1;
+	
+	/**
+	 * The number of times to patrol the route.
+	 */
+	private int numRounds = -1;
 	
 	/**
 	 * Details of each robot in the team.
@@ -120,6 +125,9 @@ public class ExpConfig {
 					} else if (line.contains("MARKER_SEPARATION")) {
 						String[] elem = line.split("[\\s]+");
 						markerDist = Double.valueOf(elem[1]);
+					} else if (line.contains("NUM_ROUNDS")) {
+						String[] elem = line.split("[\\s]+");
+						numRounds = Integer.valueOf(elem[1]);
 					}
 				}
 				lineno++;
@@ -127,7 +135,30 @@ public class ExpConfig {
 			input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(1);
 		}
+		
+		// Perform some checks to ensure experiment configuration file is valid.
+		if (numRounds == -1) {
+			System.err.println("Must specify number of rounds!");
+			System.exit(1);
+		}
+		
+		if (numMarkers == -1) {
+			System.err.println("Must specify number of markers along patrol route!");
+			System.exit(1);
+		}
+		
+		if (markerDist == -1) {
+			System.err.println("Must specify distance between markers!");
+			System.exit(1);
+		}
+		
+		if (getNumRobots() == 0) {
+			System.err.println("Must specify at least one robot!");
+			System.exit(1);
+		}
+		
 	}
 	
 	public String getExpName() {
@@ -150,6 +181,10 @@ public class ExpConfig {
 		return team.size();
 	}
 	
+	public int getNumRounds() {
+		return numRounds;
+	}
+	
 	public Iterator<RobotExpSettings> getRobotItr() {
 		return team.iterator();
 	}
@@ -163,6 +198,7 @@ public class ExpConfig {
 		sb.append("\tExpName = " + expName + "\n");
 		sb.append("\tNumMarkers = " + numMarkers + "\n");
 		sb.append("\tMarkerDist = " + markerDist + "\n");
+		sb.append("\tNumRounds = " + numRounds + "\n");
 		sb.append("\tRobots:\n");
 		Iterator<RobotExpSettings> itr = team.iterator();
 		while (itr.hasNext()) {
