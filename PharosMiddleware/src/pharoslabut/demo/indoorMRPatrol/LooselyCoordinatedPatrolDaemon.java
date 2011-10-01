@@ -14,6 +14,11 @@ import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
 
+/**
+ * Handles the execution of an loosely coordinated robot patrol experiment.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runnable, WiFiBeaconListener {
 	
 	/**
@@ -191,7 +196,7 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 					Logger.log("Reached marker " + numMarkersSeen);
 					updateBeacon();
 					
-					Logger.log("Checking to see if teammates are synced.");
+					Logger.log("Checking if all teammates are loosely synced.");
 					if (!isTeamSynced()) {
 						Logger.log("Team not synced, waiting at this marker until team is synced.");
 						lineFollower.stop();
