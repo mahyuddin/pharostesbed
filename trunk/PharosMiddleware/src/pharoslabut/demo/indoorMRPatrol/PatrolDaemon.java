@@ -67,7 +67,7 @@ public abstract class PatrolDaemon implements PathLocalizerOverheadMarkersListen
 	
 	@Override
 	public void markerEvent(int numMarkers) {
-		Logger.log("Received marker event: num markers = " + numMarkers);
+		Logger.log("MARKER DETECTED: Total = " + numMarkers);
 		synchronized(this) {
 			this.numMarkersSeen = numMarkers;
 			this.numMarkersSeenUpdated = true;
