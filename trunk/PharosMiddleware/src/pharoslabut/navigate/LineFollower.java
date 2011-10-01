@@ -42,7 +42,7 @@ public class LineFollower implements Runnable {
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = 0.6;		//modified by sushen
+	public static final double MAX_SPEED = 0.5;		//modified by sushen
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
@@ -52,7 +52,7 @@ public class LineFollower implements Runnable {
 	/**
 	 * The maximum turn angle of the robot in degrees.
 	 */
-	public static final double MAX_TURN_ANGLE = 30;
+	public static final double MAX_TURN_ANGLE = 20;
 	
 	public int turnSign;
 	
