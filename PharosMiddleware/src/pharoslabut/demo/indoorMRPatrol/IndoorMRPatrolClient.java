@@ -76,7 +76,7 @@ public class IndoorMRPatrolClient {
 			
 			// Send each robot the start experiment command.
 			StartExpMsg sem = new StartExpMsg(expConfig.getExpName(),
-					expConfig.getExpType());
+					expConfig.getExpType(), expConfig.getNumRounds());
 			itr = expConfig.getRobotItr();
 			while (itr.hasNext()) {
 				RobotExpSettings currRobot = itr.next();

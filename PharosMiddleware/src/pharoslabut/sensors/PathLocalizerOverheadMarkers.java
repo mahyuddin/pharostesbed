@@ -1,5 +1,8 @@
 package pharoslabut.sensors;
 
+import java.util.Iterator;
+import java.util.Vector;
+
 import pharoslabut.logger.Logger;
 import pharoslabut.util.SimpleTextGUI;
 import playerclient3.structures.position2d.PlayerPosition2dData;
@@ -87,6 +90,9 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	 */
 	private double distSinceMarker = 0;
 	
+	private Vector<PathLocalizerOverheadMarkersListener> listeners 
+		= new Vector<PathLocalizerOverheadMarkersListener>();
+	
 	/**
 	 * The constructor.
 	 * 
@@ -97,7 +103,22 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 		pos2DBuffer.addPos2DListener(this);
 		gui = new SimpleTextGUI("Overhead Marker Detector.");
 	}
+	
+	/**
+	 * Adds a listener of overhead marker events.
+	 * 
+	 * @param listener The listener to add.
+	 */
+	public void addListener(PathLocalizerOverheadMarkersListener listener) {
+		listeners.add(listener);
+	}
 
+	private void notifyListeners() {
+		Iterator<PathLocalizerOverheadMarkersListener> itr = listeners.iterator();
+		while (itr.hasNext()) {
+			itr.next().markerEvent(numOverheadMarkers);
+		}
+	}
 	/**
 	 * This processes the raw range data from the IR sensor used to detect the overhead markers.
 	 */
@@ -118,9 +139,9 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 					currState = IRPathLocalizerState.NO_MARKER;
 					Logger.log("STATUS CHANGE: NO_MARKER");
 				} else {
-					// We got a distance measurement that might indicate the non-presence of the 
+					// We got a distance measurement that might indicate the absence of the 
 					// marker but we need to wait till we get THRESOLD_NO_MARKER consecutive readings
-					// that are greater than THRESHOLD_NONEXIST_MARKER.
+					// that are greater than THRESHOLD_NONEXIST_MARKER before concluding for sure.
 				}
 			} else {
 				// This is a duplicate "no marker" signal.  Ingnore it.
@@ -139,6 +160,9 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 					Logger.log("STATUS CHANGE: MARKER, Total seen: " + numOverheadMarkers + ", dist since last marker: " + distSinceMarker + " mm (" + (distSinceMarker * 0.0393700787) + " in)");
 					
 					distSinceMarker = 0;
+					
+					notifyListeners();
+					
 					if (gui != null) {
 						if (numOverheadMarkers == 1)
 							gui.setText(numOverheadMarkers + " Marker");
