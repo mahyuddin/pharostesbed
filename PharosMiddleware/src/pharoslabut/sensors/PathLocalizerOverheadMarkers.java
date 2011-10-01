@@ -83,25 +83,42 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	/**
 	 * For debugging purposes.
 	 */
-	private SimpleTextGUI gui;
+	private SimpleTextGUI gui = null;
 	
 	/**
 	 * Recalls the distance since the last marker.
 	 */
 	private double distSinceMarker = 0;
 	
+	/** 
+	 * Listeners of path localizer events.
+	 */
 	private Vector<PathLocalizerOverheadMarkersListener> listeners 
 		= new Vector<PathLocalizerOverheadMarkersListener>();
+	
+	/**
+	 * The constructor. No GUI displayed.
+	 * 
+	 * @param rangerBuffer The source of range information.
+	 * @param pos2DBuffer The source of Position2D odometry data.
+	 */
+	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer, Position2DBuffer pos2DBuffer) {
+		this(rangerBuffer, pos2DBuffer, false);
+	}
 	
 	/**
 	 * The constructor.
 	 * 
 	 * @param rangerBuffer The source of range information.
+	 * @param pos2DBuffer The source of Position2D odometry data.
+	 * @param showGUI whether to show the GUI.
 	 */
-	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer, Position2DBuffer pos2DBuffer) {
+	public PathLocalizerOverheadMarkers(RangerDataBuffer rangerBuffer, Position2DBuffer pos2DBuffer, 
+			boolean showGUI) {
 		rangerBuffer.addRangeListener(this);
 		pos2DBuffer.addPos2DListener(this);
-		gui = new SimpleTextGUI("Overhead Marker Detector.");
+		if (showGUI)
+			gui = new SimpleTextGUI("Overhead Marker Detector.");
 	}
 	
 	/**

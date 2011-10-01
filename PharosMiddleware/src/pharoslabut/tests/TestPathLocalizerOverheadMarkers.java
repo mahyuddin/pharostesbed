@@ -93,7 +93,7 @@ public class TestPathLocalizerOverheadMarkers {
 		
 		// Start the PathLocalizerOverheadMarkers
 		//PathLocalizerOverheadMarkers pathLocalizer = 
-		new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer);
+		new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer, true);
 		Logger.log("Created the PathLocalizerOverheadMarkers.");
 		
 		if (doLineFollow) {
