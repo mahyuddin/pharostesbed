@@ -5,6 +5,8 @@ import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 //import pharoslabut.navigate.LineFollowerEventListener;
 import pharoslabut.sensors.*;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
 import playerclient3.structures.blobfinder.PlayerBlobfinderData;
 
 /**
@@ -18,19 +20,44 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 	/**
 	 * Defines the types of intersection management.
 	 */
-	public static enum IntersectionManagementType {CENTRALIZED, ADHOC, AUTO};
+	public static enum IntersectionManagementType {TRADITIONAL, CENTRALIZED, ADHOC, AUTO};
 	
 	/**
 	 * Defines the possible states that the client manager can be in.
 	 */
 	public static enum ClientManagerState {IDLE, FOLLOW_LINE, REMOTE_TRAVERSAL, LOCAL_TRAVERSAL};
     
+	/**
+	 * The type of intersection management to use.
+	 */
 	private IntersectionManagementType mgrType;
+	
+	/**
+	 * The current state of this client.
+	 */
 	private ClientManagerState currState = ClientManagerState.IDLE;
+	
+	/**
+	 * The line follower.
+	 */
 	private LineFollower lf;
+	
+	/**
+	 * The remote intersection manager.
+	 */
 	private RemoteIntersectionManager rim;
+	
+	/**
+	 * The local intersection manager.
+	 */
 	private LocalIntersectionManager lim;
+	
+	/**
+	 * The lane identifier.
+	 */
 	private LaneIdentifier li;
+	
+	
 	private IntersectionEvent ie = null;
 	
 	/**
@@ -46,35 +73,39 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 	/**
 	 * The constructor.
 	 * 
-	 * @param mgrType The type of intersection management beign tested.
-	 */
-	public AutoIntersectionClient(IntersectionManagementType mgrType) {
-		this.mgrType = mgrType;
-		new Thread(this).start();
-	}
-	
-	/**
-	 * The constructor.
-	 * 
-	 * @param mgrType The type of intersection management beign tested.
+	 * @param mgrType The type of intersection management, e.g., traditional, centralized, ad hoc, etc.
 	 * @param serverIP The intersection server's IP address.
 	 * @param port The intersection server's IP port.
 	 * @param playerIP The Player Server's IP address.
 	 * @param playerPort The Player Server's port.
 	 */
 	public AutoIntersectionClient(IntersectionManagementType mgrType, String serverIP, int port, String playerIP, int playerPort) {
-		this(mgrType);
+		this.mgrType = mgrType;
+		
+		PlayerClient client = null;
+		
+		// Connect to the player server.
+		try {
+			client = new PlayerClient(playerIP, playerPort);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to server."); System.exit(1); }
+		Logger.log("Created robot client.");
 		
 		// Create the line follower
-		Logger.log("Creating the line follower.");
-		lf = new LineFollower(playerIP, playerPort);
+		Logger.log("Creating the line follower...");
+		lf = new LineFollower(client);
+		
+		Logger.logDbg("Changing Player server mode to PUSH...");
+		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		
+		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
+		client.runThreaded(-1, -1);	
 		
 		// Create the lane identifier
-		Logger.log("Creating the lane identifier.");
+		Logger.log("Creating the lane identifier...");
 		li = new LaneIdentifier("/dev/ttyS1");
 		
 		// Create the intersection detector.
-		Logger.log("Creating the intersection detector.");
+		Logger.log("Creating the intersection detector...");
 		detector = new IntersectionDetectorIR(lf.getOpaqueInterface());
 		detector.addIntersectionEventListener(this);
 		
@@ -221,6 +252,8 @@ public class AutoIntersectionClient implements IntersectionEventListener, Runnab
 					String type = args[++i];
 					if (type.equals("auto"))
 						mgrType = IntersectionManagementType.AUTO;
+					else if (type.equals("traditional"))
+						mgrType = IntersectionManagementType.TRADITIONAL;
 					else if (type.equals("adhoc"))
 						mgrType = IntersectionManagementType.ADHOC;
 					else if (type.equals("centralized"))
