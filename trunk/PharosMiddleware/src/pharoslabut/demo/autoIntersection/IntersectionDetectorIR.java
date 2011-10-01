@@ -6,13 +6,12 @@ import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 
 /**
- * Detects the intersection using the IR sensor.  This data is delivered
- * through the Opaque interface.
+ * Detects the intersection using the IR sensor.
  * 
  * @author Chien-Liang Fok
  *
  */
-public class IntersectionDetectorIR extends IntersectionDetector implements ProteusOpaqueListener {
+public class IntersectionDetectorIR extends IntersectionDetector  {
 
 	public static final String INTERSECTION_EVENT_KEY = "IE";
 	public static final String APPROACH_KEY = "A";
@@ -37,28 +36,27 @@ public class IntersectionDetectorIR extends IntersectionDetector implements Prot
 //				}
 //			}
 //		}
-		poi.addOpaqueListener(this);
 	}
 
-	@Override
-	public void newOpaqueData(ProteusOpaqueData opaqueData) {
-		String msg = new String(opaqueData.getData());
-		if (msg.contains(INTERSECTION_EVENT_KEY)) {
-			String type = msg.substring(INTERSECTION_EVENT_KEY.length()+1);
-			Logger.log("Intersection Event: \"" + msg + "\", type = \"" + type + "\"");
-			
-			if (type.equals(APPROACH_KEY)) {
-				Logger.log("The robot is approaching the intersection!");
-				genApproachingEvent();
-			} else if (type.equals(ENTRY_KEY)) {
-				Logger.log("The robot is entering the intersection!");
-				genEnteringEvent();
-			} else if (type.equals(EXIT_KEY)) {
-				Logger.log("The robot is exiting the intersection!");
-				genExitingEvent();
-			} else {
-				Logger.logErr("Unknown intersection event type: \"" + type + "\"");
-			}
-		}
-	}
+//	@Override
+//	public void newOpaqueData(ProteusOpaqueData opaqueData) {
+//		String msg = new String(opaqueData.getData());
+//		if (msg.contains(INTERSECTION_EVENT_KEY)) {
+//			String type = msg.substring(INTERSECTION_EVENT_KEY.length()+1);
+//			Logger.log("Intersection Event: \"" + msg + "\", type = \"" + type + "\"");
+//			
+//			if (type.equals(APPROACH_KEY)) {
+//				Logger.log("The robot is approaching the intersection!");
+//				genApproachingEvent();
+//			} else if (type.equals(ENTRY_KEY)) {
+//				Logger.log("The robot is entering the intersection!");
+//				genEnteringEvent();
+//			} else if (type.equals(EXIT_KEY)) {
+//				Logger.log("The robot is exiting the intersection!");
+//				genExitingEvent();
+//			} else {
+//				Logger.logErr("Unknown intersection event type: \"" + type + "\"");
+//			}
+//		}
+//	}
 }
