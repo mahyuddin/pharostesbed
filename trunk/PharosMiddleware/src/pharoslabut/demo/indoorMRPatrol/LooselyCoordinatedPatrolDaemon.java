@@ -56,6 +56,7 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 		this.wifiBeaconBroadcaster = wifiBeaconBroadcaster;
 		wifiBeaconReceiver.addBeaconListener(this);
 		
+		// Get own name so it does not add itself to its world view.
 		String robotName = null;
 		try {
 			robotName = pharoslabut.RobotIPAssignments.getName();
