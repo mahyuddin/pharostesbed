@@ -23,14 +23,20 @@ public class StartExpMsg implements Message {
 	private ExpType expType;
 	
 	/**
+	 * The number of rounds to patrol.
+	 */
+	private int numRounds;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param expName The name of the experiment.
 	 * @param expType The type of experiment.
 	 */
-	public StartExpMsg(String expName, ExpType expType) {
+	public StartExpMsg(String expName, ExpType expType, int numRounds) {
 		this.expName = expName;
 		this.expType = expType;
+		this.numRounds = numRounds;
 	}
 	
 	/**
@@ -47,6 +53,14 @@ public class StartExpMsg implements Message {
 	 */
 	public ExpType getExpType() {
 		return expType;
+	}
+	
+	/**
+	 * 
+	 * @return The number of rounds to patrol.
+	 */
+	public int getNumRounds() {
+		return numRounds;
 	}
 	
 	@Override

@@ -7,10 +7,14 @@ import pharoslabut.beacon.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.MotionArbiter;
+import pharoslabut.sensors.PathLocalizerOverheadMarkers;
+import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
+import pharoslabut.sensors.RangerDataBuffer;
 import pharoslabut.io.*;
 
 import playerclient3.*;
@@ -25,11 +29,30 @@ import playerclient3.structures.PlayerConstants;
  */
 public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener, ProteusOpaqueListener {
 	
+	/**
+	 * The name of the local robot.
+	 */
 	private String robotName;
 	
+	/**
+	 * The IP address of the player server.
+	 */
 	private String playerServerIP;
+	
+	/**
+	 * The TCP port on which the player server listens.
+	 */
 	private int playerServerPort;
-	private int pharosServerPort;
+	
+    /**
+     * The player client that connects to the player server.
+     */
+	private PlayerClient playerClient = null;
+	
+	/**
+	 * This TCP port on which this server listens.
+	 */
+	private int indoorMRPatrolServerPort;
 	
     /**
 	 * The WiFi multicast group address.
@@ -40,11 +63,6 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 	 * The WiFi multicast port.
 	 */
     private int mCastPort;
-	
-	private PlayerClient client = null;
-	//private CompassDataBuffer compassDataBuffer;
-	//private GPSDataBuffer gpsDataBuffer;
-	private MotionArbiter motionArbiter;
 	
 	// Components for sending and receiving WiFi beacons
 	private WiFiBeaconBroadcaster wifiBeaconBroadcaster;
@@ -57,10 +75,23 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 	//private RelativeMotionScript relMotionScript;
 	
 	/**
+	 * This is the component that allows the robot to follow a line.
+	 */
+	private LineFollower lineFollower;
+	
+	/**
+	 * This localizes the robot by detecting overhead markers
+	 * and using odometry.
+	 */
+	private PathLocalizerOverheadMarkers pathLocalizer;
+	
+	/**
 	 * This is the file logger that is used for debugging purposes.  It is used when debug mode is enabled
 	 * and there is no experiments running.
 	 */
 	private FileLogger debugFileLogger = null;
+	
+	private LoadExpSettingsMsg loadSettingsMsg;
 	
 	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
@@ -79,7 +110,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 	{
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
-		this.pharosServerPort = pharosServerPort;
+		this.indoorMRPatrolServerPort = pharosServerPort;
 		
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
@@ -103,7 +134,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 			e1.printStackTrace();
 		}
 		
-		if (!initPharosServer()) {
+		if (!initIndoorMRPatrolServer()) {
 			Logger.logErr("Failed to initialize the Pharos server!");
 			System.exit(1);
 		}
@@ -124,77 +155,74 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 	
 	/**
 	 * Creates the player client and obtains the necessary interfaces from it.
-	 * Creates the CompassDataBuffer, GPSDataBuffer, and MotionArbiter objects.
 	 * 
 	 * @return true if successful.
 	 */
 	private boolean createPlayerClient(MotionArbiter.MotionType mobilityPlane) {
+		
+		// Connect to the player server.
 		try {
-			client = new PlayerClient(playerServerIP, playerServerPort);
+			playerClient = new PlayerClient(playerServerIP, playerServerPort);
 		} catch(PlayerException e) {
 			Logger.logErr("Unable to connecting to Player: ");
 			Logger.logErr("    [ " + e.toString() + " ]");
 			return false;
 		}
+		Logger.log("Created player client.");
 		
-		Logger.log("Subscribing to motors.");
-		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (motors == null) {
+		// Subscribe to the ranger proxy.
+		RangerInterface ri = playerClient.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
+		RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
+		rangerBuffer.start();
+		Logger.log("Subscribed to the ranger proxy.");
+		
+		Position2DInterface p2di = playerClient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (p2di == null) {
 			Logger.logErr("motors is null");
 			return false;
 		}
+		Position2DBuffer pos2DBuffer = new Position2DBuffer(p2di);
+		pos2DBuffer.start();
+		Logger.logDbg("Subscribed to Position2d proxy.");
 		
-		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
-		// while the Segway RMP 50's compass is on index 2.
-//		Logger.log("Subscribing to compass.");
-//		Position2DInterface compass;
-//		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
-//				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
-//			compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
-//		} else {
-//			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
-//		}
-//		if (compass == null) {
-//			Logger.logErr("compass is null");
-//			return false;
-//		}
 		
-//		Logger.log("Subscribing to GPS.");
-//		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
-//		if (gps == null) {
-//			Logger.logErr("gps is null");
-//			return false;
-//		}
+		// Start the PathLocalizerOverheadMarkers
+		pathLocalizer = new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer);
+		Logger.log("Created the PathLocalizerOverheadMarkers.");
+		
+		// Start the robot following the line
+		lineFollower = new LineFollower(playerClient);
+		Logger.log("Created the line follower.");
 		
 		Logger.log("Subscribing to opaque interface.");
-		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)client.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
+		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)playerClient.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
 		if (oi == null) {
 			Logger.logErr("opaque interface is null");
 			return false;
+		} else {
+			oi.addOpaqueListener(this);
+			Logger.log("Subscribed to opaque proxy.");
 		}
 		
-		Logger.log("Creating the line follower.");
-		// TODO
-		
-		//compassDataBuffer = new CompassDataBuffer(compass);
-		//gpsDataBuffer = new GPSDataBuffer(gps);
-		motionArbiter = new MotionArbiter(mobilityPlane, motors);
-		oi.addOpaqueListener(this);
-		
 		Logger.log("Changing Player server mode to PUSH...");
-		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
+		playerClient.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
 		Logger.log("Setting Player Client to run in continuous threaded mode...");
-		client.runThreaded(-1, -1);
+		playerClient.runThreaded(-1, -1);
 		
 		return true;
 	}
 	
-	private boolean initPharosServer() {
-		new TCPMessageReceiver(this, pharosServerPort);
+	private boolean initIndoorMRPatrolServer() {
+		new TCPMessageReceiver(this, indoorMRPatrolServerPort);
 		return true;
 	}
 	
+	/**
+	 * Initializes the components that transmit and receive beacons.
+	 * 
+	 * @return true if successful.
+	 */
 	private boolean initWiFiBeacons() {
     	// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
@@ -230,7 +258,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		}
 		
 		try {
-			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(pharosIP), pharosServerPort);
+			WiFiBeacon beacon = new WiFiBeacon(InetAddress.getByName(pharosIP), indoorMRPatrolServerPort);
 			wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
 			wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
 
@@ -242,15 +270,6 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 			e.printStackTrace();
 		}
 		return false;
-	}
-	
-	/**
-	 * Loads the settings of the indoor multi-robot patrol application.
-	 * 
-	 * @param loadMsg The message containing the application settings.
-	 */
-	private void loadSettings(LoadExpSettingsMsg loadMsg) {
-		// TODO
 	}
 	
 	/**
@@ -284,7 +303,9 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 			setSystemTime(((SetTimeMsg)msg).getTime());
 			break;
 		case LOAD_SETTINGS:
-			loadSettings((LoadExpSettingsMsg)msg);
+			// Simply save the message.  This message will be used
+			// when the start experiment message arrives.
+			this.loadSettingsMsg = (LoadExpSettingsMsg)msg;  
 			break;
 		case RESET:
 			reset();
@@ -324,19 +345,11 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		
 		switch(startExpMsg.getExpType()) {
 			case UNCOORDINATED:
-				Logger.log("Starting uncoordinated patrol...");
-				
-				// TODO
-				
-//				NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-//						gpsDataBuffer);
-//				Scooter scooter = new Scooter(motionArbiter);
-//				MotionScriptFollower wpFollower = new MotionScriptFollower(navigatorGPS, scooter, 
-//						wifiBeaconBroadcaster, telosRadioSignalMeter);
-//				wpFollower.start(gpsMotionScript, this);
+				Logger.log("Patrol type: uncoordinated");
+				new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, startExpMsg.getNumRounds());
 				break;
 			case LOOSELY:
-				Logger.log("Starting loosely coordinated patrol...");
+				Logger.log("Patrol type: loosely");
 				
 				// TODO
 				
@@ -344,11 +357,11 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 //				navigatorRel.start();
 				break;
 			case LABELED:
-				Logger.log("Starting labeled context coordinated patrol...");
+				Logger.log("Patrol type: labeled");
 				// TODO
 				break;
 			case BLOOMIER:
-				Logger.log("Starting bloomier filter compressed context coordinated patrol.");
+				Logger.log("Patrol type: bloomier");
 				
 				// TODO
 				break;
