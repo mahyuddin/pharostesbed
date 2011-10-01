@@ -106,6 +106,17 @@ public class RobotIPAssignments implements java.io.Serializable {
 	}
 	
 	/**
+	 * Returns the name of the robot based on its IP address.
+	 * 
+	 * @param address The robot's IP address.
+	 * @return The name of the robot.
+	 * @throws PharosException  if the robot's address cannot be found
+	 */
+	public static String getName(InetAddress address) throws PharosException {
+		return getName(getID(address));
+	}
+	
+	/**
 	 * Returns the robot's name given its ID.
 	 * 
 	 * @param id The id of the robot, which is the last octal of the robot's IP address
