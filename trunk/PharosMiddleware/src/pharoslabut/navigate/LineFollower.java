@@ -156,7 +156,7 @@ public class LineFollower implements Runnable {
 			
 			Logger.logDbg("Joining thread...");
 			try {
-				lineFollowerThread.join();
+				lineFollowerThread.join(2000); // wait at most 2 seconds for thread to terminate
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
