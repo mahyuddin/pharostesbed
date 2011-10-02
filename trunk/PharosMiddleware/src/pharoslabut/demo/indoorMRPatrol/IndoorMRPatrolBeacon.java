@@ -19,6 +19,12 @@ public class IndoorMRPatrolBeacon extends WiFiBeacon {
 	private int numMarkersTraversed;
 	
 	/**
+	 * Default constructor.
+	 */
+	public IndoorMRPatrolBeacon() {	
+	}
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param address
@@ -52,7 +58,7 @@ public class IndoorMRPatrolBeacon extends WiFiBeacon {
 	public String toString() {
 		StringBuffer sBuff = new StringBuffer("(");
 		sBuff.append(getAddress().getHostAddress() + ":" + getPort() 
-				+ "," + getSeqNum() + ", " + numMarkersTraversed + ")");
+				+ ", " + getSeqNum() + ", " + numMarkersTraversed + ")");
 		return sBuff.toString();
 	}	
 }
