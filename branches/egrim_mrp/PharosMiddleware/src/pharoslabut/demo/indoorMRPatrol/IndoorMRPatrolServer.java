@@ -381,7 +381,9 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		// Start the individual components
 //		if (compassDataBuffer != null)			compassDataBuffer.start();
 		
+		pathLocalizer.start();
         ContextHandler contextHandler = ContextHandler.getInstance();
+        
         ExpType expType = startExpMsg.getExpType();
 
         switch (expType) {

@@ -81,7 +81,7 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
                     teamState.notifyAll();
                 }
             } catch (PharosException e) {
-                Logger.logErr("While processing beacon, unable to determine robot's name based on its id (" 
+                Logger.logErr("While processing context, unable to determine robot's name based on its id ("
                         + summary.getId() + ")");
                 e.printStackTrace();
             }
@@ -172,9 +172,9 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
                     Logger.log("Checking if all teammates are loosely synced.");
                     if (!isTeamSynced()) {
                         Logger.log("Team not synced, waiting at this marker until team is synced.");
-                        lineFollower.stop();
+                        lineFollower.pause();
                         waitTillLooselySynced();
-                        lineFollower.start();
+                        lineFollower.unpause();
                     } else {
                         Logger.log("Team synched, continuing.");
                     }

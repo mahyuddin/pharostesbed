@@ -85,6 +85,8 @@ public class LineFollower implements Runnable {
 	private double pan = 0;
 	private double panOld = 0;
 	
+	private boolean paused = false;
+	
 	/**
 	 * A reference to the thread performing the line following task.  It is null initially, but
 	 * is assigned a value when start() is called.
@@ -165,6 +167,19 @@ public class LineFollower implements Runnable {
 			Logger.logDbg("Thread stopped.");
 		} else
 			Logger.log("WARNING: already stopped.");
+	}
+	
+	/**
+	 * Sets the speed to be zero, but keeps the line follower running.
+	 */
+	public void pause() {
+		Logger.log("Pausing...");
+		paused = true;	
+	}
+	
+	public void unpause() {
+		Logger.log("Resuming...");
+		paused = false;
 	}
 	
 //	/**
@@ -407,6 +422,11 @@ public class LineFollower implements Runnable {
 			if (System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
 				Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
 				speed = angle = pan = 0;
+			}
+			
+			if (paused) {
+				Logger.log("LineFollower is paused, setting speed to zero but leaving the angle and pan alone.");
+				speed = 0;
 			}
 			
 			Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);

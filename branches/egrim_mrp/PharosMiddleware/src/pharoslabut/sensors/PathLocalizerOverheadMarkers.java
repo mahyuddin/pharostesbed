@@ -62,7 +62,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	/**
 	 * Records the number of overhead markers seen by the robot.
 	 */
-	private int numOverheadMarkers = 0;
+	private volatile int numOverheadMarkers = 0;
 	
 	/**
 	 * The total distance traveled by the robot in meters.
@@ -100,6 +100,11 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	 */
 	private double minDist = -1;
 	
+	/**
+	 * Whether this component has been started.
+	 */
+	private boolean started = false;
+	
 	/** 
 	 * Listeners of path localizer events.
 	 */
@@ -132,6 +137,16 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	}
 	
 	/**
+	 * Start this running.  Prior to calling this, be sure to initialize
+	 * all aspects of this class, like the minimum marker distance.
+	 */
+	public void start() {
+		Logger.log("Resetting the timestamp of the last marker.");
+		lastMarkerTimestamp = System.currentTimeMillis();
+		this.started = true;
+	}
+
+	/**
 	 * Sets the minimum marker distance. Anything marker detection event that occurs prior
 	 * to the robot traveling this distance will be considered a false detection.
 	 * 
@@ -160,8 +175,11 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	/**
 	 * This processes the raw range data from the IR sensor used to detect the overhead markers.
 	 */
-	private void processRangeData(double range) {
-		Logger.log("current range measurement: " + range);
+	private synchronized void processRangeData(double range) {
+		long currTime = System.currentTimeMillis();
+		long deltaTime = currTime - lastMarkerTimestamp;
+		
+		Logger.log("current range measurement: " + range + " dist = " + distSinceMarker + " delta time = " + deltaTime);
 		
 		if (range > THRESHOLD_NONEXIST_MARKER) {
 			// We may no longer be under the overhead marker.
@@ -186,23 +204,21 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 			}
 		} else if (range < THRESHOLD_EXIST_MARKER) {
 			// We may be under a marker
-			
-			// First verify that we've traveled the minimum distance between markers
-			if (minDist != -1 && distSinceMarker < minDist) {
-				Logger.log("Detected a marker but did not reach minimum distance (" + distSinceMarker + " < " + minDist + ").  Assuming it was a false detection.");
-			} else {
-				countNoMarker = 0; // reset the "no marker" counter
 
-				if (currState == IRPathLocalizerState.NO_MARKER) {
+			countNoMarker = 0; // reset the "no marker" counter
 
+			if (currState == IRPathLocalizerState.NO_MARKER) {
+
+				// First verify that we've traveled the minimum distance between markers
+				if (minDist != -1 && distSinceMarker < minDist) {
+					Logger.log("FALSE MARKER DETECTION: minimum distance not reached (" + distSinceMarker + " < " + minDist + ")");
+				} else {
 					if (++countMarker >= THRESHOLD_MARKER) {
-						// Conclude that we are under a mark
+						// Conclude that we are under a marker
 						currState = IRPathLocalizerState.MARKER;
 						numOverheadMarkers++;
 
 						// Calculate the time since the last marker.
-						long currTime = System.currentTimeMillis();
-						long deltaTime = currTime - lastMarkerTimestamp;
 						lastMarkerTimestamp = currTime;
 
 						Logger.log("MARKER DETECTED, Total: " + numOverheadMarkers 
@@ -219,9 +235,9 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 								gui.setText(numOverheadMarkers + " Markers");
 						}
 					}
-				} else {
-					// duplicate event.  Ignore it.  Maybe print a debug statement to know we're here
 				}
+			} else {
+				// duplicate marker event.  Ignore it.  Maybe print a debug statement to know we're here
 			}
 		} else {
 			countMarker = 0;
@@ -246,18 +262,19 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 
 	@Override
 	public void newRangerData(PlayerRangerData rangeData) {
-		int numSensors = rangeData.getRanges_count();
-    	if (numSensors >= 6) {
-    		double[] data = rangeData.getRanges();
-    		double range = calibrateShortRangeIR(data[5]);
-    		
-    		Logger.log("Raw ADC = " + data[5] + ", Calibrated Dist = " + range + " mm");
-    		processRangeData(range);
-    		
-    	} else {
-    		Logger.logErr("Expected at least 6 sensors, instead got " + numSensors);
-    	}
-		
+		if (started) {
+			int numSensors = rangeData.getRanges_count();
+			if (numSensors >= 6) {
+				double[] data = rangeData.getRanges();
+				double range = calibrateShortRangeIR(data[5]);
+
+				Logger.log("Raw ADC = " + data[5] + ", Calibrated Dist = " + range + " mm");
+				processRangeData(range);
+
+			} else {
+				Logger.logErr("Expected at least 6 sensors, instead got " + numSensors);
+			}
+		}
 	}
 	
 	@Override

@@ -206,22 +206,31 @@ public class WiFiBeaconReceiver implements Runnable {
                 ObjectInputStream ois = new ObjectInputStream(
                     new ByteArrayInputStream(packet.getData()));
                 
-                Object value = ois.readObject();
-                
-                // check the object type and perform required actions
-                if (value instanceof WiFiBeacon)
-                    distributeBeacon((WiFiBeacon) value);
+               
+               	Object value = ois.readObject();
+
+               	// check the object type and perform required actions
+               	if (value instanceof WiFiBeacon)
+               		distributeBeacon((WiFiBeacon) value);
             }
         } catch(IOException ioe) {
 //            if (mSocket != null && !mSocket.isClosed())
 //                ioe.printStackTrace();
+        	Logger.logErr("IOException when receiving beacon: " + ioe);
         }
         catch (ClassNotFoundException cnfe) {
 //			if (mSocket != null && !mSocket.isClosed())
                 cnfe.printStackTrace();
+                
+                Logger.logErr("ClassNotFoundException when receiving beacon: " + cnfe);
+        }
+        catch(RuntimeException rte) {
+        	Logger.logErr("RuntimeException when receiving beacon: " + rte);
+        	rte.printStackTrace();
         }
         finally {
             try {
+            	Logger.logDbg("Closing the multicast socket.");
                 mSocket.close();
             }catch(Exception oie) {}
         }

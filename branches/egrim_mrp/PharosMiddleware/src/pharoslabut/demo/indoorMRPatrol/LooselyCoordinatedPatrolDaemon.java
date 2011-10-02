@@ -73,10 +73,10 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 			RobotExpSettings currRobot = team.get(i);
 			
 			// Do not put self in world view.
-			if (!currRobot.getName().equals(robotName)) {
+			if (!currRobot.getName().toUpperCase().equals(robotName)) {
 				Logger.logDbg("Adding robot " + currRobot.getName() + " to world view.");
-				teamState.put(currRobot.getName(), 
-					new RobotState(currRobot.getName(), currRobot.getIP(), currRobot.getStartingLoc()));
+				teamState.put(currRobot.getName().toUpperCase(), 
+					new RobotState(currRobot.getName().toUpperCase(), currRobot.getIP(), currRobot.getStartingLoc()));
 			}
 		}
 		
@@ -95,18 +95,27 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
 		IndoorMRPatrolBeacon beacon = (IndoorMRPatrolBeacon)be.getBeacon();
+		
+		
 		try {
-			String robotName = RobotIPAssignments.getName(beacon.getAddress());
-			Logger.logDbg("Received beacon from " + robotName);
-			
-			RobotState robotState = teamState.get(robotName);
-			robotState.setLastHeardTimeStamp();
-			robotState.setNumMarkersTraversed(beacon.getNumMarkersTraversed());
-			
-			// Since the world view has changed, notify all threads waiting on this change
-			Logger.logDbg("Notifying all threads waiting on team state changes.");
-			synchronized(teamState) {
-				teamState.notifyAll();
+			if (beacon.getSenderID() == RobotIPAssignments.getID()) {
+				Logger.log("Ignoring my own beacon.");
+			} else {
+				String robotName = RobotIPAssignments.getName(beacon.getAddress());
+				Logger.logDbg("Received beacon from " + robotName);
+
+				RobotState robotState = teamState.get(robotName.toUpperCase());
+				if (robotState == null) {
+					Logger.logErr("Could not find neighbor: " + robotName.toUpperCase());
+				} else {
+					robotState.setLastHeardTimeStamp();
+					robotState.setNumMarkersTraversed(beacon.getNumMarkersTraversed());
+				}
+				// Since the world view has changed, notify all threads waiting on this change
+				Logger.logDbg("Notifying all threads waiting on team state changes.");
+				synchronized(teamState) {
+					teamState.notifyAll();
+				}
 			}
 		} catch (PharosException e) {
 			Logger.logErr("While processing beacon, unable to determine robot's name based on its IP address (" 
@@ -200,9 +209,9 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 					Logger.log("Checking if all teammates are loosely synced.");
 					if (!isTeamSynced()) {
 						Logger.log("Team not synced, waiting at this marker until team is synced.");
-						lineFollower.stop();
+						lineFollower.pause();
 						waitTillLooselySynced();
-						lineFollower.start();
+						lineFollower.unpause();
 					} else {
 						Logger.log("Team synched, continuing.");
 					}
