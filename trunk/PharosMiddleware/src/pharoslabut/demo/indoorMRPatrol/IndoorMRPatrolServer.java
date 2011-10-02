@@ -349,6 +349,8 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		// Start the individual components
 //		if (compassDataBuffer != null)			compassDataBuffer.start();
 		
+		pathLocalizer.start();
+		
 		switch(startExpMsg.getExpType()) {
 			case UNCOORDINATED:
 				Logger.log("Patrol type: uncoordinated");
