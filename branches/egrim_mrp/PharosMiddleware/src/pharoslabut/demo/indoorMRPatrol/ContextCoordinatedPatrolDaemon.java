@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Vector;
 
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
@@ -41,13 +42,29 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
         super(settings, numRounds, lineFollower, pathLocalizer);
         handler.addPostReceiveSummariesUpdateObserver(this);
 
+        String robotName = null;
         // Construct context summary
         try {
+            robotName = pharoslabut.RobotIPAssignments.getName();
             myContext = new HashMapContextSummary(RobotIPAssignments.getID());
         } catch (PharosException e) {
             e.printStackTrace();
-            Logger.logErr("Unable to get robot id.");
+            Logger.logErr("Unable to get robot information.");
             System.exit(1);
+        }
+
+        Logger.log("Creating this robot's world view.");
+        Vector<RobotExpSettings> team = settings.getTeam();
+        for (int i = 0; i < team.size(); i++) {
+            RobotExpSettings currRobot = team.get(i);
+
+            // Do not put self in world view.
+            if (!currRobot.getName().toUpperCase().equals(robotName)) {
+                Logger.logDbg("Adding robot " + currRobot.getName() + " to world view.");
+                teamState.put(currRobot.getName().toUpperCase(),
+                              new RobotState(currRobot.getName().toUpperCase(), currRobot.getIP(),
+                                             currRobot.getStartingLoc()));
+            }
         }
 
         Logger.log("Starting the beaconing.");
@@ -71,10 +88,13 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
                 String robotName = RobotIPAssignments.getName(summary.getId());
                 Logger.logDbg("Received summary from " + robotName);
                 
-                RobotState robotState = teamState.get(robotName);
-                robotState.setLastHeardTimeStamp();
-                robotState.setNumMarkersTraversed(summary.get(NUM_MARKERS_TRAVERSED));
-
+                RobotState robotState = teamState.get(robotName.toUpperCase());
+                if (robotState == null) {
+                    Logger.logErr("Could not find neighbor: " + robotName.toUpperCase());
+                } else {
+                    robotState.setLastHeardTimeStamp();
+                    robotState.setNumMarkersTraversed(summary.get(NUM_MARKERS_TRAVERSED));
+                }
                 // Since we've gotten an update, notify all threads waiting on this change
                 Logger.logDbg("Notifying all threads waiting on team state changes.");
                 synchronized (teamState) {
