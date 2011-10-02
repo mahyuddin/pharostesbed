@@ -31,6 +31,12 @@ public class WiFiBeacon implements java.io.Serializable {
      */
     private long seqNum = 0;
 	
+    /**
+     * A default constructor for allowing subclasses to be serializable.
+     */
+    public WiFiBeacon() {	
+    }
+    
 	/**
 	 * Default constructor for the beacon.
 	 * 
