@@ -1,9 +1,15 @@
 package pharoslabut.beacon;
 
-import java.net.*;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
 
 import pharoslabut.logger.Logger;
+import edu.utexas.ece.mpc.context.net.ContextShimmedMulticastSocket;
 
 /**
  * Periodically broadcasts WiFi beacons.  It is used in conjunction
@@ -20,7 +26,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     private InetAddress mCastAddr;
     private int mCastPort;
     private MulticastSocket mSocket = null;    
-    
+
     /**
      * Creates a BeaconBroadcaster.  Note that it does not automatically start beaconing.
      * To start beaconing, call the start() method.
@@ -31,6 +37,25 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
      * @param beacon the initial beacon to broadcast.
      */
     public WiFiBeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, WiFiBeacon beacon) {
+        this(mCastAddr, interfaceIPAddr, mCastPort, beacon, false);
+    }
+
+    /**
+     * Creates a BeaconBroadcaster. Note that it does not automatically start beaconing. To start beaconing, call the
+     * start() method.
+     * 
+     * @param mCastAddr
+     *            the multicast group address to use.
+     * @param interfaceIPAddr
+     *            The IP address of the local interface on which to broadcast beacons.
+     * @param mCastPort
+     *            the multicast port to use.
+     * @param beacon
+     *            the initial beacon to broadcast.
+     * @param shimContext
+     *            use a context shim
+     */
+    public WiFiBeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort, WiFiBeacon beacon, boolean shimContext) {
     	
         this.mCastAddr = mCastAddr;
         this.mCastPort = mCastPort;
@@ -38,7 +63,11 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
         
         try{
         	InetSocketAddress ina = new InetSocketAddress(interfaceIPAddr, mCastPort);
-            mSocket = new MulticastSocket(ina);
+            if (shimContext) {
+                mSocket = new ContextShimmedMulticastSocket(ina);
+            } else {
+                mSocket = new MulticastSocket(ina);
+            }
         } catch(IOException ioe) {
         	System.err.println("Error creating multicast socket for broadcasting beacons!");
             ioe.printStackTrace();
