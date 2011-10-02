@@ -23,7 +23,7 @@ public class UncoordinatedPatrolDaemon extends PatrolDaemon implements Runnable 
 	public UncoordinatedPatrolDaemon(LoadExpSettingsMsg settings, LineFollower lineFollower, 
 			PathLocalizerOverheadMarkers pathLocalizer, int numRounds) 
 	{
-		super(settings.getNumMarkers(), numRounds, lineFollower, pathLocalizer);
+		super(settings, numRounds, lineFollower, pathLocalizer);
 		new Thread(this).start();
 	}
 	
