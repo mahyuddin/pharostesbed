@@ -38,7 +38,7 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
     public ContextCoordinatedPatrolDaemon(LoadExpSettingsMsg settings, LineFollower lineFollower,
                                           PathLocalizerOverheadMarkers pathLocalizer,
                                           int numRounds, WiFiBeaconBroadcaster wifiBeaconBroadcaster) {
-        super(settings.getNumMarkers(), numRounds, lineFollower, pathLocalizer);
+        super(settings, numRounds, lineFollower, pathLocalizer);
         handler.addPostReceiveSummariesUpdateObserver(this);
 
         // Construct context summary

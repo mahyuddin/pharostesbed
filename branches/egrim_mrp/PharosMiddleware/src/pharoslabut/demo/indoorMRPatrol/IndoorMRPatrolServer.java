@@ -338,6 +338,12 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 			// Simply save the message.  This message will be used
 			// when the start experiment message arrives.
 			this.loadSettingsMsg = (LoadExpSettingsMsg)msg;  
+			
+			// Calculate the minimum marker distance, which is a percentage of the
+			// specified marker distance.
+			double minMarkerDist = loadSettingsMsg.getMarkerDist() * 0.80;
+			Logger.log("Settings the minimum marker distance to be " + minMarkerDist);
+			pathLocalizer.setMinMarkerDist(minMarkerDist);
 			break;
 		case RESET:
 			reset();

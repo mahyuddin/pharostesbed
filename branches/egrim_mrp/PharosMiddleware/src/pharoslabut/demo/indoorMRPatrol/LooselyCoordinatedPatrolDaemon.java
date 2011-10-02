@@ -52,7 +52,7 @@ public class LooselyCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 			PathLocalizerOverheadMarkers pathLocalizer, int numRounds,
 			WiFiBeaconBroadcaster wifiBeaconBroadcaster, WiFiBeaconReceiver wifiBeaconReceiver) 
 	{
-		super(settings.getNumMarkers(), numRounds, lineFollower, pathLocalizer);
+		super(settings, numRounds, lineFollower, pathLocalizer);
 		this.wifiBeaconBroadcaster = wifiBeaconBroadcaster;
 		wifiBeaconReceiver.addBeaconListener(this);
 		
