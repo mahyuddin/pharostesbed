@@ -1,11 +1,18 @@
 package pharoslabut.beacon;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.DatagramPacket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.MulticastSocket;
+import java.net.NetworkInterface;
+import java.util.Vector;
 
 import pharoslabut.exceptions.PharosException;
-import pharoslabut.logger.*;
+import pharoslabut.logger.Logger;
+import edu.utexas.ece.mpc.context.net.ContextShimmedMulticastSocket;
 
 /**
  * This receives WiFi beacons. When a WiFi beacon is received, each of the WiFiBeaconListeners are
@@ -47,6 +54,8 @@ public class WiFiBeaconReceiver implements Runnable {
     
     private String networkInterfaceName;
     
+    private boolean shimContext = false;
+
 //    private FileLogger flogger;
     
     /**
@@ -64,16 +73,22 @@ public class WiFiBeaconReceiver implements Runnable {
      * chipset.
      */
     public WiFiBeaconReceiver(String mcastGroupAddress, int mcastport, String networkInterfaceName) {
-        this.mcastGroupAddress = mcastGroupAddress;
-        this.mcastport = mcastport;
-        this.networkInterfaceName = networkInterfaceName;
-        bListeners = new Vector<WiFiBeaconListener>();
+        this(mcastGroupAddress, mcastport, networkInterfaceName, false);
     }
     
 //    public void setFileLogger(FileLogger flogger) {
 //    	this.flogger = flogger;
 //    }
     
+    public WiFiBeaconReceiver(String mcastGroupAddress, int mcastport, String networkInterfaceName,
+                              boolean shimContext) {
+        this.mcastGroupAddress = mcastGroupAddress;
+        this.mcastport = mcastport;
+        this.networkInterfaceName = networkInterfaceName;
+        this.shimContext = shimContext;
+        bListeners = new Vector<WiFiBeaconListener>();
+    }
+
     /**
      * Adds a beaconListener to this server.  The beacon listener
      * will be notified each time a beacon is received.
@@ -118,7 +133,11 @@ public class WiFiBeaconReceiver implements Runnable {
         if (bThread == null) {
             try{
             	ni = NetworkInterface.getByName(networkInterfaceName);
-                mSocket = new MulticastSocket(mcastport);
+                if (shimContext) {
+                    mSocket = new ContextShimmedMulticastSocket(mcastport);
+                } else {
+                    mSocket = new MulticastSocket(mcastport);
+                }
                 InetAddress group = InetAddress.getByName(mcastGroupAddress);
                 socketAddr = new InetSocketAddress(group, mcastport);
                 mSocket.joinGroup(socketAddr, ni);

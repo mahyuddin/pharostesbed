@@ -1,10 +1,19 @@
 package pharoslabut.demo.indoorMRPatrol;
 
-import java.net.*;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.*;
+import pharoslabut.beacon.WiFiBeacon;
+import pharoslabut.beacon.WiFiBeaconBroadcaster;
+import pharoslabut.beacon.WiFiBeaconEvent;
+import pharoslabut.beacon.WiFiBeaconListener;
+import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.exceptions.PharosException;
+import pharoslabut.io.Message;
+import pharoslabut.io.MessageReceiver;
+import pharoslabut.io.SetTimeMsg;
+import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
@@ -15,10 +24,13 @@ import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.sensors.RangerDataBuffer;
-import pharoslabut.io.*;
-
-import playerclient3.*;
+import playerclient3.PlayerClient;
+import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
+import playerclient3.RangerInterface;
 import playerclient3.structures.PlayerConstants;
+import edu.utexas.ece.mpc.context.ContextHandler;
+import edu.utexas.ece.mpc.context.ContextHandler.WireSummaryType;
 
 /**
  * This should run on each robot.  It handles the execution of the indoor multi-robot patrol
@@ -143,14 +155,8 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 			Logger.logErr("Failed to connect to Player server!");
 			System.exit(1);
 		}
-		
-		if (System.getProperty ("PharosMiddleware.disableWiFiBeacons") == null) {
-			if (!initWiFiBeacons()) {
-				Logger.logErr("Failed to initialize the WiFi beaconer!");
-				System.exit(1);
-			}
-		} else
-			Logger.log("WiFi beacons disabled.");
+
+        // initWifi delayed until experiment type is known
 	}
 	
 	/**
@@ -218,12 +224,14 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		return true;
 	}
 	
-	/**
-	 * Initializes the components that transmit and receive beacons.
-	 * 
-	 * @return true if successful.
-	 */
-	private boolean initWiFiBeacons() {
+	    /**
+     * Initializes the components that transmit and receive beacons.
+     * 
+     * @param expType
+     * 
+     * @return true if successful.
+     */
+    private boolean initWiFiBeacons(ExpType expType) {
     	// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
 		try {
@@ -258,9 +266,33 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		}
 		
 		try {
-			IndoorMRPatrolBeacon beacon = new IndoorMRPatrolBeacon(InetAddress.getByName(pharosIP), indoorMRPatrolServerPort);
-			wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
-			wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort, beacon);
+            WiFiBeacon beacon = null;
+            switch (expType) {
+                case LOOSELY:
+                    beacon = new IndoorMRPatrolBeacon(InetAddress.getByName(pharosIP),
+                                                      indoorMRPatrolServerPort);
+
+                    wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
+                    wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP,
+                                                                      mCastPort, beacon);
+
+                    break;
+                case LABELED:
+                case BLOOMIER:
+                    beacon = new WiFiBeacon(InetAddress.getByName(pharosIP),
+                                            indoorMRPatrolServerPort);
+                    wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI,
+                                                                true);
+                    wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP,
+                                                                      mCastPort, beacon, true);
+
+                    break;
+                default:
+                    Logger.logErr("Could not initialize beacon - unknown experiment type: "
+                                  + expType);
+                    return false;
+            }
+
 
 			// Start receiving beacons
 			wifiBeaconReceiver.start();
@@ -350,8 +382,11 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 //		if (compassDataBuffer != null)			compassDataBuffer.start();
 		
 		pathLocalizer.start();
-		
-		switch(startExpMsg.getExpType()) {
+        
+        ContextHandler contextHandler = ContextHandler.getInstance();
+        ExpType expType = startExpMsg.getExpType();
+
+        switch (expType) {
 			case UNCOORDINATED:
 				Logger.log("Patrol type: uncoordinated");
 				new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
@@ -359,20 +394,38 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 				break;
 			case LOOSELY:
 				Logger.log("Patrol type: loosely");
+
+                if (!initWiFiBeacons(startExpMsg.getExpType())) {
+                    Logger.logErr("Beacon initialization failed, exiting!");
+                    System.exit(1);
+                }
 				
 				new LooselyCoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
 						startExpMsg.getNumRounds(), wifiBeaconBroadcaster, wifiBeaconReceiver);
 				
 				break;
 			case LABELED:
+            case BLOOMIER:
 				Logger.log("Patrol type: labeled");
-				// TODO
-				break;
-			case BLOOMIER:
-				Logger.log("Patrol type: bloomier");
-				
-				// TODO
-				break;
+
+                if (expType == ExpType.LABELED) {
+                    contextHandler.setWireSummaryType(WireSummaryType.LABELED);
+                } else {
+                    contextHandler.setWireSummaryType(WireSummaryType.BLOOMIER);
+                }
+
+                contextHandler.setLoggerDelegate(new PharosLoggingDelegate());
+
+                if (!initWiFiBeacons(startExpMsg.getExpType())) {
+                    Logger.logErr("Beacon initialization failed, exiting!");
+                    System.exit(1);
+                }
+
+                new ContextCoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer,
+                                                   startExpMsg.getNumRounds(),
+                                                   wifiBeaconBroadcaster);
+
+                break;
 		}
 		
 	}

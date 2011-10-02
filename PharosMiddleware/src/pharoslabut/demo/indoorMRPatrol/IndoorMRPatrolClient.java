@@ -1,7 +1,6 @@
 package pharoslabut.demo.indoorMRPatrol;
 
 import java.util.Iterator;
-import java.util.Vector;
 
 import pharoslabut.io.SetTimeMsg;
 import pharoslabut.io.TCPMessageSender;
