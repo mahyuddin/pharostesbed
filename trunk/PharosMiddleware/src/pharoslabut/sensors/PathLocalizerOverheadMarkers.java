@@ -16,7 +16,7 @@ import playerclient3.structures.ranger.PlayerRangerData;
  *
  */
 public class PathLocalizerOverheadMarkers implements RangerListener, Position2DListener {
-
+	
 	/**
 	 * Defines the possible states that the client manager can be in.
 	 */
@@ -86,9 +86,19 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	private SimpleTextGUI gui = null;
 	
 	/**
-	 * Recalls the distance since the last marker.
+	 * The distance since the last marker in millimeters
 	 */
 	private double distSinceMarker = 0;
+	
+	/**
+	 * The time since the last marker was detected.
+	 */
+	private long lastMarkerTimestamp = System.currentTimeMillis();
+	
+	/**
+	 * The minimum distance between markers.
+	 */
+	private double minDist = -1;
 	
 	/** 
 	 * Listeners of path localizer events.
@@ -119,6 +129,17 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 		pos2DBuffer.addPos2DListener(this);
 		if (showGUI)
 			gui = new SimpleTextGUI("Overhead Marker Detector.");
+	}
+	
+	/**
+	 * Sets the minimum marker distance. Anything marker detection event that occurs prior
+	 * to the robot traveling this distance will be considered a false detection.
+	 * 
+	 * @param minDist The minimum distance between markers.
+	 */
+	public void setMinMarkerDist(double minDist) {
+		Logger.log("Minimum marker distance set to be " + minDist + " meters.");
+		this.minDist = minDist;
 	}
 	
 	/**
@@ -166,29 +187,41 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 		} else if (range < THRESHOLD_EXIST_MARKER) {
 			// We may be under a marker
 			
-			countNoMarker = 0; // reset the "no marker" counter
-			
-			if (currState == IRPathLocalizerState.NO_MARKER) {
-				
-				if (++countMarker >= THRESHOLD_MARKER) {
-					// Conclude that we are under a mark
-					currState = IRPathLocalizerState.MARKER;
-					numOverheadMarkers++;
-					Logger.log("STATUS CHANGE: MARKER, Total seen: " + numOverheadMarkers + ", dist since last marker: " + distSinceMarker + " mm (" + (distSinceMarker * 0.0393700787) + " in)");
-					
-					distSinceMarker = 0;
-					
-					notifyListeners();
-					
-					if (gui != null) {
-						if (numOverheadMarkers == 1)
-							gui.setText(numOverheadMarkers + " Marker");
-						else
-							gui.setText(numOverheadMarkers + " Markers");
-					}
-				}
+			// First verify that we've traveled the minimum distance between markers
+			if (minDist != -1 && distSinceMarker < minDist) {
+				Logger.log("Detected a marker but did not reach minimum distance (" + distSinceMarker + " < " + minDist + ").  Assuming it was a false detection.");
 			} else {
-				// duplicate event.  Ignore it.  Maybe print a debug statement to know we're here
+				countNoMarker = 0; // reset the "no marker" counter
+
+				if (currState == IRPathLocalizerState.NO_MARKER) {
+
+					if (++countMarker >= THRESHOLD_MARKER) {
+						// Conclude that we are under a mark
+						currState = IRPathLocalizerState.MARKER;
+						numOverheadMarkers++;
+
+						// Calculate the time since the last marker.
+						long currTime = System.currentTimeMillis();
+						long deltaTime = currTime - lastMarkerTimestamp;
+						lastMarkerTimestamp = currTime;
+
+						Logger.log("MARKER DETECTED, Total: " + numOverheadMarkers 
+								+ ", dist since last (m): " + distSinceMarker + " (" + (distSinceMarker * 39.3700787) + " in)"
+								+ ", time since last (ms): " + deltaTime);
+
+						distSinceMarker = 0;
+						notifyListeners();
+
+						if (gui != null) {
+							if (numOverheadMarkers == 1)
+								gui.setText(numOverheadMarkers + " Marker");
+							else
+								gui.setText(numOverheadMarkers + " Markers");
+						}
+					}
+				} else {
+					// duplicate event.  Ignore it.  Maybe print a debug statement to know we're here
+				}
 			}
 		} else {
 			countMarker = 0;
@@ -230,6 +263,6 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) {
 		Logger.log("New Odometry data: " + data.getPos().getPx());
-		distSinceMarker += data.getPos().getPx();
+		distSinceMarker += data.getPos().getPx() / 1000.0;  // Store distance in meters. 
 	}
 }

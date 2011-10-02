@@ -1,5 +1,7 @@
 package pharoslabut.demo.indoorMRPatrol;
 
+import java.util.Vector;
+
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
@@ -47,27 +49,35 @@ public abstract class PatrolDaemon implements PathLocalizerOverheadMarkersListen
 	protected PathLocalizerOverheadMarkers pathLocalizer;
 	
 	/**
+	 * The starting marker.
+	 */
+	int startingMarkerID;
+	
+	/**
 	 * The constructor.
 	 * 
-	 * @param numMarkersPerRound The number of markers on the patrol route.
+	 * @param settings The experiment settings.
 	 * @param numRounds The number of rounds to patrol.
 	 * @param lineFollower The line follower.
 	 * @param pathLocalizer The path localizer.
 	 */
-	public PatrolDaemon(int numMarkersPerRound, int numRounds, LineFollower lineFollower,
+	public PatrolDaemon(LoadExpSettingsMsg settings, int numRounds, LineFollower lineFollower,
 			PathLocalizerOverheadMarkers pathLocalizer) 
 	{
-		this.numMarkersPerRound = numMarkersPerRound;
+		this.numMarkersPerRound = settings.getNumMarkers();
 		this.numRounds = numRounds;
 		this.lineFollower = lineFollower;
 		this.pathLocalizer = pathLocalizer;
-		
+		this.startingMarkerID = (int)(settings.getMySettings().getStartingLoc() / settings.getMarkerDist());
 		pathLocalizer.addListener(this);
 	}
 	
+	/**
+	 * This is called whenever a marker is detected.
+	 */
 	@Override
 	public void markerEvent(int numMarkers) {
-		Logger.log("MARKER DETECTED: Total = " + numMarkers);
+		Logger.log("MARKER DETECTED: Total = " + numMarkers + ", At marker " + (startingMarkerID + numMarkers) % numMarkersPerRound);
 		synchronized(this) {
 			this.numMarkersSeen = numMarkers;
 			this.numMarkersSeenUpdated = true;

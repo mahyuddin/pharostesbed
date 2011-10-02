@@ -1,6 +1,9 @@
 package pharoslabut.demo.indoorMRPatrol;
 
+import pharoslabut.RobotIPAssignments;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
+import pharoslabut.logger.Logger;
 
 import java.util.*;
 
@@ -68,6 +71,29 @@ public class LoadExpSettingsMsg implements Message {
 	 */
 	public Vector<RobotExpSettings> getTeam() {
 		return team;
+	}
+	
+	/**
+	 * 
+	 * @return The local robot's settings.
+	 */
+	public RobotExpSettings getMySettings() {
+		String myName;
+		try {
+			myName = RobotIPAssignments.getName();
+			for (int i=0; i < team.size(); i++) {
+				RobotExpSettings currSettings = team.get(i);
+				if (currSettings.getName().toUpperCase().equals(myName))
+					return currSettings;
+			}
+			Logger.logErr("Unable to find settings for myself ("+ myName + ")!");
+		} catch (PharosException e) {
+			e.printStackTrace();
+			Logger.logErr("Unable to get my own name: " + e.getMessage());
+		}
+	
+		System.exit(1);	
+		return null;
 	}
 	
 	@Override
