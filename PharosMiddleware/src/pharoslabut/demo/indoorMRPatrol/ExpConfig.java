@@ -7,6 +7,8 @@ import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.Vector;
 
+import pharoslabut.logger.Logger;
+
 /**
  * Contains the configuration of a simple multi-robot patrol.
  * 
@@ -98,6 +100,7 @@ public class ExpConfig {
 								System.err.println("Unknown experiment type " + elem[1]);
 								System.exit(1);	
 							}
+							Logger.log("Experiment type: " + expType);
 							
 						} catch(Exception e) {
 							e.printStackTrace();

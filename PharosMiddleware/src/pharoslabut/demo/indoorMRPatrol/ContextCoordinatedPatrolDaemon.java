@@ -26,7 +26,7 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
      */
     public static final long DISCONNECTION_THRESHOLD = 10000;
 
-    private static final String NUM_MARKERS_TRAVERSED = "num markers traversed";
+    private static final String NUM_MARKERS_TRAVERSED = "NUMMRKST"; //"num markers traversed";
     private HashMapContextSummary myContext;
     private ContextHandler handler = ContextHandler.getInstance();
 
@@ -66,6 +66,10 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
                                              currRobot.getStartingLoc()));
             }
         }
+        
+        for (int i=0; i < 1; i++) {
+        	myContext.put("Key" + i, i);
+        }
 
         Logger.log("Starting the beaconing.");
         long minPeriod = 1000;
@@ -90,10 +94,13 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
                 
                 RobotState robotState = teamState.get(robotName.toUpperCase());
                 if (robotState == null) {
-                    Logger.logErr("Could not find neighbor: " + robotName.toUpperCase());
+                	Logger.logErr("Could not find neighbor: " + robotName.toUpperCase());
                 } else {
-                    robotState.setLastHeardTimeStamp();
-                    robotState.setNumMarkersTraversed(summary.get(NUM_MARKERS_TRAVERSED));
+                	Integer numTraversed = summary.get(NUM_MARKERS_TRAVERSED);
+                	if (numTraversed != null) {
+                		robotState.setLastHeardTimeStamp();
+                		robotState.setNumMarkersTraversed(numTraversed);
+                	}
                 }
                 // Since we've gotten an update, notify all threads waiting on this change
                 Logger.logDbg("Notifying all threads waiting on team state changes.");
