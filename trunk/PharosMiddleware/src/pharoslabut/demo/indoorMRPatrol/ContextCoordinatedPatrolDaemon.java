@@ -69,7 +69,7 @@ public class ContextCoordinatedPatrolDaemon extends PatrolDaemon implements Runn
 
         Logger.log("Starting the beaconing.");
         long minPeriod = 1000;
-        long maxPeriod = 15000;
+        long maxPeriod = 1500;
         short txPower = (short) 31;
         wifiBeaconBroadcaster.start(minPeriod, maxPeriod, txPower);
 
