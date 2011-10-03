@@ -268,6 +268,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		try {
             WiFiBeacon beacon = null;
             switch (expType) {
+            	case UNCOORDINATED:
                 case LOOSELY:
                     beacon = new IndoorMRPatrolBeacon(InetAddress.getByName(pharosIP),
                                                       indoorMRPatrolServerPort);
@@ -386,36 +387,36 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
         ContextHandler contextHandler = ContextHandler.getInstance();
         ExpType expType = startExpMsg.getExpType();
 
+        Logger.log("Patrol type: " + expType);
+        
         switch (expType) {
 			case UNCOORDINATED:
-				Logger.log("Patrol type: uncoordinated");
-				new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
-						startExpMsg.getNumRounds());
-				break;
 			case LOOSELY:
-				Logger.log("Patrol type: loosely");
-
                 if (!initWiFiBeacons(startExpMsg.getExpType())) {
                     Logger.logErr("Beacon initialization failed, exiting!");
                     System.exit(1);
                 }
 				
-				new LooselyCoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
-						startExpMsg.getNumRounds(), wifiBeaconBroadcaster, wifiBeaconReceiver);
-				
+                
+                if (expType == ExpType.UNCOORDINATED)
+                	new UncoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
+    						startExpMsg.getNumRounds(), wifiBeaconBroadcaster, wifiBeaconReceiver);
+                else
+                	new LooselyCoordinatedPatrolDaemon(loadSettingsMsg, lineFollower, pathLocalizer, 
+                		startExpMsg.getNumRounds(), wifiBeaconBroadcaster, wifiBeaconReceiver);
 				break;
 			case LABELED:
             case BLOOMIER:
-				Logger.log("Patrol type: labeled");
-
+				
+            	contextHandler.setLoggerDelegate(new PharosLoggingDelegate());
+            	
                 if (expType == ExpType.LABELED) {
                     contextHandler.setWireSummaryType(WireSummaryType.LABELED);
                 } else {
                     contextHandler.setWireSummaryType(WireSummaryType.BLOOMIER);
                 }
 
-                contextHandler.setLoggerDelegate(new PharosLoggingDelegate());
-
+           
                 if (!initWiFiBeacons(startExpMsg.getExpType())) {
                     Logger.logErr("Beacon initialization failed, exiting!");
                     System.exit(1);
