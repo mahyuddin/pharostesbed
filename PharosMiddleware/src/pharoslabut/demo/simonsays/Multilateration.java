@@ -33,7 +33,7 @@ public class Multilateration extends Thread{
 	/**
 	 * the time stamp of the last time {@code saveCurrentLocation()} was called
 	 */
-	private static long lastUpdateTime;
+	private static long lastSaveTime;
 	
 	/**
 	 * The list of previously-saved locations
@@ -56,7 +56,7 @@ public class Multilateration extends Thread{
 	    	
 		Multilateration.currentLocation.setPx(initX);
 		Multilateration.currentLocation.setPy(initY);
-		Multilateration.lastUpdateTime = System.currentTimeMillis();
+		Multilateration.lastSaveTime = System.currentTimeMillis();
 	}
 	
 	
@@ -83,16 +83,17 @@ public class Multilateration extends Thread{
 				// wrap the beaconData map in an ArrayList
 				ArrayList<Entry<String, BeaconReading>> beaconDataList = new ArrayList<Entry<String, BeaconReading>>(beaconData.entrySet());
 				
+				// iterate through each circle in the list
 				for (int i = 0; i < beaconDataList.size() - 1; i++) {
 					BeaconReading circle1 = beaconDataList.get(i).getValue();
 					xCenter1 = circle1.coord.getPx();
 					yCenter1 = circle1.coord.getPy();
 					radius1 = circle1.distance;
 					
-					
+					// iterate through every other circle in the list
 					for (int j = i + 1; j < beaconDataList.size(); j++) {
 						if (i == j) 
-							continue; // i should never equal j
+							continue; // don't compare a circle with itself
 						
 						BeaconReading circle2 = beaconDataList.get(i).getValue();
 						xCenter2 = circle2.coord.getPx();
@@ -212,7 +213,7 @@ public class Multilateration extends Thread{
 	public static synchronized void saveCurrentLocation() {
 		synchronized(savedLocations) {
 			savedLocations.add(currentLocation);		
-			lastUpdateTime = System.currentTimeMillis();
+			lastSaveTime = System.currentTimeMillis();
 		}
 	}
 	
