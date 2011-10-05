@@ -27,6 +27,8 @@ public class CmdExec implements MessageReceiver {
 	private TCPMessageReceiver tcpReceiver = new TCPMessageReceiver(this);
 //	private FileLogger flogger = null;
 	
+//	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
+	
 	private InetAddress destAddr;
 	private int destPort;
 	
@@ -90,6 +92,9 @@ public class CmdExec implements MessageReceiver {
 			return false;
 		}
 		
+//		if (msg instanceof RobotMoveMsg) // movement starts the timer
+//			bdc.startTimer();
+		
 		boolean result = false;
 		
 		// Wait until an ack arrives...
@@ -119,6 +124,9 @@ public class CmdExec implements MessageReceiver {
 			}
 		}
 		
+//		if (result)
+//			bdc.stopTimer();
+			
 		return result;
 	}
 	
@@ -134,9 +142,13 @@ public class CmdExec implements MessageReceiver {
 				
 				// pass new cricket data to Trilateration thread
 				double height = coords.getPz();
-				double radius = Math.sqrt(cd.getDistance() * cd.getDistance() - height * height); // pythagorean theorem to find distance along ground
-				Multilateration.newBeaconReading(cd.getCricketID(), System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
-				Logger.log("Robot is" + cd.getDistance() + "m from (" + coords.getPx() + "," + coords.getPy() + ")" );;
+				double dist = ((double)cd.getDistance())/100;
+				double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
+				
+//				bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+				//Multilateration.newBeaconReading(cd.getCricketID(), System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+				//Logger.log("Robot is " + radius + "m from (" + coords.getPx() + "," + coords.getPy() + ")" );
+//				System.out.println(cd.getCricketID() + ", dist = " + cd.getDistance());
 			}
 			else {
 				this.notifyAll();

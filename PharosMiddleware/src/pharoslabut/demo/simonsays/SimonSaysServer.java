@@ -34,6 +34,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	public static final int IMAGE_WIDTH = 640;
 	public static final int IMAGE_HEIGHT = 480;
 	public static String cricketSerialPort = "/dev/ttyUSB1";
+	public static boolean noClient = false;
 	
 	/**
 	 * the list of Cricket Mote beacons and their corresponding poses (positional coordinates)
@@ -71,7 +72,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	private AxisCameraInterface camera;
 	
 	
-	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
+	public static BeaconDataCollector bdc;
 	
 	
 	/**
@@ -96,13 +97,18 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		String cameraURL = "http://" + cameraIP + "/axis-cgi/jpg/image.cgi?resolution=" + IMAGE_WIDTH + "x" + IMAGE_HEIGHT;
 		camera = new AxisCameraInterface(cameraURL, "root", "longhorn");
 		
+		// read list of cricket beacons and their positions
+		cricketPositions = readCricketFile(cricketFile);	
+				
 		// add listener for cricket mote on USB1
 		CricketInterface ci  = new CricketInterface(cricketSerialPort);
 		ci.registerCricketDataListener(this);
+		bdc = new BeaconDataCollector("beaconData.txt");
+//		System.out.println("=== created BeaconDataCollector...");
 		
-		// create list of cricket beacons and their positions
-		cricketPositions = readCricketFile(cricketFile);
-		
+		if (noClient)
+			bdc.startTimer(); // dont know where to stop it yet
+
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
 	}
@@ -165,22 +171,24 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		double height = coords.getPz();
 		double dist = ((double)cd.getDistance())/100;
 		double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
+		
 		// send data to be recorded by bdc
 		bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+	
 		
-		CricketDataMsg cricketMsg = new CricketDataMsg(cd, coords);
-		// broadcast new CricketData to clients list
-		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
-	    while (iter.hasNext()) {
-	    	Entry<InetAddress, Integer> pair = iter.next();
-		    try {
-		    	sender.sendMessage(pair.getKey(), pair.getValue(), cricketMsg);
-		    }
-		    catch (PharosException e) {
-				e.printStackTrace();
-				Logger.logErr("Failed to send Cricket Msg, " + cd.toString());
-			}
-	    }
+//		CricketDataMsg cricketMsg = new CricketDataMsg(cd, coords);
+//		// broadcast new CricketData to clients list
+//		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
+//	    while (iter.hasNext()) {
+//	    	Entry<InetAddress, Integer> pair = iter.next();
+//		    try {
+//		    	sender.sendMessage(pair.getKey(), pair.getValue(), cricketMsg);
+//		    }
+//		    catch (PharosException e) {
+//				e.printStackTrace();
+//				Logger.logErr("Failed to send Cricket Msg, " + cd.toString());
+//			}
+//	    }
 	} 
 	
 	//@Override
@@ -274,15 +282,20 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 * @param moveMsg The move message.
 	 */
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
-		bdc.startTimer();
-		
+		if (!noClient) {
+			bdc.startTimer();
+			System.out.println("=== started BDC timer");
+		}
 		double dist = moveMsg.getDist();
 		Logger.log("Moving robot " + dist + " meters...");
 		boolean result = ri.move(dist);
 		Logger.log("Done moving robot, sending ack, result = " + result + "...");
 		sendAck(result, moveMsg); // success
 		
-		bdc.stopTimer(); // collects beacon data for a single movement cmd
+		if (!noClient) {
+			bdc.stopTimer(); // collects beacon data for a single movement cmd
+			System.out.println("=== stopped BDC timer");
+		}
 	}
 	
 	/**
@@ -381,6 +394,9 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 				}
 				else if (args[i].equals("-cricketPort")) {
 					cricketSerialPort = args[++i];
+				}
+				else if (args[i].equals("-noClient")) {
+					noClient = true;
 				}
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
