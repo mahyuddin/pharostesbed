@@ -59,6 +59,7 @@ public class CreateRobotInterface {
 		
 		//connect();
 		stopPlayer();
+		startPlayer(); // in order to collect beacon data without using the client
 	}
 	
 	/**

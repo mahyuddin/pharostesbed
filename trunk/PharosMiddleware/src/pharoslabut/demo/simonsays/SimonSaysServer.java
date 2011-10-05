@@ -70,6 +70,10 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 */
 	private AxisCameraInterface camera;
 	
+	
+	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
+	
+	
 	/**
 	 * The constructor.
 	 * 
@@ -157,7 +161,14 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		curList.add(cd); // probably don't need to store the entire CricketData obj -- distance might suffice
 		cricketBeacons.put(cd.getCricketID(), curList);
 		
-		CricketDataMsg cricketMsg = new CricketDataMsg(cd, cricketPositions.get(cd.getCricketID()));
+		PlayerPoint3d coords = cricketPositions.get(cd.getCricketID());
+		double height = coords.getPz();
+		double dist = ((double)cd.getDistance())/100;
+		double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
+		// send data to be recorded by bdc
+		bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+		
+		CricketDataMsg cricketMsg = new CricketDataMsg(cd, coords);
 		// broadcast new CricketData to clients list
 		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
 	    while (iter.hasNext()) {
@@ -263,11 +274,15 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 * @param moveMsg The move message.
 	 */
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
+		bdc.startTimer();
+		
 		double dist = moveMsg.getDist();
 		Logger.log("Moving robot " + dist + " meters...");
 		boolean result = ri.move(dist);
 		Logger.log("Done moving robot, sending ack, result = " + result + "...");
 		sendAck(result, moveMsg); // success
+		
+		bdc.stopTimer(); // collects beacon data for a single movement cmd
 	}
 	
 	/**
