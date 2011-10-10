@@ -510,7 +510,7 @@ result_t processOdometryPacket(proteus_comm_t* r) {
 		popRxSerialBuff(r, &data);
 		distance += (data & 0x00FF);
 		//printf("proteus_comms.c: distance = %d\n", distance);
-		r->distance = distance * .00128333; //distance is in units of .128333 cm or .00128333 mm
+		r->distance = distance * 1.28333; //distance is in units of .128333 cm or 1.28333 mm
 			
 		// The second two bytes are the steering angle
 		popRxSerialBuff(r, &data);
