@@ -14,7 +14,13 @@ import playerclient3.structures.ranger.PlayerRangerData;
  * @author Chien-Liang Fok
  */
 public class RangerDataBuffer implements Runnable {
-	public static final long RANGER_BUFFER_REFRESH_PERIOD = 100;
+	
+	/**
+	 * Defines this buffer's cycle time in milliseconds.
+	 */
+	//public static final long RANGER_BUFFER_REFRESH_PERIOD = 100; // 10Hz
+	//public static final long RANGER_BUFFER_REFRESH_PERIOD = 10; // 100Hz
+	public static final long RANGER_BUFFER_REFRESH_PERIOD = 5; // 200Hz
 	
 	private RangerInterface ranger;
 	

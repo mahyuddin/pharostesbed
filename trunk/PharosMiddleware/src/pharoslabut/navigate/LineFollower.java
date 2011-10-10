@@ -15,9 +15,9 @@ import java.util.*;
  * Follows a line using a CMUcam2.  It uses BlobfinderInterface
  * and PtzInterface to follow the line.
  * 
- * @author Sushen Patel
- * @author Seth Gee
  * @author Chien-Liang Fok
+ * @author Seth Gee
+ * @author Sushen Patel
  * @author Maykel Sabet
  */
 public class LineFollower implements Runnable {
@@ -26,7 +26,9 @@ public class LineFollower implements Runnable {
 	 * This is the cycle period of the LineFollower thread.
 	 * It is in milliseconds.
 	 */
-	public static int CYCLE_PERIOD = 100; // 10Hz
+	//public static int CYCLE_PERIOD = 100; // 10Hz
+	//public static int CYCLE_PERIOD = 10; // 100Hz
+	public static int CYCLE_PERIOD = 5; // 200Hz
 	
 	/**
 	 * This is the minimum area in pixels that a blob must consume before
@@ -153,6 +155,17 @@ public class LineFollower implements Runnable {
 	 */
 	public synchronized void stop() {
 		if (lineFollowerThread != null) {
+			Logger.logDbg("Pausing the line follower to allow robot to stop.");
+			pause();
+			
+			synchronized(this) {
+				try {
+					wait(3000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			
 			Logger.logDbg("Setting done = true");
 			done = true;
 			
