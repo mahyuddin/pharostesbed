@@ -104,8 +104,9 @@ requires Player to be restarted
 
 #include "proteus_comms.h"
 
-#define CYCLE_TIME_NS 100000000 //10hz
-
+//#define CYCLE_TIME_NS 100000000 // 10Hz
+//#define CYCLE_TIME_NS 10000000 // 100Hz
+#define CYCLE_TIME_NS 5000000 // 200Hz
 
 #ifndef PI
 #define PI 3.14159265
@@ -376,7 +377,7 @@ void Proteus::updatePos2D() {
 	// Update position2d data
 	// Update odometry info first
 	// First-order odometric integration for a car
-	this->proteus_dev->oa += this->proteus_dev->distance *
+/*	this->proteus_dev->oa += this->proteus_dev->distance *
 		atan(this->proteus_dev->steering_angle) / PROTEUS_FRONT_TO_REAR_AXLE;
 	
 	//clip rotation to +/-PI
@@ -403,6 +404,16 @@ void Proteus::updatePos2D() {
 	this->Publish(this->position_addr,
 		PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
 		(void*)&posdata);
+*/
+
+	// For now, we just want a simple measurement of how far
+	// the robot moved forward since the last odometer event.
+	player_position2d_data_t posdata;
+	memset(&posdata,0,sizeof(posdata));
+	posdata.pos.px = proteus_dev->distance; // this is the distance in mm.
+	this->Publish(this->position_addr,
+                PLAYER_MSGTYPE_DATA, PLAYER_POSITION2D_DATA_STATE,
+                (void*)&posdata);
 }
 
 /**
