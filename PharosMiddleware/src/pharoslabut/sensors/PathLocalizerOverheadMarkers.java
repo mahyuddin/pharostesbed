@@ -274,6 +274,8 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 			} else {
 				Logger.logErr("Expected at least 6 sensors, instead got " + numSensors);
 			}
+		} else {
+			Logger.logDbg("Received ranger data but component not started.");
 		}
 	}
 	
