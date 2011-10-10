@@ -128,10 +128,17 @@ int16_t controlledIncrement(int16_t velocityError) {
  */
 void MotorControl_updateSpeed(void) {
 	if (_targetSpeed == 0) {
+	  /*
 	  // Exponential decrease in speed
 	  if (_currentMotorPower != 0) {
 	    // since we cannot multiple by 0.8, we instead do the following
 		  _currentMotorPower = (_currentMotorPower * 4) / 5;
+	  }
+	  */
+	  
+	  // Immediately stop the robot when the target speed is zero.
+	  if (_currentMotorPower != 0) {
+	     _currentMotorPower = 0;
 	  }
 		Motor_setSpeed(_currentMotorPower);
 	} else {
