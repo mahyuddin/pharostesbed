@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.intersectionDetector;
 
 import pharoslabut.logger.Logger;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;

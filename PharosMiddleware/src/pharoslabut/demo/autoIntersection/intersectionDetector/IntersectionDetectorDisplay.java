@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.intersectionDetector;
 
 import java.awt.Color;
 import java.awt.Dimension;

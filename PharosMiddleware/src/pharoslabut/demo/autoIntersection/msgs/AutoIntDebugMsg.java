@@ -2,7 +2,7 @@ package pharoslabut.demo.autoIntersection.msgs;
 
 import java.net.InetAddress;
 
-import pharoslabut.demo.autoIntersection.IntersectionEvent;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEvent;
 
 /**
  * A message sent between the AutoIntersectionClient and

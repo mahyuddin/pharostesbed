@@ -1,5 +1,11 @@
 package pharoslabut.demo.autoIntersection;
 
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorBlobFinder;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorCricket;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorDisplay;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEvent;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventListener;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
@@ -25,7 +31,7 @@ import playerclient3.structures.PlayerConstants;
  * $ java pharoslabut.demo.autoIntersection.TestIntersectionDetector
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.IntersectionDetector
+ * @see pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector
  */
 public class TestIntersectionDetector implements IntersectionEventListener, ProteusOpaqueListener {
 	public static enum IntersectionDetectorType {BLOB, CRICKET, IR};

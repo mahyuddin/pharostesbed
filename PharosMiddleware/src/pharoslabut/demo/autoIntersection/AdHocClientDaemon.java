@@ -7,6 +7,7 @@ import java.util.TimerTask;
 
 import pharoslabut.navigate.*;
 import pharoslabut.io.*;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.msgs.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.*;

@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.intersectionDetector;
 
 /**
  * Defines the types of intersection events.

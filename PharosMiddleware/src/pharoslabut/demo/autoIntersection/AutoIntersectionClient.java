@@ -3,6 +3,8 @@ package pharoslabut.demo.autoIntersection;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 import pharoslabut.demo.autoIntersection.msgs.LoadExpSettingsMsg;
 import pharoslabut.demo.autoIntersection.msgs.StartAdHocExpMsg;
