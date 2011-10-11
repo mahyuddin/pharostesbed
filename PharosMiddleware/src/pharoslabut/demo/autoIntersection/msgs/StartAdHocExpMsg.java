@@ -8,7 +8,7 @@ import pharoslabut.io.Message;
  * to initiate a patrol experiment.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.ExpMgr
+ * @see pharoslabut.demo.autoIntersection.AutoIntersectionExpMgr
  * @see pharoslabut.demo.autoIntersection.AutoIntersectionClient
  */
 public class StartAdHocExpMsg implements Message {

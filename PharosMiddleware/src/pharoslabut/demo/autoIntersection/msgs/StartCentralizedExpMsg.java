@@ -7,7 +7,7 @@ import pharoslabut.demo.autoIntersection.ExpType;
  * to initiate a patrol experiment.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.ExpMgr
+ * @see pharoslabut.demo.autoIntersection.AutoIntersectionExpMgr
  * @see pharoslabut.demo.autoIntersection.AutoIntersectionClient
  */
 public class StartCentralizedExpMsg extends StartAdHocExpMsg {
