@@ -104,7 +104,7 @@ public class ExpConfig {
 					} else if (line.contains("SERVER_PORT")) {
 						String[] elem = line.split("[\\s]+");
 						serverPort = Integer.valueOf(elem[1]);
-					} else if (line.contains("ROBOT")) {
+					} else if (line.contains("VEHICLE")) {
 						try {
 							String[] elem = line.split("[\\s]+");
 							String name = elem[1];

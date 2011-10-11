@@ -7,8 +7,9 @@ import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetect
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 import pharoslabut.demo.autoIntersection.msgs.LoadExpSettingsMsg;
-import pharoslabut.demo.autoIntersection.msgs.StartAdHocExpMsg;
+//import pharoslabut.demo.autoIntersection.msgs.StartAdHocExpMsg;
 import pharoslabut.demo.autoIntersection.msgs.StartCentralizedExpMsg;
+import pharoslabut.demo.autoIntersection.msgs.StartExpMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;
@@ -38,9 +39,9 @@ import playerclient3.structures.PlayerConstants;
 public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueListener {
 	
 	/**
-	 * The name of the local robot.
+	 * The name of the local vehicle.
 	 */
-	private String robotName;
+	private String vehicleName;
 	
 	/**
 	 * The IP address of the player server.
@@ -130,13 +131,13 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 			Logger.log("Creating a " + getClass().getName() + "...");
 		}
 		
-		// Get the robot's name...		
+		// Get the vehicle's name...		
 		try {
-			robotName = pharoslabut.RobotIPAssignments.getName();
-			Logger.log("Robot name: " + robotName);
+			vehicleName = pharoslabut.RobotIPAssignments.getName();
+			Logger.log("Vehicle name: " + vehicleName);
 		} catch (PharosException e1) {
-			Logger.logErr("Unable to get robot's name, using 'JohnDoe'");
-			robotName = "JohnDoe";
+			Logger.logErr("Unable to get vehicle's name, using 'JohnDoe'");
+			vehicleName = "JohnDoe";
 			e1.printStackTrace();
 		}
 		
@@ -244,7 +245,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 			break;
 		case STARTEXP:
 			Logger.log("Starting experiment...");
-			startExp((StartAdHocExpMsg)msg);
+			startExp((StartExpMsg)msg);
 			break;
 		case STOPEXP:
 			Logger.log("Stopping experiment...");
@@ -265,12 +266,13 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 	/**
 	 * Starts the experiment.
 	 * 
+	 * @param startExpMsg The start experiment message.
 	 */
-	private void startExp(StartAdHocExpMsg startExpMsg) {
+	private void startExp(StartExpMsg startExpMsg) {
 		
 		// Start the file logger and set it in the Logger.
-		String fileName = startExpMsg.getExpName() + "-" + robotName 
-			+ "-IndoorMRPatrol_" + FileLogger.getUniqueNameExtension() + ".log"; 
+		String fileName = startExpMsg.getExpName() + "-" + vehicleName 
+			+ "-AutoIntersectionClient_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		FileLogger expFlogger = new FileLogger(fileName);
 		Logger.setFileLogger(expFlogger);
 		
@@ -287,22 +289,20 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
         
         switch (expType) {
         case CENTRALIZED:
-        	StartCentralizedExpMsg msg = (StartCentralizedExpMsg)startExpMsg;
+        	StartCentralizedExpMsg cmsg = (StartCentralizedExpMsg)startExpMsg;
 
-        	InetAddress serverIP = null;
-        	try {
-        		serverIP = InetAddress.getByName(msg.getServerIP());
-        	} catch (UnknownHostException e) {
-        		Logger.logErr("Unable to get serverIP : " + e);
-        		e.printStackTrace();
-        		System.exit(1);
-        	}
-
-        	daemon = new CentralizedClientDaemon(serverIP, msg.getServerPort(), port,
+        	InetAddress serverIP = cmsg.getServerIP();
+        	
+        	Logger.log("Creating the daemon...");
+        	daemon = new CentralizedClientDaemon(serverIP, cmsg.getServerPort(), port,
         			lineFollower, intersectionDetector, 
         			settings.getEntryID(), settings.getExitID());
+        	
+        	Logger.log("Starting the daemon...");
+        	daemon.start();
         	break;
         case ADHOC:
+//        	StartAdHocExpMsg amsg = (StartAdHocExpMsg)startExpMsg;
         	daemon = new AdHocClientDaemon(lineFollower, intersectionDetector);
         	break;
         }
