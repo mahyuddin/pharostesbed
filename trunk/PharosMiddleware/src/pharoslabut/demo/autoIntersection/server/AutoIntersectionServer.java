@@ -56,7 +56,9 @@ public class AutoIntersectionServer {
     	if (daemon == null) {
     		switch(serverType) {
     		case SEQUENTIAL:
+    			Logger.log("Starting sequentual daemon.");
     			daemon = new SequentialDaemon(intersectionSpecs, serverPort);
+    			daemon.start();
     			break;
     		case PARALLEL:
     			break;
