@@ -16,7 +16,7 @@ import pharoslabut.logger.Logger;
  * 
  * @author Chien-Liang Fok
  */
-public class ExpMgr {
+public class AutoIntersectionExpMgr {
 	/**
      * The connection to the AutoIntersectionClient(s).
      */
@@ -29,7 +29,7 @@ public class ExpMgr {
      * @see pharoslabut.experiment.ExpConfig
      * @see pharoslabut.navigate.motionscript.MotionScriptReader
      */
-	public ExpMgr(String expConfigFileName) {
+	public AutoIntersectionExpMgr(String expConfigFileName) {
 		doExp(expConfigFileName);
 	}
 	
@@ -95,7 +95,7 @@ public class ExpMgr {
 	}
 	
 	private static void usage() {
-		print("Usage: " + ExpMgr.class.getName() + " <options>\n");
+		print("Usage: " + AutoIntersectionExpMgr.class.getName() + " <options>\n");
 		print("Where <options> include:");
 		print("\t-file <experiment configuration file name>: The name of the file containing the experiment configuration (required)");
 		print("\t-debug: enable debug mode");
@@ -134,6 +134,6 @@ public class ExpMgr {
 		print("Exp Config: " + expConfigFileName);
 		print("Debug: " + ((System.getProperty ("PharosMiddleware.debug") != null) ? true : false));
 		
-		new ExpMgr(expConfigFileName);
+		new AutoIntersectionExpMgr(expConfigFileName);
 	}
 }

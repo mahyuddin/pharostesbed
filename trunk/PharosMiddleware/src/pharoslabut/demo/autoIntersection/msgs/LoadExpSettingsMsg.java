@@ -7,7 +7,7 @@ import pharoslabut.io.Message;
  * This is sent by an ExpMgr to an AutoIntersectionClient.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.ExpMgr
+ * @see pharoslabut.demo.autoIntersection.AutoIntersectionExpMgr
  * @see pharoslabut.demo.autoIntersection.AutoIntersectionClient
  */
 public class LoadExpSettingsMsg implements Message {
