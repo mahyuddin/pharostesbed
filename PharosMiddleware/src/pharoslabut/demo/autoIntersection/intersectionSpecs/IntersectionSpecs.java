@@ -26,12 +26,13 @@ public class IntersectionSpecs implements java.io.Serializable {
 	/**
 	 * A list of roads that are at the intersection.
 	 */
-	private Vector<Road> roads;
+	private Vector<Road> roads = new Vector<Road>();
 	
 	/**
 	 * Maps every entry point to a list of allowed exit points
 	 */
-	private HashMap<EntryPoint, Vector<ExitPoint>> mapEntryToExits;
+	private HashMap<EntryPoint, Vector<ExitPoint>> mapEntryToExits 
+		= new HashMap<EntryPoint, Vector<ExitPoint>>();
 	
 	/**
 	 * The constructor
@@ -102,6 +103,14 @@ public class IntersectionSpecs implements java.io.Serializable {
 		return entryPoints;
 	}
 	
+	/**
+	 * 
+	 * @return The name of the intersection.
+	 */
+	public String getName() {
+		return name;
+	}
+	
 	
 	
 //	@SuppressWarnings("unchecked")
@@ -116,7 +125,7 @@ public class IntersectionSpecs implements java.io.Serializable {
 	
 	@Override
 	public String toString() {
-		return "IntersectionSpecs";
+		return getClass().getName() + ": " + name;
 	}
 
 }
