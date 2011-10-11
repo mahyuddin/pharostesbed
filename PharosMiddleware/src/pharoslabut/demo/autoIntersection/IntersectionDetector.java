@@ -3,7 +3,6 @@ package pharoslabut.demo.autoIntersection;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import pharoslabut.demo.autoIntersection.IntersectionEvent.IntersectionEventType;
 import pharoslabut.logger.Logger;
 
 /**
@@ -29,7 +28,6 @@ public abstract class IntersectionDetector  {
 	 * The constructor.
 	 */
 	public IntersectionDetector() {
-		
 	}
 	
 	/**

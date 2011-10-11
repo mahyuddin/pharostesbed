@@ -8,7 +8,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.font.LineMetrics;
 import java.util.Timer;
-import java.util.TimerTask;
+//import java.util.TimerTask;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;

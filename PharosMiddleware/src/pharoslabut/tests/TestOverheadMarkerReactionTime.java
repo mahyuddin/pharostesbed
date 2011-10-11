@@ -65,8 +65,8 @@ public class TestOverheadMarkerReactionTime implements PathLocalizerOverheadMark
 	}
 	
 	@Override
-	public void markerEvent(int numMarkers) {
-		Logger.log("Detected marker!");
+	public void markerEvent(int numMarkers, double distance) {
+		Logger.log("Detected marker! Distance = " + distance);
 		Logger.log("Stopping the line follower.");
 		lineFollower.stop();
 		Logger.log("Line follower stopped, exiting system.");

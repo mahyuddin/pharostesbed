@@ -94,7 +94,7 @@ public class PharosExpServer implements MessageReceiver, WiFiBeaconListener, Pro
 		if (System.getProperty ("PharosMiddleware.debug") != null) {
 			debugFileLogger = new FileLogger("PharosExpServer-" + FileLogger.getUniqueNameExtension() + ".log");
 			Logger.setFileLogger(debugFileLogger);
-			Logger.log("Creating a PharosExpServer...");
+			Logger.log("Creating a " + getClass().getName() + "...");
 		}
 		
 		// Get the robot's name...		

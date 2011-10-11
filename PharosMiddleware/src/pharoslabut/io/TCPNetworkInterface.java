@@ -6,6 +6,13 @@ import java.net.*;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 
+/**
+ * Provides an interface to the TCP network stack that allows users
+ * to send messages.  It each not connection oriented; each message must
+ * include a destination IP and port.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class TCPNetworkInterface extends NetworkInterface {
 	
 	private TCPReceiver rcvr;
