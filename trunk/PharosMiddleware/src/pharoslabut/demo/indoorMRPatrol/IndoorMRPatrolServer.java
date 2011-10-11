@@ -133,7 +133,7 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		if (System.getProperty ("PharosMiddleware.debug") != null) {
 			debugFileLogger = new FileLogger("PharosExpServer-" + FileLogger.getUniqueNameExtension() + ".log");
 			Logger.setFileLogger(debugFileLogger);
-			Logger.log("Creating a PharosExpServer...");
+			Logger.log("Creating a " + getClass().getName() + "...");
 		}
 		
 		// Get the robot's name...		
@@ -490,22 +490,6 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 	public void beaconReceived(WiFiBeaconEvent be) {
 		Logger.log("Received beacon: " + be);
 	}
-	
-	
-//	private void logErr(String msg) {
-//		String result = "PharosServer: ERROR: " + msg;
-//		System.err.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
-//	
-//	private void log(String msg) {
-//		String result = "PharosServer: " + msg;
-//		if (System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
 	
 	private static void print(String msg) {
 		System.out.println(msg);

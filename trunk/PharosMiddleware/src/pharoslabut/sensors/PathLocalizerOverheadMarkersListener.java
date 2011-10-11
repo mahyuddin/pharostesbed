@@ -12,8 +12,9 @@ public interface PathLocalizerOverheadMarkersListener {
 	/**
 	 * This is called whenever a new marker is detected.
 	 * 
-	 * @param numMarkers 
+	 * @param numMarkers the number of markers.
+	 * @param distance The distance since the last marker.
 	 */
-	public void markerEvent(int numMarkers);
+	public void markerEvent(int numMarkers, double distance);
 	
 }

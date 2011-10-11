@@ -4,14 +4,18 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 //import pharoslabut.tests.TestLineFollower;
+import pharoslabut.sensors.PathLocalizerOverheadMarkers;
+import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
+import pharoslabut.sensors.RangerDataBuffer;
 import playerclient3.BlobfinderInterface;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.PtzInterface;
+import playerclient3.RangerInterface;
 import playerclient3.structures.PlayerConstants;
 
 /**
@@ -75,7 +79,23 @@ public class TestIntersectionDetector implements IntersectionEventListener, Prot
 		}
 		else if (detectorType == IntersectionDetectorType.IR) {
 			Logger.log("Testing the IR-based intersection detector.");
-			IntersectionDetectorIR id = new IntersectionDetectorIR(lf.getOpaqueInterface());
+			
+			RangerInterface ri = client.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
+			RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
+			rangerBuffer.start();
+			Logger.log("Subscribed to the ranger proxy.");
+			
+			Position2DInterface p2di = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+			if (p2di == null) {
+				Logger.logErr("motors is null");
+				System.exit(1);
+			}
+			Position2DBuffer pos2DBuffer = new Position2DBuffer(p2di);
+			pos2DBuffer.start();
+			Logger.logDbg("Subscribed to Position2d proxy.");
+			
+			PathLocalizerOverheadMarkers markerDetector = new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer);
+			IntersectionDetectorIR id = new IntersectionDetectorIR(markerDetector);
 			id.addIntersectionEventListener(this);
 		}
 		
@@ -113,7 +133,7 @@ public class TestIntersectionDetector implements IntersectionEventListener, Prot
 		print("\t-port <port number>: The Player Server's port number (default 6665)");
 		print("\t-log <log file name>: The name of the file in which to save debug output (default null)");
 		print("\t-serial <port>: The serial port to which the cricket is attached (default /dev/ttyS1)");
-		print("\t-type <detector type>: The type of detector to use (blob, cricket, ir, default ir)");
+		print("\t-type <blob|cricket|ir>: The type of detector to use (default ir)");
 		print("\t-gui: show the GUI.");
 		print("\t-debug: enable debug mode");
 	}
@@ -121,7 +141,6 @@ public class TestIntersectionDetector implements IntersectionEventListener, Prot
 	public static void main(String[] args) {
 		String serverIP = "localhost";
 		int serverPort = 6665;
-		boolean useBlobFinder = false;
 		String cricketSerialPort = "/dev/ttyS1";
 		IntersectionDetectorType detectorType = IntersectionDetectorType.IR;
 		boolean showGUI = false;
@@ -134,8 +153,6 @@ public class TestIntersectionDetector implements IntersectionEventListener, Prot
 					serverPort = Integer.valueOf(args[++i]);
 				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
-				} else if (args[i].equals("-useBlobFinder")) {
-					useBlobFinder = true;
 				} else if (args[i].equals("-serial")) {
 					cricketSerialPort = args[++i];
 				} else if (args[i].equals("-type")) {

@@ -16,7 +16,6 @@ import java.util.Set;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import pharoslabut.demo.autoIntersection.LaneSpecs;
 import pharoslabut.demo.autoIntersection.server.AutoIntersectionServer;
 
 public class IntersectionPanel extends JPanel implements Runnable {
@@ -42,9 +41,9 @@ public class IntersectionPanel extends JPanel implements Runnable {
 	public void paintComponent(Graphics g) {
 	    super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
-		if( (AutoIntersectionServer.getNWays()==4)  &&  (AutoIntersectionServer.getNLanes()==2) ) {
-			paint2L4WGUI();
-		}
+//		if( (AutoIntersectionServer.getNWays()==4)  &&  (AutoIntersectionServer.getNLanes()==2) ) {
+//			paint2L4WGUI();
+//		}
 		g2.drawImage(intersectionImage, 0, 0, this.getPreferredSize().width, this.getPreferredSize().height, null);
 		
 		Iterator<Car> iterator = carsApproaching.iterator();
@@ -69,21 +68,21 @@ public class IntersectionPanel extends JPanel implements Runnable {
          }
 	}
 	
-	public static void approachingCar(InetAddress ipAddress, LaneSpecs laneSpecs) {
-		//TODO take the lane specs and conver it to start xposition and start yposition and car orientation
-		Car car = new Car(ipAddress, 0, 186);
-		if(! carsApproaching.contains(car) ) {
-			car.setID(carsApproaching.size());
-			carsApproaching.add(car);
-	//		car.setID( carsApproaching. .indexOf(car) );
-			try {                
-				BufferedImage CarImage = ImageIO.read(new File("images/car-" + car.getID() + ".png"));
-				car.setCarImage(CarImage);
-	         } catch (IOException ex) {
-	              System.out.println("ERROR: image not found");
-	         }
-		}
-	}
+//	public static void approachingCar(InetAddress ipAddress, LaneSpecs laneSpecs) {
+//		//TODO take the lane specs and conver it to start xposition and start yposition and car orientation
+//		Car car = new Car(ipAddress, 0, 186);
+//		if(! carsApproaching.contains(car) ) {
+//			car.setID(carsApproaching.size());
+//			carsApproaching.add(car);
+//	//		car.setID( carsApproaching. .indexOf(car) );
+//			try {                
+//				BufferedImage CarImage = ImageIO.read(new File("images/car-" + car.getID() + ".png"));
+//				car.setCarImage(CarImage);
+//	         } catch (IOException ex) {
+//	              System.out.println("ERROR: image not found");
+//	         }
+//		}
+//	}
 	
 	public static void exitingCar(InetAddress ipAddress) {
 		System.out.println("Cars Approaching" + carsApproaching);

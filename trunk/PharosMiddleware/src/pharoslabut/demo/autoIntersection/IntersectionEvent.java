@@ -12,8 +12,6 @@ import java.io.Serializable;
 public class IntersectionEvent implements Serializable {
 
 	private static final long serialVersionUID = -6535896318270525624L;
-
-	public enum IntersectionEventType {APPROACHING, ENTERING, EXITING, ERROR};
 	
 	private IntersectionEventType type;
 	

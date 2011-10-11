@@ -6,35 +6,42 @@ import pharoslabut.io.*;
 
 /**
  * A top-level class for all messages used in the autonomous intersection demo.
- * It implements the Message interface and adds a new member, the RobotID.
  * 
  * @author Michael Hanna
  * @author Chien-Liang Fok
  */
 public abstract class AutoIntersectionMsg implements Message {
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 6086049361771571057L;
 	
-	private String robotIP;
-	private int robotPort;
+	/**
+	 * The IP address of the vehicle.
+	 */
+	private String ip;
+	
+	/**
+	 * The port on which the vehicle is listening.
+	 */
+	private int port;
 	
 	/**
 	 * The constructor.
+	 * 
+	 * @param ip The IP address of the vehicle.
+	 * @param port The port on which the vehicle is listening.
 	 */
-	public AutoIntersectionMsg(InetAddress robotIP, int robotPort) {
-		this.robotIP = robotIP.getHostAddress();
-		this.robotPort = robotPort;
+	public AutoIntersectionMsg(InetAddress ip, int port) {
+		this.ip = ip.getHostAddress();
+		this.port = port;
 	}
 	
 	/**
-     *  @return The robot's IP address
+     *  @return The vehicle's IP address
      */
-    public InetAddress getRobotIP() {
+    public InetAddress getIP() {
         InetAddress result = null;
         try {
-			result = InetAddress.getByName(robotIP);
+			result = InetAddress.getByName(ip);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -42,10 +49,18 @@ public abstract class AutoIntersectionMsg implements Message {
     }
     
     /**
-     * @return The robot's port.
+     * 
+     * @return The vehicle's IP address in string format.
      */
-    public int getRobotPort() {
-    	return robotPort;
+    public String getIPString() {
+    	return ip;
+    }
+    
+    /**
+     * @return The vehicle's port.
+     */
+    public int getPort() {
+    	return port;
     }
 	
 	@Override
@@ -54,6 +69,6 @@ public abstract class AutoIntersectionMsg implements Message {
 	}
 	
 	public String toString() {
-		return "AutoIntersectionMsg";
+		return ip + ":" + port;
 	}
 }

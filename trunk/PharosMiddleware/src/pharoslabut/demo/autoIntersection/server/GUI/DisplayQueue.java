@@ -80,7 +80,7 @@ public class DisplayQueue extends JFrame
 
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
-        PriorityQueue<pharoslabut.demo.autoIntersection.server.Robot> queue = pharoslabut.demo.autoIntersection.server.RobotsPriorityQueue.getQueueCopy();
+        PriorityQueue<pharoslabut.demo.autoIntersection.server.Vehicle> queue = pharoslabut.demo.autoIntersection.server.VehiclePriorityQueue.getQueueCopy();
         String s = "";
 
         while(! queue.isEmpty() )
@@ -88,14 +88,14 @@ public class DisplayQueue extends JFrame
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            pharoslabut.demo.autoIntersection.server.Robot robot = queue.remove();
-            s = "Robot ID " + robot.getIP() + ":" + robot.getPort();
+            pharoslabut.demo.autoIntersection.server.Vehicle vehicle = queue.remove();
+            s = "Robot ID " + vehicle.getIP() + ":" + vehicle.getPort();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
-            s = "Lane Specifications: " + robot.getLaneSpecs();
+//            s = "Entry/Exit Points: " + vehicle.getEntryPoint() + "/" + vehicle.getExitPoint();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
-            s = "Estimated time of arrival (ETA): " + robot.getETA();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
-            s = "Estimated time of clearance (ETC): " + robot.getETC();
+//            s = "Estimated time of arrival (ETA): " + vehicle.getETA();
+//            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
+//            s = "Estimated time of clearance (ETC): " + vehicle.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
             
             yPosition += cellHeight;
@@ -111,21 +111,21 @@ public class DisplayQueue extends JFrame
         font = new Font("Arial", Font.PLAIN, 12);
         graphics2.setFont(font);
         s = "";
-        LinkedList<pharoslabut.demo.autoIntersection.server.Robot> robotsCompleted = null; //pharoslabut.demo.autoIntersection.server.IntersectionManager.getRobotsCompletedCopy();
+        LinkedList<pharoslabut.demo.autoIntersection.server.Vehicle> robotsCompleted = null; //pharoslabut.demo.autoIntersection.server.IntersectionManager.getRobotsCompletedCopy();
 
         while(! robotsCompleted.isEmpty() )
         {
             Rectangle2D rectangle = new Rectangle2D.Float(xPosition, yPosition, cellWidth, cellHeight);
             graphics2.draw(rectangle);
 
-            pharoslabut.demo.autoIntersection.server.Robot robot = robotsCompleted.removeFirst();
+            pharoslabut.demo.autoIntersection.server.Vehicle robot = robotsCompleted.removeFirst();
             s = "Robot ID " + robot.getIP() + ":" + robot.getPort();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*0);
-            s = "Lane Specifications: " + robot.getLaneSpecs();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
-            s = "Estimated time of arrival (ETA): " + robot.getETA();
-            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
-            s = "Estimated time of clearance (ETC): " + robot.getETC();
+//            s = "Lane Specifications: " + robot.getLaneSpecs();
+//            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*1);
+//            s = "Estimated time of arrival (ETA): " + robot.getETA();
+//            graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*2);
+//            s = "Estimated time of clearance (ETC): " + robot.getETC();
             graphics2.drawString(s, xPosition + 20, yPosition + 20 + font.getSize()*3);
 
             yPosition += cellHeight;

@@ -166,12 +166,18 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 		listeners.add(listener);
 	}
 
-	private void notifyListeners() {
+	/**
+	 * Notifies the listeners of a new marker appearing.
+	 * 
+	 * @param distance The distance since the last marker.
+	 */
+	private void notifyListeners(double distance) {
 		Iterator<PathLocalizerOverheadMarkersListener> itr = listeners.iterator();
 		while (itr.hasNext()) {
-			itr.next().markerEvent(numOverheadMarkers);
+			itr.next().markerEvent(numOverheadMarkers, distance);
 		}
 	}
+	
 	/**
 	 * This processes the raw range data from the IR sensor used to detect the overhead markers.
 	 */
@@ -224,9 +230,10 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 						Logger.log("MARKER DETECTED, Total: " + numOverheadMarkers 
 								+ ", dist since last (m): " + distSinceMarker + " (" + (distSinceMarker * 39.3700787) + " in)"
 								+ ", time since last (ms): " + deltaTime);
-
+						
+						double distance = distSinceMarker;
 						distSinceMarker = 0;
-						notifyListeners();
+						notifyListeners(distance);
 
 						if (gui != null) {
 							if (numOverheadMarkers == 1)

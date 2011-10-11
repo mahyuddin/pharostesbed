@@ -1,6 +1,5 @@
 package pharoslabut.demo.autoIntersection;
 
-import pharoslabut.demo.autoIntersection.IntersectionEvent.IntersectionEventType;
 import pharoslabut.logger.Logger;
 import pharoslabut.sensors.BlobDataConsumer;
 import playerclient3.structures.blobfinder.PlayerBlobfinderBlob;
@@ -10,9 +9,12 @@ import playerclient3.structures.blobfinder.PlayerBlobfinderData;
  * Analyzes blob data from the CMUCam2 to detect when the robot is approaching,
  * entering, and leaving the intersection.
  * 
+ * NOTE: This was determined not to work because it induced excessive latency on the CMUCam2
+ * resulting in the robot loosing the line.
+ * 
  * @author Chien-Liang Fok
  */
-public class IntersectionDetectorBlobFinder extends IntersectionDetector implements BlobDataConsumer {
+@Deprecated public class IntersectionDetectorBlobFinder extends IntersectionDetector implements BlobDataConsumer {
 
 	/**
 	 * The secondary blob is used for indicating three things: 
