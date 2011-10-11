@@ -247,7 +247,7 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 		Logger.log("Starting the line follower.");
 		lineFollower.start();
 		
-		while(!isRunning) {
+		while(isRunning) {
 			
 			if (currState == IntersectionEventType.APPROACHING || 
 					currState == IntersectionEventType.ENTERING)

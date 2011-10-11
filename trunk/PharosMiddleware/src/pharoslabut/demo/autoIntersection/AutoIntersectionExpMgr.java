@@ -4,6 +4,8 @@ import java.util.Iterator;
 
 import pharoslabut.demo.autoIntersection.msgs.LoadExpSettingsMsg;
 import pharoslabut.demo.autoIntersection.msgs.StartAdHocExpMsg;
+import pharoslabut.demo.autoIntersection.msgs.StartCentralizedExpMsg;
+import pharoslabut.demo.autoIntersection.msgs.StartExpMsg;
 import pharoslabut.io.SetTimeMsg;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.Logger;
@@ -76,8 +78,14 @@ public class AutoIntersectionExpMgr {
 			
 			
 			// Send each vehicle a start experiment command.
-			StartAdHocExpMsg sem = new StartAdHocExpMsg(expConfig.getExpName(),
-					expConfig.getExpType());
+			StartExpMsg sem;
+
+			if (expConfig.getExpType() == ExpType.CENTRALIZED) 
+				sem = new StartCentralizedExpMsg(expConfig.getExpName(),
+						expConfig.getExpType(), expConfig.getServerIP(), expConfig.getServerPort());
+			else 
+				sem = new StartAdHocExpMsg(expConfig.getExpName(),
+						expConfig.getExpType());
 			itr = expConfig.getRobotItr();
 			while (itr.hasNext()) {
 				RobotExpSettings currRobot = itr.next();

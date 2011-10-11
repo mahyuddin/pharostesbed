@@ -1,5 +1,7 @@
 package pharoslabut.demo.autoIntersection.msgs;
 
+import java.net.InetAddress;
+
 import pharoslabut.demo.autoIntersection.ExpType;
 
 /**
@@ -10,21 +12,21 @@ import pharoslabut.demo.autoIntersection.ExpType;
  * @see pharoslabut.demo.autoIntersection.AutoIntersectionExpMgr
  * @see pharoslabut.demo.autoIntersection.AutoIntersectionClient
  */
-public class StartCentralizedExpMsg extends StartAdHocExpMsg {
+public class StartCentralizedExpMsg extends StartExpMsg {
 
 	private static final long serialVersionUID = -1322699976908956288L;
 
-	String serverIP;
+	InetAddress serverIP;
 	
 	int serverPort;
 	
-	public StartCentralizedExpMsg(String expName, ExpType expType, String serverIP, int serverPort) {
+	public StartCentralizedExpMsg(String expName, ExpType expType, InetAddress serverIP, int serverPort) {
 		super(expName, expType);
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
 	}
 	
-	public String getServerIP() {
+	public InetAddress getServerIP() {
 		return serverIP;
 	}
 	
