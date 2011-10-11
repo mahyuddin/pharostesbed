@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.intersectionDetector;
 
 /**
  * Defines the interface that all LineFollowerEventListeners must
@@ -6,7 +6,7 @@ package pharoslabut.demo.autoIntersection;
  * 
  * @author Chien-Liang Fok
  * @see pharoslabut.navigate.LineFollower
- * @see pharoslabut.demo.autoIntersection.IntersectionEvent
+ * @see pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEvent
  */
 public interface IntersectionEventListener {
 

@@ -1,5 +1,6 @@
 package pharoslabut.demo.autoIntersection;
 
+import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventType;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 
 /**
