@@ -1,7 +1,6 @@
 package pharoslabut.demo.autoIntersection;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
@@ -126,7 +125,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 		 * If we're running in debug mode, start logging debug statements even before the experiment begins.
 		 */
 		if (System.getProperty ("PharosMiddleware.debug") != null) {
-			debugFileLogger = new FileLogger("PharosExpServer-" + FileLogger.getUniqueNameExtension() + ".log");
+			debugFileLogger = new FileLogger("AutoIntersectionClient-" + FileLogger.getUniqueNameExtension() + ".log");
 			Logger.setFileLogger(debugFileLogger);
 			Logger.log("Creating a " + getClass().getName() + "...");
 		}
@@ -444,7 +443,6 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 		print("\t-port <port>: The port on which the this client listens (default 7776).");
 		print("\t-playerIP <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");
-		print("\t-log <log file name>: The name of the file in which to save debug output (default null)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		print("\t-debug: enable debug mode");
 	}
@@ -465,8 +463,6 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 					playerServerPort = Integer.valueOf(args[++i]);
 				} else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
-				} else if (args[i].equals("-log")) {
-					Logger.setFileLogger(new pharoslabut.logger.FileLogger(args[++i]));
 				} else if (args[i].equals("-mobilityPlane")) {
 					String mp = args[++i].toLowerCase();
 					if (mp.equals("traxxas"))
