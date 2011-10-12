@@ -15,10 +15,12 @@ import playerclient3.structures.*;
  * @author Chien-Liang Fok
  */
 public class TestBlobFinderPTZ {
-//	private FileLogger flogger = null;
+	
+	public static final float PAN_INCREMENT = (float)0.05;
+	public static final float TILT_INCREMENT = (float)0.05;
+	public static final long PAUSE_INTERVAL = 1;
+	
 	private PlayerClient client = null;	
-//	private BlobfinderInterface bfi = null;
-//	private BlobFinderVisualizer visualizer;
 		
 	/**
 	 * The constructor.
@@ -46,14 +48,6 @@ public class TestBlobFinderPTZ {
 			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}	
 		
-		/*javax.swing.SwingUtilities.invokeLater(new Runnable() {
-           		 public void run() {
-            			visualizer = new BlobFinderVisualizer(flogger);
-           		 }
-      		  }
-
-	); */
-		
 		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
@@ -79,25 +73,50 @@ public class TestBlobFinderPTZ {
 				//******** see http://pharos.ece.utexas.edu/wiki/index.php/How_to_Make_a_Proteus_Robot_Follow_a_Line_Using_a_CMUCam#Determine_Offset_of_Hardware_and_Change_Configuration_File
 
 				//Begin test	
-				Logger.log("Testing Pan....");			
-				for (float pan = (float)-70; pan < 82; pan += 10) {
-					Logger.log("Current Settings\nPan= "+ ptzCmd.getPan() +" PanSpeed= "+ ptzCmd.getPanspeed() +"\nSetting pan to "+ pan +"...\n");
-					ptzCmd.setPan((float) pan);
+				Logger.log("Testing Pan....");	
+				for(float pan = (float)0; pan > -70; pan -= PAN_INCREMENT) {
+					ptzCmd.setPan((float)pan);
+					Logger.log("Setting pan to " + pan);
 					ptz.setPTZ(ptzCmd);
-					pause(1000);
+					pause(PAUSE_INTERVAL);
+				}
+				for (float pan = (float)-70; pan < 82; pan += PAN_INCREMENT) {
+					ptzCmd.setPan((float)pan);
+					Logger.log("Setting pan to " + pan);
+					ptz.setPTZ(ptzCmd);
+					pause(PAUSE_INTERVAL);
+				}
+				for(float pan = (float)82; pan > 0; pan -= PAN_INCREMENT) {
+					ptzCmd.setPan((float)pan);
+					Logger.log("Setting pan to " + pan);
+					ptz.setPTZ(ptzCmd);
+					pause(PAUSE_INTERVAL);
 				}
 
 
 				ptzCmd.setPan((float) 0);
 				ptz.setPTZ(ptzCmd);
-				pause(3000);
+				pause(1000);
 
-				Logger.log("Testing Tilt...");		
-				for (float tilt = (float)-40; tilt < 82; tilt += 10) {
-					Logger.log("Current Settings\nTilt= "+ ptzCmd.getTilt() +" TiltSpeed= "+ ptzCmd.getTiltspeed()+ "\nSetting tilt to "+ tilt +"...\n");
+				Logger.log("Testing Tilt...");	
+				for (float tilt = (float)0; tilt > -40; tilt -= TILT_INCREMENT) {
+					ptzCmd.setTilt((float)tilt);
+					Logger.log("Setting tilt to " + tilt);
 					ptz.setPTZ(ptzCmd);
-					pause(1000);
+					pause(PAUSE_INTERVAL);
+				}
+				for (float tilt = (float)-40; tilt < 82; tilt += TILT_INCREMENT) {
+					ptzCmd.setTilt((float)tilt);
+					Logger.log("Setting tilt to " + tilt);
+					ptz.setPTZ(ptzCmd);
+					pause(PAUSE_INTERVAL);
 				} 
+				for (float tilt = (float)82; tilt > 0; tilt -= TILT_INCREMENT) {
+					ptzCmd.setTilt((float)tilt);
+					Logger.log("Setting tilt to " + tilt);
+					ptz.setPTZ(ptzCmd);
+					pause(PAUSE_INTERVAL);
+				}
 
 				ptzCmd.setTilt((float) 0);
 				ptz.setPTZ(ptzCmd);
@@ -107,31 +126,10 @@ public class TestBlobFinderPTZ {
 			}
 		}
 		
-/*		boolean done = false;
-		while(!done) {
-			if (visualizer != null && !visualizer.isVisible())
-				done = true;
-			if (!done && bfi.isDataReady()) {
-				PlayerBlobfinderData blobData = bfi.getData();
-				if (blobData != null) {
-					if (visualizer != null)
-						visualizer.visualizeBlobs(blobData);
-				}
-			}
-			pause(100);
-		} // end while(true)
-*/		System.exit(0);
-
-
+		System.exit(0);
 	}
-	
-//	private void log(String msg) {
-//		System.out.println(msg);
-//		if (flogger != null) 
-//			flogger.log(msg);
-//	}
 
-	private void pause(int duration) {
+	private void pause(long duration) {
 		synchronized(this) {
 			try {
 				wait(duration);
