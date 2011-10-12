@@ -192,8 +192,6 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 			case EXITING:
 				Logger.log("Vehicle is exiting intersection.");
 				currState = IntersectionEventType.EXITING;
-				lineFollower.pause();
-				
 				
 				// Send a message to the server telling it that this robot has exited the
 				// intersection
@@ -206,7 +204,21 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 					e.printStackTrace();
 				}
 				
-				isRunning = false;
+				Logger.log("Moving one more second to pass the exiting marker.");
+				
+				synchronized(this) {
+					try {
+						this.wait(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				Logger.log("Pausing the line follower.");
+				lineFollower.pause();
+				
+				// Keep the client running to ensure the final exit message is sent to the server.
+//				isRunning = false;
 				break;
 				
 //			This message is now handled by the ClientManager
@@ -228,10 +240,10 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 			accessGranted = true;
 			
 			if (currState == IntersectionEventType.APPROACHING) {
-				Logger.log("Receievd grant message.");	
+				Logger.log("Received grant message.");	
 			}
 			else if (currState == IntersectionEventType.ENTERING) {
-				Logger.log("Receievd grant message, resuming robot movement.");
+				Logger.log("Received grant message, resuming robot movement.");
 				lineFollower.unpause();
 			}
 			else {

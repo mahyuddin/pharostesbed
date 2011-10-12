@@ -12,10 +12,26 @@ import pharoslabut.sensors.PathLocalizerOverheadMarkersListener;
 public class IntersectionDetectorIR extends IntersectionDetector implements PathLocalizerOverheadMarkersListener {
 	
 	/**
+	 * The minimum distance in meters a robot must travel before it can possibly
+	 * exit the intersection.
+	 */
+	public static final double MIN_DIST_TO_EXIT = 1;
+	
+	/**
+	 * The minimum distance between markers.
+	 */
+	public static final double MIN_DIST_BETWEEN_MARKERS = 0.1;
+	
+	/**
 	 * The current state of this detector.  Assume it starts idle, meaning it is prior to
 	 * approaching the intersection.
 	 */
 	private IntersectionEventType state = IntersectionEventType.IDLE;
+	
+	/**
+	 * The distance since the last accepted marker.
+	 */
+	private double distSinceLastAcceptedMarker = 0;
 	
 	/**
 	 * The source of range information.
@@ -39,23 +55,37 @@ public class IntersectionDetectorIR extends IntersectionDetector implements Path
 	@Override
 	public void markerEvent(int numMarkers, double distance) {
 		
-		// TODO: Consider distance when determining whether this is a valid event.
+		distSinceLastAcceptedMarker += distance;
+		
+		// Filter out invalid marker events.
+		// One way to determine if a marker event is invalid is if the distance traveled is less than the 
+		// minimum specified distance.
+		if (distSinceLastAcceptedMarker < MIN_DIST_BETWEEN_MARKERS) {
+			Logger.logErr("Rejecting marker event because distance is less than the minimum (" + distance + " < " + MIN_DIST_BETWEEN_MARKERS);
+			return;
+		}
 		
 		switch(state) {
 		case IDLE:
 			Logger.log("Vehicle is APPROACHING intersection.");
+			distSinceLastAcceptedMarker = 0;
 			state = IntersectionEventType.APPROACHING;
 			genApproachingEvent();
 			break;
 		case APPROACHING:
 			Logger.log("Vehicle is ENTERING intersection.");
+			distSinceLastAcceptedMarker = 0;
 			state = IntersectionEventType.ENTERING;
 			genEnteringEvent();
 			break;
 		case ENTERING:
-			Logger.log("Vehicle is EXITING intersection.");
-			state = IntersectionEventType.IDLE;
-			genExitingEvent();
+			if (distSinceLastAcceptedMarker > MIN_DIST_TO_EXIT) {
+				Logger.log("Vehicle is EXITING intersection.");
+				distSinceLastAcceptedMarker = 0;
+				state = IntersectionEventType.IDLE;
+				genExitingEvent();
+			} else 
+				Logger.logErr("Detected invalid exiting event, distance = " + distSinceLastAcceptedMarker + ", which is less than " + MIN_DIST_TO_EXIT + "m");
 			break;
 		default: 
 			Logger.logErr("Unknown state: " + state);

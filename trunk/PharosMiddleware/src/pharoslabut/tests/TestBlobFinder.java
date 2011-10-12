@@ -36,9 +36,10 @@ public class TestBlobFinder {
 			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
 		} catch (PlayerException e) { System.out.println("Error, could not connect to blob finder proxy."); System.exit(1);}	
 		
+		final String name = serverIP + ":" + serverPort;
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-            	visualizer = new BlobFinderVisualizer();
+            	visualizer = new BlobFinderVisualizer(name);
             }
         });
 		

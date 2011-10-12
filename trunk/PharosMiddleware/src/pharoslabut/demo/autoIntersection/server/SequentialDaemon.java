@@ -102,16 +102,19 @@ public class SequentialDaemon extends ServerDaemon implements Runnable, MessageR
 			return;
 		}
 		
-		if (currVehicle == null) {
-			
-			InetAddress vehicleIP = msg.getIP();
-			int vehiclePort = msg.getPort();
+		InetAddress vehicleIP = msg.getIP();
+		int vehiclePort = msg.getPort();
+		
+		Vehicle requestingVehicle = new Vehicle(vehicleIP, vehiclePort, 
+				msg.getEntryPoint(), msg.getExitPoint());
+		
+		// Either there is no vehicle in the intersection, or this is a duplicate request.
+		if (currVehicle == null || currVehicle.equals(requestingVehicle)) {
 			
 			Logger.log("Granting vehicle " + vehicleIP + ":" + vehiclePort 
 					+ " access to the intersection at time " + currVehicleTime);
 			
-			currVehicle = new Vehicle(vehicleIP, vehiclePort, 
-				msg.getEntryPoint(), msg.getExitPoint());
+			currVehicle = requestingVehicle;
 			currVehicleTime = System.currentTimeMillis();
 			
 			// Send the grant access message to the vehicle.
@@ -121,7 +124,7 @@ public class SequentialDaemon extends ServerDaemon implements Runnable, MessageR
 			
 			// Denying a vehicle consists of ignoring it.  The vehicle will not proceed
 			// through the intersection if it did not receive a GrantAccessMsg.
-			Logger.log("Denying vehicle " + msg.getIPString() + ":" + msg.getPort());
+			Logger.log("Denying vehicle " + msg.getIPString() + ":" + msg.getPort() + ", current vehicle = " + currVehicle.getIP() + ":" + currVehicle.getPort());
 		}
 	}
 

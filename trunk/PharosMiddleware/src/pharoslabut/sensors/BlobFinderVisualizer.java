@@ -28,8 +28,8 @@ public class BlobFinderVisualizer extends JFrame {
 //	private FileLogger flogger;
 	private BlobPanel blobPanel;
 	
-	public BlobFinderVisualizer() {
-		super("BlobFinder Visualizer");;
+	public BlobFinderVisualizer(String name) {
+		super("BlobFinder Visualizer - " + name);
 	}
 	 
 	protected void frameInit() {
