@@ -81,7 +81,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 	/**
 	 * The lane identifier.
 	 */
-	private LaneIdentifier laneID;
+//	private LaneIdentifier laneID;
 	
 	/**
 	 * This detects the intersection.
@@ -153,8 +153,8 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 		}
 		
 		// Create the lane identifier
-		Logger.log("Creating the lane identifier...");
-		laneID = new LaneIdentifier("/dev/ttyS1");
+//		Logger.log("Creating the lane identifier...");
+//		laneID = new LaneIdentifier("/dev/ttyS1");
 	}
 	
 	/**
