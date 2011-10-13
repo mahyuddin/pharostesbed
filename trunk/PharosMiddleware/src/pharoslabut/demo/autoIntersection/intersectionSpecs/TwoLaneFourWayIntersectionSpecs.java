@@ -63,4 +63,26 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 		addValidExitPoint(e4, x2);
 		addValidExitPoint(e4, x3);
 	}
+
+	@Override
+	public boolean willIntersect(String entryPointID1, String exitPointID1,
+			String entryPointID2, String exitPointID2) 
+	{
+		// For now, just hard-code in the two possible forms of parallelism.
+		// TODO: Use math to determine whether the paths will intersect based on the entry and exit point locations.
+
+		if (entryPointID1.equals("E1") && exitPointID1.equals("X3")) 
+			return !(entryPointID2.equals("E3") && exitPointID2.equals("X1"));
+		else if (entryPointID2.equals("E1") && exitPointID2.equals("X3")) 
+			return !(entryPointID1.equals("E3") && exitPointID1.equals("X1"));
+		
+		else if (entryPointID1.equals("E4") && exitPointID1.equals("X2")) 
+			return !(entryPointID2.equals("E2") && exitPointID2.equals("X4"));
+		else if (entryPointID2.equals("E4") && exitPointID2.equals("X2")) 
+			return !(entryPointID1.equals("E2") && exitPointID1.equals("X4"));
+			
+		else
+			return false;
+		
+	}
 }

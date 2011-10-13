@@ -17,17 +17,17 @@ import pharoslabut.logger.Logger;
  * 
  * @author Chien-Liang Fok
  */
-public class SequentialDaemon extends ServerDaemon implements Runnable, MessageReceiver{
+public class SequentialDaemon extends ServerDaemon implements MessageReceiver {
 
-	/**
-	 * The cycle time of this daemon in milliseconds.
-	 */
-	public static final long CYCLE_TIME = 100; // 10Hz
+//	/**
+//	 * The cycle time of this daemon in milliseconds.
+//	 */
+//	public static final long CYCLE_TIME = 100; // 10Hz
 	
 	/**
 	 * This daemon's thread.
 	 */
-	Thread daemonThread = null;
+//	Thread daemonThread = null;
 	
 	/**
 	 * The network interface.
@@ -72,8 +72,8 @@ public class SequentialDaemon extends ServerDaemon implements Runnable, MessageR
 			networkInterface = new TCPNetworkInterface(serverPort); //UDPNetworkInterface(serverPort);
 			networkInterface.registerMsgListener(this);
 			
-			daemonThread = new Thread(this);
-			daemonThread.start();
+//			daemonThread = new Thread(this);
+//			daemonThread.start();
 			running = true;
 		} else {
 			Logger.logErr("Already started.");
@@ -111,11 +111,11 @@ public class SequentialDaemon extends ServerDaemon implements Runnable, MessageR
 		// Either there is no vehicle in the intersection, or this is a duplicate request.
 		if (currVehicle == null || currVehicle.equals(requestingVehicle)) {
 			
-			Logger.log("Granting vehicle " + vehicleIP + ":" + vehiclePort 
-					+ " access to the intersection at time " + currVehicleTime);
-			
 			currVehicle = requestingVehicle;
 			currVehicleTime = System.currentTimeMillis();
+			
+			Logger.log("Granting vehicle " + vehicleIP + ":" + vehiclePort 
+					+ " access to the intersection at time " + currVehicleTime);
 			
 			// Send the grant access message to the vehicle.
 			GrantAccessMsg grantMsg = new GrantAccessMsg(vehicleIP, vehiclePort);
@@ -182,20 +182,20 @@ public class SequentialDaemon extends ServerDaemon implements Runnable, MessageR
     		Logger.log("RECEIVER: Unknown message " + msg);
 	}
 	
-	public void run() {
-		while(running) {
-			
-			// Do something
-			
-			synchronized(this) {
-				try {
-					wait(CYCLE_TIME);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
+//	public void run() {
+//		while(running) {
+//			
+//			// Do something
+//			
+//			synchronized(this) {
+//				try {
+//					wait(CYCLE_TIME);
+//				} catch (InterruptedException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		}
+//	}
 	
 	public String toString() {
 		return getClass().getName();

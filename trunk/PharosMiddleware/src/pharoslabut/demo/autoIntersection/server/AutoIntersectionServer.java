@@ -61,6 +61,9 @@ public class AutoIntersectionServer {
     			daemon.start();
     			break;
     		case PARALLEL:
+    			Logger.log("Starting parallel daemon.");
+    			daemon = new ParallelDaemon(intersectionSpecs, serverPort);
+    			daemon.start();
     			break;
     		}
     	} else 
