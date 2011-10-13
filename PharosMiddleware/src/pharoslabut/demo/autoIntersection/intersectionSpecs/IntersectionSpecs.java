@@ -14,7 +14,7 @@ import pharoslabut.logger.Logger;
  * @author Michael Hanna
  * @author Chien-Liang Fok
  */
-public class IntersectionSpecs implements java.io.Serializable {
+public abstract class IntersectionSpecs implements java.io.Serializable {
 	
 	private static final long serialVersionUID = -6517026202617597952L;
 	
@@ -110,6 +110,18 @@ public class IntersectionSpecs implements java.io.Serializable {
 	public String getName() {
 		return name;
 	}
+	
+	/**
+	 * Determines whether two vehicles will take interseting paths through the intersection.
+	 * 
+	 * @param entryPointID1 The entry point of vehicle 1.
+	 * @param exitPointID1 The exit point of vehicle 1.
+	 * @param entryPointID2 The entry point of vehicle 2.
+	 * @param exitPointID2 The exit point of vehicle 2.
+	 * @return true if the paths of vehicle 1 and vehicle 2 will cross within the intersection.
+	 */
+	public abstract boolean willIntersect(String entryPointID1, String exitPointID1, 
+			String entryPointID2, String exitPointID2);	
 	
 	
 	
