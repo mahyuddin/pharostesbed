@@ -1,6 +1,5 @@
 package pharoslabut.beacon;
 
-//import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 
 /**
@@ -24,12 +23,14 @@ public abstract class BeaconBroadcaster implements Runnable {
     
     /**
      * The tx power level.  Default is 31.
+     * This is only used by the cc2420 radio (not the WiFi radio).
      */
     protected short txPower = 31;
     
+    /**
+     * Whether this broadcaster is running.
+     */
     protected boolean running = false;
-    
-//    protected FileLogger flogger;
     
     /**
      * Generates a random value between minPeriod and maxPeriod.
@@ -67,6 +68,17 @@ public abstract class BeaconBroadcaster implements Runnable {
     		Logger.logErr("Tried to start the beacon broadcaster when it was already running.");
     		return false;
     	}
+    }
+    
+    /**
+     * Starts the broadcasting of beacons at the default power level.
+     * 
+     * @param minPeriod The minimum beacon period.
+     * @param maxPeriod The maximum beacon period.
+     * @return true if successful.
+     */
+    public boolean start(long minPeriod, long maxPeriod) {
+    	return start(minPeriod, maxPeriod, txPower);
     }
     
     /**
