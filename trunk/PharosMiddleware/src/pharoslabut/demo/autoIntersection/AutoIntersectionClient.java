@@ -301,8 +301,10 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
         	daemon.start();
         	break;
         case ADHOC:
-//        	StartAdHocExpMsg amsg = (StartAdHocExpMsg)startExpMsg;
-        	daemon = new AdHocClientDaemon(lineFollower, intersectionDetector);
+        	Logger.log("Creating the daemon...");
+        	daemon = new AdHocClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	Logger.log("Starting the daemon...");
+        	daemon.start();                                                       
         	break;
         }
 	}

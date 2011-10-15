@@ -24,11 +24,6 @@ import pharoslabut.navigate.LineFollower;
  * @author Seth Gee
  */
 public class CentralizedClientDaemon extends ClientDaemon implements IntersectionEventListener, Runnable {
-
-	/**
-	 * The cycle time of this daemon in milliseconds.
-	 */
-	public static final long CYCLE_TIME = 100;
 	
 	/**
 	 * The number of milliseconds before this daemon assumes the previous
@@ -52,34 +47,14 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 	private InetAddress ip;
 	
 	/**
-	 * The local port on which this client is listening.
+	 * The local port on which this client should listen.
 	 */
 	private int port;
-	
-	/**
-	 * Makes the robot follow the line, which denotes a lane.
-	 */
-	private LineFollower lineFollower;
-	
-	/**
-	 * Detects the intersection.
-	 */
-	private IntersectionDetector intersectionDetector;
 	
 	/**
 	 * Whether the this daemon is running.
 	 */
 	private boolean isRunning = false;
-	
-	/**
-	 * The ID of the entry point into the intersection.
-	 */
-	private String entryPointID;
-	
-	/**
-	 * The ID of the exit point from the intersection.
-	 */
-	private String exitPointID;
 	
 	/**
 	 * The time since the robot last requested access to the intersection.
@@ -101,13 +76,17 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 	 * 
 	 * @param serverIP The IP address of the intersection management server.
 	 * @param serverPort The port of the intersection management server.
-	 * @param port The local port on which this client is listening.
+	 * @param port The local port on which this client should listen.
 	 * @param lineFollower The line follower.
 	 * @param intersectionDetector The intersection detector.
+	 * @param entryPointID The ID of the entry point.
+	 * @param exitPointID The ID of the exit point.
 	 */
 	public CentralizedClientDaemon(InetAddress serverIP, int serverPort, int port,
-			LineFollower lineFollower, IntersectionDetector intersectionDetector) 
+			LineFollower lineFollower, IntersectionDetector intersectionDetector,
+			String entryPointID, String exitPointID) 
 	{
+		super(lineFollower, intersectionDetector, entryPointID, exitPointID);
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
 		this.port = port;
@@ -126,26 +105,6 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 			e.printStackTrace();
 			System.exit(1);
 		}
-	}
-	
-	/**
-	 * The constructor.
-	 * 
-	 * @param serverIP The IP address of the intersection management server.
-	 * @param serverPort The port of the intersection management server.
-	 * @param port The local port on which this client is listening.
-	 * @param lineFollower The line follower.
-	 * @param intersectionDetector The intersection detector.
-	 * @param entryPointID The ID of the entry point.
-	 * @param exitPointID The ID of the exit point.
-	 */
-	public CentralizedClientDaemon(InetAddress serverIP, int serverPort, int port,
-			LineFollower lineFollower, IntersectionDetector intersectionDetector,
-			String entryPointID, String exitPointID) 
-	{
-		this(serverIP, serverPort, port, lineFollower, intersectionDetector);
-		this.entryPointID = entryPointID;
-		this.exitPointID = exitPointID;
 	}
 	
 	/**
