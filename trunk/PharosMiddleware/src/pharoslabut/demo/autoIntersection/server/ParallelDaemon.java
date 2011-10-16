@@ -4,10 +4,10 @@ import java.net.InetAddress;
 import java.util.Iterator;
 import java.util.Vector;
 
+import pharoslabut.demo.autoIntersection.clientDaemons.centralized.ExitingMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.centralized.GrantAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.centralized.RequestAccessMsg;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
-import pharoslabut.demo.autoIntersection.msgs.ExitingMsg;
-import pharoslabut.demo.autoIntersection.msgs.GrantAccessMsg;
-import pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg;
 import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;
 import pharoslabut.io.TCPNetworkInterface;

@@ -44,7 +44,7 @@ public class TestNetworkInterface implements MessageReceiver{
 		
 		while (true) {
 			//Message m = new StartExpMsg("TestExp", "Msg-" + cntr, ExpType.FOLLOW_GPS_MOTION_SCRIPT);
-			Message m = new pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg(address, 0,
+			Message m = new pharoslabut.demo.autoIntersection.clientDaemons.centralized.RequestAccessMsg(address, 0,
 					"E1", "X3");
 			
 			//Message m = new pharoslabut.demo.autoIntersection.msgs.ExitingMsg(address, 0);

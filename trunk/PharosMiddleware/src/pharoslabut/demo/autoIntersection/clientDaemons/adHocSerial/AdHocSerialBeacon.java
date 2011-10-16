@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
 
 import java.net.InetAddress;
 
@@ -6,12 +6,12 @@ import pharoslabut.beacon.WiFiBeacon;
 import pharoslabut.logger.Logger;
 
 /**
- * This is the WiFi beacon that is transmitted in the ad hoc
+ * This is the WiFi beacon that is transmitted in the ad hoc/serial
  * autonomous intersection.
  * 
  * @author Chien-Liang Fok
  */
-public class AdHocAutoIntersectionBeacon extends WiFiBeacon {
+public class AdHocSerialBeacon extends WiFiBeacon {
 
 	private static final long serialVersionUID = -6681705407266292187L;
 
@@ -26,7 +26,7 @@ public class AdHocAutoIntersectionBeacon extends WiFiBeacon {
 	 * @param address The address of this host.
 	 * @param port The single-cast port number being used.
 	 */
-	public AdHocAutoIntersectionBeacon(InetAddress address, int port) {
+	public AdHocSerialBeacon(InetAddress address, int port) {
 		super(address, port);
 	}
 	

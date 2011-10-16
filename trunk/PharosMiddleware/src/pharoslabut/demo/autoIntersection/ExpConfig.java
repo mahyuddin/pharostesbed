@@ -84,8 +84,10 @@ public class ExpConfig {
 							String expTypeStr = elem[1].toUpperCase();
 							if (expTypeStr.equals("CENTRALIZED"))
 								expType = ExpType.CENTRALIZED;
-							else if (expTypeStr.equals("ADHOC"))
-								expType = ExpType.ADHOC;
+							else if (expTypeStr.equals("ADHOC-SERIAL"))
+								expType = ExpType.ADHOC_SERIAL;
+							else if (expTypeStr.equals("ADHOC-PARALLEL"))
+								expType = ExpType.ADHOC_PARALLEL;
 							else {
 								System.err.println("Unknown experiment type " + elem[1]);
 								System.exit(1);	
