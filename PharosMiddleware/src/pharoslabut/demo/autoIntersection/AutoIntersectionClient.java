@@ -3,6 +3,7 @@ package pharoslabut.demo.autoIntersection;
 import java.net.InetAddress;
 
 import pharoslabut.demo.autoIntersection.clientDaemons.ClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel.AdHocParallelClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.centralized.CentralizedClientDaemon;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
@@ -306,6 +307,12 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
         case ADHOC_SERIAL:
         	Logger.log("Creating the daemon...");
         	daemon = new AdHocSerialClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	Logger.log("Starting the daemon...");
+        	daemon.start();                                                       
+        	break;
+        case ADHOC_PARALLEL:
+        	Logger.log("Creating the daemon...");
+        	daemon = new AdHocParallelClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
         	break;
