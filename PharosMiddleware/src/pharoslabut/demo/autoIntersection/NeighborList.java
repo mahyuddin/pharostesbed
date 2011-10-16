@@ -99,6 +99,11 @@ public class NeighborList {
 		InetAddress vehicleAddress = beacon.getAddress();
 		NeighborState neighborState;
 		
+		if (vehicleAddress.getAddress()[3] == myID) {
+			Logger.log("Ignoring my own beacon.");
+			return;
+		}
+		
 		if (list.containsKey(vehicleAddress))
 			neighborState = list.get(vehicleAddress);
 		else {
