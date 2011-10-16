@@ -82,10 +82,13 @@ public class IntersectionDetectorIR extends IntersectionDetector implements Path
 			if (distSinceLastAcceptedMarker > MIN_DIST_TO_EXIT) {
 				Logger.log("Vehicle is EXITING intersection.");
 				distSinceLastAcceptedMarker = 0;
-				state = IntersectionEventType.IDLE;
+				state = IntersectionEventType.DONE;
 				genExitingEvent();
 			} else 
 				Logger.logErr("Detected invalid exiting event, distance = " + distSinceLastAcceptedMarker + ", which is less than " + MIN_DIST_TO_EXIT + "m");
+			break;
+		case DONE:
+			Logger.logErr("Detected invalid event because already done");
 			break;
 		default: 
 			Logger.logErr("Unknown state: " + state);

@@ -6,5 +6,5 @@ package pharoslabut.demo.autoIntersection.intersectionDetector;
  * @author Chien-Liang Fok
  */
 public enum IntersectionEventType {
-	IDLE, APPROACHING, ENTERING, EXITING, ERROR;
+	IDLE, APPROACHING, ENTERING, EXITING, DONE, ERROR;
 }
