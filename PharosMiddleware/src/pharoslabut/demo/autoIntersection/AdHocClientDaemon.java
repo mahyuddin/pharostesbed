@@ -50,7 +50,7 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
 	 * The minimum amount of time that a node must think it's safe to cross the intersection
 	 * before actually granting itself access to the intersection.
 	 */
-	public static final int MIN_SAFE_DURATION = 3000;
+	public static final int MIN_SAFE_DURATION = 2100;
 	
 	/**
 	 * Whether the this daemon is running.
@@ -101,14 +101,6 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
      * The neighbor list.
      */
     private NeighborList nbrList = new NeighborList();
-    
-    /**
-     * A neighbor list that records the status of each neighbor.
-     * The key is a string that consists of the neighbor's IP address,
-     * and the value is a neighbor state object that records the neighbor's
-     * state.
-     */
-    private Hashtable<InetAddress, NeighborList> neighborList = new Hashtable<InetAddress, NeighborList>();
     
     /**
 	 * The constructor.
@@ -184,6 +176,9 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
 			
 			Logger.log("Registering self as listener to intersection events.");
 			intersectionDetector.addIntersectionEventListener(this);
+			
+			Logger.log("Starting beacon receiver.");
+			beaconReceiver.start();
 			
 			Logger.log("Starting beacon broadcaster with min period " + MIN_BEACON_PERIOD + " and max period " + MAX_BEACON_PERIOD);
 			beaconBroadcaster.start(MIN_BEACON_PERIOD, MAX_BEACON_PERIOD);
@@ -268,6 +263,7 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
 	 */
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
+		Logger.log("Received beacon: " + be);
 		WiFiBeacon beacon = be.getBeacon();
 		if (beacon instanceof AdHocAutoIntersectionBeacon) {
 			nbrList.update((AdHocAutoIntersectionBeacon)beacon);
@@ -298,7 +294,7 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
 					boolean isSafeNow = nbrList.isSafeToCross();
 					if (isSafeNow) {
 						if (!isSafeToCross) {
-							Logger.log("It might be safe to cross, currTime = currTime");
+							Logger.log("It might be safe to cross, currTime = " + currTime);
 							isSafeToCross = true;
 							safeTimestamp = currTime;
 						} else {
@@ -310,6 +306,7 @@ public class AdHocClientDaemon extends ClientDaemon implements IntersectionEvent
 										+ safeDuration + ", Min. safe duration = " + MIN_SAFE_DURATION);
 								accessGranted = true;
 								beacon.setVehicleStatus(VehicleStatus.CROSSING);
+								lineFollower.unpause();
 							}
 						}
 					} else {

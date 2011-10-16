@@ -120,6 +120,12 @@ public class LineFollower implements Runnable {
 		Logger.logDbg("Connected to PTZ proxy.");
 		
 		p2di.setSpeed(0f,0f);  // ensure robot is initially stopped
+		
+		PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
+		ptzCmd.setPan((float) 0);
+		ptzCmd.setTilt((float) 0);
+		Logger.log("Resetting position of the camera.");
+		ptz.setPTZ(ptzCmd);
 	}
 	
 	/**
@@ -185,14 +191,18 @@ public class LineFollower implements Runnable {
 	/**
 	 * Sets the speed to be zero, but keeps the line follower running.
 	 */
-	public void pause() {
-		Logger.log("Pausing...");
-		paused = true;	
+	public synchronized void pause() {
+		if (!paused) {
+			Logger.log("Pausing...");
+			paused = true;
+		}
 	}
 	
-	public void unpause() {
-		Logger.log("Resuming...");
-		paused = false;
+	public synchronized void unpause() {
+		if (paused) {
+			Logger.log("Resuming...");
+			paused = false;
+		}
 	}
 	
 //	/**
