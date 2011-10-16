@@ -127,12 +127,12 @@ public class RangerVisualizer {
     		javax.swing.SwingUtilities.invokeLater(irPanel); // repaints the IR panel
     		
     		if (graphPanel != null) {
-    			graphPanel.updateFR(timeS, distFR);
-    			graphPanel.updateFC(timeS, distFC);
-    			graphPanel.updateFL(timeS, distFL);
-    			graphPanel.updateRR(timeS, distRR);
-    			graphPanel.updateRC(timeS, distRC);
-    			graphPanel.updateRL(timeS, distRL);
+    			if (distFR != 0xffff) graphPanel.updateFR(timeS, distFR);
+    			if (distFC != 0xffff) graphPanel.updateFC(timeS, distFC);
+    			if (distFL != 0xffff) graphPanel.updateFL(timeS, distFL);
+    			if (distRR != 0xffff) graphPanel.updateRR(timeS, distRR);
+    			if (distRC != 0xffff) graphPanel.updateRC(timeS, distRC);
+    			if (distRL != 0xffff) graphPanel.updateRL(timeS, distRL);
     		}
     	} else {
     		Logger.logErr("Expected 6 sensors, instead got " + numSensors);
