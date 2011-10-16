@@ -102,7 +102,6 @@ public class RangerDataBuffer implements Runnable {
 	 * Removes expired compass readings.
 	 */
 	public void run() {
-		
 		Logger.log("thread starting...");
 		
 		while(running) {
@@ -124,12 +123,4 @@ public class RangerDataBuffer implements Runnable {
 		
 		Logger.log("thread terminating...");
 	}
-	
-//	private void log(String msg) {
-//		String result = "RangerDataBuffer: " + msg;
-//		if (System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		if (flogger != null) 
-//			flogger.log(result);
-//	}
 }
