@@ -1,6 +1,8 @@
-package pharoslabut.demo.autoIntersection.msgs;
+package pharoslabut.demo.autoIntersection.clientDaemons.centralized;
 
 import java.net.InetAddress;
+
+import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 
 
 /**

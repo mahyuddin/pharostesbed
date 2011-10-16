@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
 
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -13,19 +13,19 @@ import pharoslabut.logger.Logger;
  * Records the state of the neighboring vehicles in an ad hoc autonomous intersection.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.AdHocClientDaemon
+ * @see pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialClientDaemon
  */
 public class NeighborList {
 
 	/**
 	 * The ID of the local node.
 	 */
-	int myID;
+	protected int myID;
 	
 	/**
 	 * The internal data structure used to store the neighbor list.
 	 */
-	private HashMap<InetAddress, NeighborState> list = new HashMap<InetAddress, NeighborState>();
+	protected HashMap<InetAddress, NeighborState> list = new HashMap<InetAddress, NeighborState>();
 	
 	/**
 	 * The constructor.
@@ -95,7 +95,7 @@ public class NeighborList {
 	 * 
 	 * @param beacon The beacon.
 	 */
-	public void update(AdHocAutoIntersectionBeacon beacon) {
+	public void update(AdHocSerialBeacon beacon) {
 		InetAddress vehicleAddress = beacon.getAddress();
 		NeighborState neighborState;
 		
@@ -131,79 +131,5 @@ public class NeighborList {
 				sb.append("\n");
 		}
 		return sb.toString();
-	}
-	
-	/**
-	 * Contains the state about a specific neighbor in the neighbor list.
-	 * 
-	 * @author Chien-Liang Fok
-	 */
-	private class NeighborState {
-		
-		/**
-		 * The IP address of the neighbor.
-		 */
-		InetAddress address;
-		
-		/**
-		 * The status of the neighbor.
-		 */
-		VehicleStatus status;
-		
-		/**
-		 * The time since this neighbor was updated.
-		 */
-		long lastUpdatedTime;
-		
-		/**
-		 * The constructor.
-		 * 
-		 * @param address The IP address of the neighbor.
-		 * @param status The status of the neighbor.
-		 */
-		public NeighborState(InetAddress address, VehicleStatus status) {
-			this.address = address;
-			this.status = status;
-			lastUpdatedTime = System.currentTimeMillis();
-		}
-		
-//		/**
-//		 *
-//		 * @return The neighbor's IP address.
-//		 */
-//		public InetAddress getAddress() {
-//			return address;
-//		}
-		
-		/**
-		 * Sets the status of this neighbor.
-		 * 
-		 * @param status The new status of the neighbor.
-		 */
-		public void setStatus(VehicleStatus status) {
-			this.status = status;
-			lastUpdatedTime = System.currentTimeMillis();
-		}
-		
-		/**
-		 * 
-		 * @return The status of the neighbor.
-		 */
-		public VehicleStatus getStatus() {
-			return status;
-		}
-		
-		/**
-		 * 
-		 * @return The time since this neighbor state was last updated.
-		 */
-		public long getAge() {
-			return System.currentTimeMillis() - lastUpdatedTime;
-		}
-		
-		public String toString() {
-			return address + ", status=" + status + ", lastUpdatedTime=" + lastUpdatedTime 
-			+ ", age=" + (System.currentTimeMillis() - lastUpdatedTime);
-		}
 	}
 }

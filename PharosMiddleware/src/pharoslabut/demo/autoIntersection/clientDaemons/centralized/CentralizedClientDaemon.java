@@ -1,17 +1,15 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.clientDaemons.centralized;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import pharoslabut.RobotIPAssignments;
+import pharoslabut.demo.autoIntersection.clientDaemons.ClientDaemon;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEvent;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventListener;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventType;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
-import pharoslabut.demo.autoIntersection.msgs.ExitingMsg;
-import pharoslabut.demo.autoIntersection.msgs.GrantAccessMsg;
-import pharoslabut.demo.autoIntersection.msgs.RequestAccessMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.Logger;

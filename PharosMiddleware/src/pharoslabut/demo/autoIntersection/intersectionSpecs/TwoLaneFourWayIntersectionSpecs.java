@@ -13,7 +13,15 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 
 	private static final long serialVersionUID = -2737528121576109063L;
 
-	public TwoLaneFourWayIntersectionSpecs() {
+	/**
+	 * A reference to the singleton instance of this class.
+	 */
+	private static TwoLaneFourWayIntersectionSpecs specs = new TwoLaneFourWayIntersectionSpecs();
+	
+	/**
+	 * The constructor.  It's private because this is a singleton.
+	 */
+	private TwoLaneFourWayIntersectionSpecs() {
 		super("TwoLaneFourWayIntersection");
 		
 		// Define the entry points
@@ -64,6 +72,14 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 		addValidExitPoint(e4, x3);
 	}
 
+	/**
+	 * An accessor to the singleton instance of this class.
+	 * @return
+	 */
+	public static TwoLaneFourWayIntersectionSpecs getSpecs() {
+		return specs;
+	}
+	
 	@Override
 	public boolean willIntersect(String entryPointID1, String exitPointID1,
 			String entryPointID2, String exitPointID2) 

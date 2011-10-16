@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection;
+package pharoslabut.demo.autoIntersection.clientDaemons;
 
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventType;

@@ -96,7 +96,7 @@ public class AutoIntersectionServer {
 		ServerType serverType = ServerType.SEQUENTIAL;
 		
 		// TODO: Allow user to specify this through the command line.
-		IntersectionSpecs intersectionSpecs = new TwoLaneFourWayIntersectionSpecs();
+		IntersectionSpecs intersectionSpecs = TwoLaneFourWayIntersectionSpecs.getSpecs();
 		
 		try {
 			for (int i=0; i < args.length; i++) {

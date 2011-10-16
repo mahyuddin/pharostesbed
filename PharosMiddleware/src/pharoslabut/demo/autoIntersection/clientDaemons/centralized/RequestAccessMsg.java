@@ -1,6 +1,8 @@
-package pharoslabut.demo.autoIntersection.msgs;
+package pharoslabut.demo.autoIntersection.clientDaemons.centralized;
 
 import java.net.InetAddress;
+
+import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 
 /**
  * This message is sent from the vehicle to the intersection server when
@@ -23,16 +25,6 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
 	 * The exit point.
 	 */
 	private String exitPointID;
-	
-//	/**
-//	 * The estimated time of entry into the intersection.
-//	 */
-//	private long entraceTime;
-//	
-//	/**
-//	 * The estimated time of exit from the intersection.
-//	 */
-//	private long exitTime;
 	
 	/**
 	 * The constructor.
@@ -65,49 +57,6 @@ public class RequestAccessMsg extends AutoIntersectionMsg  {
 	public String getExitPoint() {
 		return exitPointID;
 	}
-	
-//	/**
-//     *  @return ETA
-//     */
-//    public long getETA() {
-//        return this.ETA;
-//    }
-//    
-//    /**
-//     *  @return ETC
-//     */
-//    public long getETC() {
-//        return this.ETC;
-//    }
-    
-//    /**
-//     *  @return laneSpecs
-//     */
-//    public LaneSpecs getLaneSpecs() {
-//        return laneSpecs;
-//    }
-
-//    /**
-//     *  this method sets a new ETA for the robot
-//     * @param eta - The estimated time of arrival
-//     */
-//    public void setETA(long eta) {
-//        this.ETA = eta;
-////        this.ETA = ETA + new Date().getTime() - Main.startTime;
-//    }
-//
-//    /**
-//     *  this method sets a new ETC for the robot
-//     * @param etc The estimated time of clearance
-//     */
-//    public void setETC(long etc) {
-//        this.ETC = etc;
-////        this.ETC = etc + new Date().getTime() - Main.startTime;
-//    }
-    
-//    public void setLaneSpecs(LaneSpecs specs) {
-//        this.laneSpecs = specs;
-//    }
 	
 	public String toString() {
 		return getClass().getName() + ", " + super.toString() 
