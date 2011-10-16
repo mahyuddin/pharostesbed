@@ -302,7 +302,10 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
 
 					// We want to cross the intersection but we are not sure if it is safe.
 					long currTime = System.currentTimeMillis();
+					
+					
 					boolean isSafeNow = nbrList.isSafeToCross();
+					
 					if (isSafeNow) {
 						if (!isSafeToCross) {
 							Logger.log("It might be safe to cross, currTime = " + currTime);

@@ -27,10 +27,10 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	 */
 	public static final int OVERHEAD_RANGER_INDEX = 5;
 	
-	/**
-	 * The distance between overhead markers in meters.
-	 */
-	public static final double OVERHEAD_MARKER_SEPARATION_DISTANCE = 1;
+//	/**
+//	 * The distance between overhead markers in meters.
+//	 */
+//	public static final double OVERHEAD_MARKER_SEPARATION_DISTANCE = 1;
 	
 	/**
 	 * The threshold value above which the marker is assumed to not exist.
@@ -52,7 +52,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	 * The number of consecutive marker sensor readings before we conclude that the 
 	 * marker exists.
 	 */
-	public static final int THRESHOLD_MARKER = 1;
+	public static final int THRESHOLD_MARKER = 2;
 	
 	/**
 	 * Whether the robot is currently under a marker.  It is initially assumed to not be under a marker.
