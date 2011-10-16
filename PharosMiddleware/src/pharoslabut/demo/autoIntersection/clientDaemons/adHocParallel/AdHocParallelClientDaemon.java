@@ -42,7 +42,7 @@ public class AdHocParallelClientDaemon
 	
 	@Override
 	protected void createNeighborList() {
-		 nbrList = new NeighborList();
+		 nbrList = new NeighborList(entryPointID, exitPointID);
 	}
 
 }

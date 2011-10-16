@@ -53,7 +53,7 @@ public class NeighborState
 	 * @return The exit point.
 	 */
 	public String getExitPointID() {
-		return entryPointID;
+		return exitPointID;
 	}
 	
 	/**

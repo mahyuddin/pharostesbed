@@ -19,15 +19,29 @@ public class NeighborList
 	extends
 	pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.NeighborList
 {	
+	/**
+	 * The entry point.
+	 */
+	private String myEntryID;
+	
+	/**
+	 * The exit point.
+	 */
+	private String myExitID;
 	
 	// TODO: Make this a tunable parameter.
 	private IntersectionSpecs intersectionSpecs = TwoLaneFourWayIntersectionSpecs.getSpecs();
 	
 	/**
 	 * The constructor.
+	 * 
+	 * @param myEntryID The entry point.
+	 * @param myExitID The exit point.
 	 */
-	public NeighborList() {
+	public NeighborList(String myEntryID, String myExitID) {
 		super();
+		this.myEntryID = myEntryID;
+		this.myExitID = myExitID;
 	}
 	
 	
@@ -35,21 +49,29 @@ public class NeighborList
 	 * Searches the neighbor list and determines whether it is safe for the
 	 * local robot to cross the intersection.
 	 * 
-	 * @param myEntryID The local vehicle's entry ID into the intersection.
-	 * @param myExitID The local vehicle's exit ID from the intersection.
 	 * @return true if it's safe to cross the intersection.
 	 */
-	public boolean isSafeToCross(String myEntryID, String myExitID) {
+	@Override
+	public boolean isSafeToCross() {
+		Logger.log("Checking to see if it's OK to cross in a serial manner.");
 		if (super.isSafeToCross()) {
 			Logger.log("Safe to cross sequentially.");
 			return true;
 		} else {
 			Logger.log("Determining whether it's safe to cross in parallel with another robot.");
+			
+			int numCrossing = 0;
+			
 			Iterator<InetAddress> itr = list.keySet().iterator();
 			while (itr.hasNext()) {
 				InetAddress addr = itr.next();
 				NeighborState nbrState = (NeighborState)list.get(addr);
+				Logger.log("Checking neighbor " + nbrState);
+				
 				if (nbrState.getStatus() == VehicleStatus.CROSSING) {
+					
+					numCrossing++;
+					
 					StringBuffer sb = new StringBuffer("Vehicle " + nbrState.getAddress() + " is crossing.");
 					sb.append("\n\tChecking if it's OK to cross in parallel with this vehicle.");
 					sb.append("\n\tMy entrance: " + myEntryID + ", My exit: " + myExitID);
@@ -69,9 +91,13 @@ public class NeighborList
 				}
 			}
 			
-			Logger.log("Checked all neighbors and will not conflict with any of them."
-					+ "  Thus, concluding it's safe to cross.");
-			return true;
+			if (numCrossing > 0) {
+				Logger.log("There are neighbors crossing and I do not conflict. Thus, concluding it's safe to cross.");
+				return true;
+			} else {
+				Logger.log("No neighbors crossing, resorting to conclusion of serial ad hoc manager.");
+				return false;
+			}
 		}
 	}
 	
