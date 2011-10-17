@@ -4,6 +4,7 @@ import java.net.InetAddress;
 import java.util.Iterator;
 
 import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialBeacon;
+import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.SafeState;
 import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.VehicleStatus;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.TwoLaneFourWayIntersectionSpecs;
@@ -52,11 +53,11 @@ public class NeighborList
 	 * @return true if it's safe to cross the intersection.
 	 */
 	@Override
-	public boolean isSafeToCross() {
+	public SafeState isSafeToCross() {
 		Logger.log("Checking to see if it's OK to cross in a serial manner.");
-		if (super.isSafeToCross()) {
+		if (super.isSafeToCross().isSafe()) {
 			Logger.log("Safe to cross sequentially.");
-			return true;
+			return new SafeState(true);
 		} else {
 			Logger.log("Determining whether it's safe to cross in parallel with another robot.");
 			
@@ -83,7 +84,7 @@ public class NeighborList
 					{
 						sb.append("\n\tWill intersect!  Not safe to cross!");
 						Logger.log(sb.toString());
-						return false;
+						return new SafeState(false);
 					} else {
 						sb.append("\n\tWill NOT intersect!  May still be safe to cross.");
 						Logger.log(sb.toString());
@@ -92,11 +93,11 @@ public class NeighborList
 			}
 			
 			if (numCrossing > 0) {
-				Logger.log("There are neighbors crossing and I do not conflict. Thus, concluding it's safe to cross.");
-				return true;
+				Logger.log("There are neighbors crossing and I do not conflict. Thus, concluding it's immediately safe to cross.");
+				return new SafeState(true, System.currentTimeMillis());
 			} else {
 				Logger.log("No neighbors crossing, resorting to conclusion of serial ad hoc manager.");
-				return false;
+				return new SafeState(false);
 			}
 		}
 	}
