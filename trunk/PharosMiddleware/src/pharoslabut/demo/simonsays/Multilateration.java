@@ -65,17 +65,31 @@ public class Multilateration extends Thread{
 		while (true) {
 			
 			// wait until we have readings from three unique beacons
-			if (beaconData.size() < 3) 
+			while (beaconData.size() < 2) 
 			{ 
-				try {
-					beaconData.wait();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				synchronized(beaconData)
+				{
+					try {
+						System.out.println("Waiting on more beacon Data");
+						beaconData.wait();
+						System.out.println("Done waiting, now have beaconData size = " + beaconData.size());
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
 			} 
-			else 
+		
+			synchronized (beaconData) 
 			{
-
+				System.out.println("starting location calculation...");
+				System.out.print("beaconData entries: ");
+				for (Entry<String, BeaconReading> e : beaconData.entrySet()) {
+					System.out.print("(" + e.getValue().coord.getPx() + "," + e.getValue().coord.getPy() + "): " + e.getValue().distance + "   ");
+				}
+				System.out.println();
+				
+				
+				
 				ArrayList<PlayerPoint2d> intersectionPoints = new ArrayList<PlayerPoint2d>();
 				double xCenter1, yCenter1, radius1, xCenter2, yCenter2, radius2, distanceBetweenCenters;
 				double xSol1, ySol1, xSol2, ySol2;
@@ -100,7 +114,18 @@ public class Multilateration extends Thread{
 						yCenter2 = circle2.coord.getPy();
 						radius2 = circle2.distance;
 						
-						distanceBetweenCenters = Math.sqrt(((xCenter2 - xCenter1) * (xCenter2 - xCenter1)) + ((yCenter2 - yCenter1) * (yCenter2 - yCenter1)));
+						double xDiff = xCenter2 - xCenter1;
+						double yDiff = yCenter2 - yCenter1; 
+						
+						distanceBetweenCenters = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
+						
+						if (distanceBetweenCenters > (radius1 + radius2))
+							continue; // circles do not intersect
+						
+						if (distanceBetweenCenters < Math.abs(radius2 - radius1))
+							continue; // one circle is inside the other, no intersection
+						
+						
 						
 						// TODO use margin of error in this conditional
 						if ((radius1 + radius2) == distanceBetweenCenters) // one intersection point (circles are tangent)
@@ -108,21 +133,35 @@ public class Multilateration extends Thread{
 							PlayerPoint2d point = new PlayerPoint2d();
 							point.setPx((xCenter1*radius1 + xCenter2*radius2) / (radius1 + radius2));
 							point.setPy((yCenter1*radius1 + yCenter2*radius2) / (radius1 + radius2));
-							
 						}
 				
 						// TODO use margin of error in this conditional
 						else if ((radius1 + radius2) > distanceBetweenCenters)  // two intersection points
 						{
-							double xDiff = xCenter2 - xCenter1;
-							double yDiff = yCenter2 - yCenter1; 
-							double hValue = (distanceBetweenCenters*distanceBetweenCenters + radius1*radius1 - radius2*radius2) / (2*distanceBetweenCenters); 
+							// distance from circle1 center to the tangent line that crosses the two intersection points
+							double distToTan = (distanceBetweenCenters*distanceBetweenCenters + radius1*radius1 - radius2*radius2) / (2*distanceBetweenCenters); 
 							
-							xSol1 = xCenter1 + (xDiff*hValue / distanceBetweenCenters) + (yDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - hValue*hValue);
-							ySol1 = yCenter1 + (yDiff*hValue / distanceBetweenCenters) - (xDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - hValue*hValue);
+							xSol2 = xCenter1 + (xDiff * distToTan / distanceBetweenCenters);
+							ySol2 = yCenter1 + (yDiff * distToTan / distanceBetweenCenters);
 							
-							xSol2 = xCenter1 + (xDiff*hValue / distanceBetweenCenters) - (yDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - hValue*hValue);
-							ySol2 = yCenter1 + (yDiff*hValue / distanceBetweenCenters) + (xDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - hValue*hValue);
+							// distance from circle2 center to either intersection point
+							double distToIntersection = Math.sqrt(Math.abs(radius1 * radius1 - distToTan * distToTan));
+							
+							double xOffset = -1 * yDiff * distToIntersection / distanceBetweenCenters;
+							double yOffset = xDiff * distToIntersection / distanceBetweenCenters;
+							
+							xSol1 = xSol2 + xOffset;
+							xSol2 = xSol2 - xOffset;
+							
+							ySol1 = ySol2 + yOffset;
+							ySol2 = ySol2 - yOffset;
+							
+// old method
+//							xSol1 = xCenter1 + (xDiff*distToTan / distanceBetweenCenters) + (yDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - distToTan*distToTan);
+//							ySol1 = yCenter1 + (yDiff*distToTan / distanceBetweenCenters) - (xDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - distToTan*distToTan);
+//							
+//							xSol2 = xCenter1 + (xDiff*distToTan / distanceBetweenCenters) - (yDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - distToTan*distToTan);
+//							ySol2 = yCenter1 + (yDiff*distToTan / distanceBetweenCenters) + (xDiff/distanceBetweenCenters) * Math.sqrt(radius1*radius1 - distToTan*distToTan);
 							
 							PlayerPoint2d point1 = new PlayerPoint2d();
 							point1.setPx(xSol1);
@@ -141,14 +180,30 @@ public class Multilateration extends Thread{
 					} // end of inner for loop "j"
 				} // end of outer for loop "i"
 				
+				// print intersection points
+				System.out.print("Intersection Points: ");
+				for (PlayerPoint2d p : intersectionPoints) {
+					System.out.print("(" + p.getPx() + "," + p.getPy() + ") ");
+				}
+				System.out.println();
+				
 				
 				// remove points outside of beacon polygon
 				intersectionPoints = removeOutsidePoints(intersectionPoints, beaconDataList);
 				
+				
 				// find minimum point
 				currentLocation = findMinimumCluster(intersectionPoints);
-
-			}
+				System.out.println("Current Location: (" + currentLocation.getPx() + "," + currentLocation.getPy() + ")");
+				
+				// wait for new value
+				try {
+					beaconData.wait();
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				} 
+				
+			} // end of synchronized (beaconData)
 			
 		} // end of while(true) loop
 	}
