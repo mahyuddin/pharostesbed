@@ -304,23 +304,31 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
 					long currTime = System.currentTimeMillis();
 					
 					
-					boolean isSafeNow = nbrList.isSafeToCross();
+					SafeState isSafeNow = nbrList.isSafeToCross();
 					
-					if (isSafeNow) {
-						if (!isSafeToCross) {
-							Logger.log("It might be safe to cross, currTime = " + currTime);
-							isSafeToCross = true;
-							safeTimestamp = currTime;
+					if (isSafeNow.isSafe()) {
+						
+						if (System.currentTimeMillis() > isSafeNow.getSafeTime()) {
+							Logger.log("It is immediately safe to cross!  Granting self permission to cross intersection!");
+							accessGranted = true;
+							beacon.setVehicleStatus(VehicleStatus.CROSSING);
+							lineFollower.unpause();
 						} else {
-							// The robot previously concluded that it was safe to cross the intersection.
-							// See if enough time has passed to really be sure it is safe.
-							long safeDuration = currTime - safeTimestamp;
-							if (safeDuration > MIN_SAFE_DURATION) {
-								Logger.log("Granting self permission to cross intersection! safeDuration = " 
-										+ safeDuration + ", Min. safe duration = " + MIN_SAFE_DURATION);
-								accessGranted = true;
-								beacon.setVehicleStatus(VehicleStatus.CROSSING);
-								lineFollower.unpause();
+							if (!isSafeToCross) {
+								Logger.log("It might be safe to cross, currTime = " + currTime);
+								isSafeToCross = true;
+								safeTimestamp = currTime;
+							} else {
+								// The robot previously concluded that it was safe to cross the intersection.
+								// See if enough time has passed to really be sure it is safe.
+								long safeDuration = currTime - safeTimestamp;
+								if (safeDuration > MIN_SAFE_DURATION) {
+									Logger.log("Granting self permission to cross intersection! safeDuration = " 
+											+ safeDuration + ", Min. safe duration = " + MIN_SAFE_DURATION);
+									accessGranted = true;
+									beacon.setVehicleStatus(VehicleStatus.CROSSING);
+									lineFollower.unpause();
+								}
 							}
 						}
 					} else {

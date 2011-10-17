@@ -46,7 +46,7 @@ public class NeighborList {
 	 * 
 	 * @return true if it's safe to cross the intersection.
 	 */
-	public boolean isSafeToCross() {
+	public SafeState isSafeToCross() {
 		
 		Logger.log("Determining whether it's safe to cross the intersection.");
 		Iterator<InetAddress> itr = list.keySet().iterator();
@@ -55,19 +55,19 @@ public class NeighborList {
 			NeighborState nbrState = list.get(addr);
 			if (nbrState.getStatus() == VehicleStatus.CROSSING) {
 				Logger.log("Not safe to cross!  Neighbor " + addr + " is crossing.");
-				return false;
+				return new SafeState(false);
 			}
 			else if (nbrState.getStatus() == VehicleStatus.REQUESTING) {
 				int nbrID = addr.getAddress()[3]; 
 				if (nbrID > myID) {
 					Logger.logErr("Not safe to cross!  Neighbor " + addr + " is requesting and has a greater ID (" + nbrID + " vs. " + myID + ")");
-					return false;
+					return new SafeState(false);
 				}
 			}
 		}
 		
 		Logger.log("Safe to cross!");
-		return true;
+		return new SafeState(true);
 	}
 	
 	/**

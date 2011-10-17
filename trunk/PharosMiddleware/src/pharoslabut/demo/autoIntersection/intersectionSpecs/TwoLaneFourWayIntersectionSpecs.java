@@ -98,7 +98,7 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 			return !(entryPointID1.equals("E2") && exitPointID1.equals("X4"));
 			
 		else
-			return false;
+			return true;  // by default assume a conflict will occur
 		
 	}
 }
