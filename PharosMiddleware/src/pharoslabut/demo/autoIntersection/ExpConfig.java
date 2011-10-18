@@ -88,6 +88,8 @@ public class ExpConfig {
 								expType = ExpType.ADHOC_SERIAL;
 							else if (expTypeStr.equals("ADHOC-PARALLEL"))
 								expType = ExpType.ADHOC_PARALLEL;
+							else if (expTypeStr.equals("STOPSIGN"))
+								expType = ExpType.STOPSIGN;
 							else {
 								System.err.println("Unknown experiment type " + elem[1]);
 								System.exit(1);	

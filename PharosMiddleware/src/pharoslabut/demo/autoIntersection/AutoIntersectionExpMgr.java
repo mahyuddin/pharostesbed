@@ -80,7 +80,7 @@ public class AutoIntersectionExpMgr {
 			// Send each vehicle a start experiment command.
 			StartExpMsg sem;
 
-			if (expConfig.getExpType() == ExpType.CENTRALIZED) 
+			if (expConfig.getExpType() == ExpType.CENTRALIZED || expConfig.getExpType() == ExpType.STOPSIGN) 
 				sem = new StartCentralizedExpMsg(expConfig.getExpName(),
 						expConfig.getExpType(), expConfig.getServerIP(), expConfig.getServerPort());
 			else 

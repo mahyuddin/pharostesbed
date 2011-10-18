@@ -6,5 +6,5 @@ package pharoslabut.demo.autoIntersection;
  * @author Chien-Liang Fok
  */
 public enum ExpType {
-	CENTRALIZED, ADHOC_SERIAL, ADHOC_PARALLEL;
+	CENTRALIZED, ADHOC_SERIAL, ADHOC_PARALLEL, STOPSIGN;
 }

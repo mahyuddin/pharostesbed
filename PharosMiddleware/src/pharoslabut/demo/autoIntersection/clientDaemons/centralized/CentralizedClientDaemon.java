@@ -32,42 +32,42 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 	/**
 	 * The IP address of the intersection management server.
 	 */
-	private InetAddress serverIP;
+	protected InetAddress serverIP;
 	
 	/**
 	 * The port of the intersection management server.
 	 */
-	private int serverPort;
+	protected int serverPort;
 	
 	/**
 	 * The local IP address.
 	 */
-	private InetAddress ip;
+	protected InetAddress ip;
 	
 	/**
 	 * The local port on which this client should listen.
 	 */
-	private int port;
+	protected int port;
 	
 	/**
 	 * Whether the this daemon is running.
 	 */
-	private boolean isRunning = false;
+	protected boolean isRunning = false;
 	
 	/**
 	 * The time since the robot last requested access to the intersection.
 	 */
-	private long lastRequestTime = -1;
+	protected long lastRequestTime = -1;
 	
 	/**
 	 * Whether access to the intersection was granted.
 	 */
-	private boolean accessGranted = false;
+	protected boolean accessGranted = false;
 	
 	/**
 	 * The message sender.
 	 */
-	private TCPMessageSender msgSender = TCPMessageSender.getSender();
+	protected TCPMessageSender msgSender = TCPMessageSender.getSender();
 	
 	/**
 	 * The constructor.
