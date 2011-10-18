@@ -5,6 +5,7 @@ import pharoslabut.sensors.BlobFinderVisualizer;
 
 import playerclient3.*;
 import playerclient3.structures.blobfinder.*;
+import playerclient3.structures.ptz.PlayerPtzCmd;
 import playerclient3.structures.*;
 
 /**
@@ -42,6 +43,19 @@ public class TestBlobFinder {
             	visualizer = new BlobFinderVisualizer(name);
             }
         });
+		
+		// connect to PTZ
+		PtzInterface ptz = null;
+		try {
+			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { System.out.println("Error, could not connect to PTZ proxy."); System.exit(1);}	
+		
+		PlayerPtzCmd ptzCmd = new PlayerPtzCmd();
+		ptzCmd.setPan((float) 0);
+		ptzCmd.setTilt((float) 0);
+		
+		Logger.log("Resetting position of the camera.");
+		ptz.setPTZ(ptzCmd);
 		
 		Logger.log("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
