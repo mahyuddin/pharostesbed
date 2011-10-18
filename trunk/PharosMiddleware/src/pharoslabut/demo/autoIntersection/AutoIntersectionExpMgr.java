@@ -96,6 +96,17 @@ public class AutoIntersectionExpMgr {
 			Logger.logErr("Problem while communicating with the vehicles...");
 			e.printStackTrace();
 		}
+		
+		// Pause 5 seconds to ensure messages were all sent
+		Logger.log("Pausing 5 seconds to ensure all messages were sent.");
+		synchronized(this) {
+			try {
+				this.wait(5000);
+			} catch (InterruptedException e) {				
+				e.printStackTrace();
+			}
+		}
+		Logger.log("Shutting down...");
 	}
 	
 	private static void print(String msg) {
