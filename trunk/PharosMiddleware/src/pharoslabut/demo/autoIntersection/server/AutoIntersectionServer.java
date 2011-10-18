@@ -14,7 +14,7 @@ import pharoslabut.logger.Logger;
 public class AutoIntersectionServer {
 
 	// TODO: Add batch and other types.
-	public static enum ServerType {SEQUENTIAL, PARALLEL};
+	public static enum ServerType {SEQUENTIAL, PARALLEL, TRAFFIC_LIGHT};
 	
 	/**
 	 * The server type.
@@ -65,6 +65,11 @@ public class AutoIntersectionServer {
     			daemon = new ParallelDaemon(intersectionSpecs, serverPort);
     			daemon.start();
     			break;
+    		case TRAFFIC_LIGHT:
+    			Logger.log("Starting traffic light daemon.");
+    			daemon = new TrafficLightDaemon(intersectionSpecs, serverPort);
+    			daemon.start();
+    			break;
     		}
     	} else 
     		Logger.logErr("Already started, daemon = " + daemon);
@@ -79,7 +84,7 @@ public class AutoIntersectionServer {
 		System.setProperty ("PharosMiddleware.debug", "true");
 		print("Usage: " + AutoIntersectionServer.class.getName() + " <options>\n");
 		print("Where <options> include:");
-		print("\t-type <sequential|parallel>: The type of intersection management (default sequential)");
+		print("\t-type <sequential|parallel|trafficlight>: The type of intersection management (default sequential)");
 		print("\t-port <port number>: The port on which to listen (default 7898)");
 		print("\t-log <log file name>: The name of the file in which to save debug output (default null)");
 		print("\t-debug: enable debug mode");
@@ -112,6 +117,8 @@ public class AutoIntersectionServer {
 						serverType = ServerType.SEQUENTIAL;
 					else if (mp.equals("parallel"))
 						serverType = ServerType.PARALLEL;
+					else if (mp.equals("trafficlight"))
+						serverType = ServerType.TRAFFIC_LIGHT;
 					else {
 						System.err.println("Unknown mobility plane " + mp);
 						usage();
