@@ -6,6 +6,7 @@ import pharoslabut.demo.autoIntersection.clientDaemons.ClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel.AdHocParallelClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.centralized.CentralizedClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.stopSign.StopSignClientDaemon;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
@@ -290,13 +291,15 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 
         Logger.log("Patrol type: " + expType);
         
+        
+        
+        Logger.log("Switching on the expType.");
         switch (expType) {
         case CENTRALIZED:
         	StartCentralizedExpMsg cmsg = (StartCentralizedExpMsg)startExpMsg;
-
-        	InetAddress serverIP = cmsg.getServerIP();
-        	
-        	Logger.log("Creating the daemon...");
+            InetAddress serverIP = cmsg.getServerIP();
+            
+        	Logger.log("Creating the centralized daemon...");
         	daemon = new CentralizedClientDaemon(serverIP, cmsg.getServerPort(), port,
         			lineFollower, intersectionDetector, 
         			settings.getEntryID(), settings.getExitID());
@@ -305,16 +308,27 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
         	daemon.start();
         	break;
         case ADHOC_SERIAL:
-        	Logger.log("Creating the daemon...");
+        	Logger.log("Creating the ad hoc serial daemon...");
         	daemon = new AdHocSerialClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
         	break;
         case ADHOC_PARALLEL:
-        	Logger.log("Creating the daemon...");
+        	Logger.log("Creating the ad hoc parallel daemon...");
         	daemon = new AdHocParallelClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
+        	break;
+        case STOPSIGN:
+        	cmsg = (StartCentralizedExpMsg)startExpMsg;
+            serverIP = cmsg.getServerIP();
+            
+        	Logger.log("Creating the stop sign daemon...");
+        	daemon = new StopSignClientDaemon(serverIP, cmsg.getServerPort(), port,
+        			lineFollower, intersectionDetector, 
+        			settings.getEntryID(), settings.getExitID());
+        	Logger.log("Starting the daemon...");
+        	daemon.start(); 
         	break;
         }
 	}
