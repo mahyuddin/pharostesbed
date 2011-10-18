@@ -31,17 +31,17 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	/**
 	 * The network interface.
 	 */
-	TCPNetworkInterface networkInterface;
+	private TCPNetworkInterface networkInterface;
 	
 	/**
 	 * Whether this daemon is running.
 	 */
-	boolean running = false;
+	private boolean running = false;
 	
 	/**
 	 * The current vehicles that are in the intersection.
 	 */
-	Vector<VehicleState> currVehicles = new Vector<VehicleState>();
+	private Vector<VehicleState> currVehicles = new Vector<VehicleState>();
 	
 	/**
 	 * The constructor.

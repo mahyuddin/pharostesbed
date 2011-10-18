@@ -44,6 +44,23 @@ public abstract class IntersectionSpecs implements java.io.Serializable {
 	}
 	
 	/**
+	 * @return The number of roads in the intersection.
+	 */
+	public int numRoads() {
+		return roads.size();
+	}
+	
+	/**
+	 * Obtains a road specification.
+	 * 
+	 * @param i The index of the road, must be between 0 and numRoads() - 1.
+	 * @return The ith road specification
+	 */
+	public Road getRoad(int i) {
+		return roads.get(i);
+	}
+	
+	/**
 	 * Adds a road to the intersection.
 	 * 
 	 * @param road The road to add.
