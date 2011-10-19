@@ -173,22 +173,23 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
 		
 		// send data to be recorded by bdc
-		bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+		// bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
 	
 		
-//		CricketDataMsg cricketMsg = new CricketDataMsg(cd, coords);
-//		// broadcast new CricketData to clients list
-//		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
-//	    while (iter.hasNext()) {
-//	    	Entry<InetAddress, Integer> pair = iter.next();
-//		    try {
-//		    	sender.sendMessage(pair.getKey(), pair.getValue(), cricketMsg);
-//		    }
-//		    catch (PharosException e) {
-//				e.printStackTrace();
-//				Logger.logErr("Failed to send Cricket Msg, " + cd.toString());
-//			}
-//	    }
+		BeaconReadingMsg brMsg = new BeaconReadingMsg(new BeaconReading(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius));
+		// broadcast new BeaconReading to clients list
+		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
+	    while (iter.hasNext()) {
+	    	Entry<InetAddress, Integer> pair = iter.next();
+		    try {
+		    	sender.sendMessage(pair.getKey(), pair.getValue(), brMsg);
+		    }
+		    catch (PharosException e) {
+				iter.remove();
+		    	e.printStackTrace();
+				Logger.logErr("Failed to send BeaconReadingMsg, " + brMsg.toString());
+			}
+	    }
 	} 
 	
 	//@Override
@@ -356,6 +357,9 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		print("\t-log <file name>: name of file in which to save results (default SimonSaysServer.log)");
+		print("\t-cricketFile <file name>: name of file where Cricket Beacon IDs and coordinates are stored (default cricketBeacons.txt)");
+		print("\t-cricketPort <port number>: tty port where the Cricket Listener is connected (default /dect/ttyUSB1");
+		print("\t-noClient: this option allows you to manually control the robot without the SimonSaysClient (default false)");
 		print("\t-debug: enable debug mode");
 	}
 	

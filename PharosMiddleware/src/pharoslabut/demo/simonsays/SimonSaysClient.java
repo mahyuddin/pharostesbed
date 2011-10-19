@@ -6,6 +6,8 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.junit.Assert;
+
 import pharoslabut.demo.simonsays.io.PlayerControlCmd;
 import pharoslabut.demo.simonsays.io.PlayerControlMsg;
 import pharoslabut.io.AckableMessage;
@@ -26,6 +28,8 @@ public class SimonSaysClient {
 	
 //	private TCPMessageSender tcpSender;
 	private CmdExec cmdExec;
+	public static boolean testing = false;
+	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
 	
 	/**
 	 * The Constructor.
@@ -48,7 +52,7 @@ public class SimonSaysClient {
 //			}
 			
 			// initialize the Trilateration process
-			new Multilateration(0, 0).start(); // robot's starting coordinates (x,y)
+//			new Multilateration(0, 0).start(); // robot's starting coordinates (x,y)
 			
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(InetAddress.getByName(serverIP), serverPort);
@@ -56,7 +60,6 @@ public class SimonSaysClient {
 			// send an initial PlayerControlMsg with the START cmd, this adds this client to the server's client list
 			cmdExec.sendMsg(new PlayerControlMsg(PlayerControlCmd.START));			
 			
-			System.out.println("starting GUI...");
 			// Create a GUI for allowing users to interact with the system...
 			// See: http://download.oracle.com/javase/6/docs/api/javax/swing/package-summary.html#threading
 			SwingUtilities.invokeLater(new Runnable() {
@@ -120,6 +123,9 @@ public class SimonSaysClient {
 				else if (args[i].equals("-log")) {
 					logfileName = args[++i];
 				}
+				else if (args[i].equals("-testing")) {
+					testing = true;
+				}
 
 				else {
 					usage();
@@ -131,6 +137,7 @@ public class SimonSaysClient {
 			usage();
 			System.exit(1);
 		}
+		
 		
 		print("Server IP: " + serverIP);
 		print("Server port: " + serverPort);
