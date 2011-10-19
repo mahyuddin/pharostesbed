@@ -150,6 +150,10 @@ public class CmdExec implements MessageReceiver {
 				//Logger.log("Robot is " + radius + "m from (" + coords.getPx() + "," + coords.getPy() + ")" );
 //				System.out.println(cd.getCricketID() + ", dist = " + cd.getDistance());
 			}
+			else if (rcvMsg instanceof BeaconReadingMsg) {
+				BeaconReadingMsg brMsg = (BeaconReadingMsg)rcvMsg;
+				SimonSaysClient.bdc.newBeaconData(brMsg.getBeaconReading());
+			}
 			else {
 				this.notifyAll();
 			}

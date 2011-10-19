@@ -31,6 +31,7 @@ public class ProgramEntryGUI implements ActionListener {
 	private JButton submitButton;
 	private JFrame frame;
 	//private JLabel statusLabel = new JLabel("Debug Mode: False");
+	private AssertionTuple currentTuple = null; 
 	
 	private ProgramExecutor executor = null;
 	
@@ -124,7 +125,7 @@ public class ProgramEntryGUI implements ActionListener {
 		robotMenu.add(resetPlayerMI);
 		
 		// Create the "Debug" pull down menu
-		debugModeMI = new JCheckBoxMenuItem("Enable Debug Mode");
+		debugModeMI = new JCheckBoxMenuItem("Enable Debug Mode", true);
 		debugModeMI.setMnemonic(KeyEvent.VK_S);
 //		debugModeMI.addActionListener(new ActionListener() {
 //			public void actionPerformed(ActionEvent ae) {
@@ -288,6 +289,7 @@ public class ProgramEntryGUI implements ActionListener {
 					JOptionPane.showMessageDialog(frame, pe.getMessage());
 				}
 			}
+			SimonSaysClient.testing = false;
 			
 			running = false;
 			Logger.log("ProgramExecutor thread exiting...");
@@ -308,7 +310,13 @@ public class ProgramEntryGUI implements ActionListener {
 //		else if (msg instanceof CameraTakeSnapshotMsg)
 		else if (msg instanceof RobotMoveMsg) {
 			JOptionPane.showMessageDialog(frame, "About to move robot, note the robot's current position.");
-			Multilateration.saveCurrentLocation(); // this is the only time that saveCurrentLocation() should be called
+//			Multilateration.saveCurrentLocation(); // this is the only time that saveCurrentLocation() should be called
+			if (SimonSaysClient.testing) {
+				currentTuple = new AssertionTuple();
+				currentTuple.setExpectedDelta(((RobotMoveMsg)msg).getDist());
+				currentTuple.setStartingValue(SimonSaysClient.bdc.getLastBeaconReading().distance);
+				System.out.println("doDebugPre: Created new assertion tuple.");
+			}
 		}
 		else if (msg instanceof RobotTurnMsg)
 			JOptionPane.showMessageDialog(frame, "About to turn robot, note the robot's current heading.");
@@ -335,13 +343,18 @@ public class ProgramEntryGUI implements ActionListener {
 			cppData.add(cpp);
 		}
 		else if (msg instanceof RobotMoveMsg) {
-			// double actualDist = getDouble("How many meters did the robot move?");
+			double actualDist = getDouble("How many meters did the robot move?");
 			// use Euclidean distance formula instead of asking the user
-			PlayerPoint2d curLoc = Multilateration.getCurrentLocation();
-			PlayerPoint2d lastLoc = Multilateration.getLastSavedLocation(); // this is the only time that saveCurrentLocation() should be called
-			double actualDist = Math.sqrt(Math.pow(curLoc.getPx() - lastLoc.getPx(), 2) + Math.pow(curLoc.getPy() - lastLoc.getPy(), 2)); 
+//			PlayerPoint2d curLoc = Multilateration.getCurrentLocation();
+//			PlayerPoint2d lastLoc = Multilateration.getLastSavedLocation(); // this is the only time that saveCurrentLocation() should be called
+//			double actualDist = Math.sqrt(Math.pow(curLoc.getPx() - lastLoc.getPx(), 2) + Math.pow(curLoc.getPy() - lastLoc.getPy(), 2)); 
 			CPP cpp = new CPP("MOVE", ((RobotMoveMsg)msg).getDist(), actualDist);
 			cppData.add(cpp);
+			if (SimonSaysClient.testing) {
+				currentTuple.setEndingValue(SimonSaysClient.bdc.getLastBeaconReading().distance);
+				System.out.println("doDebugPost: Finished assertion tuple.");
+				SimonSaysClientTest.startAssertion(currentTuple);
+			}
 		}
 		else if (msg instanceof RobotTurnMsg) {
 			double actualAngle = getDouble("How many degrees did the robot turn?");
