@@ -31,9 +31,9 @@ public class RobotMoveMsg implements AckableMessage {
 	}
 	
 	/**
-	 * Returns the desired pan angle.
+	 * Returns the distance to move in meters.
 	 * 
-	 * @return the pan angle.
+	 * @return the distance to move in meters.
 	 */
 	public double getDist() {
 		return dist;
