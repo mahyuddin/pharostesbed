@@ -164,7 +164,7 @@ public class TCPMessageReceiver implements Runnable {
 	 */
     private class ClientHandler implements Runnable {
 		/**
-		 * The sock et to the client.
+		 * The socket to the client.
 		 */
 		private Socket socket;
 		
