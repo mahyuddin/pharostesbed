@@ -29,8 +29,11 @@ package playerclient3.structures;
  *      <li>v3.0 - Player 3.0 supported
  * </ul>
  */
-public class PlayerPoint2d {
-    private double px;        // X [m]
+public class PlayerPoint2d implements java.io.Serializable {
+
+	private static final long serialVersionUID = -9026420866715544418L;
+
+	private double px;        // X [m]
     private double py;        // Y [m]
 
 
