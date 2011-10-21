@@ -2,7 +2,6 @@ package pharoslabut.demo.simonsays;
 
 import static org.junit.Assert.*;
 
-import java.util.Collections;
 import java.util.Vector;
 
 import org.junit.AfterClass;
