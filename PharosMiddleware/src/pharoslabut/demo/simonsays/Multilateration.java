@@ -294,17 +294,3 @@ public class Multilateration extends Thread{
 
 
 
-class BeaconReading {
-	
-	long timeStamp;
-	PlayerPoint2d coord = new PlayerPoint2d();
-	double distance;
-	
-	public BeaconReading(long ts, double x, double y, double dist) {
-		this.timeStamp = ts;
-		this.coord.setPx(x);
-		this.coord.setPy(y);
-		this.distance = dist;
-	}
-	
-}
