@@ -4,7 +4,6 @@ import pharoslabut.demo.simonsays.BeaconReading;
 import pharoslabut.demo.simonsays.SimonSaysClient;
 import pharoslabut.demo.simonsays.SimonSaysServer;
 import pharoslabut.io.Message;
-import playerclient3.structures.PlayerPoint3d;
 
 /**
  * This message is sent by the SimonSaysServer to the SimonSaysClient with
