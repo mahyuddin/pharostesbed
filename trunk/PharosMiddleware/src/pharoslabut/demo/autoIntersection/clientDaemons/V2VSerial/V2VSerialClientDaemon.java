@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -27,7 +27,7 @@ import pharoslabut.exceptions.PharosException;
  * 
  * @author Chien-Liang Fok
  */
-public class AdHocSerialClientDaemon extends ClientDaemon implements IntersectionEventListener, 
+public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionEventListener, 
 	Runnable, WiFiBeaconListener 
 {
 	
@@ -91,7 +91,7 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
     /**
      * The beacon that this node is periodically broadcasting.
      */
-    protected AdHocSerialBeacon beacon;
+    protected V2VSerialBeacon beacon;
     
     /**
      * The beacon receiver.
@@ -112,7 +112,7 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
 	 * @param entryPointID The entry point ID.
 	 * @param exitPointID The exit point ID.
 	 */
-	public AdHocSerialClientDaemon(//int port,
+	public V2VSerialClientDaemon(//int port,
 			LineFollower lineFollower, IntersectionDetector intersectionDetector,
 			String entryPointID, String exitPointID) 
 	{
@@ -165,7 +165,7 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
 	protected void createBeacon(String pharosIP) {
 		Logger.log("Creating the beacon.");
 		try {
-			beacon = new AdHocSerialBeacon(InetAddress.getByName(pharosIP), mCastPort);
+			beacon = new V2VSerialBeacon(InetAddress.getByName(pharosIP), mCastPort);
 		} catch (UnknownHostException e) {
 			Logger.logErr("Unable to create the beacon: " + e.toString());
 			e.printStackTrace();
@@ -276,8 +276,8 @@ public class AdHocSerialClientDaemon extends ClientDaemon implements Intersectio
 	public void beaconReceived(WiFiBeaconEvent be) {
 		Logger.log("Received beacon: " + be);
 		WiFiBeacon beacon = be.getBeacon();
-		if (beacon instanceof AdHocSerialBeacon) {
-			nbrList.update((AdHocSerialBeacon)beacon);
+		if (beacon instanceof V2VSerialBeacon) {
+			nbrList.update((V2VSerialBeacon)beacon);
 		} else
 			Logger.logErr("Received an unexpected beacon: " + beacon);
 	}

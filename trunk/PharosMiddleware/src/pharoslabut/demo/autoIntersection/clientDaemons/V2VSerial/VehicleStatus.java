@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial;
 
 /**
  * Define the states that the vehicles can be in.

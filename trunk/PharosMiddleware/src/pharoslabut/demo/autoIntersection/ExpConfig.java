@@ -23,7 +23,7 @@ public class ExpConfig {
 	/**
 	 * The experiment type.
 	 */
-	private ExpType expType = ExpType.CENTRALIZED;
+	private ExpType expType = ExpType.V2I;
 	
 	/**
 	 * The IP address of the server.  This is only used in centrally-managed intersections.
@@ -82,14 +82,18 @@ public class ExpConfig {
 						String[] elem = line.split("[\\s]+");
 						try {
 							String expTypeStr = elem[1].toUpperCase();
-							if (expTypeStr.equals("CENTRALIZED"))
-								expType = ExpType.CENTRALIZED;
-							else if (expTypeStr.equals("ADHOC-SERIAL"))
-								expType = ExpType.ADHOC_SERIAL;
-							else if (expTypeStr.equals("ADHOC-PARALLEL"))
-								expType = ExpType.ADHOC_PARALLEL;
+							if (expTypeStr.equals("V2V"))
+								expType = ExpType.V2I;
+							else if (expTypeStr.equals("V2V-SERIAL"))
+								expType = ExpType.V2V_SERIAL;
+							else if (expTypeStr.equals("V2V-PARALLEL"))
+								expType = ExpType.V2V_PARALLEL;
 							else if (expTypeStr.equals("STOPSIGN"))
 								expType = ExpType.STOPSIGN;
+							else if (expTypeStr.equals("V2I-RESERVATION"))
+								expType = ExpType.V2I_RESERVATION;
+							else if (expTypeStr.equals("V2V-RESERVATION"))
+								expType = ExpType.V2V_RESERVATION;
 							else {
 								System.err.println("Unknown experiment type " + elem[1]);
 								System.exit(1);	
@@ -135,7 +139,7 @@ public class ExpConfig {
 		}
 		
 		// Perform some checks to ensure experiment configuration file is valid.
-		if (expType == ExpType.CENTRALIZED) {
+		if (expType == ExpType.V2I || expType == ExpType.STOPSIGN) {
 			if (serverIP == null) {
 				System.err.println("Must specify server IP!");
 				System.exit(1);
@@ -184,7 +188,7 @@ public class ExpConfig {
 	public String toString() {
 		StringBuffer sb = new StringBuffer(getClass().getName() + "\n");
 		sb.append("\tExpName = " + expName + "\n");
-		if (expType == ExpType.CENTRALIZED) {
+		if (expType == ExpType.V2I || expType == ExpType.STOPSIGN || expType == ExpType.V2I_RESERVATION) {
 			sb.append("\tServerIP = " + serverIP + "\n");
 			sb.append("\tServerPort = " + serverPort + "\n");
 		}

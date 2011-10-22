@@ -1,17 +1,18 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel;
 
 import java.net.InetAddress;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialBeacon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.VehicleStatus;
 
 /**
- * This is the beacon used in the ad hoc / parallel autonomous intersection.
+ * Contains the state about a specific neighbor in the neighbor list.
  * 
  * @author Chien-Liang Fok
  */
-public class AdHocParallelBeacon extends AdHocSerialBeacon {
-	
-	private static final long serialVersionUID = -6304254516078221644L;
+public class NeighborState
+		extends
+		pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.NeighborState 
+{
 
 	/**
 	 * The entry point.
@@ -26,13 +27,15 @@ public class AdHocParallelBeacon extends AdHocSerialBeacon {
 	/**
 	 * The constructor.
 	 * 
-	 * @param address The address of this host.
-	 * @param port The single-cast port number being used.
-	 * @param entryPointID The entry point.
-	 * @param exitPointID The exit point.
+	 * @param address The IP address of the neighbor.
+	 * @param status The status of the neighbor.
+	 * @param entryPointID The ID of the entry point.
+	 * @param exitPointID The ID of the exit point.
 	 */
-	public AdHocParallelBeacon(InetAddress address, int port, String entryPointID, String exitPointID) {
-		super(address, port);
+	public NeighborState(InetAddress address, VehicleStatus status, 
+			String entryPointID, String exitPointID) 
+	{
+		super(address, status);
 		this.entryPointID = entryPointID;
 		this.exitPointID = exitPointID;
 	}
@@ -59,5 +62,4 @@ public class AdHocParallelBeacon extends AdHocSerialBeacon {
 	public String toString() {
 		return super.toString() + ", entryPointID=" + entryPointID + ", exitPointID=" + exitPointID;
 	}
-	
 }

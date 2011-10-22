@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.centralized;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2I;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,7 +21,7 @@ import pharoslabut.navigate.LineFollower;
  * @author Chien-Liang Fok
  * @author Seth Gee
  */
-public class CentralizedClientDaemon extends ClientDaemon implements IntersectionEventListener, Runnable {
+public class V2IClientDaemon extends ClientDaemon implements IntersectionEventListener, Runnable {
 	
 	/**
 	 * The number of milliseconds before this daemon assumes the previous
@@ -80,7 +80,7 @@ public class CentralizedClientDaemon extends ClientDaemon implements Intersectio
 	 * @param entryPointID The ID of the entry point.
 	 * @param exitPointID The ID of the exit point.
 	 */
-	public CentralizedClientDaemon(InetAddress serverIP, int serverPort, int port,
+	public V2IClientDaemon(InetAddress serverIP, int serverPort, int port,
 			LineFollower lineFollower, IntersectionDetector intersectionDetector,
 			String entryPointID, String exitPointID) 
 	{

@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial;
 
 /**
  * Records whether it is potentially safe to cross the intersection, and
@@ -24,7 +24,7 @@ public class SafeState {
 	 * @param isSafe Whether it is potentially safe to cross.
 	 */
 	public SafeState(boolean isSafe) {
-		this(isSafe, System.currentTimeMillis() + AdHocSerialClientDaemon.MIN_SAFE_DURATION);
+		this(isSafe, System.currentTimeMillis() + V2VSerialClientDaemon.MIN_SAFE_DURATION);
 	}
 	
 	/**

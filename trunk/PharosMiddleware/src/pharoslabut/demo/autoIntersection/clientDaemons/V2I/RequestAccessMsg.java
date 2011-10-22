@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.centralized;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2I;
 
 import java.net.InetAddress;
 

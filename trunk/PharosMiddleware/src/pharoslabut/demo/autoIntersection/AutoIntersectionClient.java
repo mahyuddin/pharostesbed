@@ -3,9 +3,11 @@ package pharoslabut.demo.autoIntersection;
 import java.net.InetAddress;
 
 import pharoslabut.demo.autoIntersection.clientDaemons.ClientDaemon;
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel.AdHocParallelClientDaemon;
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialClientDaemon;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.CentralizedClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.V2IClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2IReservation.V2IReservationClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel.V2VParallelClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VReservation.V2VReservationClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.V2VSerialClientDaemon;
 import pharoslabut.demo.autoIntersection.clientDaemons.stopSign.StopSignClientDaemon;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetectorIR;
@@ -295,29 +297,46 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
         
         Logger.log("Switching on the expType.");
         switch (expType) {
-        case CENTRALIZED:
+        case V2I:
         	StartCentralizedExpMsg cmsg = (StartCentralizedExpMsg)startExpMsg;
             InetAddress serverIP = cmsg.getServerIP();
             
-        	Logger.log("Creating the centralized daemon...");
-        	daemon = new CentralizedClientDaemon(serverIP, cmsg.getServerPort(), port,
+        	Logger.log("Creating the V2I-daemon...");
+        	daemon = new V2IClientDaemon(serverIP, cmsg.getServerPort(), port,
         			lineFollower, intersectionDetector, 
         			settings.getEntryID(), settings.getExitID());
         	
         	Logger.log("Starting the daemon...");
         	daemon.start();
         	break;
-        case ADHOC_SERIAL:
-        	Logger.log("Creating the ad hoc serial daemon...");
-        	daemon = new AdHocSerialClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        case V2I_RESERVATION:
+        	cmsg = (StartCentralizedExpMsg)startExpMsg;
+            serverIP = cmsg.getServerIP();
+            
+        	Logger.log("Creating the V2I-reservation daemon...");
+        	daemon = new V2IReservationClientDaemon(serverIP, cmsg.getServerPort(), port,
+        			lineFollower, intersectionDetector, 
+        			settings.getEntryID(), settings.getExitID());
+        	Logger.log("Starting the daemon...");
+        	daemon.start(); 
+        	break;
+        case V2V_SERIAL:
+        	Logger.log("Creating the V2V-serial daemon...");
+        	daemon = new V2VSerialClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
         	break;
-        case ADHOC_PARALLEL:
-        	Logger.log("Creating the ad hoc parallel daemon...");
-        	daemon = new AdHocParallelClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        case V2V_PARALLEL:
+        	Logger.log("Creating the V2V-parallel daemon...");
+        	daemon = new V2VParallelClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
+        	break;
+        case V2V_RESERVATION:
+        	Logger.log("Creating the V2V-reservation daemon...");
+        	daemon = new V2VReservationClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	Logger.log("Starting the daemon...");
+        	daemon.start();
         	break;
         case STOPSIGN:
         	cmsg = (StartCentralizedExpMsg)startExpMsg;
