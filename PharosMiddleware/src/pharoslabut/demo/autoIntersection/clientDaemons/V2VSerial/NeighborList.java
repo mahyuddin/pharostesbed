@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial;
 
 import java.net.InetAddress;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import pharoslabut.logger.Logger;
  * Records the state of the neighboring vehicles in an ad hoc autonomous intersection.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialClientDaemon
+ * @see pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.V2VSerialClientDaemon
  */
 public class NeighborList {
 
@@ -95,7 +95,7 @@ public class NeighborList {
 	 * 
 	 * @param beacon The beacon.
 	 */
-	public void update(AdHocSerialBeacon beacon) {
+	public void update(V2VSerialBeacon beacon) {
 		InetAddress vehicleAddress = beacon.getAddress();
 		NeighborState neighborState;
 		

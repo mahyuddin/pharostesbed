@@ -1,4 +1,4 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial;
 
 import java.net.InetAddress;
 
@@ -11,7 +11,7 @@ import pharoslabut.logger.Logger;
  * 
  * @author Chien-Liang Fok
  */
-public class AdHocSerialBeacon extends WiFiBeacon {
+public class V2VSerialBeacon extends WiFiBeacon {
 
 	private static final long serialVersionUID = -6681705407266292187L;
 
@@ -26,7 +26,7 @@ public class AdHocSerialBeacon extends WiFiBeacon {
 	 * @param address The address of this host.
 	 * @param port The single-cast port number being used.
 	 */
-	public AdHocSerialBeacon(InetAddress address, int port) {
+	public V2VSerialBeacon(InetAddress address, int port) {
 		super(address, port);
 	}
 	

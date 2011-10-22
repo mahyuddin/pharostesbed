@@ -2,9 +2,9 @@ package pharoslabut.demo.autoIntersection.clientDaemons.stopSign;
 
 import java.net.InetAddress;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.CentralizedClientDaemon;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.GrantAccessMsg;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.RequestAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.V2IClientDaemon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventType;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
@@ -20,7 +20,7 @@ import pharoslabut.navigate.LineFollower;
  * 
  * @author Chien-Liang Fok
  */
-public class StopSignClientDaemon extends CentralizedClientDaemon {
+public class StopSignClientDaemon extends V2IClientDaemon {
 	
 	
 	/**

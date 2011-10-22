@@ -2,9 +2,9 @@ package pharoslabut.demo.autoIntersection.server;
 
 import java.net.InetAddress;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.ExitingMsg;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.GrantAccessMsg;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.RequestAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.ExitingMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;

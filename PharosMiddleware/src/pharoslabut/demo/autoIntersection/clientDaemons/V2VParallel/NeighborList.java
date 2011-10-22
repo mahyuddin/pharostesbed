@@ -1,11 +1,11 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel;
 
 import java.net.InetAddress;
 import java.util.Iterator;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.AdHocSerialBeacon;
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.SafeState;
-import pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.VehicleStatus;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.V2VSerialBeacon;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.SafeState;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.VehicleStatus;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.TwoLaneFourWayIntersectionSpecs;
 import pharoslabut.logger.Logger;
@@ -14,11 +14,11 @@ import pharoslabut.logger.Logger;
  * Records the state of the neighboring vehicles in an ad hoc autonomous intersection.
  * 
  * @author Chien-Liang Fok
- * @see pharoslabut.demo.autoIntersection.clientDaemons.adHocParallel.AdHocParallelClientDaemon
+ * @see pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel.V2VParallelClientDaemon
  */
 public class NeighborList 
 	extends
-	pharoslabut.demo.autoIntersection.clientDaemons.adHocSerial.NeighborList
+	pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.NeighborList
 {	
 	/**
 	 * The entry point.
@@ -107,13 +107,13 @@ public class NeighborList
 	 * 
 	 * @param beacon The beacon.
 	 */
-	public void update(AdHocSerialBeacon beacon) {
+	public void update(V2VSerialBeacon beacon) {
 		
-		if (!(beacon instanceof AdHocParallelBeacon)) {
+		if (!(beacon instanceof V2VParallelBeacon)) {
 			Logger.log("Received unexpected beacon " + beacon);
 		}
 		
-		AdHocParallelBeacon actualBeacon = (AdHocParallelBeacon)beacon;
+		V2VParallelBeacon actualBeacon = (V2VParallelBeacon)beacon;
 		
 		InetAddress vehicleAddress = beacon.getAddress();
 		NeighborState neighborState;

@@ -6,9 +6,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.ExitingMsg;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.GrantAccessMsg;
-import pharoslabut.demo.autoIntersection.clientDaemons.centralized.RequestAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.ExitingMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.Road;
 import pharoslabut.io.Message;
