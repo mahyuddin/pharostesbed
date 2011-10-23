@@ -112,6 +112,11 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 	private ClientDaemon daemon;
 	
 	/**
+	 * A buffer for incoming position2d informatino.
+	 */
+	private Position2DBuffer pos2DBuffer;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param port The TCP port on on which this client listens.  This is for receiving messages
@@ -192,7 +197,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
 			Logger.logErr("motors is null");
 			return false;
 		}
-		Position2DBuffer pos2DBuffer = new Position2DBuffer(p2di);
+		pos2DBuffer = new Position2DBuffer(p2di);
 		pos2DBuffer.start();
 		Logger.logDbg("Subscribed to Position2d proxy.");
 		
@@ -303,7 +308,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
             
         	Logger.log("Creating the V2I-daemon...");
         	daemon = new V2IClientDaemon(serverIP, cmsg.getServerPort(), port,
-        			lineFollower, intersectionDetector, 
+        			lineFollower, intersectionDetector, pos2DBuffer,
         			settings.getEntryID(), settings.getExitID());
         	
         	Logger.log("Starting the daemon...");
@@ -315,26 +320,29 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
             
         	Logger.log("Creating the V2I-reservation daemon...");
         	daemon = new V2IReservationClientDaemon(serverIP, cmsg.getServerPort(), port,
-        			lineFollower, intersectionDetector, 
+        			lineFollower, intersectionDetector, pos2DBuffer,
         			settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start(); 
         	break;
         case V2V_SERIAL:
         	Logger.log("Creating the V2V-serial daemon...");
-        	daemon = new V2VSerialClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	daemon = new V2VSerialClientDaemon(lineFollower, intersectionDetector, pos2DBuffer,
+        			settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
         	break;
         case V2V_PARALLEL:
         	Logger.log("Creating the V2V-parallel daemon...");
-        	daemon = new V2VParallelClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	daemon = new V2VParallelClientDaemon(lineFollower, intersectionDetector, pos2DBuffer,
+        			settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();                                                       
         	break;
         case V2V_RESERVATION:
         	Logger.log("Creating the V2V-reservation daemon...");
-        	daemon = new V2VReservationClientDaemon(lineFollower, intersectionDetector, settings.getEntryID(), settings.getExitID());
+        	daemon = new V2VReservationClientDaemon(lineFollower, intersectionDetector, pos2DBuffer,
+        			settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start();
         	break;
@@ -344,7 +352,7 @@ public class AutoIntersectionClient implements MessageReceiver, ProteusOpaqueLis
             
         	Logger.log("Creating the stop sign daemon...");
         	daemon = new StopSignClientDaemon(serverIP, cmsg.getServerPort(), port,
-        			lineFollower, intersectionDetector, 
+        			lineFollower, intersectionDetector, pos2DBuffer,
         			settings.getEntryID(), settings.getExitID());
         	Logger.log("Starting the daemon...");
         	daemon.start(); 

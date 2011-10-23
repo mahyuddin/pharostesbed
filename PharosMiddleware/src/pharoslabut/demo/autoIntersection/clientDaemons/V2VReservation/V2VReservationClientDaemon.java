@@ -2,6 +2,7 @@ package pharoslabut.demo.autoIntersection.clientDaemons.V2VReservation;
 
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.sensors.Position2DBuffer;
 
 /**
  * Implements a V2V form of intersection management where each robot decides
@@ -14,10 +15,10 @@ import pharoslabut.navigate.LineFollower;
 public class V2VReservationClientDaemon extends pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel.V2VParallelClientDaemon {
 
 	public V2VReservationClientDaemon(LineFollower lineFollower,
-			IntersectionDetector intersectionDetector, String entryPointID,
+			IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer, String entryPointID,
 			String exitPointID) 
 	{
-		super(lineFollower, intersectionDetector, entryPointID, exitPointID);
+		super(lineFollower, intersectionDetector, pos2DBuffer, entryPointID, exitPointID);
 		
 	}
 

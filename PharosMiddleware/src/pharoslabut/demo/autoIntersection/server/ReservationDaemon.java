@@ -3,8 +3,8 @@ package pharoslabut.demo.autoIntersection.server;
 import java.net.InetAddress;
 import java.util.Vector;
 
-import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessReservationMsg;
 import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2IReservation.GrantAccessReservationMsg;
 import pharoslabut.demo.autoIntersection.clientDaemons.V2IReservation.RequestReservationMsg;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.logger.Logger;

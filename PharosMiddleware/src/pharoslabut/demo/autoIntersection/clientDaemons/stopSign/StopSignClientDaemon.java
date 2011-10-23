@@ -11,6 +11,7 @@ import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.sensors.Position2DBuffer;
 
 /**
  * Navigates across an intersection by mimicking a stop sign.  It does this by ignoring
@@ -35,10 +36,10 @@ public class StopSignClientDaemon extends V2IClientDaemon {
 	 * @param exitPointID The ID of the exit point.
 	 */
 	public StopSignClientDaemon(InetAddress serverIP, int serverPort, int port,
-			LineFollower lineFollower, IntersectionDetector intersectionDetector,
+			LineFollower lineFollower, IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer,
 			String entryPointID, String exitPointID) 
 	{
-		super(serverIP, serverPort, port, lineFollower, intersectionDetector, entryPointID, exitPointID);
+		super(serverIP, serverPort, port, lineFollower, intersectionDetector, pos2DBuffer, entryPointID, exitPointID);
 	}
 	
 	@Override

@@ -14,6 +14,7 @@ import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.sensors.Position2DBuffer;
 
 /**
  * Navigates across an intersection by communicating with a central server.
@@ -81,10 +82,10 @@ public class V2IClientDaemon extends ClientDaemon implements IntersectionEventLi
 	 * @param exitPointID The ID of the exit point.
 	 */
 	public V2IClientDaemon(InetAddress serverIP, int serverPort, int port,
-			LineFollower lineFollower, IntersectionDetector intersectionDetector,
+			LineFollower lineFollower, IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer,
 			String entryPointID, String exitPointID) 
 	{
-		super(lineFollower, intersectionDetector, entryPointID, exitPointID);
+		super(lineFollower, intersectionDetector, pos2DBuffer ,entryPointID, exitPointID);
 		this.serverIP = serverIP;
 		this.serverPort = serverPort;
 		this.port = port;
@@ -189,24 +190,65 @@ public class V2IClientDaemon extends ClientDaemon implements IntersectionEventLi
 			Logger.log("Ignoring event because not running: " + lfe);
 	}
 	
+	/**
+	 * Implements the logic of how to handle a grant access message.
+	 * 
+	 * @param msg The grant access message.
+	 */
+	protected void handleGrantMessage(GrantAccessMsg msg) {
+		accessGranted = true;
+		
+		if (currState == IntersectionEventType.APPROACHING) {
+			Logger.log("Received grant message.");	
+		}
+		else if (currState == IntersectionEventType.ENTERING) {
+			Logger.log("Received grant message, resuming robot movement.");
+			lineFollower.unpause();
+		}
+		else
+			Logger.logErr("Received unexpected grant message, currState = " + currState);
+	}
+	
 	@Override
 	public void messageReceived(AutoIntersectionMsg msg) {
 		if (msg instanceof GrantAccessMsg) {
-//			GrantAccessMsg grantMsg = (GrantAccessMsg)msg;
-			
-			accessGranted = true;
-			
-			if (currState == IntersectionEventType.APPROACHING) {
-				Logger.log("Received grant message.");	
-			}
-			else if (currState == IntersectionEventType.ENTERING) {
-				Logger.log("Received grant message, resuming robot movement.");
-				lineFollower.unpause();
-			}
-			else {
-				Logger.logErr("Received unexpected grant message, currState = " + currState);
-			}
+			GrantAccessMsg grantMsg = (GrantAccessMsg)msg;			
+			handleGrantMessage(grantMsg);
 		}
+		
+	}
+	
+	/**
+	 * Sends a request to the server asking for permission to cross the intersection.
+	 * It only sends a request every REQUEST_TIMEOUT period of time.  This is to prevent
+	 * flooding the wireless channel.
+	 */
+	protected void sendRequest() {
+		long currTime = System.currentTimeMillis();
+		long timeSinceLastReq = currTime - lastRequestTime;
+		if (timeSinceLastReq > REQUEST_TIMEOUT) {
+			Logger.log("Sending request to server.");
+			RequestAccessMsg requestMsg = new RequestAccessMsg(ip, port, 
+					entryPointID, exitPointID);
+
+			Logger.log("Sending request access message to server.");
+			try {
+				msgSender.sendMessage(serverIP, serverPort, requestMsg);
+			} catch (PharosException e) {
+				Logger.logErr(e.toString());
+				e.printStackTrace();
+			}
+			
+			lastRequestTime = currTime;
+		}
+	}
+	
+	/**
+	 * Adjust the vehicle's speed.  In this class,
+	 * this method does not do anything.  But children classes
+	 * may use this method.
+	 */
+	protected void adjustVehicleSpeed() {
 		
 	}
 	
@@ -221,28 +263,11 @@ public class V2IClientDaemon extends ClientDaemon implements IntersectionEventLi
 			if (currState == IntersectionEventType.APPROACHING || 
 					currState == IntersectionEventType.ENTERING)
 			{
-				
-				if (!accessGranted) {
-
-					long currTime = System.currentTimeMillis();
-					long timeSinceLastReq = currTime - lastRequestTime;
-					if (timeSinceLastReq > REQUEST_TIMEOUT) {
-						Logger.log("Sending request to server.");
-						RequestAccessMsg requestMsg = new RequestAccessMsg(ip, port, 
-								entryPointID, exitPointID);
-
-						Logger.log("Sending request access message to server.");
-						try {
-							msgSender.sendMessage(serverIP, serverPort, requestMsg);
-						} catch (PharosException e) {
-							Logger.logErr(e.toString());
-							e.printStackTrace();
-						}
-						
-						lastRequestTime = currTime;
-					}
-				}
+				if (!accessGranted)
+					sendRequest();
 			}
+			
+			adjustVehicleSpeed();
 			
 			synchronized(this) {
 				try {

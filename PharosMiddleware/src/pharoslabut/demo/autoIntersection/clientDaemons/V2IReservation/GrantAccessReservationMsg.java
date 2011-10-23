@@ -1,6 +1,8 @@
-package pharoslabut.demo.autoIntersection.clientDaemons.V2I;
+package pharoslabut.demo.autoIntersection.clientDaemons.V2IReservation;
 
 import java.net.InetAddress;
+
+import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessMsg;
 
 /**
  * Sent by the server to the robot assigning it a time in the future when it may
