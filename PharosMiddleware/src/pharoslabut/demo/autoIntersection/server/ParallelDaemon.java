@@ -24,14 +24,9 @@ import pharoslabut.logger.Logger;
 public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	
 	/**
-	 * This daemon's thread.
-	 */
-//	Thread daemonThread = null;
-	
-	/**
 	 * The network interface.
 	 */
-	private TCPNetworkInterface networkInterface;
+	protected TCPNetworkInterface networkInterface;
 	
 	/**
 	 * Whether this daemon is running.
@@ -41,7 +36,7 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	/**
 	 * The current vehicles that are in the intersection.
 	 */
-	private Vector<VehicleState> currVehicles = new Vector<VehicleState>();
+	protected Vector<VehicleState> currVehicles = new Vector<VehicleState>();
 	
 	/**
 	 * The constructor.
@@ -66,8 +61,6 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 			networkInterface = new TCPNetworkInterface(serverPort); //UDPNetworkInterface(serverPort);
 			networkInterface.registerMsgListener(this);
 			
-//			daemonThread = new Thread(this);
-//			daemonThread.start();
 			running = true;
 		} else {
 			Logger.logErr("Already started.");
@@ -87,7 +80,7 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	 * @param v The specified vehicle.
 	 * @return The vehicle state.
 	 */
-	private VehicleState getVehicle(Vehicle v) {
+	protected VehicleState getVehicle(Vehicle v) {
 		Iterator<VehicleState> i = currVehicles.iterator();
 		while (i.hasNext()) {
 			VehicleState vs = i.next();
@@ -103,7 +96,7 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	 * @param v The vehicle to evaluate.
 	 * @return Whether the vehicle is in the intersection.
 	 */
-	private boolean inIntersection(Vehicle v) {
+	protected boolean inIntersection(Vehicle v) {
 		return getVehicle(v) != null;
 	}
 	
@@ -114,7 +107,19 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	 * @param v The vehicle to check
 	 * @return true if a conflict exists.
 	 */
-	private boolean conflictsWithExisting(Vehicle v) {
+	protected boolean conflictsWithExisting(Vehicle v) {
+		return getConflictingVehicles(v).size() != 0;
+	}
+	
+	/**
+	 * Creates a list of all vehicles already in the intersection that conflict with the specified vehicle.
+	 * 
+	 * @param v The vehicle to check
+	 * @return A list of all vehicles already in the intersection that conflict with the specified vehicle.
+	 */
+	protected Vector<VehicleState> getConflictingVehicles(Vehicle v) {
+		Vector<VehicleState> result = new Vector<VehicleState>();
+		
 		Logger.log("Checking if " + v + " intersects with any of the existing vehicles in the intersection.");
 		Iterator<VehicleState> i = currVehicles.iterator();
 		while (i.hasNext()) {
@@ -122,19 +127,19 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 			Vehicle currVehicle = vs.getVehicle();
 			if (intersectionSpecs.willIntersect(v.getEntryPointID(), v.getExitPointID(), currVehicle.getEntryPointID(), currVehicle.getExitPointID())) {
 				Logger.log("Potential intersection between " + v + " and " + currVehicle);
-				return true;
+				result.add(vs);
 			}
 		}
 		
-		Logger.log("No potential intersections!");
-		return false;
+		Logger.log("Number of vehicles in conflict: " + result.size());
+		return result;
 	}
 	
 	/**
 	 * 
 	 * @return A string containing a list of vehicles.
 	 */
-	private String getVehicleList() {
+	protected String getVehicleList() {
 		StringBuffer sb = new StringBuffer();
 		Iterator<VehicleState> i = currVehicles.iterator();
 		while (i.hasNext()) {
@@ -152,7 +157,7 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	 * 
 	 * @param msg The message.
 	 */
-	private synchronized void handleRequestAccessMsg(RequestAccessMsg msg) {
+	protected synchronized void handleRequestAccessMsg(RequestAccessMsg msg) {
 		
 		// Do a sanity check
 		if(msg == null) {
@@ -211,7 +216,7 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 			
 			VehicleState vs = getVehicle(vehicle);
 			if (vs != null) {
-				long latency = System.currentTimeMillis() - vs.getTimeOfEntry();
+				long latency = System.currentTimeMillis() - vs.getGrantTime();
 				Logger.log("Vehicle " + vs.getVehicle() + " exited the intersection!  Time in intersection: " + latency);
 				currVehicles.remove(vs);
 			} else {
