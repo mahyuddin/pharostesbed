@@ -58,7 +58,9 @@ public class ReservationDaemon extends ParallelDaemon {
 		Vehicle requestingVehicle = new Vehicle(vehicleIP, vehiclePort, 
 				request.getEntryPoint(), request.getExitPoint());
 		
-		long currTime = System.currentTimeMillis();
+		// add a 0.5s buffer to account for differences in the clocks of the server and the vehicles.
+		// TODO Get rid of this buffer.
+		long currTime = System.currentTimeMillis() - 500; 
 		long grantTime = -1;
 		
 		

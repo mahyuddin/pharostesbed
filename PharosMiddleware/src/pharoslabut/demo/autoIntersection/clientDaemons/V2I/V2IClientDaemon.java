@@ -124,6 +124,19 @@ public class V2IClientDaemon extends ClientDaemon implements IntersectionEventLi
 	}
 	
 	/**
+	 * Implements the logic for handling an entering event.
+	 */
+	protected void handleEnteringEvent() {
+		if (!accessGranted) {
+			Logger.log("Vehicle is entering intersection but access not granted.  Stopping robot.");
+			lineFollower.pause();
+		} else {
+			Logger.log("Vehicle is entering intersection (access was granted).");
+		}
+		currState = IntersectionEventType.ENTERING;
+	}
+	
+	/**
 	 * This is called when a new intersection event occurs.
 	 */
 	@Override
@@ -138,13 +151,7 @@ public class V2IClientDaemon extends ClientDaemon implements IntersectionEventLi
 				break;
 			
 			case ENTERING:
-				if (!accessGranted) {
-					Logger.log("Vehicle is entering intersection but access not granted.  Stopping robot.");
-					lineFollower.pause();
-				} else {
-					Logger.log("Vehicle is entering intersection (access was granted).");
-				}
-				currState = IntersectionEventType.ENTERING;
+				handleEnteringEvent();
 				break;
 			
 			case EXITING:
