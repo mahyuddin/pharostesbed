@@ -136,6 +136,31 @@ public class ParallelDaemon extends ServerDaemon implements MessageReceiver {
 	}
 	
 	/**
+	 * Creates a list of all vehicles already in the intersection that conflict with the specified vehicle.
+	 * 
+	 * @param v The vehicle to check
+	 * @return A list of all vehicles already in the intersection that conflict with the specified vehicle.
+	 */
+	protected Vector<VehicleState> getNonConflictingVehicles(Vehicle v) {
+		Vector<VehicleState> result = new Vector<VehicleState>();
+		
+		Logger.log("Checking if " + v + " intersects with any of the existing vehicles in the intersection.");
+		Iterator<VehicleState> i = currVehicles.iterator();
+		while (i.hasNext()) {
+			VehicleState vs = i.next();
+			Vehicle currVehicle = vs.getVehicle();
+			if (!intersectionSpecs.willIntersect(v.getEntryPointID(), v.getExitPointID(), currVehicle.getEntryPointID(), currVehicle.getExitPointID())) {
+				Logger.log("No conflict between " + v + " and " + currVehicle);
+				result.add(vs);
+			}
+		}
+		
+		Logger.log("Number of vehicles not in conflict: " + result.size());
+		return result;
+	}
+	
+	
+	/**
 	 * 
 	 * @return A string containing a list of vehicles.
 	 */
