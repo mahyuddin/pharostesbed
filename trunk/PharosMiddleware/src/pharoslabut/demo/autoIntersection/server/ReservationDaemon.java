@@ -1,6 +1,7 @@
 package pharoslabut.demo.autoIntersection.server;
 
 import java.net.InetAddress;
+import java.util.Iterator;
 import java.util.Vector;
 
 import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
@@ -68,7 +69,7 @@ public class ReservationDaemon extends ParallelDaemon {
 		if (inIntersection(requestingVehicle)) {
 			VehicleState vs = getVehicle(requestingVehicle);
 			grantTime = vs.getGrantTime();
-			Logger.log("Duplicate request, previous grant time was " + grantTime);
+			Logger.log(requestingVehicle + ": Duplicate request, previous grant time was " + grantTime);
 			
 			//TODO: Check if grantTime is still valid.  For example, if it is already past, find a new time for the vehicle to enter.
 		}
@@ -78,34 +79,55 @@ public class ReservationDaemon extends ParallelDaemon {
 			VehicleState vs = new VehicleState(requestingVehicle, request.getEntryPoint(), request.getExitPoint(), currTime);
 			currVehicles.add(vs);
 			grantTime = currTime;
-			Logger.log("No vehicles are in the intersection, granting immediate access.");
+			Logger.log(requestingVehicle + ": No vehicles are in the intersection, granting immediate access.");
 		}
 		
 		// If this is not a duplicate request and vehicles exist in the intersection, determine if there are
-		// any vehicles that conflict with the requesting vehicle.  Then compute
+		// any vehicles the requesting vehicle can cross in parallel with or that conflict with the requesting vehicle.  Then compute
 		// the earliest time the vehicle can enter the intersection.
 		else {
-			Vector<VehicleState> conflictingVehicles = getConflictingVehicles(requestingVehicle);
 			
-			long lastTimeOfConflict = -1;
-			for (int i=0; i < conflictingVehicles.size(); i++) {
-				VehicleState currVehicle = conflictingVehicles.get(i);
-				long currGrantTime = currVehicle.getGrantTime();
-				if (lastTimeOfConflict < currGrantTime)
-					lastTimeOfConflict = currGrantTime;
-			}
-			
-			if (lastTimeOfConflict == -1) {
-				grantTime = currTime;
-				Logger.log("Vehicles exist in intersection, but none conflict.  Thus granting immediate access.");
+			// First see if this vehicle can cross concurrently with an existing vehicle
+			// that is already in the intersection
+			Vector<VehicleState> nonConflictingVehicles = getNonConflictingVehicles(requestingVehicle);
+			if (nonConflictingVehicles.size() != 0) {
+				
+				VehicleState parallelVehicle = nonConflictingVehicles.get(0);
+				
+				// Find the first non-conflicting vehicle and schedule the requesting vehicle to 
+				// cross in parallel with it.
+				for (int i=1; i < nonConflictingVehicles.size(); i++) {
+					VehicleState currVehicle = nonConflictingVehicles.get(i);
+					if (currVehicle.getGrantTime() < parallelVehicle.getGrantTime())
+						parallelVehicle = currVehicle;
+				}
+				
+				Logger.log(requestingVehicle + ": Vehicles exist in intersection, but requesting vehicle may travel in parallel with " 
+						+ parallelVehicle + ", thus granting access at time " + parallelVehicle.getGrantTime());
+				grantTime = parallelVehicle.getGrantTime();
 			} else {
-				grantTime = lastTimeOfConflict + request.getTimeToCross();
-				Logger.log("Vehicles exist in intersection, and there is a conflict.  Time of last conflict is " + lastTimeOfConflict + ", thus granting access at time " + grantTime);
+				// See if there are any conflicting vehicles.
+				Vector<VehicleState> conflictingVehicles = getConflictingVehicles(requestingVehicle);
+				
+				long lastTimeOfConflict = -1;
+				for (int i=0; i < conflictingVehicles.size(); i++) {
+					VehicleState currVehicle = conflictingVehicles.get(i);
+					long currGrantTime = currVehicle.getGrantTime();
+					if (lastTimeOfConflict < currGrantTime)
+						lastTimeOfConflict = currGrantTime;
+				}
+				
+				if (lastTimeOfConflict == -1) {
+					grantTime = currTime;
+					Logger.log(requestingVehicle + ": Vehicles exist in intersection, but none conflict.  Thus granting immediate access.");
+				} else {
+					grantTime = lastTimeOfConflict + request.getTimeToCross();
+					Logger.log(requestingVehicle + ": Vehicles exist in intersection, and there is a conflict.  Time of last conflict is " + lastTimeOfConflict + ", thus granting access at time " + grantTime);
+				}
 			}
 			
-			VehicleState vs = new VehicleState(requestingVehicle, request.getEntryPoint(), request.getExitPoint(), currTime);
+			VehicleState vs = new VehicleState(requestingVehicle, request.getEntryPoint(), request.getExitPoint(), grantTime);
 			currVehicles.add(vs);
-			
 		}
 
 		assert(grantTime != -1); // for debugging purposes
