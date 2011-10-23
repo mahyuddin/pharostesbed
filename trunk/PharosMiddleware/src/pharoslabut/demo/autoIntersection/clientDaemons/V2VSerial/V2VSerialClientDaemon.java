@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.*;
+import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.beacon.BeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeacon;
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
@@ -113,10 +114,10 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 	 * @param exitPointID The exit point ID.
 	 */
 	public V2VSerialClientDaemon(//int port,
-			LineFollower lineFollower, IntersectionDetector intersectionDetector,
+			LineFollower lineFollower, IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer,
 			String entryPointID, String exitPointID) 
 	{
-		super(lineFollower, intersectionDetector, entryPointID, exitPointID);
+		super(lineFollower, intersectionDetector, pos2DBuffer, entryPointID, exitPointID);
 //		this.port = port;
 		
 		// Obtain the multicast address		

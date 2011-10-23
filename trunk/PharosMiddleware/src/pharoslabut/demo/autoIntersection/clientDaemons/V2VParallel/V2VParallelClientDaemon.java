@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetector;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.sensors.Position2DBuffer;
 
 /**
  * Implements a V2V form of intersection management where each robot decides
@@ -20,10 +21,10 @@ public class V2VParallelClientDaemon
 {
 
 	public V2VParallelClientDaemon(LineFollower lineFollower,
-			IntersectionDetector intersectionDetector, String entryPointID,
+			IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer, String entryPointID,
 			String exitPointID) 
 	{
-		super(lineFollower, intersectionDetector, entryPointID, exitPointID);
+		super(lineFollower, intersectionDetector, pos2DBuffer, entryPointID, exitPointID);
 		
 	}
 	

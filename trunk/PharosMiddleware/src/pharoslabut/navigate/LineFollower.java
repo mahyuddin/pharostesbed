@@ -49,7 +49,7 @@ public class LineFollower implements Runnable {
 	/**
 	 * The minimum speed of the robot in meters per second.
 	 */
-	public static final double MIN_SPEED = 0.37;		//modified by sushen 
+	public static final double MIN_SPEED = 0.2; //0.37;		//modified by sushen 
 	
 	/**
 	 * The maximum turn angle of the robot in degrees.
@@ -82,6 +82,7 @@ public class LineFollower implements Runnable {
 	
 	private Position2DInterface p2di = null;
 	
+	private double currMaxSpeed = MAX_SPEED;
 	private double angle = 0;
 	private double speed = 0;
 	private double pan = 0;
@@ -129,6 +130,15 @@ public class LineFollower implements Runnable {
 	}
 	
 	/**
+	 * Sets the maximum speed that this line follower can move the vehicle.
+	 * @param maxSpeed The maximum speed.
+	 */
+	public void setMaxSpeed(double maxSpeed) {
+		Logger.log("Max speed set to " + maxSpeed + "m/s");
+		this.currMaxSpeed = maxSpeed;
+	}
+	
+	/**
 	 * @return The player client.
 	 */
 	public PlayerClient getPlayerClient() {
@@ -141,6 +151,14 @@ public class LineFollower implements Runnable {
 	 */
 	public ProteusOpaqueInterface getOpaqueInterface() {
 		return poi;
+	}
+	
+	/**
+	 * 
+	 * @return The Position2DInterface.  This is useful for obtaining odometry information.
+	 */
+	public Position2DInterface getPosition2DInterface() {
+		return p2di;
 	}
 	
 	/**
@@ -337,7 +355,7 @@ public class LineFollower implements Runnable {
 			speed = MIN_SPEED;
 		*/
 		//---------------------------------------------------------------------------Alternate method added by sushen -------------
-		speed = MIN_SPEED + ( (MAX_SPEED - MIN_SPEED) * (1 - Math.abs(angle/MAX_TURN_ANGLE)) );
+		speed = MIN_SPEED + ( (currMaxSpeed - MIN_SPEED) * (1 - Math.abs(angle/MAX_TURN_ANGLE)) );
 //speed = 0.65;
 //		speed = ((MAX_SPEED - MIN_SPEED) * (1 - divergencePct)) + MIN_SPEED;
 //		if(angle > (0.6*MAX_TURN_ANGLE) )

@@ -4,6 +4,7 @@ import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionDetect
 import pharoslabut.demo.autoIntersection.intersectionDetector.IntersectionEventType;
 import pharoslabut.demo.autoIntersection.msgs.AutoIntersectionMsg;
 import pharoslabut.navigate.LineFollower;
+import pharoslabut.sensors.Position2DBuffer;
 
 /**
  * The top-level class of all client daemons.
@@ -32,6 +33,11 @@ public abstract class ClientDaemon {
 	protected IntersectionDetector intersectionDetector;
 	
 	/**
+	 * A buffer for position 2d information.   This includes the robot's odometry data.
+	 */
+	protected Position2DBuffer pos2DBuffer;
+	
+	/**
 	 * The ID of the entry point into the intersection.
 	 */
 	protected String entryPointID;
@@ -42,16 +48,21 @@ public abstract class ClientDaemon {
 	protected String exitPointID;
 	
 	/**
-	 * The contructor.
+	 * The constructor.
 	 * 
-	 * @param lineFollower
-	 * @param intersectionDetector
+	 * @param lineFollower The line follower.
+	 * @param intersectionDetector The intersection detector.
+	 * @param pos2DBuffer The position 2d buffer.
+	 * @param entryPointID The entry point ID.
+	 * @param exitPointID The exit point ID.
 	 */
-	public ClientDaemon(LineFollower lineFollower, IntersectionDetector intersectionDetector,
+	public ClientDaemon(LineFollower lineFollower, IntersectionDetector intersectionDetector, 
+			Position2DBuffer pos2DBuffer,
 			String entryPointID, String exitPointID) 
 	{
 		this.lineFollower = lineFollower;
 		this.intersectionDetector = intersectionDetector;
+		this.pos2DBuffer = pos2DBuffer;
 		this.entryPointID = entryPointID;
 		this.exitPointID = exitPointID;
 	}
