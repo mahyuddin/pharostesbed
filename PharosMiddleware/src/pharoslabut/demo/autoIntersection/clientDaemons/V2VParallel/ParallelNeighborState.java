@@ -9,7 +9,7 @@ import pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.VehicleStatus;
  * 
  * @author Chien-Liang Fok
  */
-public class NeighborState
+public class ParallelNeighborState
 		extends
 		pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.NeighborState 
 {
@@ -32,7 +32,7 @@ public class NeighborState
 	 * @param entryPointID The ID of the entry point.
 	 * @param exitPointID The ID of the exit point.
 	 */
-	public NeighborState(InetAddress address, VehicleStatus status, 
+	public ParallelNeighborState(InetAddress address, VehicleStatus status, 
 			String entryPointID, String exitPointID) 
 	{
 		super(address, status);
