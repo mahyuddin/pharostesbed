@@ -62,7 +62,7 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 	/**
 	 * Whether access to the intersection was granted.
 	 */
-	private boolean accessGranted = false;
+	protected boolean accessGranted = false;
 	
 	/**
 	 * Whether it is safe for the local node to cross the intersection.
@@ -107,18 +107,16 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
     /**
 	 * The constructor.
 	 * 
-//	 * @param port The local port on which this client should listen.
 	 * @param lineFollower The line follower.
 	 * @param intersectionDetector The intersection detector.
 	 * @param entryPointID The entry point ID.
 	 * @param exitPointID The exit point ID.
 	 */
-	public V2VSerialClientDaemon(//int port,
+	public V2VSerialClientDaemon(
 			LineFollower lineFollower, IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer,
 			String entryPointID, String exitPointID) 
 	{
 		super(lineFollower, intersectionDetector, pos2DBuffer, entryPointID, exitPointID);
-//		this.port = port;
 		
 		// Obtain the multicast address		
 		InetAddress mCastGroupAddress = null;
@@ -213,6 +211,16 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 	}
 	
 	/**
+	 * Implements the logic for handling when the vehicle approaches the intersection.
+	 */
+	protected void handleApproachEvent() {
+		Logger.log("Vehicle is approaching intersection");
+		currState = IntersectionEventType.APPROACHING;
+		
+		beacon.setVehicleStatus(VehicleStatus.REQUESTING);
+	}
+	
+	/**
 	 * This is called when a new intersection event occurs.
 	 */
 	@Override
@@ -222,10 +230,7 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 			switch(lfe.getType()) {
 			
 			case APPROACHING:
-				Logger.log("Vehicle is approaching intersection");
-				currState = IntersectionEventType.APPROACHING;
-				
-				beacon.setVehicleStatus(VehicleStatus.REQUESTING);
+				handleApproachEvent();
 				break;
 			
 			case ENTERING:
@@ -283,6 +288,23 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 			Logger.logErr("Received an unexpected beacon: " + beacon);
 	}
 
+	/**
+	 * Adjust the vehicle's speed.  In this class,
+	 * this method does not do anything.  But children classes
+	 * may use this method.
+	 */
+	protected void adjustVehicleSpeed() {
+		
+	}
+	
+	/**
+	 * Grants the local vehicle permission to cross the intersection.
+	 */
+	protected void grantSelfAccess() {
+		accessGranted = true;
+		beacon.setVehicleStatus(VehicleStatus.CROSSING);
+		lineFollower.unpause();
+	}
 	
 	@Override
 	public void run() {
@@ -311,24 +333,20 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 						
 						if (System.currentTimeMillis() > isSafeNow.getSafeTime()) {
 							Logger.log("It is immediately safe to cross!  Granting self permission to cross intersection!");
-							accessGranted = true;
-							beacon.setVehicleStatus(VehicleStatus.CROSSING);
-							lineFollower.unpause();
+							grantSelfAccess();
 						} else {
 							if (!isSafeToCross) {
-								Logger.log("It might be safe to cross, currTime = " + currTime);
+								Logger.log("It might be safe to cross at time " + isSafeNow.getSafeTime());
 								isSafeToCross = true;
-								safeTimestamp = currTime;
+								safeTimestamp = isSafeNow.getSafeTime();
 							} else {
 								// The robot previously concluded that it was safe to cross the intersection.
 								// See if enough time has passed to really be sure it is safe.
-								long safeDuration = currTime - safeTimestamp;
-								if (safeDuration > MIN_SAFE_DURATION) {
-									Logger.log("Granting self permission to cross intersection! safeDuration = " 
-											+ safeDuration + ", Min. safe duration = " + MIN_SAFE_DURATION);
-									accessGranted = true;
-									beacon.setVehicleStatus(VehicleStatus.CROSSING);
-									lineFollower.unpause();
+					
+								if (currTime > safeTimestamp) {
+									Logger.log("Granting self permission to cross intersection! currTime = " 
+											+ currTime + ", safeTimestamp = " + safeTimestamp);
+									grantSelfAccess();
 								}
 							}
 						}
@@ -339,6 +357,8 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 					}
 				}
 			}
+			
+			adjustVehicleSpeed();
 			
 			synchronized(this) {
 				try {

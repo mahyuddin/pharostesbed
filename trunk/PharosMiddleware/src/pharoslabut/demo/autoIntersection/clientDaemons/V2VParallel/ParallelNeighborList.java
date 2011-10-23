@@ -11,27 +11,28 @@ import pharoslabut.demo.autoIntersection.intersectionSpecs.TwoLaneFourWayInterse
 import pharoslabut.logger.Logger;
 
 /**
- * Records the state of the neighboring vehicles in an ad hoc autonomous intersection.
+ * Records the state of the neighboring vehicles in a V2V-Parallel intersection.
+ * It's isSafeToCross method allows multiple vehicles to simultaneously cross the intersection.
  * 
  * @author Chien-Liang Fok
  * @see pharoslabut.demo.autoIntersection.clientDaemons.V2VParallel.V2VParallelClientDaemon
  */
-public class NeighborList 
+public class ParallelNeighborList 
 	extends
 	pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.NeighborList
 {	
 	/**
 	 * The entry point.
 	 */
-	private String myEntryID;
+	protected String myEntryID;
 	
 	/**
 	 * The exit point.
 	 */
-	private String myExitID;
+	protected String myExitID;
 	
 	// TODO: Make this a tunable parameter.
-	private IntersectionSpecs intersectionSpecs = TwoLaneFourWayIntersectionSpecs.getSpecs();
+	protected IntersectionSpecs intersectionSpecs = TwoLaneFourWayIntersectionSpecs.getSpecs();
 	
 	/**
 	 * The constructor.
@@ -39,7 +40,7 @@ public class NeighborList
 	 * @param myEntryID The entry point.
 	 * @param myExitID The exit point.
 	 */
-	public NeighborList(String myEntryID, String myExitID) {
+	public ParallelNeighborList(String myEntryID, String myExitID) {
 		super();
 		this.myEntryID = myEntryID;
 		this.myExitID = myExitID;
@@ -66,7 +67,7 @@ public class NeighborList
 			Iterator<InetAddress> itr = list.keySet().iterator();
 			while (itr.hasNext()) {
 				InetAddress addr = itr.next();
-				NeighborState nbrState = (NeighborState)list.get(addr);
+				ParallelNeighborState nbrState = (ParallelNeighborState)list.get(addr);
 				Logger.log("Checking neighbor " + nbrState);
 				
 				if (nbrState.getStatus() == VehicleStatus.CROSSING) {
@@ -107,16 +108,18 @@ public class NeighborList
 	 * 
 	 * @param beacon The beacon.
 	 */
+	@Override
 	public void update(V2VSerialBeacon beacon) {
 		
 		if (!(beacon instanceof V2VParallelBeacon)) {
-			Logger.log("Received unexpected beacon " + beacon);
+			Logger.log("Received unexpected beacon of wrong type " + beacon);
+			return;
 		}
 		
 		V2VParallelBeacon actualBeacon = (V2VParallelBeacon)beacon;
 		
 		InetAddress vehicleAddress = beacon.getAddress();
-		NeighborState neighborState;
+		ParallelNeighborState neighborState;
 		
 		if (vehicleAddress.getAddress()[3] == myID) {
 			Logger.log("Ignoring my own beacon.");
@@ -124,9 +127,9 @@ public class NeighborList
 		}
 		
 		if (list.containsKey(vehicleAddress))
-			neighborState = (NeighborState)list.get(vehicleAddress);
+			neighborState = (ParallelNeighborState)list.get(vehicleAddress);
 		else {
-			neighborState = new NeighborState(vehicleAddress, actualBeacon.getStatus(), 
+			neighborState = new ParallelNeighborState(vehicleAddress, actualBeacon.getStatus(), 
 					actualBeacon.getEntryPointID(), actualBeacon.getExitPointID());
 			
 			Logger.log("Adding neighbor " + vehicleAddress + " to neighbor list.");

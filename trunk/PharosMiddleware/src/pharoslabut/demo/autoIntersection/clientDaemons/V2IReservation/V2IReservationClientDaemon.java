@@ -62,6 +62,7 @@ public class V2IReservationClientDaemon
 	{
 		super(serverIP, serverPort, port, lineFollower, intersectionDetector,pos2DBuffer,
 				entryPointID, exitPointID);
+		pos2DBuffer.addPos2DListener(this);
 	}
 	
 	/**

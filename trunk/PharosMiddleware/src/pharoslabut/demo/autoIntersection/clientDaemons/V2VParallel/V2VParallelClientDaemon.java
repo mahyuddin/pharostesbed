@@ -20,6 +20,14 @@ public class V2VParallelClientDaemon
 	pharoslabut.demo.autoIntersection.clientDaemons.V2VSerial.V2VSerialClientDaemon
 {
 
+    /**
+	 * The constructor.
+	 * 
+	 * @param lineFollower The line follower.
+	 * @param intersectionDetector The intersection detector.
+	 * @param entryPointID The entry point ID.
+	 * @param exitPointID The exit point ID.
+	 */
 	public V2VParallelClientDaemon(LineFollower lineFollower,
 			IntersectionDetector intersectionDetector, Position2DBuffer pos2DBuffer, String entryPointID,
 			String exitPointID) 
@@ -43,7 +51,7 @@ public class V2VParallelClientDaemon
 	
 	@Override
 	protected void createNeighborList() {
-		 nbrList = new NeighborList(entryPointID, exitPointID);
+		 nbrList = new ParallelNeighborList(entryPointID, exitPointID);
 	}
 
 }
