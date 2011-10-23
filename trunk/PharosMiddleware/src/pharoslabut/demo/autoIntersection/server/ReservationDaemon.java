@@ -5,6 +5,7 @@ import java.util.Vector;
 
 import pharoslabut.demo.autoIntersection.clientDaemons.V2I.GrantAccessReservationMsg;
 import pharoslabut.demo.autoIntersection.clientDaemons.V2I.RequestAccessMsg;
+import pharoslabut.demo.autoIntersection.clientDaemons.V2IReservation.RequestReservationMsg;
 import pharoslabut.demo.autoIntersection.intersectionSpecs.IntersectionSpecs;
 import pharoslabut.logger.Logger;
 
@@ -44,11 +45,18 @@ public class ReservationDaemon extends ParallelDaemon {
 			return;
 		}
 		
-		InetAddress vehicleIP = msg.getIP();
-		int vehiclePort = msg.getPort();
+		if (!(msg instanceof RequestReservationMsg)) {
+			Logger.logErr("Receive a request that was not a " + RequestReservationMsg.class.getName());
+			System.exit(1);
+		}
+		
+		RequestReservationMsg request = (RequestReservationMsg)msg;
+			
+		InetAddress vehicleIP = request.getIP();
+		int vehiclePort = request.getPort();
 		
 		Vehicle requestingVehicle = new Vehicle(vehicleIP, vehiclePort, 
-				msg.getEntryPoint(), msg.getExitPoint());
+				request.getEntryPoint(), request.getExitPoint());
 		
 		long currTime = System.currentTimeMillis();
 		long grantTime = -1;
@@ -65,7 +73,7 @@ public class ReservationDaemon extends ParallelDaemon {
 		
 		// If this is not a duplicate request and there is no vehicle in the intersection...
 		else if (currVehicles.size() == 0) {
-			VehicleState vs = new VehicleState(requestingVehicle, msg.getEntryPoint(), msg.getExitPoint(), currTime);
+			VehicleState vs = new VehicleState(requestingVehicle, request.getEntryPoint(), request.getExitPoint(), currTime);
 			currVehicles.add(vs);
 			grantTime = currTime;
 			Logger.log("No vehicles are in the intersection, granting immediate access.");
@@ -89,23 +97,21 @@ public class ReservationDaemon extends ParallelDaemon {
 				grantTime = currTime;
 				Logger.log("Vehicles exist in intersection, but none conflict.  Thus granting immediate access.");
 			} else {
-				grantTime = lastTimeOfConflict + intersectionSpecs.getTraversalLatency();
+				grantTime = lastTimeOfConflict + request.getTimeToCross();
 				Logger.log("Vehicles exist in intersection, and there is a conflict.  Time of last conflict is " + lastTimeOfConflict + ", thus granting access at time " + grantTime);
 			}
 			
-			VehicleState vs = new VehicleState(requestingVehicle, msg.getEntryPoint(), msg.getExitPoint(), currTime);
+			VehicleState vs = new VehicleState(requestingVehicle, request.getEntryPoint(), request.getExitPoint(), currTime);
 			currVehicles.add(vs);
 			
 		}
 
 		assert(grantTime != -1); // for debugging purposes
 		
-		Logger.log("Granting vehicle " + vehicleIP + ":" + vehiclePort 
-				+ " access to the intersection at time " + grantTime);
+		Logger.log("Granting vehicle " + vehicleIP + ":" + vehiclePort + " access to the intersection at time " + grantTime);
 
 		// Send the grant access message to the vehicle.
 		GrantAccessReservationMsg grantMsg = new GrantAccessReservationMsg(vehicleIP, vehiclePort, grantTime);
 		networkInterface.sendMessage(vehicleIP, vehiclePort, grantMsg);
 	}
-
 }

@@ -24,9 +24,6 @@ public class TwoLaneFourWayIntersectionSpecs extends IntersectionSpecs {
 	private TwoLaneFourWayIntersectionSpecs() {
 		super("TwoLaneFourWayIntersection");
 		
-		// Set the traversal latency.
-		traversalLatency = 4000;
-		
 		// Define the entry points
 		// Use fake locations for now
 		EntryPoint e1 = new EntryPoint("E1", Heading.NORTH, new Location(1,3)); 

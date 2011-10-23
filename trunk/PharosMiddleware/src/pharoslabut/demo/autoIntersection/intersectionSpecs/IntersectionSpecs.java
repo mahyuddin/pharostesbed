@@ -35,12 +35,6 @@ public abstract class IntersectionSpecs implements java.io.Serializable {
 		= new HashMap<EntryPoint, Vector<ExitPoint>>();
 	
 	/**
-	 * The time in milliseconds it takes a vehicle to cross the intersection.
-	 * It is initialized to an invalid value of -1.
-	 */
-	protected long traversalLatency = -1;
-	
-	/**
 	 * The constructor
 	 * 
 	 * @param name The name of the intersection.
@@ -145,10 +139,6 @@ public abstract class IntersectionSpecs implements java.io.Serializable {
 	 */
 	public abstract boolean willIntersect(String entryPointID1, String exitPointID1, 
 			String entryPointID2, String exitPointID2);	
-	
-	public long getTraversalLatency() {
-		return traversalLatency;
-	}
 	
 //	@SuppressWarnings("unchecked")
 //	public void printHashMap(HashMap hm) {
