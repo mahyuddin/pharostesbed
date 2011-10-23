@@ -125,6 +125,25 @@ public class V2IReservationClientDaemon
 			System.exit(1);
 		}
 	}
+	
+	/**
+	 * Implements the logic for handling an entering event.
+	 */
+	protected void handleEnteringEvent() {
+		if (!accessGranted) {
+			long timeTillGrant = getTimeTillGrant(); 
+			if (timeTillGrant == 0) {
+				Logger.log("Vehicle is entering intersection and grant time has arrived!");
+				accessGranted = true;
+			} else {
+				Logger.log("Vehicle is entering intersection but access not granted (time till grant = " 
+						+ timeTillGrant + ").  Stopping robot.");
+				lineFollower.pause();
+			}
+		} else
+			Logger.log("Vehicle is entering intersection (access was granted).");
+		currState = IntersectionEventType.ENTERING;
+	}
 
 	/**
 	 * Sends a request to the server asking for permission to cross the intersection.
@@ -159,21 +178,32 @@ public class V2IReservationClientDaemon
 	/**
 	 * Adjust the vehicle's speed based on the grant time and the estimated distance to the entrance.
 	 */
+	@Override
 	protected void adjustVehicleSpeed() {
-		
-		double newMaxSpeed;
-		
-		long timeTillGrant = getTimeTillGrant();
-		if (timeTillGrant == 0) {
-			lineFollower.setMaxSpeed(LineFollower.MAX_SPEED);
-			newMaxSpeed = LineFollower.MAX_SPEED;
-		} else {
-			newMaxSpeed = distToEntrance / (timeTillGrant/1000.0);
+		if (currState == IntersectionEventType.APPROACHING) {
+			double newMaxSpeed = LineFollower.MAX_SPEED;
+
+			long timeTillGrant = getTimeTillGrant();
+			if (timeTillGrant == Long.MAX_VALUE) {
+				Logger.logErr("Invalid time till grant, not adjusting vehicle speed.");
+			} else if (timeTillGrant == 0) {
+				// keep max speed to be the actual max speed
+			} else {
+				newMaxSpeed = distToEntrance / (timeTillGrant/1000.0);	
+			}
+			
 			lineFollower.setMaxSpeed(newMaxSpeed);
+
+			Logger.log("Adjusting velocity so it arrives at the entrance JIT. distToEntrance = " + distToEntrance
+					+ ", time till grant = " + (timeTillGrant == Long.MAX_VALUE ? "NULL":timeTillGrant) + ", new max speed = " + newMaxSpeed);
 		}
 		
-		Logger.log("Adjusting the vehicle's velocity so it arrives at the entrance JIT. distToEntrance = " + distToEntrance
-				+ ", time till grant = " + timeTillGrant + ", new max speed = " + newMaxSpeed);
+		else if (currState == IntersectionEventType.ENTERING) {
+			if (getTimeTillGrant() == 0) {
+				lineFollower.setMaxSpeed(LineFollower.MAX_SPEED);
+				lineFollower.unpause();
+			}
+		}
 	}
 
 	/**
