@@ -8,25 +8,39 @@ package pharoslabut.demo.autoIntersection.server;
  */
 public class VehicleState {
 
+	/**
+	 * The vehicle whose state is being stored.
+	 */
 	private Vehicle vehicle;
 	
-	private String entranceID, exitID;
+	/**
+	 * The ID of the entrance through which the vehicle will travel.
+	 */
+	private String entranceID;
 	
-	private long timeOfEntry;
+	/**
+	 * The ID of the exit through which the vehicle will travel.
+	 */
+	private String exitID;
+	
+	/**
+	 * The time in which the vehicle is authorized to enter the intersection.
+	 */
+	private long grantTime;
 	
 	/**
 	 * The constructor.
 	 * 
-	 * @param vehicle The vehicle.
-	 * @param entranceID The entrance.
-	 * @param exitID The exit.
-	 * @param timeOfEntry The time of entry.
+	 * @param vehicle The vehicle whose state is being stored.
+	 * @param entranceID The ID of the entrance through which the vehicle will travel.
+	 * @param exitID The ID of the exit through which the vehicle will travel.
+	 * @param grantTime The time in which the vehicle is authorized to enter the intersection.
 	 */
-	public VehicleState(Vehicle vehicle, String entranceID, String exitID, long timeOfEntry) {
+	public VehicleState(Vehicle vehicle, String entranceID, String exitID, long grantTime) {
 		this.vehicle = vehicle;
 		this.entranceID = entranceID;
 		this.exitID = exitID;
-		this.timeOfEntry = timeOfEntry;
+		this.grantTime = grantTime;
 	}
 	
 	public Vehicle getVehicle() {
@@ -41,11 +55,11 @@ public class VehicleState {
 		return exitID;
 	}
 	
-	public long getTimeOfEntry() {
-		return timeOfEntry;
+	public long getGrantTime() {
+		return grantTime;
 	}
 	
 	public String toString() {
-		return vehicle + ", " + entranceID + ", " + exitID + ", " + timeOfEntry;
+		return vehicle + ", " + entranceID + ", " + exitID + ", " + grantTime;
 	}
 }
