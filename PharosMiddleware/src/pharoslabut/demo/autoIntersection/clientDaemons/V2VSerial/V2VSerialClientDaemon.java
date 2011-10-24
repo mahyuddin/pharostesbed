@@ -70,9 +70,9 @@ public class V2VSerialClientDaemon extends ClientDaemon implements IntersectionE
 	private boolean isSafeToCross = false;
 	
 	/**
-	 * The time since we concluded that it is safe to cross the intersection.
+	 * The time when it's safe for this vehicle to cross the intersection.
 	 */
-	private long safeTimestamp = -1;
+	protected long safeTimestamp = -1;
 	
 	/**
 	 * The beacon broadcaster.
