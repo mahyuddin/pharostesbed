@@ -37,7 +37,7 @@ public class V2VReservationClientDaemon extends
 	/**
 	 * The time when this vehicle may enter the intersection.
 	 */
-	private long entryTime = -1;
+	//private long entryTime = -1;
 	
 	/**
 	 * The constructor.
@@ -100,14 +100,14 @@ public class V2VReservationClientDaemon extends
 	 * @return the number of milliseconds until the entry time.
 	 */
 	private long getTimeTillEntry() {
-		if (entryTime == -1)
+		if (safeTimestamp == -1)
 			return Long.MAX_VALUE;
 		
 		long currTime = System.currentTimeMillis();
-		if (currTime >= entryTime)
+		if (currTime >= safeTimestamp)
 			return 0;
 		else
-			return entryTime - currTime;
+			return safeTimestamp - currTime;
 	}
 	
 	/**
@@ -135,9 +135,16 @@ public class V2VReservationClientDaemon extends
 		
 		else if (currState == IntersectionEventType.ENTERING) {
 			if (getTimeTillEntry() == 0) {
+				Logger.log("Vehicle is in entering state and the time till entry is zero.  Setting max speed to be " + LineFollower.MAX_SPEED);
 				lineFollower.setMaxSpeed(LineFollower.MAX_SPEED);
 				lineFollower.unpause();
+			} else {
+				Logger.log("Vehicle is in entering state but time till entry is not zero.  Leaving vehicle speed alone.");
 			}
+		}
+		
+		else {
+			Logger.log("Not changing vehicle speed because vehicle not in approaching or entering state, currState=" + currState);
 		}
 	}
 	
