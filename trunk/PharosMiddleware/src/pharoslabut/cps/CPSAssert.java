@@ -12,7 +12,7 @@ import java.util.Calendar;
 
 /**
  * @author Kevin Boos
- *
+ * 
  */
 public class CPSAssert {
 
