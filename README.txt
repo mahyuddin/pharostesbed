@@ -1,14 +1,12 @@
 This is the software used by the Proteus robots in the Pharos
-Mobile Computing Laboratory at UT.  The software is modularized into the
-following directories:
+Mobile Computing Laboratory at UT.  It is a version that uses the
+SyRen25A with the 9S12 MCU.
+
+The software is modularized into the following directories:
 
  - MCU: This is the code that runs on the 9S12 micro-controller. This is 
    written in C.
  
- - MCU-SimonSays: This is the 9S12 MCU code for the Simon Says demo.
-
- - MCU-AutoInt: This is the 9S12 MCU code for the Autonomous Intersection demo.
-
  - ProteusDriver: This is the Player Driver that allows the Player
    middleware to communicate with the robot's MCU.  The Player middleware
    provides basic access to robot sensors and actuators, e.g., movement
