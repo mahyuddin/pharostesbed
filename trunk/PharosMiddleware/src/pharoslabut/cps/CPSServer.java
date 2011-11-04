@@ -3,7 +3,7 @@ package pharoslabut.cps;
 import java.net.InetAddress;
 import java.util.*;
 
-import pharoslabut.demo.simonsays.io.*;
+//import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.FileLogger;
@@ -90,12 +90,12 @@ public class CPSServer implements MessageReceiver {
 	private void handlePlayerControlMsg(PlayerControlMsg playerCtrlMsg) {
 		if (playerCtrlMsg.getCmd() == PlayerControlCmd.STOP) {
 			ri.stopPlayer();
-			sendAck(true, playerCtrlMsg);
+			sendAck(true, null, playerCtrlMsg);
 		} else if (playerCtrlMsg.getCmd() == PlayerControlCmd.START) {
 			// signifies that a new client has connected to the server
 			clients.put(playerCtrlMsg.getReplyAddr(), playerCtrlMsg.getPort());
 			Logger.log("Client added: " + playerCtrlMsg.getReplyAddr() + ":" + playerCtrlMsg.getPort());
-			sendAck(true, playerCtrlMsg);
+			sendAck(true, null, playerCtrlMsg);
 		} else 
 			Logger.log("Unknown PlayerControlMsg, cmd = " + playerCtrlMsg.getCmd());
 	}
@@ -113,7 +113,7 @@ public class CPSServer implements MessageReceiver {
 		Logger.log("Moving robot " + dist + " meters...");
 		boolean result = ri.move(dist);
 		Logger.log("Done moving robot, sending ack, result = " + result + "...");
-		sendAck(result, moveMsg); // success
+		sendAck(result, null, moveMsg); // success
 		
 	}
 	
@@ -127,7 +127,7 @@ public class CPSServer implements MessageReceiver {
 		Logger.log("Turning robot " + turnMsg.getAngle() + " degrees...");
 		boolean result = ri.turn(angle);
 		Logger.log("Done turning robot, sending ack, result = " + result + "...");
-		sendAck(result, turnMsg); // success
+		sendAck(result, null, turnMsg); // success
 	}
 	
 	/**
@@ -136,8 +136,11 @@ public class CPSServer implements MessageReceiver {
 	 * @param success Whether the operation was successful.
 	 * @param am The message to ack.
 	 */
-	private void sendAck(boolean success, AckableMessage am) {
+	private void sendAck(boolean success, String info, AckableMessage am) {
 		CmdDoneMsg cdm = new CmdDoneMsg(success);
+		if (info != null) // if there's also an info String
+			cdm = new CmdDoneMsg(success, info);
+		
 		try {
 			sender.sendMessage(am.getReplyAddr(), am.getPort(), cdm);
 		} catch (PharosException e) {
@@ -152,11 +155,19 @@ public class CPSServer implements MessageReceiver {
 	 * @param sdMsg The AssertionRequestMsg received from the client
 	 */
 	private void handleAssertionRequestMsg(AssertionRequestMsg arMsg) {
-		arMsg.msgReceived();
+		arMsg.msgReceived();		
+		String assertionData = arMsg.getSensorType() + ", " + arMsg.getIneq() + ", " + arMsg.getActualValues();
+		
 		// TODO parse data out of arMsg
 		// TODO call the appropriate assertion
 		// TODO (probably need to change the assert methods to return a String of the assertion results)
-		// TODO send AssertionResultMsg
+
+		try {
+			sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), new AssertionResponseMsg("Received Assertion: " + assertionData));
+		} catch (PharosException e) {
+			e.printStackTrace();
+			Logger.logErr("Failed to send AssertionResponseMessage for " + arMsg + ", error=" + e);
+		}
 		
 	}
 	
@@ -189,10 +200,10 @@ public class CPSServer implements MessageReceiver {
 		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
 		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
-		print("\t-log <file name>: name of file in which to save results (default SimonSaysServer.log)");
+		print("\t-log <file name>: name of file in which to save results (default CPSServer.log)");
 		print("\t-cricketFile <file name>: name of file where Cricket Beacon IDs and coordinates are stored (default cricketBeacons.txt)");
 		print("\t-cricketPort <port number>: tty port where the Cricket Listener is connected (default /dect/ttyUSB1");
-		print("\t-noClient: this option allows you to manually control the robot without the SimonSaysClient (default false)");
+		print("\t-noClient: this option allows you to manually control the robot without the CPSClient (default false)");
 		print("\t-debug: enable debug mode");
 	}
 	
@@ -200,7 +211,7 @@ public class CPSServer implements MessageReceiver {
 		int port = 8887;
 		String pServerIP = "localhost";
 		int pServerPort = 6665;
-		String logFile = "SimonSaysServer.log";
+		String logFile = "CPSServer.log";
 		String mcuPort = "/dev/ttyS0";
 		String cricketFile = "cricketBeacons.txt";
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_IROBOT_CREATE;

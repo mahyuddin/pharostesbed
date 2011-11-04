@@ -36,7 +36,7 @@ public class AssertionRequestMsg implements AckableMessage {
 	/**
 	 * the system time when this AssertionRequestMsg was received
 	 */
-	private long requestTimestamp;
+	private long requestReceivedTime;
 
 	
 	public AssertionRequestMsg(SensorType st, Inequality in, Object vals[]) {
@@ -49,7 +49,7 @@ public class AssertionRequestMsg implements AckableMessage {
 	 * sets this msg's receivedTimestamp value to the current system time
 	 */
 	public void msgReceived() {
-		this.requestTimestamp = System.currentTimeMillis();
+		this.requestReceivedTime = System.currentTimeMillis();
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class AssertionRequestMsg implements AckableMessage {
 	 * @return the requestTimestamp
 	 */
 	public long getRequestTimestamp() {
-		return requestTimestamp;
+		return requestReceivedTime;
 	}
 
 	@Override

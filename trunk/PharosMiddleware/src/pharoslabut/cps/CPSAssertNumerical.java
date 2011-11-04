@@ -38,7 +38,7 @@ public class CPSAssertNumerical {
 	}
 	
 	public static void AssertEquals(String message, Double expected, Double actual, Double delta) {
-		AssertInequality(message, expected, actual, delta, Inequality.EQUAL);
+		AssertInequality(message, expected, actual, delta, Inequality.EQUAL_TO);
 	}
 		
 	// AssertEquals methods for type Integer
@@ -55,7 +55,7 @@ public class CPSAssertNumerical {
 	}
 	
 	public static void AssertEquals(String message, Integer expected, Integer actual, Integer delta) {
-		AssertInequality(message, expected, actual, delta, Inequality.EQUAL);
+		AssertInequality(message, expected, actual, delta, Inequality.EQUAL_TO);
 	}	
 	
 	
@@ -75,18 +75,17 @@ public class CPSAssertNumerical {
 
 	public static void AssertInequality(String message, Double expected, Double actual, Double delta, Inequality type) {
 		Double marginOfError = Math.abs(delta);
-		String ineq = "";
 		boolean condition = false;
 		switch (type) {
-			case LESS_THAN: condition = expected < actual + marginOfError; ineq = "<"; break;
-			case LESS_THAN_EQUAL_TO: condition = expected <= actual + marginOfError; ineq = "<="; break;
-			case EQUAL: condition = (expected >= actual - marginOfError) && (expected <= actual + marginOfError); ineq = "=="; break;
-			case GREATER_THAN: condition = expected > actual - marginOfError; ineq = ">"; break;
-			case GREATER_THAN_EQUAL_TO: condition = expected >= actual - marginOfError; ineq = ">="; break;
+			case LESS_THAN: condition = expected < actual + marginOfError; break;
+			case LESS_THAN_EQUAL_TO: condition = expected <= actual + marginOfError; break;
+			case EQUAL_TO: condition = (expected >= actual - marginOfError) && (expected <= actual + marginOfError); break;
+			case GREATER_THAN: condition = expected > actual - marginOfError; break;
+			case GREATER_THAN_EQUAL_TO: condition = expected >= actual - marginOfError; break;
 		}
 		System.out.println(getCurrentTime() + " -- Assertion " + (condition ? "Passed." : "Failed.") +
 				(!(message == "" || message == null) ? ("   Message: " + message) : ""));
-		System.out.println("             -- (Expected: " + expected + ") " + ineq + " (Actual: " + actual + "), Error Margin = " + delta + "\n");
+		System.out.println("             -- (Expected: " + expected + ") " + type.toMathString() + " (Actual: " + actual + "), Error Margin = " + delta + "\n");
 	}
 
 
@@ -110,7 +109,7 @@ public class CPSAssertNumerical {
 		switch (type) {
 			case LESS_THAN: condition = expected < actual + marginOfError; ineq = "<"; break;
 			case LESS_THAN_EQUAL_TO: condition = expected <= actual + marginOfError; ineq = "<="; break;
-			case EQUAL: condition = (expected >= actual - marginOfError) && (expected <= actual + marginOfError); ineq = "=="; break;
+			case EQUAL_TO: condition = (expected >= actual - marginOfError) && (expected <= actual + marginOfError); ineq = "=="; break;
 			case GREATER_THAN: condition = expected > actual - marginOfError; ineq = ">"; break;
 			case GREATER_THAN_EQUAL_TO: condition = expected >= actual - marginOfError; ineq = ">="; break;
 		}

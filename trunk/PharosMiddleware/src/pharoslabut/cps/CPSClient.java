@@ -54,7 +54,7 @@ public class CPSClient {
 				}
 			});
 		} catch(IOException ioe) {
-			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure the DemoServer is running."; 
+			String msg = "Unable to connect to robot " + serverIP + ":" + serverPort + ",\nEnsure the CPSServer is running."; 
 			JOptionPane.showMessageDialog(null, msg);
 			Logger.logErr(msg);
 			ioe.printStackTrace();

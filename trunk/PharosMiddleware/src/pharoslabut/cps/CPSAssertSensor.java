@@ -1,6 +1,15 @@
 package pharoslabut.cps;
 
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.util.HashMap;
+import java.util.InputMismatchException;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+
+import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.sensors.CompassDataBuffer;
@@ -17,17 +26,24 @@ import playerclient3.PlayerException;
 import playerclient3.RangerInterface;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.PlayerPoint3d;
+import playerclient3.structures.PlayerPose2d;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 
 public class CPSAssertSensor implements CricketDataListener, RangerListener, Position2DListener{
+	private static Double lastCricketReading = null;
+	
+	private CompassDataBuffer compassBuffer;
+	private Position2DBuffer odometryBuffer;
+	private RangerDataBuffer rangerBuffer;
 
 
 	public CPSAssertSensor (
 			PlayerClient pc, FileLogger flogger,
 			boolean useCricket, CricketInterface ci, String cricketSerialPort, 
-			boolean useRanger, RangerInterface ri, RangerDataBuffer rdb,
+			boolean useRanger, Integer rangerDeviceIndex, RangerInterface rangerInterface, RangerDataBuffer rangerBuffer,
 			boolean useOdometry, Integer odometryDeviceIndex, Position2DInterface odometryInterface, Position2DBuffer odometryBuffer,
 			boolean useCompass, Integer compassDeviceIndex, Position2DInterface compassInterface, CompassDataBuffer compassBuffer
 			) 
@@ -46,13 +62,28 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 		}
 		
 		if (useRanger) {
-			if (rdb == null) {
-				if (ri == null) {
-					ri = new RangerInterface(pc);
+			if (rangerBuffer == null) {
+				if (rangerInterface == null) {
+					if (pc == null) {
+						throw new NullPointerException("CPSAssertSensor Constructor: PlayerClient \"pc\" was null when connecting to Ranger Interface.\n" + 
+								"Please specify one of the values, or set the useRanger boolean value to false to disable ranger usage."); 
+					}
+					if (rangerDeviceIndex == null) {
+						rangerDeviceIndex = 0;
+						Logger.log("\"rangerDeviceIndex\" was null, will use value = 0 as default.");
+					}
+					try{
+						rangerInterface = pc.requestInterfaceRanger(rangerDeviceIndex, PlayerConstants.PLAYER_OPEN_MODE);
+					} catch (PlayerException e) { 
+						System.out.println("Error: could not connect to Ranger's Position2dInterface."); 
+						System.exit(1); 
+					}
 				}
-				rdb = new RangerDataBuffer(ri);
+				rangerBuffer = new RangerDataBuffer(rangerInterface);
+				rangerBuffer.start();
 			}
-			rdb.addRangeListener(this);
+			// no need to add this as a Pos2DListener, just use getRecentData() for latest ranger value
+			this.rangerBuffer = rangerBuffer;
 		}
 		
 		if (useOdometry) {
@@ -74,8 +105,10 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 					}
 				}
 				odometryBuffer = new Position2DBuffer(odometryInterface);
+				odometryBuffer.start();
 			}
-			odometryBuffer.addPos2DListener(this);
+			// no need to add this as a Pos2DListener, just use getRecentData() for latest odometry value
+			this.odometryBuffer = odometryBuffer;
 		}
 		
 		if (useCompass) {
@@ -97,27 +130,66 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 					}
 				}
 				compassBuffer = new CompassDataBuffer(compassInterface);
+				compassBuffer.start();
 			}
-			compassBuffer.addPos2DListener(this);
+			// no need to add this as a Pos2DListener, just use getMedian() for latest compass value
+			this.compassBuffer = compassBuffer;
 		}
-
 
 	}
 
 
 	/**
+	 * Reads a file with cricket beacons IDs and coordinates in order to associate each beacon with its location instead of ID
+	 * 
+	 * @param fileName the file to read, default is "cricketBeacons.txt"
+	 * @return a map of key-value pairs, where the key is the Cricket beacon ID and the value is the 3-d coordinate of the beacon
+	 */
+	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
+		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
+		try {
+			Scanner sc = new Scanner(new BufferedReader(new FileReader(fileName)));
+			while (sc.hasNextLine()) {
+				String cricketId = sc.next();
+				if (cricketId.contains("//") || cricketId.contains("/*") || cricketId.contains("#") || cricketId.contains(";"))
+				{
+					// we've reached a commented line in the file
+					sc.nextLine(); // skip this line
+					continue;
+				}
+				PlayerPoint3d coords = new PlayerPoint3d();
+				coords.setPx(sc.nextDouble());
+				coords.setPy(sc.nextDouble());
+				coords.setPz(sc.nextDouble());
+				sc.nextLine(); // consume the rest of the line
+				// store to hashmap entry
+				beacons.put(cricketId, coords);
+				Logger.logDbg("Cricket Mote " + cricketId + " has coords: (" + coords.getPx() + "," + coords.getPy() + "," + coords.getPz() + ")");
+			}
+		} catch (FileNotFoundException e) {
+			Logger.logErr("Could not find Cricket beacons file: " + fileName);
+			e.printStackTrace();
+		} catch (InputMismatchException e) {
+			Logger.logErr("Error reading Cricket beacons file: " + fileName + ", bad input format.");
+			e.printStackTrace();
+		} catch (NoSuchElementException e) { }
+		
+		return beacons;
+	}	
+	
+	
+	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+
 
 
 	}
 
 	@Override
 	public void newCricketData(CricketData cd) {
-		// TODO Auto-generated method stub
-
+		lastCricketReading = ((double)cd.getDistance())/100;
 	}
 
 	@Override
@@ -129,8 +201,27 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 	
 	
 	
-	public void AssertCricket(Double actual, Inequality ineq) {
-
+	public void AssertCricket(Double expected, Inequality operation, Double delta) {
+		CPSAssertNumerical.AssertInequality("Asserted that the current Cricket Beacon distance was " + operation.toString() + " the expected value.",
+				expected, lastCricketReading, delta, operation);
+	}
+	
+	public void AssertCompass(Double expected, Inequality operation, Double delta) throws NoNewDataException {
+		CPSAssertNumerical.AssertInequality("Asserted that the current Compass Bearing was " + operation.toString() + " the expected value.",
+				expected, compassBuffer.getMedian(3), delta, operation);		
+	}
+	
+	public void AssertOdometry(Double expectedX, Double expectedY, Inequality operation, Double deltaX, Double deltaY) throws NoNewDataException {
+		PlayerPose2d curPos = odometryBuffer.getRecentData().getPos();
+		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry x-value was " + operation.toString() + " the expected value.",
+				expectedX, curPos.getPx(), deltaX, operation);		
+		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry y-value was " + operation.toString() + " the expected value.",
+				expectedY, curPos.getPy(), deltaY, operation);		
+	}
+	
+	public void AssertRange(Double expectedRange, Inequality operation, Double delta) throws NoNewDataException {
+		CPSAssertNumerical.AssertInequality("Asserted that the current Ranger Distance was " + operation.toString() + " the expected value.",
+				expectedRange, rangerBuffer.getRecentData().getRanges()[0], delta, operation);		
 	}
 
 

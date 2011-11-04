@@ -370,8 +370,34 @@ public class CPSGui implements ActionListener {
 			
 			return new Command(new RobotTurnMsg(angle), lineno);
 		}
-		// TODO else if(instr.equals("ASSERT") {
-		// TODO 	create a new AssertionRequestMsg, return it inside of a new Command
+		else if(instr.equals("ASSERT")) {
+			
+			if (tokens.length < 4)
+				throw new ParseException("Missing assert argument(s) on line " + lineno + ".");
+			
+			SensorType sensor = null;
+			try {
+				sensor = SensorType.valueOf(tokens[1].toUpperCase());
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
+			}
+			
+			Inequality ineq = null;
+			try {
+				ineq = Inequality.valueOf(tokens[2].toUpperCase());
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[2] + " is not a valid Inequality.");
+			}
+			
+			double dist = 0;
+			try {
+				dist = Double.parseDouble(tokens[3]);
+				// TODO accept multiple actual values, and they should be put into "Object[] actualValues"
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " is not a valid double value.");
+			}
+			return new Command(new AssertionRequestMsg(sensor, ineq, new Object[] {dist}), lineno);
+		}
 		else
 			throw new ParseException("Unknown instruction \"" + instr + "\" on line " + lineno);
 	}
