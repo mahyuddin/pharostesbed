@@ -1,4 +1,4 @@
-package pharoslabut.cps;
+package pharoslabut.cpsAssert;
 
 import java.net.InetAddress;
 

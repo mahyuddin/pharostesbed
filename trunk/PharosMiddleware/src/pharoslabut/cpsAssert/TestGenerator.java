@@ -1,4 +1,4 @@
-package pharoslabut.cps;
+package pharoslabut.cpsAssert;
 
 import java.io.*;
 import java.util.Arrays;
@@ -96,7 +96,6 @@ class TestGeneratorListener extends RunListener {
 	 */
 	@Override
 	public void testFailure(Failure failure) throws Exception {
-		// TODO Auto-generated method stub
 		super.testFailure(failure);
 		System.out.println("\nTest Failed: " + failure.getMessage());
 	}
@@ -106,7 +105,6 @@ class TestGeneratorListener extends RunListener {
 	 */
 	@Override
 	public void testFinished(Description description) throws Exception {
-		// TODO Auto-generated method stub
 		super.testFinished(description);
 		System.out.println("\nTest finished.");
 		System.out.println(description.getClassName());
@@ -120,7 +118,6 @@ class TestGeneratorListener extends RunListener {
 	 */
 	@Override
 	public void testRunFinished(Result result) throws Exception {
-		// TODO Auto-generated method stub
 		super.testRunFinished(result);
 		System.out.println("\n*****************************************");
 		System.out.println("********** All tests finished. **********");

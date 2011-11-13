@@ -1,13 +1,5 @@
-package pharoslabut.cps;
+package pharoslabut.cpsAssert;
 
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.HashMap;
-import java.util.InputMismatchException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.FileLogger;
@@ -26,13 +18,26 @@ import playerclient3.PlayerException;
 import playerclient3.RangerInterface;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
-import playerclient3.structures.PlayerPoint3d;
 import playerclient3.structures.PlayerPose2d;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 
 public class CPSAssertSensor implements CricketDataListener, RangerListener, Position2DListener{
+	
+	
+//	/**
+//	 * the list of Cricket Mote beacons and their corresponding poses (positional coordinates)
+//	 */
+//	Map<String, PlayerPoint3d> cricketPositions = new HashMap<String, PlayerPoint3d>();
+//	
+//	/**
+//	 * the list of Cricket Mote beacons currently connected to this robot's Cricket Mote Listener
+//	 */
+//	Map<String, ArrayList<CricketData>> cricketBeacons = Collections.synchronizedMap(new HashMap<String, ArrayList<CricketData>>());
+	
+	public static final double cricketBeaconHeight = 1.0;
+	
 	private static Double lastCricketReading = null;
 	
 	private CompassDataBuffer compassBuffer;
@@ -48,7 +53,8 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 			boolean useCompass, Integer compassDeviceIndex, Position2DInterface compassInterface, CompassDataBuffer compassBuffer
 			) 
 	{
-		Logger.setFileLogger(flogger); // set up logger (this does nothing if logger was already set up)
+		if (flogger == null)
+			Logger.setFileLogger(new FileLogger("CPSAssertLog.txt")); // set up logger (this does nothing if logger was already set up)
 
 		if (useCricket) {
 			if (ci == null) {
@@ -140,88 +146,131 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 
 
 	/**
-	 * Reads a file with cricket beacons IDs and coordinates in order to associate each beacon with its location instead of ID
-	 * 
-	 * @param fileName the file to read, default is "cricketBeacons.txt"
-	 * @return a map of key-value pairs, where the key is the Cricket beacon ID and the value is the 3-d coordinate of the beacon
-	 */
-	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
-		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
-		try {
-			Scanner sc = new Scanner(new BufferedReader(new FileReader(fileName)));
-			while (sc.hasNextLine()) {
-				String cricketId = sc.next();
-				if (cricketId.contains("//") || cricketId.contains("/*") || cricketId.contains("#") || cricketId.contains(";"))
-				{
-					// we've reached a commented line in the file
-					sc.nextLine(); // skip this line
-					continue;
-				}
-				PlayerPoint3d coords = new PlayerPoint3d();
-				coords.setPx(sc.nextDouble());
-				coords.setPy(sc.nextDouble());
-				coords.setPz(sc.nextDouble());
-				sc.nextLine(); // consume the rest of the line
-				// store to hashmap entry
-				beacons.put(cricketId, coords);
-				Logger.logDbg("Cricket Mote " + cricketId + " has coords: (" + coords.getPx() + "," + coords.getPy() + "," + coords.getPz() + ")");
-			}
-		} catch (FileNotFoundException e) {
-			Logger.logErr("Could not find Cricket beacons file: " + fileName);
-			e.printStackTrace();
-		} catch (InputMismatchException e) {
-			Logger.logErr("Error reading Cricket beacons file: " + fileName + ", bad input format.");
-			e.printStackTrace();
-		} catch (NoSuchElementException e) { }
-		
-		return beacons;
-	}	
+//	 * Reads a file with cricket beacons IDs and coordinates in order to associate each beacon with its location instead of ID
+//	 * 
+//	 * @param fileName the file to read, default is "cricketBeacons.txt"
+//	 * @return a map of key-value pairs, where the key is the Cricket beacon ID and the value is the 3-d coordinate of the beacon
+//	 */
+//	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
+//		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
+//		try {
+//			Scanner sc = new Scanner(new BufferedReader(new FileReader(fileName)));
+//			while (sc.hasNextLine()) {
+//				String cricketId = sc.next();
+//				if (cricketId.contains("//") || cricketId.contains("/*") || cricketId.contains("#") || cricketId.contains(";"))
+//				{
+//					// we've reached a commented line in the file
+//					sc.nextLine(); // skip this line
+//					continue;
+//				}
+//				PlayerPoint3d coords = new PlayerPoint3d();
+//				coords.setPx(sc.nextDouble());
+//				coords.setPy(sc.nextDouble());
+//				coords.setPz(sc.nextDouble());
+//				sc.nextLine(); // consume the rest of the line
+//				// store to hashmap entry
+//				beacons.put(cricketId, coords);
+//				Logger.logDbg("Cricket Mote " + cricketId + " has coords: (" + coords.getPx() + "," + coords.getPy() + "," + coords.getPz() + ")");
+//			}
+//		} catch (FileNotFoundException e) {
+//			Logger.logErr("Could not find Cricket beacons file: " + fileName);
+//			e.printStackTrace();
+//		} catch (InputMismatchException e) {
+//			Logger.logErr("Error reading Cricket beacons file: " + fileName + ", bad input format.");
+//			e.printStackTrace();
+//		} catch (NoSuchElementException e) { }
+//		
+//		return beacons;
+//	}	
 	
 	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-
-
-
-	}
 
 	@Override
 	public void newCricketData(CricketData cd) {
 		lastCricketReading = ((double)cd.getDistance())/100;
 	}
 
+	
 	@Override
 	public void newRangerData(PlayerRangerData data) { /*do nothing*/ }
 
+	
 	@Override
 	public void newPlayerPosition2dData(PlayerPosition2dData data) { /*do nothing*/ }
 
 	
 	
 	
-	public void AssertCricket(Double expected, Inequality operation, Double delta) {
-		CPSAssertNumerical.AssertInequality("Asserted that the current Cricket Beacon distance was " + operation.toString() + " the expected value.",
+	public void AssertCricket(Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+				
+		if (lastCricketReading == null)
+			throw new NoNewDataException("No Cricket Data Available.");
+		
+		AssertionThread at = new AssertionThread("Asserted that the current Cricket Beacon distance was " + operation.toString() + " the expected value.",
 				expected, lastCricketReading, delta, operation);
+		
+		at.start();
+		if (blocking) {
+			try {
+				at.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		
 	}
 	
-	public void AssertCompass(Double expected, Inequality operation, Double delta) throws NoNewDataException {
-		CPSAssertNumerical.AssertInequality("Asserted that the current Compass Bearing was " + operation.toString() + " the expected value.",
-				expected, compassBuffer.getMedian(3), delta, operation);		
+	public void AssertCompass(Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+		
+		if (compassBuffer == null)
+			throw new NullPointerException("compassBuffer not configured properly, cannot use the AssertCompass method.");
+		
+		AssertionThread at = new AssertionThread("Asserted that the current Compass Bearing was " + operation.toString() + " the expected value.",
+				expected, compassBuffer.getMedian(3), delta, operation);
+		
+		at.start();
+		if (blocking) {
+			try {
+				at.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}	
 	}
 	
-	public void AssertOdometry(Double expectedX, Double expectedY, Inequality operation, Double deltaX, Double deltaY) throws NoNewDataException {
+	
+	public void AssertOdometry(Double expectedX, Double expectedY, Inequality ineqX, Inequality ineqY, Double deltaX, Double deltaY, boolean blocking) throws NoNewDataException {
+		
+		if (odometryBuffer == null)
+			throw new NullPointerException("odometryBuffer not configured properly, cannot use the AssertOdometry method.");
+		
+		// TODO fix for usage with AssertionThread subclass
+		
 		PlayerPose2d curPos = odometryBuffer.getRecentData().getPos();
-		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry x-value was " + operation.toString() + " the expected value.",
-				expectedX, curPos.getPx(), deltaX, operation);		
-		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry y-value was " + operation.toString() + " the expected value.",
-				expectedY, curPos.getPy(), deltaY, operation);		
+		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry x-value was " + ineqX.toString() + " the expected value.",
+				expectedX, curPos.getPx(), deltaX, ineqX);		
+		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry y-value was " + ineqX.toString() + " the expected value.",
+				expectedY, curPos.getPy(), deltaY, ineqX);		
 	}
 	
-	public void AssertRange(Double expectedRange, Inequality operation, Double delta) throws NoNewDataException {
-		CPSAssertNumerical.AssertInequality("Asserted that the current Ranger Distance was " + operation.toString() + " the expected value.",
-				expectedRange, rangerBuffer.getRecentData().getRanges()[0], delta, operation);		
+	
+	public void AssertRange(Double expectedRange, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+		
+		if (rangerBuffer == null)
+			throw new NullPointerException("rangerBuffer not configured properly, cannot use the AssertRange method.");
+		
+		AssertionThread at = new AssertionThread("Asserted that the current Ranger Distance was " + operation.toString() + " the expected value.",
+				expectedRange, rangerBuffer.getRecentData().getRanges()[0], delta, operation);
+		
+		at.start();
+		if (blocking) {
+			try {
+				at.join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}	
+						
 	}
 
 
