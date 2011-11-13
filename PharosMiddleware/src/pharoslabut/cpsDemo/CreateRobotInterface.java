@@ -1,4 +1,4 @@
-package pharoslabut.cps;
+package pharoslabut.cpsDemo;
 
 import java.io.*;
 
@@ -19,7 +19,7 @@ public class CreateRobotInterface {
 	public static final String PLAYER_SERVER = "/usr/local/bin/player";
 	public static final String PLAYER_CONFIG_FILE = "/usr/local/share/player/config/proteus-roomba.cfg";
 	public static final boolean CALIBRATE_DISTANCE = false;
-	public static final boolean CALIBRATE_TURN = true;
+	public static final boolean CALIBRATE_TURN = false;
 	
 	/**
 	 * The adjustment need to ensure robot rotates at desired rate.
@@ -58,9 +58,9 @@ public class CreateRobotInterface {
 		this.playerIP = playerIP;
 		this.playerPort = playerPort;
 		
-		//connect();
 		stopPlayer();
-		
+		startPlayer();
+		connect();
 	}
 	
 	/**
@@ -141,13 +141,11 @@ public class CreateRobotInterface {
 			return true;
 		}
 		
-		System.out.println("here1");
 		if (!isPlayerRunning()) {
 			Logger.log("player not running, reconnecting...");
 			connect();
 		}
 		
-		System.out.println("here2");
 		// Calibrate the distance
 		double calibratedDist;
 		
@@ -162,10 +160,9 @@ public class CreateRobotInterface {
 		int direction = dist < 0 ? -1 : 1;
 		int duration = (int)(Math.abs(dist) / ROBOT_SPEED * 1000); // in milliseconds
 		int heading = 0;
-		
-		System.out.println("about to use motors");
+	
 		if (motors == null)
-			System.out.println("motors is null");
+			System.out.println("*******motors is null...");
 		
 		motors.isDataReady(); // clears the readyPp2ddata flag
 		
@@ -546,5 +543,12 @@ public class CreateRobotInterface {
 		}
 		
 		System.exit(0);
+	}
+
+	/**
+	 * @return the pclient
+	 */
+	public PlayerClient getPlayerClient() {
+		return pclient;
 	}
 }

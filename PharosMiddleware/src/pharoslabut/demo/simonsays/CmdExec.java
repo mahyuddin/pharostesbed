@@ -5,6 +5,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.cpsAssert.AssertionResponseMsg;
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
@@ -150,15 +151,32 @@ public class CmdExec implements MessageReceiver {
 				//Logger.log("Robot is " + radius + "m from (" + coords.getPx() + "," + coords.getPy() + ")" );
 //				System.out.println(cd.getCricketID() + ", dist = " + cd.getDistance());
 			}
-			else if (rcvMsg instanceof BeaconReadingMsg) {
-				BeaconReadingMsg brMsg = (BeaconReadingMsg)rcvMsg;
-				SimonSaysClient.bdc.newBeaconData(brMsg.getBeaconReading());
+//			else if (rcvMsg instanceof BeaconReadingMsg) {
+//				BeaconReadingMsg brMsg = (BeaconReadingMsg)rcvMsg;
+//				SimonSaysClient.bdc.newBeaconData(brMsg.getBeaconReading());
+//			}
+			
+			else if (rcvMsg instanceof AssertionResponseMsg) {
+				handleReceivedAssertion((AssertionResponseMsg)rcvMsg);
 			}
 			else {
 				this.notifyAll();
 			}
 		}
 	}
+	
+	
+	/**
+	 * Performs the actions that should be taken when a AssertionResponseMsg is received.
+	 * 
+	 * @param sdMsg The AssertionResponseMsg received from the client
+	 */
+	private void handleReceivedAssertion(AssertionResponseMsg arMsg) {
+		arMsg.msgReceived();
+		
+		System.out.println(arMsg.getAssertionMsg());	
+	}
+	
 	
 	/**
 	 * Moves the robot forward or backward.  This is a blocking operation meaning the calling thread

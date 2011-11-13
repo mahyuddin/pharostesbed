@@ -8,6 +8,8 @@ import java.util.*;
 
 import javax.swing.*;
 
+import pharoslabut.cpsAssert.AssertionRequestMsg;
+import pharoslabut.cpsAssert.SensorType;
 import pharoslabut.demo.simonsays.io.CameraPanMsg;
 import pharoslabut.demo.simonsays.io.CameraTakeSnapshotMsg;
 import pharoslabut.demo.simonsays.io.CameraTiltMsg;
@@ -31,7 +33,6 @@ public class ProgramEntryGUI implements ActionListener {
 	private JButton submitButton;
 	private JFrame frame;
 	//private JLabel statusLabel = new JLabel("Debug Mode: False");
-	private AssertionTuple currentTuple = null; 
 	
 	private ProgramExecutor executor = null;
 	
@@ -289,7 +290,6 @@ public class ProgramEntryGUI implements ActionListener {
 					JOptionPane.showMessageDialog(frame, pe.getMessage());
 				}
 			}
-			SimonSaysClient.testing = false;
 			
 			running = false;
 			Logger.log("ProgramExecutor thread exiting...");
@@ -307,23 +307,12 @@ public class ProgramEntryGUI implements ActionListener {
 			JOptionPane.showMessageDialog(frame, "About to pan camera, note the current pan angle.");
 		else if (msg instanceof CameraTiltMsg)
 			JOptionPane.showMessageDialog(frame, "About to tilt camera, note the current tilt angle.");
-//		else if (msg instanceof CameraTakeSnapshotMsg)
 		else if (msg instanceof RobotMoveMsg) {
 			JOptionPane.showMessageDialog(frame, "About to move robot, note the robot's current position.");
 //			Multilateration.saveCurrentLocation(); // this is the only time that saveCurrentLocation() should be called
-			if (SimonSaysClient.testing) {
-				currentTuple = new AssertionTuple();
-				currentTuple.setExpectedDelta(((RobotMoveMsg)msg).getDist());
-				currentTuple.setStartingValue(SimonSaysClient.bdc.getLastBeaconReading().distance);
-				System.out.println("doDebugPre: Created new assertion tuple.");
-			}
 		}
 		else if (msg instanceof RobotTurnMsg)
 			JOptionPane.showMessageDialog(frame, "About to turn robot, note the robot's current heading.");
-//		else if (msg instanceof ResetPlayerMsg)
-//			ri.stopPlayer();
-//		else if (msg instanceof PlayerControlMsg)
-//			handlePlayerControlMsg((PlayerControlMsg)msg);
 	}
 	
 	/**
@@ -350,11 +339,6 @@ public class ProgramEntryGUI implements ActionListener {
 //			double actualDist = Math.sqrt(Math.pow(curLoc.getPx() - lastLoc.getPx(), 2) + Math.pow(curLoc.getPy() - lastLoc.getPy(), 2)); 
 			CPP cpp = new CPP("MOVE", ((RobotMoveMsg)msg).getDist(), actualDist);
 			cppData.add(cpp);
-			if (SimonSaysClient.testing) {
-				currentTuple.setEndingValue(SimonSaysClient.bdc.getLastBeaconReading().distance);
-				System.out.println("doDebugPost: Finished assertion tuple.");
-				SimonSaysClientTest.startAssertion(currentTuple);
-			}
 		}
 		else if (msg instanceof RobotTurnMsg) {
 			double actualAngle = getDouble("How many degrees did the robot turn?");
@@ -438,6 +422,36 @@ public class ProgramEntryGUI implements ActionListener {
 			}
 			
 			return new Command(new RobotTurnMsg(angle), lineno);
+		}
+		else if(instr.equals("ASSERT")) {
+			
+		// TODO handle ASSERT message being passed to Server
+//			if (tokens.length < 4)
+//				throw new ParseException("Missing assert argument(s) on line " + lineno + ".");
+//			
+//			SensorType sensor = null;
+//			try {
+//				sensor = SensorType.valueOf(tokens[1].toUpperCase());
+//			} catch(Exception e) {
+//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
+//			}
+//			
+//			Inequality ineq = null;
+//			try {
+//				ineq = Inequality.valueOf(tokens[2].toUpperCase());
+//			} catch(Exception e) {
+//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[2] + " is not a valid Inequality.");
+//			}
+//			
+//			double dist = 0;
+//			try {
+//				dist = Double.parseDouble(tokens[3]);
+//				// TODO accept multiple actual values, and they should be put into "Object[] actualValues"
+//			} catch(Exception e) {
+//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " is not a valid double value.");
+//			}
+			//return new Command(new AssertionRequestMsg(sensor, ineq, new Object[] {dist}), lineno);
+			return null; // TODO change this
 		}
 		else if(instr.equals("PAN")) {  
 			if (tokens.length < 2)

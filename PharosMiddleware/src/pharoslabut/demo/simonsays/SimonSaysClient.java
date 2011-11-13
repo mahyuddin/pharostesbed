@@ -24,8 +24,7 @@ public class SimonSaysClient {
 	
 //	private TCPMessageSender tcpSender;
 	private CmdExec cmdExec;
-	public static boolean testing = false;
-	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
+//	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
 	
 	/**
 	 * The Constructor.
@@ -119,10 +118,6 @@ public class SimonSaysClient {
 				else if (args[i].equals("-log")) {
 					logfileName = args[++i];
 				}
-				else if (args[i].equals("-testing")) {
-					testing = true;
-				}
-
 				else {
 					usage();
 					System.exit(1);

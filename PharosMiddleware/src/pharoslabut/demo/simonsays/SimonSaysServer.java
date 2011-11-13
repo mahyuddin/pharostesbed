@@ -9,6 +9,8 @@ import java.net.InetAddress;
 import java.util.*;
 import java.util.Map.Entry;
 
+import pharoslabut.cpsAssert.AssertionRequestMsg;
+import pharoslabut.cpsAssert.AssertionResponseMsg;
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
@@ -72,7 +74,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	private AxisCameraInterface camera;
 	
 	
-	public static BeaconDataCollector bdc;
+//	public static BeaconDataCollector bdc;
 	
 	
 	/**
@@ -103,11 +105,10 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		// add listener for cricket mote on USB1
 		CricketInterface ci  = new CricketInterface(cricketSerialPort);
 		ci.registerCricketDataListener(this);
-		bdc = new BeaconDataCollector("beaconData.txt");
+//		bdc = new BeaconDataCollector("beaconData.txt");
 //		System.out.println("=== created BeaconDataCollector...");
 		
-		if (noClient)
-			bdc.startTimer(); // dont know where to stop it yet
+//		bdc.startTimer(); // dont know where to stop it yet
 
 		// Open the server port and start receiving messages...
 		new TCPMessageReceiver(this, port);
@@ -173,9 +174,9 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
 		
 		// send data to be recorded by bdc
-		// bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
+//		bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
 	
-		
+/*		
 		BeaconReadingMsg brMsg = new BeaconReadingMsg(new BeaconReading(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius));
 		// broadcast new BeaconReading to clients list
 		Iterator<Entry<InetAddress, Integer>> iter = clients.entrySet().iterator();
@@ -190,6 +191,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 				Logger.logErr("Failed to send BeaconReadingMsg, " + brMsg.toString());
 			}
 	    }
+*/
 	} 
 	
 	//@Override
@@ -209,6 +211,8 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 //			ri.stopPlayer();
 		else if (msg instanceof PlayerControlMsg)
 			handlePlayerControlMsg((PlayerControlMsg)msg);
+		else if (msg instanceof AssertionRequestMsg) 
+			handleAssertionRequestMsg((AssertionRequestMsg)msg);
 		else
 			Logger.log("Unkown message: " + msg);
 	}
@@ -283,20 +287,20 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 * @param moveMsg The move message.
 	 */
 	private void handleRobotMoveMsg(RobotMoveMsg moveMsg) {
-		if (!noClient) {
-			bdc.startTimer();
-			System.out.println("=== started BDC timer");
-		}
+//		if (!noClient) {
+//			bdc.startTimer();
+//			System.out.println("=== started BDC timer");
+//		}
 		double dist = moveMsg.getDist();
 		Logger.log("Moving robot " + dist + " meters...");
 		boolean result = ri.move(dist);
 		Logger.log("Done moving robot, sending ack, result = " + result + "...");
 		sendAck(result, moveMsg); // success
 		
-		if (!noClient) {
-			bdc.stopTimer(); // collects beacon data for a single movement cmd
-			System.out.println("=== stopped BDC timer");
-		}
+//		if (!noClient) {
+//			bdc.stopTimer(); // collects beacon data for a single movement cmd
+//			System.out.println("=== stopped BDC timer");
+//		}
 	}
 	
 	/**
@@ -327,6 +331,30 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 			Logger.logErr("Failed to send ack for " + am + ", error=" + e);
 		}
 	}
+	
+	
+	/**
+	 * Performs the actions that should be taken when a AssertionRequestMsg is received.
+	 * 
+	 * @param sdMsg The AssertionRequestMsg received from the client
+	 */
+	private void handleAssertionRequestMsg(AssertionRequestMsg arMsg) {
+		arMsg.msgReceived();		
+		String assertionData = arMsg.getSensorType() + ", " + arMsg.getIneq() + ", " + arMsg.getActualValues();
+		
+		// TODO parse data out of arMsg
+		// TODO call the appropriate assertion
+		// TODO (probably need to change the assert methods to return a String of the assertion results)
+
+		try {
+			sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), new AssertionResponseMsg("Received Assertion: " + assertionData));
+		} catch (PharosException e) {
+			e.printStackTrace();
+			Logger.logErr("Failed to send AssertionResponseMessage for " + arMsg + ", error=" + e);
+		}
+		
+	}
+	
 	
 //	private void logErr(String msg) {
 //		String result = "DemoServer: " + msg;
@@ -371,7 +399,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		String mcuPort = "/dev/ttyS0";
 		String cameraIP = "192.168.0.20";
 		String cricketFile = "cricketBeacons.txt";
-		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
+		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_IROBOT_CREATE;
 		
 		try {
 			for (int i=0; i < args.length; i++) {

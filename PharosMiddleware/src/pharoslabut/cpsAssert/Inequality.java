@@ -1,4 +1,4 @@
-package pharoslabut.cps;
+package pharoslabut.cpsAssert;
 
 public enum Inequality {
 	LESS_THAN {
