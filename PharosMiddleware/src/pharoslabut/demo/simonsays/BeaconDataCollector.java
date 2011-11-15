@@ -3,13 +3,14 @@ package pharoslabut.demo.simonsays;
 import java.util.ArrayList;
 
 import pharoslabut.logger.FileLogger;
+import pharoslabut.sensors.CricketBeaconReading;
 
 public class BeaconDataCollector {
 
 	static FileLogger flogger;
 	static long startTime = 0;
 	public static boolean running = false;
-	public static ArrayList<BeaconReading> readings = new ArrayList<BeaconReading>();
+	public static ArrayList<CricketBeaconReading> readings = new ArrayList<CricketBeaconReading>();
 	
 	public BeaconDataCollector(String fileName) {
 		flogger = new FileLogger(fileName, false);
@@ -32,12 +33,12 @@ public class BeaconDataCollector {
 		}
 	}
 	
-	public void newBeaconData(BeaconReading br) {
+	public void newBeaconData(CricketBeaconReading br) {
 		System.out.println("Received new BeaconReading br.");
 		readings.add(br);
 	}
 	
-	public BeaconReading getLastBeaconReading() {
+	public CricketBeaconReading getLastBeaconReading() {
 		if (readings.isEmpty())
 			return null;
 		else

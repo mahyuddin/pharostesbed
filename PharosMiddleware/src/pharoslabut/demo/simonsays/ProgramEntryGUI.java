@@ -9,6 +9,7 @@ import java.util.*;
 import javax.swing.*;
 
 import pharoslabut.cpsAssert.AssertionRequestMsg;
+import pharoslabut.cpsAssert.Inequality;
 import pharoslabut.cpsAssert.SensorType;
 import pharoslabut.demo.simonsays.io.CameraPanMsg;
 import pharoslabut.demo.simonsays.io.CameraTakeSnapshotMsg;
@@ -425,33 +426,49 @@ public class ProgramEntryGUI implements ActionListener {
 		}
 		else if(instr.equals("ASSERT")) {
 			
-		// TODO handle ASSERT message being passed to Server
-//			if (tokens.length < 4)
-//				throw new ParseException("Missing assert argument(s) on line " + lineno + ".");
-//			
-//			SensorType sensor = null;
-//			try {
-//				sensor = SensorType.valueOf(tokens[1].toUpperCase());
-//			} catch(Exception e) {
-//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
-//			}
-//			
-//			Inequality ineq = null;
-//			try {
-//				ineq = Inequality.valueOf(tokens[2].toUpperCase());
-//			} catch(Exception e) {
-//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[2] + " is not a valid Inequality.");
-//			}
-//			
-//			double dist = 0;
-//			try {
-//				dist = Double.parseDouble(tokens[3]);
-//				// TODO accept multiple actual values, and they should be put into "Object[] actualValues"
-//			} catch(Exception e) {
-//				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " is not a valid double value.");
-//			}
-			//return new Command(new AssertionRequestMsg(sensor, ineq, new Object[] {dist}), lineno);
-			return null; // TODO change this
+			// language guide: ASSERT CRICKET LESS_THAN 1.0 0.05 BLOCKING
+			
+			//TODO handle ASSERT message being passed to Server
+			
+			if (tokens.length < 4)
+				throw new ParseException("Missing assert argument(s) on line " + lineno + ".");
+			
+			SensorType sensor = null;
+			try {
+				sensor = SensorType.valueOf(tokens[1].toUpperCase());
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
+			}
+			if (sensor == null)
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
+			
+			Inequality ineq = null;
+			try {
+				ineq = Inequality.valueOf(tokens[2].toUpperCase());
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[2] + " is not a valid Inequality.");
+			}
+			if (ineq == null)
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid Inequality.");
+			
+			Double dist = null;
+			Double delta = 0.0;
+			try {
+				dist = Double.parseDouble(tokens[3]); 
+				if (tokens.length >= 5)
+					delta = Double.parseDouble(tokens[4]);
+				// TODO accept multiple actual values, and they should be put into "Object[] actualValues"
+			} catch(Exception e) {
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " or " + tokens[4] + " is not a valid double value.");
+			}
+			if (dist == null)
+				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " is not a valid double value.");
+			
+			boolean blocking = false;
+			if (tokens.length >= 6)
+				blocking = tokens[5].toUpperCase().equals("BLOCKING"); 
+				
+			return new Command(new AssertionRequestMsg(sensor, ineq, blocking, new Object[] {dist, delta}), lineno);
 		}
 		else if(instr.equals("PAN")) {  
 			if (tokens.length < 2)

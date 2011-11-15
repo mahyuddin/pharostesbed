@@ -5,6 +5,7 @@ import java.awt.image.*;
 import java.io.*;
 import java.net.*;
 
+import pharoslabut.cpsAssert.AssertionRequestMsg;
 import pharoslabut.cpsAssert.AssertionResponseMsg;
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
@@ -86,6 +87,8 @@ public class CmdExec implements MessageReceiver {
 		// Send the message
 		try {
 			rcvMsg = null;
+			if (msg instanceof AssertionRequestMsg)
+				((AssertionRequestMsg)msg).msgSent();
 			tcpSender.sendMessage(destAddr, destPort, msg);
 		} catch (PharosException e1) {
 			e1.printStackTrace();
@@ -160,6 +163,7 @@ public class CmdExec implements MessageReceiver {
 				handleReceivedAssertion((AssertionResponseMsg)rcvMsg);
 			}
 			else {
+				// used to signal a received ack msg
 				this.notifyAll();
 			}
 		}

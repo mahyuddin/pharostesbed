@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 import pharoslabut.cpsAssert.AssertionRequestMsg;
+import pharoslabut.cpsAssert.AssertionRequestThread;
 import pharoslabut.cpsAssert.AssertionResponseMsg;
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
@@ -101,7 +102,7 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 		
 		// read list of cricket beacons and their positions
 		cricketPositions = readCricketFile(cricketFile);	
-				
+		
 		// add listener for cricket mote on USB1
 		CricketInterface ci  = new CricketInterface(cricketSerialPort);
 		ci.registerCricketDataListener(this);
@@ -340,19 +341,10 @@ public class SimonSaysServer implements MessageReceiver, CricketDataListener {
 	 */
 	private void handleAssertionRequestMsg(AssertionRequestMsg arMsg) {
 		arMsg.msgReceived();		
-		String assertionData = arMsg.getSensorType() + ", " + arMsg.getIneq() + ", " + arMsg.getActualValues();
-		
-		// TODO parse data out of arMsg
-		// TODO call the appropriate assertion
-		// TODO (probably need to change the assert methods to return a String of the assertion results)
 
-		try {
-			sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), new AssertionResponseMsg("Received Assertion: " + assertionData));
-		} catch (PharosException e) {
-			e.printStackTrace();
-			Logger.logErr("Failed to send AssertionResponseMessage for " + arMsg + ", error=" + e);
-		}
-		
+		// TODO create new thread to handle it
+		AssertionRequestThread arThr = new AssertionRequestThread(arMsg, sender);
+		arThr.start();
 	}
 	
 	
