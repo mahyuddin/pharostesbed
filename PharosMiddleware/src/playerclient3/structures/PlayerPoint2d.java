@@ -36,8 +36,15 @@ public class PlayerPoint2d implements java.io.Serializable {
 	private double px;        // X [m]
     private double py;        // Y [m]
 
+    
+    public PlayerPoint2d(double x, double y) {
+    	this.px = x;
+    	this.py = y;
+    }
 
-    /**
+    public PlayerPoint2d() {}
+
+	/**
      * @return X [m]
      */
     public synchronized double getPx () {
