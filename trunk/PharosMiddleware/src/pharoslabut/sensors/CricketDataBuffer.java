@@ -43,18 +43,18 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	/**
 	 * the list of Cricket Mote beacons and their corresponding poses (positional coordinates)
 	 */
-	Map<String, PlayerPoint3d> cricketPositions = new HashMap<String, PlayerPoint3d>();
+	 Map<String, PlayerPoint3d> cricketPositions = new HashMap<String, PlayerPoint3d>();
 	
 	/**
 	 * the list of Cricket Motes and their latest CricketBeaconReading
 	 */
-	Map<String, CricketBeaconReading> beaconReadings = Collections.synchronizedMap(new HashMap<String, CricketBeaconReading>());
+	 Map<String, CricketBeaconReading> beaconReadings = Collections.synchronizedMap(new HashMap<String, CricketBeaconReading>());
 	
 	
 	/**
 	 * The period in milliseconds at which to check for expired data.
 	 */
-	public static final int CRICKET_BUFFER_REFRESH_PERIOD = 100;
+	public final int CRICKET_BUFFER_REFRESH_PERIOD = 100;
 	
 	/**
 	 * A proxy to the Cricket device.
@@ -72,7 +72,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 //	private FileLogger flogger;
 	
 	/**
-	 * The constructor. You must call the <code> start() </code> method to start receiving Cricket readings. <br>
+	 * The constructor. You must call <code> start() </code> to start collecting new Cricket readings. <br>
 	 * You can also call <code> stop() </code> to stop accepting new Cricket readings.
 	 * 
 	 * @param crckti The proxy to the Cricket device.
@@ -124,7 +124,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	
 	
 	/**
-	 * Starts the CricketDataBuffer.  Creates a thread for reading cricket data.
+	 * Starts the CricketDataBuffer. Creates a thread for reading cricket data.
 	 */
 	public synchronized void start() {
 		if (!running) {
@@ -137,7 +137,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	}
 	
 	/**
-	 * Stops the CricketDataBuffer.  Allows the thread that reads Cricket data to terminate.
+	 * Stops the CricketDataBuffer. Allows the thread that reads Cricket data to terminate.
 	 */
 	public synchronized void stop() {
 		if (running) {
@@ -150,16 +150,16 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 
 	
 //	/**
-//	 * Sets the file logger.  If the file logger is not null, this component
+//	 * Sets the file logger. If the file logger is not null, this component
 //	 * logs compass data to a file.
 //	 * 
-//	 * @param flogger The file logger.  This may be null.
+//	 * @param flogger The file logger. This may be null.
 //	 */
 //	public void setFileLogger(FileLogger flogger) {
 //		this.flogger = flogger;
 //	}
 	
-    /**
+  /**
 	 * Returns the most recent Cricket device reading.
 	 * @param cricketBeaconID the id of the Cricket Beacon to get the last reading from
 	 * @return The most recent Cricket device reading
@@ -176,7 +176,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	}
 	
 	
-	public CricketBeaconReading getLastReading(PlayerPoint2d coord) throws NoNewDataException {
+	public synchronized CricketBeaconReading getLastReading(PlayerPoint2d coord) throws NoNewDataException {
 		Iterator<Entry<String, PlayerPoint3d>> iter = getCricketPositions().iterator();
 		while (iter.hasNext()) {
 			Map.Entry<String, PlayerPoint3d> e = iter.next();
@@ -189,11 +189,11 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	}
 	
 	
-	public CricketBeaconReading getLastReading(PlayerPoint3d coord) throws NoNewDataException {
+	public synchronized CricketBeaconReading getLastReading(PlayerPoint3d coord) throws NoNewDataException {
 		return getLastReading(new PlayerPoint2d(coord.getPx(), coord.getPy()));
 	}
-    
-    
+  
+  
 	/**
 	 * Currently does nothing
 	 */
@@ -230,12 +230,14 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 		
 		double x = coord.getPx();
 		double y = coord.getPy();
+		double z = coord.getPz();
 		
 		if (!beaconReadings.containsKey(id)) { // is the first time reading from this beacon
 			Logger.logDbg("Found Cricket Mote " + (recognized ? ("at (" + x + "," + y + "),") : "with unrecognized") + " ID=" + id);
 		}
 		
-		beaconReadings.put(id, new CricketBeaconReading(System.currentTimeMillis(), x, y, (double)(cd.getDistance()/100))); // convert distance from cm to meters	
+		double dist = (double)(cd.getDistance()/100); // convert distance from cm to meters	
+		beaconReadings.put(id, new CricketBeaconReading(System.currentTimeMillis(), x, y, z, dist)); // pythagorean theorem to find distance along ground
 	}
 	
 	
@@ -252,6 +254,14 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	public PlayerPoint2d getCricketBeaconCoord2d(String cricketID) {
 		PlayerPoint3d coord = cricketPositions.get(cricketID);
 		return new PlayerPoint2d(coord.getPx(), coord.getPy());
+	}
+
+
+	/**
+	 * @return the running
+	 */
+	public boolean isRunning() {
+		return running;
 	}
 	
 	
