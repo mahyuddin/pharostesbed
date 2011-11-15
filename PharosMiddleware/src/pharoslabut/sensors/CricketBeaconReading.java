@@ -7,20 +7,26 @@ public class CricketBeaconReading implements java.io.Serializable {
 	private static final long serialVersionUID = 5053764047088598082L;
 
 	long timeStamp;
-	PlayerPoint2d coord = new PlayerPoint2d();
+	PlayerPoint2d coord;
 	
 	/**
-	 * distance from Cricket beacon to listener in meters
+	 * the actual distance in 3D space from beacon to listener
 	 */
 	double distance;
 	
+	/**
+	 * distance along the ground from Cricket beacon to listener in meters
+	 */
+	double distanceAlongGround;
+	
+	
 	public CricketBeaconReading() {}
 	
-	public CricketBeaconReading(long ts, double x, double y, double dist) {
+	public CricketBeaconReading(long ts, double x, double y, double z, double dist) {
 		this.timeStamp = ts;
-		this.coord.setPx(x);
-		this.coord.setPy(y);
+		this.coord = new PlayerPoint2d(x, y);
 		this.distance = dist;
+		this.distanceAlongGround = Math.sqrt(Math.abs(dist * dist - z * z));
 	}
 	
 	
@@ -32,7 +38,17 @@ public class CricketBeaconReading implements java.io.Serializable {
 		return coord;
 	}
 
-	public double getDistance() {
+	/**
+	 * @return distance along the ground from Cricket beacon to listener in <b> **meters** </b>
+	 */
+	public double getDistance2dComponent() {
+		return distanceAlongGround;
+	}
+	
+	/**
+	 * @return the actual distance in 3D space from beacon to listener
+	 */
+	public double getDistance3d() {
 		return distance;
 	}
 
@@ -41,7 +57,7 @@ public class CricketBeaconReading implements java.io.Serializable {
 	 */
 	@Override
 	public String toString() {
-		return "At time=" + timeStamp + ", " + distance + " from (" + coord.getPx() + "," + coord.getPy() + ")."; 
+		return "At time=" + timeStamp + ", " + distanceAlongGround + " from (" + coord.getPx() + "," + coord.getPy() + ")."; 
 	}
 	
 	
