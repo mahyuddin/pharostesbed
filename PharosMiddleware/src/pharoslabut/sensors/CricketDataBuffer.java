@@ -1,6 +1,7 @@
 package pharoslabut.sensors;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
@@ -91,6 +92,12 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	 * @return a map of key-value pairs, where the key is the Cricket beacon ID and the value is the 3-d coordinate of the beacon
 	 */
 	private HashMap<String, PlayerPoint3d> readCricketFile(String fileName) {
+		File f = new File(fileName);
+		if (!f.exists()) {
+			Logger.logErr("Could not find Cricket beacons file: " + fileName + ", using cricketBeacons.txt instead.");
+			fileName = "cricketBeacons.txt";
+		}
+			
 		HashMap<String, PlayerPoint3d> beacons = new HashMap<String, PlayerPoint3d>();
 		try {
 			Scanner sc = new Scanner(new BufferedReader(new FileReader(fileName)));
@@ -136,6 +143,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 			Logger.log("already started...");
 	}
 	
+	
 	/**
 	 * Stops the CricketDataBuffer. Allows the thread that reads Cricket data to terminate.
 	 */
@@ -159,6 +167,7 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 //		this.flogger = flogger;
 //	}
 	
+	
   /**
 	 * Returns the most recent Cricket device reading.
 	 * @param cricketBeaconID the id of the Cricket Beacon to get the last reading from
@@ -177,20 +186,19 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	
 	
 	public synchronized CricketBeaconReading getLastReading(PlayerPoint2d coord) throws NoNewDataException {
-		Iterator<Entry<String, PlayerPoint3d>> iter = getCricketPositions().iterator();
-		while (iter.hasNext()) {
-			Map.Entry<String, PlayerPoint3d> e = iter.next();
-			PlayerPoint3d coord3d = e.getValue();
-			if (coord3d.getPx() == coord.getPx() && coord3d.getPy() == coord.getPy()) { // found the request cricket beacon
-				return getLastReading(e.getKey());
-			}
-		}
-		throw new NoNewDataException("Cricket Beacon at (" + coord.getPx() + "," + coord.getPy() + ") does not exist in the configuration.");
-	}
-	
+		return getLastReading(getCricketBeaconID(coord));
+	} 
 	
 	public synchronized CricketBeaconReading getLastReading(PlayerPoint3d coord) throws NoNewDataException {
-		return getLastReading(new PlayerPoint2d(coord.getPx(), coord.getPy()));
+		return getLastReading(getCricketBeaconID(coord));
+	}
+	
+	public synchronized CricketBeaconReading getLastReading(double xCoord, double yCoord) throws NoNewDataException {
+		return getLastReading(getCricketBeaconID(xCoord, yCoord));
+	}
+	
+	public synchronized CricketBeaconReading getLastReading(double xCoord, double yCoord, double zCoord) throws NoNewDataException {
+		return getLastReading(getCricketBeaconID(xCoord, yCoord, zCoord));
 	}
   
   
@@ -257,6 +265,43 @@ public class CricketDataBuffer implements Runnable, CricketDataListener {
 	}
 
 
+	public String getCricketBeaconID(PlayerPoint2d coord) {
+		Iterator<Entry<String, PlayerPoint3d>> iter = getCricketPositions().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, PlayerPoint3d> e = iter.next();
+			PlayerPoint3d coord3d = e.getValue();
+			if (coord3d.getPx() == coord.getPx() && coord3d.getPy() == coord.getPy()) { // found the requested cricket beacon
+				return e.getKey();
+			}
+		}
+		return null;
+	}
+	
+	
+	public String getCricketBeaconID(PlayerPoint3d coord3d) {
+		Iterator<Entry<String, PlayerPoint3d>> iter = getCricketPositions().iterator();
+		while (iter.hasNext()) {
+			Map.Entry<String, PlayerPoint3d> e = iter.next();
+			PlayerPoint3d curCoord = e.getValue();
+			if (curCoord.getPx() == coord3d.getPx() && curCoord.getPy() == coord3d.getPy() && curCoord.getPz() == coord3d.getPz()) { // found the requested cricket beacon
+				return e.getKey();
+			}
+		}
+		return null;
+	}
+	
+	
+	public String getCricketBeaconID(double xCoord, double yCoord) {
+		return getCricketBeaconID(new PlayerPoint2d(xCoord, yCoord));
+	}
+	
+	
+	public String getCricketBeaconID(double xCoord, double yCoord, double zCoord) {
+		return getCricketBeaconID(new PlayerPoint3d(xCoord, yCoord, zCoord));
+	}
+	
+	
+	
 	/**
 	 * @return the running
 	 */
