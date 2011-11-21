@@ -26,12 +26,27 @@ public class AssertionRequestMsg implements AckableMessage {
 	/**
 	 * the Inequality to use for comparison
 	 */
-	private Inequality ineq;
+	private Inequality [] ineqs;
 	
 	/**
-	 * an array actual values to use for comparison
+	 * whether the assertion is blocking (foreground) or non-blocking (background)
 	 */
-	private Object [] actualValues;
+	private boolean blocking;
+	
+	/**
+	 * an array of expected values to use for comparison
+	 */
+	private Object [] expectedValues;
+	
+	/**
+	 * an array of delta values to use as margins of error for comparisons
+	 */
+	private Object [] deltaValues;
+	
+	/**
+	 * the system time when this AssertionSentMsg was received
+	 */
+	private long requestSentTime;
 	
 	/**
 	 * the system time when this AssertionRequestMsg was received
@@ -39,18 +54,28 @@ public class AssertionRequestMsg implements AckableMessage {
 	private long requestReceivedTime;
 
 	
-	public AssertionRequestMsg(SensorType st, Inequality in, Object vals[]) {
+	public AssertionRequestMsg(SensorType st, Inequality in[], boolean block, Object expVals[], Object deltaVals[]) {
 		this.sensorType = st;
-		this.ineq = in;
-		this.actualValues = vals;		
+		this.ineqs = in;
+		this.blocking = block;
+		this.expectedValues = expVals;
+		this.deltaValues = deltaVals;
 	}
 	
 	/**
-	 * sets this msg's receivedTimestamp value to the current system time
+	 * sets this msg's requestSentTime value to the current system time
+	 */
+	public void msgSent() {
+		this.requestSentTime = System.currentTimeMillis();
+	}
+	
+	/**
+	 * sets this msg's requestReceivedTime value to the current system time
 	 */
 	public void msgReceived() {
 		this.requestReceivedTime = System.currentTimeMillis();
 	}
+	
 	
 	/**
 	 * @return the sensorType
@@ -62,21 +87,29 @@ public class AssertionRequestMsg implements AckableMessage {
 	/**
 	 * @return the ineq
 	 */
-	public Inequality getIneq() {
-		return ineq;
+	public Inequality [] getInequality() {
+		return ineqs;
 	}
 
 	/**
 	 * @return the actualValues
 	 */
-	public Object[] getActualValues() {
-		return actualValues;
+	public Object[] getExpectedValues() {
+		return expectedValues;
 	}
 
 	/**
 	 * @return the requestTimestamp
 	 */
-	public long getRequestTimestamp() {
+	public long getSentTimestampe() {
+		return requestSentTime;
+	}
+
+	
+	/**
+	 * @return the requestReceivedTime
+	 */
+	public long getReceivedTimestamp() {
 		return requestReceivedTime;
 	}
 
@@ -103,6 +136,20 @@ public class AssertionRequestMsg implements AckableMessage {
 	@Override
 	public int getPort() {
 		return port;
+	}
+
+	/**
+	 * @return the blocking
+	 */
+	public boolean isBlocking() {
+		return blocking;
+	}
+
+	/**
+	 * @return the deltaValues
+	 */
+	public Object[] getDeltaValues() {
+		return deltaValues;
 	}
 
 }

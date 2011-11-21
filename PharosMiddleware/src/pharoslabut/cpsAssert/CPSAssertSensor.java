@@ -4,8 +4,10 @@ package pharoslabut.cpsAssert;
 import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.sensors.CameraLocalization;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.CricketData;
+import pharoslabut.sensors.CricketDataBuffer;
 import pharoslabut.sensors.CricketDataListener;
 import pharoslabut.sensors.CricketInterface;
 import pharoslabut.sensors.Position2DBuffer;
@@ -18,53 +20,51 @@ import playerclient3.PlayerException;
 import playerclient3.RangerInterface;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.PlayerPoint2d;
+import playerclient3.structures.PlayerPoint3d;
 import playerclient3.structures.PlayerPose2d;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 
-public class CPSAssertSensor implements CricketDataListener, RangerListener, Position2DListener{
+public class CPSAssertSensor implements RangerListener, Position2DListener{
 	
-	
-//	/**
-//	 * the list of Cricket Mote beacons and their corresponding poses (positional coordinates)
-//	 */
-//	Map<String, PlayerPoint3d> cricketPositions = new HashMap<String, PlayerPoint3d>();
-//	
-//	/**
-//	 * the list of Cricket Mote beacons currently connected to this robot's Cricket Mote Listener
-//	 */
-//	Map<String, ArrayList<CricketData>> cricketBeacons = Collections.synchronizedMap(new HashMap<String, ArrayList<CricketData>>());
-	
-	public static final double cricketBeaconHeight = 1.0;
-	
-	private static Double lastCricketReading = null;
-	
-	private CompassDataBuffer compassBuffer;
-	private Position2DBuffer odometryBuffer;
-	private RangerDataBuffer rangerBuffer;
+	private static CricketDataBuffer cricketBuffer;
+	private static CompassDataBuffer compassBuffer;
+	private static Position2DBuffer position2dBuffer;
+	private static RangerDataBuffer rangerBuffer;
+	private static CameraLocalization cameraLocalizer;
 
 
 	public CPSAssertSensor (
 			PlayerClient pc, FileLogger flogger,
-			boolean useCricket, CricketInterface ci, String cricketSerialPort, 
-			boolean useRanger, Integer rangerDeviceIndex, RangerInterface rangerInterface, RangerDataBuffer rangerBuffer,
-			boolean useOdometry, Integer odometryDeviceIndex, Position2DInterface odometryInterface, Position2DBuffer odometryBuffer,
-			boolean useCompass, Integer compassDeviceIndex, Position2DInterface compassInterface, CompassDataBuffer compassBuffer
-			) 
+			boolean useCricket, CricketDataBuffer cricketBuffer, CricketInterface cricketInterface, String cricketSerialPort, String cricketFile,  
+			boolean useRanger, RangerDataBuffer rangerBuffer, RangerInterface rangerInterface, Integer rangerDeviceIndex, 
+			boolean usePosition2d, Position2DBuffer position2dBuffer, Position2DInterface position2dInterface, Integer position2dDeviceIndex,
+			boolean useCameraLocalization, CameraLocalization cameraLocalizer, Integer refreshInterval, String cameraFileName, 
+			boolean useCompass, CompassDataBuffer compassBuffer, Position2DInterface compassInterface, Integer compassDeviceIndex
+			)
 	{
 		if (flogger == null)
-			Logger.setFileLogger(new FileLogger("CPSAssertLog.txt")); // set up logger (this does nothing if logger was already set up)
+			Logger.setFileLogger(new FileLogger("CPSAssertLog.txt")); // set up logger if not yet specified
 
 		if (useCricket) {
-			if (ci == null) {
-				if (cricketSerialPort == null) {
-					throw new NullPointerException("CPSAssertSensor Constructor: Parameter \"cricketSerialPort\" was null when trying to create a new CricketInterface.\n" + 
-							"Please specify either a non-null \"cricketSerialPort\" or CricketInterface, or set the useCricket boolean value to false to disable Cricket Mote usage.");
+			if (cricketBuffer == null) {
+				if (cricketInterface == null) {
+					if (cricketSerialPort == null) {
+						throw new NullPointerException("CPSAssertSensor Constructor: Parameter \"cricketSerialPort\" was null when trying to create a new CricketInterface.\n" + 
+								"Please specify either a non-null \"cricketSerialPort\" or CricketInterface, or set the useCricket boolean value to false to disable Cricket Mote usage.");
+					}
+					cricketInterface = new CricketInterface(cricketSerialPort);
 				}
-				ci = new CricketInterface(cricketSerialPort);
+				if (cricketFile == null) {
+					throw new NullPointerException("CPSAssertSensor Constructor: Parameter \"cricketFile\" was null when trying to create a new CricketDataBuffer.\n" + 
+							"Please specify either a non-null \"cricketFile\" or CricketDataBuffer, or set the useCricket boolean value to false to disable Cricket Mote usage.");
+				}
+				cricketBuffer = new CricketDataBuffer(cricketInterface, cricketFile);
+				cricketBuffer.start();				
 			}
-			ci.registerCricketDataListener(this);
+			CPSAssertSensor.cricketBuffer = cricketBuffer;
 		}
 		
 		if (useRanger) {
@@ -89,32 +89,32 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 				rangerBuffer.start();
 			}
 			// no need to add this as a Pos2DListener, just use getRecentData() for latest ranger value
-			this.rangerBuffer = rangerBuffer;
+			CPSAssertSensor.rangerBuffer = rangerBuffer;
 		}
 		
-		if (useOdometry) {
-			if (odometryBuffer == null) {
-				if (odometryInterface == null) {
+		if (usePosition2d) {
+			if (position2dBuffer == null) {
+				if (position2dInterface == null) {
 					if (pc == null) {
 						throw new NullPointerException("CPSAssertSensor Constructor: PlayerClient \"pc\" was null when connecting to Odometry Interface.\n" + 
 								"Please specify one of the values, or set the useOdometry boolean value to false to disable odometry usage."); 
 					}
-					if (odometryDeviceIndex == null) {
-						odometryDeviceIndex = 0;
-						Logger.log("\"odometryDeviceIndex\" was null, will use value = 0 as default.");
+					if (position2dDeviceIndex == null) {
+						position2dDeviceIndex = 0;
+						Logger.log("\"position2dDeviceIndex\" was null, will use value = 0 as default.");
 					}
 					try{
-						odometryInterface = pc.requestInterfacePosition2D(odometryDeviceIndex, PlayerConstants.PLAYER_OPEN_MODE);;
+						position2dInterface = pc.requestInterfacePosition2D(position2dDeviceIndex, PlayerConstants.PLAYER_OPEN_MODE);;
 					} catch (PlayerException e) { 
-						System.out.println("Error: could not connect to Odometry's Position2dInterface."); 
+						System.out.println("Error: could not connect to the requested Position2dInterface at deviceIndex=" + position2dDeviceIndex + "."); 
 						System.exit(1); 
 					}
 				}
-				odometryBuffer = new Position2DBuffer(odometryInterface);
-				odometryBuffer.start();
+				position2dBuffer = new Position2DBuffer(position2dInterface);
+				position2dBuffer.start();
 			}
 			// no need to add this as a Pos2DListener, just use getRecentData() for latest odometry value
-			this.odometryBuffer = odometryBuffer;
+			CPSAssertSensor.position2dBuffer = position2dBuffer;
 		}
 		
 		if (useCompass) {
@@ -139,7 +139,22 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 				compassBuffer.start();
 			}
 			// no need to add this as a Pos2DListener, just use getMedian() for latest compass value
-			this.compassBuffer = compassBuffer;
+			CPSAssertSensor.compassBuffer = compassBuffer;
+		}
+		
+		if (useCameraLocalization) {
+			if (cameraLocalizer == null) {
+				if (cameraFileName == null) {
+					throw new NullPointerException("CPSAssertSensor Constructor: cameraFileName was null when connecting to CameraLocalization.\n" + 
+							"Please specify one of the values, or set the useCameraLocalization boolean value to false to disable its usage."); 
+				}
+				if (refreshInterval == null) {
+					Logger.log("CameraLocalizzation refreshInterval was not specified, using 100ms (10Hz).");
+					refreshInterval = 100;
+				}
+				cameraLocalizer = new CameraLocalization(refreshInterval, cameraFileName); // starts itself				
+			}
+			CPSAssertSensor.cameraLocalizer = cameraLocalizer;
 		}
 
 	}
@@ -183,12 +198,6 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 //		return beacons;
 //	}	
 	
-	
-
-	@Override
-	public void newCricketData(CricketData cd) {
-		lastCricketReading = ((double)cd.getDistance())/100;
-	}
 
 	
 	@Override
@@ -199,28 +208,28 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 	public void newPlayerPosition2dData(PlayerPosition2dData data) { /*do nothing*/ }
 
 	
-	
-	
-	public void AssertCricket(Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
-				
-		if (lastCricketReading == null)
-			throw new NoNewDataException("No Cricket Data Available.");
-		
-		AssertionThread at = new AssertionThread("Asserted that the current Cricket Beacon distance was " + operation.toString() + " the expected value.",
-				expected, lastCricketReading, delta, operation);
-		
-		at.start();
-		if (blocking) {
-			try {
-				at.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
+
+	public static AssertionThread AssertCricket(PlayerPoint3d cricket3dCoord, Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+		return AssertCricket(cricketBuffer.getCricketBeaconID(cricket3dCoord), expected, operation, delta, blocking);
 	}
 	
-	public void AssertCompass(Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+	
+	public static AssertionThread AssertCricket(PlayerPoint2d cricket2dCoord, Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+		return AssertCricket(cricketBuffer.getCricketBeaconID(cricket2dCoord), expected, operation, delta, blocking);
+	}
+		
+		
+	public static AssertionThread AssertCricket(String cricketBeaconID, Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+					
+		AssertionThread at = new AssertionThread("Asserted that the Cricket Beacon distance was " + operation.toString() + " the expected value.",
+				expected, cricketBuffer.getLastReading(cricketBeaconID).getDistance2dComponent(), delta, operation);
+		
+		at.runBlocking(blocking);
+		return at;		
+	}
+	
+	
+	public static AssertionThread AssertCompass(Double expected, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
 		
 		if (compassBuffer == null)
 			throw new NullPointerException("compassBuffer not configured properly, cannot use the AssertCompass method.");
@@ -228,33 +237,38 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 		AssertionThread at = new AssertionThread("Asserted that the current Compass Bearing was " + operation.toString() + " the expected value.",
 				expected, compassBuffer.getMedian(3), delta, operation);
 		
-		at.start();
-		if (blocking) {
-			try {
-				at.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}	
+		at.runBlocking(blocking);
+		return at;
 	}
 	
 	
-	public void AssertOdometry(Double expectedX, Double expectedY, Inequality ineqX, Inequality ineqY, Double deltaX, Double deltaY, boolean blocking) throws NoNewDataException {
+	public static AssertionThread AssertPosition2d(Double expectedX, Double expectedY, Inequality ineqX, Inequality ineqY, Double deltaX, Double deltaY, boolean blocking) throws NoNewDataException {
 		
-		if (odometryBuffer == null)
-			throw new NullPointerException("odometryBuffer not configured properly, cannot use the AssertOdometry method.");
+		if (position2dBuffer == null)
+			throw new NullPointerException("position2dBuffer not configured properly, cannot use the AssertPosition2d method.");
 		
-		// TODO fix for usage with AssertionThread subclass
+		PlayerPose2d curPos = position2dBuffer.getRecentData().getPos();
+		AssertionThread at = new AssertionThreadPosition2d("position", expectedX, expectedY, curPos.getPx(), curPos.getPy(), deltaX, deltaY, ineqX, ineqY);
 		
-		PlayerPose2d curPos = odometryBuffer.getRecentData().getPos();
-		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry x-value was " + ineqX.toString() + " the expected value.",
-				expectedX, curPos.getPx(), deltaX, ineqX);		
-		CPSAssertNumerical.AssertInequality("Asserted that the current Odometry y-value was " + ineqX.toString() + " the expected value.",
-				expectedY, curPos.getPy(), deltaY, ineqX);		
+		at.runBlocking(blocking);
+		return at;
 	}
 	
 	
-	public void AssertRange(Double expectedRange, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
+	public static AssertionThread AssertCameraLocalization(Double expectedX, Double expectedY, Inequality ineqX, Inequality ineqY, Double deltaX, Double deltaY, boolean blocking) throws NoNewDataException {
+		
+		if (cameraLocalizer == null)
+			throw new NullPointerException("cameraLocalizer not configured properly, cannot use the AssertCameraLocalization method.");
+		
+		PlayerPoint2d curPos = cameraLocalizer.getCurrentLocation();
+		AssertionThread at = new AssertionThreadPosition2d("camera-based localization", expectedX, expectedY, curPos.getPx(), curPos.getPy(), deltaX, deltaY, ineqX, ineqY);
+		
+		at.runBlocking(blocking);
+		return at;
+	}
+	
+	
+	public static AssertionThread AssertRange(Double expectedRange, Inequality operation, Double delta, boolean blocking) throws NoNewDataException {
 		
 		if (rangerBuffer == null)
 			throw new NullPointerException("rangerBuffer not configured properly, cannot use the AssertRange method.");
@@ -262,21 +276,9 @@ public class CPSAssertSensor implements CricketDataListener, RangerListener, Pos
 		AssertionThread at = new AssertionThread("Asserted that the current Ranger Distance was " + operation.toString() + " the expected value.",
 				expectedRange, rangerBuffer.getRecentData().getRanges()[0], delta, operation);
 		
-		at.start();
-		if (blocking) {
-			try {
-				at.join();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}	
-						
+		at.runBlocking(blocking);
+		return at;	
 	}
-
-
-
-
-
 
 
 }

@@ -1,6 +1,7 @@
 package pharoslabut.cpsDemo;
 
 
+import static pharoslabut.cpsAssert.CPSAssertSensor.*;
 import pharoslabut.cpsAssert.CPSAssertSensor;
 import pharoslabut.cpsAssert.Inequality;
 import pharoslabut.exceptions.NoNewDataException;
@@ -24,26 +25,25 @@ public class CPSRobot {
 		
 		ri = new CreateRobotInterface(pServerIP, pServerPort);
 		
-		CPSAssertSensor sensorAsserter = new CPSAssertSensor(ri.getPlayerClient(), null, 
-					true, null, cricketSerialPort, 
+		new CPSAssertSensor(ri.getPlayerClient(), null, 
+					true, null, null, cricketSerialPort, "cricketBeacons.txt",
 					false, null, null, null, 
-					false, null, null, null, 
+					false, null, null, null,
+					true, null, 100, "/home/ut/localization.txt",
 					false, null, null, null);
 		
-		sampleAssertionRoutine(ri, sensorAsserter);
-		
+		sampleAssertionRoutine(ri);
 	}
 	
 	
 	
-	private void sampleAssertionRoutine(CreateRobotInterface ri, CPSAssertSensor sensorAsserter) {
-		
+	private void sampleAssertionRoutine(CreateRobotInterface ri) {
 		ri.move(1.0);
 		
 		pause(3000);
 		
 		try {
-			sensorAsserter.AssertCricket(1.0, Inequality.EQUAL_TO, 0.5, true);
+			AssertCameraLocalization(0.0, 1.0, Inequality.EQUAL_TO, Inequality.EQUAL_TO, 0.05, 0.05, true);
 		} catch (NoNewDataException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

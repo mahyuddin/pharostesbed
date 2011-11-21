@@ -25,55 +25,55 @@ public class CPSAssertNumerical {
 
 	
 	// AssertEquals methods for type Double
-	public static boolean AssertEquals(Double expected, Double actual) {
+	public static String AssertEquals(Double expected, Double actual) {
 		return AssertEquals("", expected, actual, 0.0);
 	}
 	
-	public static boolean AssertEquals(String message, Double expected, Double actual) {
+	public static String AssertEquals(String message, Double expected, Double actual) {
 		return AssertEquals(message, expected, actual, 0.0);
 	}
 	
-	public static boolean AssertEquals(Double expected, Double actual, Double delta) {
+	public static String AssertEquals(Double expected, Double actual, Double delta) {
 		return AssertEquals("", expected, actual, delta);
 	}
 	
-	public static boolean AssertEquals(String message, Double expected, Double actual, Double delta) {
+	public static String AssertEquals(String message, Double expected, Double actual, Double delta) {
 		return AssertInequality(message, expected, actual, delta, Inequality.EQUAL_TO);
 	}
 		
 	// AssertEquals methods for type Integer
-	public static boolean AssertEquals(Integer expected, Integer actual) {
+	public static String AssertEquals(Integer expected, Integer actual) {
 		return AssertEquals("", expected, actual, 0);
 	}
 
-	public static boolean AssertEquals(String message, Integer expected, Integer actual) {
+	public static String AssertEquals(String message, Integer expected, Integer actual) {
 		return AssertEquals(message, expected, actual, 0);
 	}
 	
-	public static boolean AssertEquals(Integer expected, Integer actual, Integer delta) {
+	public static String AssertEquals(Integer expected, Integer actual, Integer delta) {
 		return AssertEquals("", expected, actual, delta);
 	}
 	
-	public static boolean AssertEquals(String message, Integer expected, Integer actual, Integer delta) {
+	public static String AssertEquals(String message, Integer expected, Integer actual, Integer delta) {
 		return AssertInequality(message, expected, actual, delta, Inequality.EQUAL_TO);
 	}	
 	
 	
 	
 	// AssertInequality methods for type Double
-	public static boolean AssertInequality(Double expected, Double actual, Inequality type) {
+	public static String AssertInequality(Double expected, Double actual, Inequality type) {
 		return AssertInequality("", expected, actual, 0.0, type);
 	}
 
-	public static boolean AssertInequality(String message, Double expected, Double actual, Inequality type) {
+	public static String AssertInequality(String message, Double expected, Double actual, Inequality type) {
 		return AssertInequality(message, expected, actual, 0.0, type);
 	}
 
-	public static boolean AssertInequality(Double expected, Double actual, Double delta, Inequality type) {
+	public static String AssertInequality(Double expected, Double actual, Double delta, Inequality type) {
 		return AssertInequality("", expected, actual, delta, type);
 	}
 
-	public static boolean AssertInequality(String message, Double expected, Double actual, Double delta, Inequality type) {
+	public static String AssertInequality(String message, Double expected, Double actual, Double delta, Inequality type) {
 		Double marginOfError = Math.abs(delta);
 		boolean condition = false;
 		switch (type) {
@@ -83,27 +83,28 @@ public class CPSAssertNumerical {
 			case GREATER_THAN: condition = expected > actual - marginOfError; break;
 			case GREATER_THAN_EQUAL_TO: condition = expected >= actual - marginOfError; break;
 		}
-		System.out.println(getCurrentTime() + " -- Assertion " + (condition ? "Passed." : "Failed.") +
-				(!(message == "" || message == null) ? ("   Message: " + message) : ""));
-		System.out.println("             -- (Expected: " + expected + ") " + type.toMathString() + " (Actual: " + actual + "), Error Margin = " + delta + "\n");
-		return condition;
+		String result = getCurrentTime() + " -- Assertion " + (condition ? "Passed." : "Failed.") +
+				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n" + 
+				"             -- (Expected: " + expected + ") " + type.toMathString() + " (Actual: " + actual + "), Error Margin = " + delta + "\n";
+		System.out.println(result);
+		return result;
 	}
 
 
 	// AssertInequality methods for type Integer
-	public static boolean AssertInequality(Integer expected, Integer actual, Inequality type) {
+	public static String AssertInequality(Integer expected, Integer actual, Inequality type) {
 		return AssertInequality("", expected, actual, 0, type);
 	}
 
-	public static boolean AssertInequality(String message, Integer expected, Integer actual, Inequality type) {
+	public static String AssertInequality(String message, Integer expected, Integer actual, Inequality type) {
 		return AssertInequality(message, expected, actual, 0, type);
 	}
 
-	public static boolean AssertInequality(Integer expected, Integer actual, Integer delta, Inequality type) {
+	public static String AssertInequality(Integer expected, Integer actual, Integer delta, Inequality type) {
 		return AssertInequality("", expected, actual, delta, type);
 	}
 
-	public static boolean AssertInequality(String message, Integer expected, Integer actual, Integer delta, Inequality type) {
+	public static String AssertInequality(String message, Integer expected, Integer actual, Integer delta, Inequality type) {
 		Integer marginOfError = Math.abs(delta);
 		String ineq = "";
 		boolean condition = false;
@@ -114,35 +115,38 @@ public class CPSAssertNumerical {
 			case GREATER_THAN: condition = expected > actual - marginOfError; ineq = ">"; break;
 			case GREATER_THAN_EQUAL_TO: condition = expected >= actual - marginOfError; ineq = ">="; break;
 		}
-		System.out.println(getCurrentTime() + " -- Assertion " + (condition ? "Passed." : "Failed.") +
-				(!(message == "" || message == null) ? ("   Message: " + message) : ""));
-		System.out.println("             -- (Expected: " + expected + ") " + ineq + " (Actual: " + actual + "), Error Margin = " + delta + "\n");
-		return condition;
+		String result = getCurrentTime() + " -- Assertion " + (condition ? "Passed." : "Failed.") +
+				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n" +
+				"             -- (Expected: " + expected + ") " + ineq + " (Actual: " + actual + "), Error Margin = " + delta + "\n";
+		System.out.println(result);
+		return result;
 	}
 
 	
 
 	// AssertTrue methods
-	public static boolean AssertTrue(boolean condition) {
+	public static String AssertTrue(boolean condition) {
 		return AssertTrue("", condition);
 	}
 
-	public static boolean AssertTrue(String message, boolean condition) {
-		System.out.println(getCurrentTime() + " -- Assertion True " + (condition ? "Passed." : "Failed.") +
-				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n");
-		return condition;
+	public static String AssertTrue(String message, boolean condition) {
+		String result = getCurrentTime() + " -- Assertion True " + (condition ? "Passed." : "Failed.") +
+				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n";
+		System.out.println(result);
+		return result;
 	}
 
 	
 	// AssertFalse methods
-	public static boolean AssertFalse(boolean condition) {
+	public static String AssertFalse(boolean condition) {
 		return AssertFalse("", condition);
 	}
 
-	public static boolean AssertFalse(String message, boolean condition) {
-		System.out.println(getCurrentTime() + " -- Assertion False " + (!condition ? "Passed." : "Failed.") +
-				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n");
-		return !condition;
+	public static String AssertFalse(String message, boolean condition) {
+		String result = getCurrentTime() + " -- Assertion False " + (!condition ? "Passed." : "Failed.") +
+				(!(message == "" || message == null) ? ("   Message: " + message) : "") + "\n";
+		System.out.println(result);
+		return result;
 	}
 
 
