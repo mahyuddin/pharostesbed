@@ -6,6 +6,7 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import pharoslabut.cpsAssert.CPSAssertSensor;
 import pharoslabut.demo.simonsays.io.PlayerControlCmd;
 import pharoslabut.demo.simonsays.io.PlayerControlMsg;
 import pharoslabut.logger.FileLogger;
@@ -46,9 +47,14 @@ public class SimonSaysClient {
 //				tcpSender = TCPMessageSender.getSender();
 //			}
 			
-			// initialize the Trilateration process
-//			new Multilateration(0, 0).start(); // robot's starting coordinates (x,y)
-			
+			// set up camera-based localization (must run on client as of now)
+			new CPSAssertSensor(null, null, 
+					false, null, null, null, null, 
+					false, null, null, null, 
+					false, null, null, null, 
+					true, null, 100, "/ut/home/localization.txt", 
+					false, null, null, null);
+		
 			// Create the component that executes the commands of the user-provided program...
 			cmdExec = new CmdExec(InetAddress.getByName(serverIP), serverPort);
 			
