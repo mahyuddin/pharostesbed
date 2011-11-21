@@ -45,8 +45,10 @@ public class AssertionResponseMsg implements AckableMessage {
 
 
 	
-	public AssertionResponseMsg(String am) {
+	public AssertionResponseMsg(String am, long startTime, long finishTime) {
 		this.assertionMsg = am;		
+		this.assertionStartedServerTimeStamp = startTime;
+		this.assertionFinishedServerTimeStamp = finishTime;
 	}
 	
 	/**
