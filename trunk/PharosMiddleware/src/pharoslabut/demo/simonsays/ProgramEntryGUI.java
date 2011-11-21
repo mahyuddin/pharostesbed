@@ -5,10 +5,14 @@ import java.awt.event.*;
 import java.awt.image.*;
 import java.io.*;
 import java.util.*;
+import java.util.regex.*;
 
 import javax.swing.*;
 
 import pharoslabut.cpsAssert.AssertionRequestMsg;
+import pharoslabut.cpsAssert.AssertionRequestThread;
+import pharoslabut.cpsAssert.AssertionThread;
+import pharoslabut.cpsAssert.AssertionThreadPosition2d;
 import pharoslabut.cpsAssert.Inequality;
 import pharoslabut.cpsAssert.SensorType;
 import pharoslabut.demo.simonsays.io.CameraPanMsg;
@@ -256,6 +260,22 @@ public class ProgramEntryGUI implements ActionListener {
 					boolean running = true;
 					while (running && e.hasMoreElements()) {
 						Command currCmd = e.nextElement();
+						
+						if (currCmd instanceof LocalAssertionCommand) {
+							AssertionRequestThread arThr = ((LocalAssertionCommand)currCmd).getAssertionRequestThread();
+							arThr.start();
+							if (arThr.isBlocking())
+								try {
+									arThr.join();
+								} catch (InterruptedException e1) {
+									Logger.log("Could not join() blocking Assertion at line: " + currCmd.getLine());
+									e1.printStackTrace();
+								}
+							
+							continue;
+						}
+						
+						
 						AckableMessage currMsg = currCmd.getMessage();
 						
 						// Update the GUI to note which line is being executed.
@@ -426,49 +446,8 @@ public class ProgramEntryGUI implements ActionListener {
 		}
 		else if(instr.equals("ASSERT")) {
 			
-			// language guide: ASSERT CRICKET LESS_THAN 1.0 0.05 BLOCKING
+			return parseAssertCommand(lineOfCode, lineno);
 			
-			//TODO handle ASSERT message being passed to Server
-			
-			if (tokens.length < 4)
-				throw new ParseException("Missing assert argument(s) on line " + lineno + ".");
-			
-			SensorType sensor = null;
-			try {
-				sensor = SensorType.valueOf(tokens[1].toUpperCase());
-			} catch(Exception e) {
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
-			}
-			if (sensor == null)
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid SensorType.");
-			
-			Inequality ineq = null;
-			try {
-				ineq = Inequality.valueOf(tokens[2].toUpperCase());
-			} catch(Exception e) {
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[2] + " is not a valid Inequality.");
-			}
-			if (ineq == null)
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[1] + " is not a valid Inequality.");
-			
-			Double dist = null;
-			Double delta = 0.0;
-			try {
-				dist = Double.parseDouble(tokens[3]); 
-				if (tokens.length >= 5)
-					delta = Double.parseDouble(tokens[4]);
-				// TODO accept multiple actual values, and they should be put into "Object[] actualValues"
-			} catch(Exception e) {
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " or " + tokens[4] + " is not a valid double value.");
-			}
-			if (dist == null)
-				throw new ParseException("Invalid assert argument on line " + lineno + ": " + tokens[3] + " is not a valid double value.");
-			
-			boolean blocking = false;
-			if (tokens.length >= 6)
-				blocking = tokens[5].toUpperCase().equals("BLOCKING"); 
-				
-			return new Command(new AssertionRequestMsg(sensor, ineq, blocking, new Object[] {dist, delta}), lineno);
 		}
 		else if(instr.equals("PAN")) {  
 			if (tokens.length < 2)
@@ -513,6 +492,135 @@ public class ProgramEntryGUI implements ActionListener {
 		else
 			throw new ParseException("Unknown instruction \"" + instr + "\" on line " + lineno);
 	}
+	
+	
+	
+	public Command parseAssertCommand(String lineOfCode, int lineno) throws ParseException {
+		// language guide: ASSERT CRICKET LESS_THAN 1.0 0.05 BLOCKING
+		// language guide: ASSERT CAMERA_LOCALIZATION (EQUAL_TO,EQUAL_TO) (0.0,1.0) (0.05,0.05) BLOCKING
+
+		//TODO handle ASSERT message being passed to Server
+
+		Scanner scn = new Scanner(lineOfCode);
+		// sanity check to make sure lineOfCode actually starts with "ASSERT"
+		try {
+			if (!scn.next().equalsIgnoreCase("ASSERT")) {
+				throw new ParseException("Invalid syntax at line " + lineno + ".");
+			}
+		} catch (Exception e) {
+			throw new ParseException("Invalid syntax at line " + lineno + ".");
+		}
+		
+
+		SensorType sensor = null;
+		try {
+			sensor = SensorType.valueOf(scn.next());
+		} catch(Exception e) {
+			throw new ParseException("Invalid SensorType on line " + lineno + ".");
+		}
+		if (sensor == null)
+			throw new ParseException("Invalid SensorType on line " + lineno + ".");
+
+		
+		boolean blocking = false;
+		
+		switch (sensor) {
+		case CRICKET:
+			Inequality ineq = null;
+			try {
+				ineq = Inequality.valueOf(scn.next());
+			} catch(Exception e) {
+				throw new ParseException("Invalid Inequality on line " + lineno + ".");
+			}
+			if (ineq == null)
+				throw new ParseException("Invalid Inequality on line " + lineno + ".");
+
+			Double dist = null;
+			Double delta = 0.0;
+			try {
+				dist = scn.nextDouble(); 
+				if (scn.hasNextDouble()) // look for delta value
+					delta = scn.nextDouble();
+			} catch(Exception e) {
+				throw new ParseException("Invalid double value on line " + lineno + ".");
+			}
+			if (dist == null)
+				throw new ParseException("Invalid double value on line " + lineno + ".");
+
+			blocking = false;
+			try {
+				if (scn.hasNext())
+					blocking = scn.next().equals("BLOCKING"); 
+			} catch(Exception e) {
+				throw new ParseException("Invalid blocking argument on line " + lineno + ".");
+			}
+
+			return new Command(new AssertionRequestMsg(sensor, new Inequality[] {ineq}, blocking, new Object[] {dist}, new Object[] {delta}), lineno);
+			
+		case CAMERA_LOCALIZATION: case LOCATION:
+			Inequality ineqX = null, ineqY = null;
+			Double expectedX = null, expectedY = null;
+			Double deltaX = 0.0, deltaY = 0.0;
+			blocking = false; 
+			try {
+				CharSequence text = scn.nextLine();
+				Pattern p = Pattern.compile("\\(([^,]+),([^\\)]+)\\)"); // look for (###, ###)
+				Matcher m = p.matcher(text);
+				if (m.find()) {
+					if (m.groupCount() < 2) { // look for inequalities
+						ineqX = Inequality.valueOf(m.group(1));
+						ineqY = Inequality.valueOf(m.group(2));
+					} else {
+						throw new ParseException("Invalid Inequality syntax on line " + lineno + ". Must be of the form \"(ineqX, ineqY)\".");
+					}
+				}
+				
+				if (m.find()) { // look for expected values
+					if (m.groupCount() < 2) {
+						expectedX = Double.parseDouble(m.group(1));
+						expectedY = Double.parseDouble(m.group(2));
+					} else {
+						throw new ParseException("Invalid expected values syntax on line " + lineno + ". Must be of the form \"(expectedX, expectedY)\".");
+					}
+				} else {
+					throw new ParseException("Invalid expected values syntax on line " + lineno + ". Must be of the form \"(expectedX, expectedY)\".");
+				}
+				
+				if (m.find()) { // look for delta values
+					if (m.groupCount() < 2) {
+						deltaX = Double.parseDouble(m.group(1));
+						deltaY = Double.parseDouble(m.group(2));
+					} else {
+						throw new ParseException("Invalid delta values syntax on line " + lineno + ". Must be of the form \"(deltaX, deltaY)\".");
+					}
+				} else 
+					Logger.log("No delta values provided on line " + lineno + ", using (0.0, 0.0).");
+				
+				
+				p = Pattern.compile("[\\s+]\\QBLOCKING\\E"); // look for BLOCKING
+				m = p.matcher(text);
+				blocking = m.find(); // true if BLOCKING exists
+				
+				
+			} catch (Exception e) {
+				throw new ParseException("Invalid assertion syntax on line " + lineno + ".");
+			}
+			
+			
+			return new LocalAssertionCommand( new AssertionRequestThread(
+						new AssertionRequestMsg(sensor, new Inequality[] {ineqX, ineqY}, blocking, new Object[] {expectedX, expectedY}, new Object[] {deltaX, deltaY}), 
+					null, true), /*true means run locally */
+				lineno);
+			
+			
+			
+		default: throw new ParseException("Unknowns invalid assert argument on line " + lineno + ".");
+		} // end of switch(sensor) 
+			
+	}
+	
+	
+	
 	
 	/**
 	 * This should be called with the CPPTable is closed.
