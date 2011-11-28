@@ -149,7 +149,7 @@ public class CPSAssertSensor implements RangerListener, Position2DListener{
 							"Please specify one of the values, or set the useCameraLocalization boolean value to false to disable its usage."); 
 				}
 				if (refreshInterval == null) {
-					Logger.log("CameraLocalizzation refreshInterval was not specified, using 100ms (10Hz).");
+					Logger.log("CameraLocalization refreshInterval was not specified, using 100ms (10Hz).");
 					refreshInterval = 100;
 				}
 				cameraLocalizer = new CameraLocalization(refreshInterval, cameraFileName); // starts itself				

@@ -43,68 +43,46 @@ public class CameraLocalization extends Thread {
 				if (lastLine == null || lastLine == "") {
 					continue;
 				}
-				System.out.println(lastLine);
+				//System.out.println(lastLine);
 				 
 				Scanner sc = new Scanner(lastLine);
-				while (sc.hasNext()) {
-					try {
+				sc.useDelimiter("-");
+
+				try {
+					if (sc.hasNext()) {
 						sc.next();
-						double x = sc.nextDouble();
-						double y = sc.nextDouble();
-						sc.nextLine();
-						currentLocation = new PlayerPoint2d(x, y);
-					} catch (Exception e) {
-						e.printStackTrace();
+						sc.useDelimiter(",");
+						Double x = null, y = null;
+						if (sc.hasNextDouble()) {
+							x = sc.nextDouble();
+							if (sc.hasNextDouble()) {
+								y = sc.nextDouble();
+								if (x != null && y != null) {
+									currentLocation = new PlayerPoint2d(x, y);
+									//System.out.println("Current Location is (" + x + "," + y + ")");
+								}
+							}
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
+			try {
+				Thread.sleep(checkInterval);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}	
 		}
-				
-				
-//			try {
-//				RandomAccessFile fileHandler = new RandomAccessFile(fileName, "r" );
-//				long fileLength = fileName.length() - 1;
-//				StringBuilder sb = new StringBuilder();
-//
-//				for(long filePointer = fileLength; filePointer != -1; filePointer--) {
-//					fileHandler.seek( filePointer );
-//					byte readByte = fileHandler.readByte();
-//
-//					if(readByte == 0xA) {
-//						if(filePointer == fileLength) {
-//							continue;
-//						} else {
-//							break;
-//						}
-//					} else if(readByte == 0xD) {
-//						if(filePointer == fileLength - 1) {
-//							continue;
-//						} else {
-//							break;
-//						}
-//					}
-//
-//					sb.append((char)readByte);
-//				}
-//				lastLine = sb.reverse().toString();
-//
-//			} catch( java.io.FileNotFoundException e ) {
-//				e.printStackTrace();
-//				lastLine = null;
-//			} catch( java.io.IOException e ) {
-//				e.printStackTrace();
-//				lastLine = null;
-//			}
 	}
 	
 	
-	
 	public static void main (String args[]) {
-		new CameraLocalization(100, "/Users/Kevin/Desktop/JavaTools.txt");
+		// simple test of logic
+//		new CameraLocalization(100, "/Users/Kevin/Desktop/JavaTools.txt");
 	}
 
 	/**

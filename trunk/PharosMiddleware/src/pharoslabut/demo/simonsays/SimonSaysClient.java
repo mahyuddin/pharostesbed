@@ -52,7 +52,7 @@ public class SimonSaysClient {
 					false, null, null, null, null, 
 					false, null, null, null, 
 					false, null, null, null, 
-					true, null, 100, "/ut/home/localization.txt", 
+					true, null, 100, "/home/ut/localization.txt", 
 					false, null, null, null);
 		
 			// Create the component that executes the commands of the user-provided program...

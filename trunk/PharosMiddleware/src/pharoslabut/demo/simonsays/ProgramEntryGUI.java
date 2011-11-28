@@ -500,7 +500,7 @@ public class ProgramEntryGUI implements ActionListener {
 		// language guide: ASSERT CAMERA_LOCALIZATION (EQUAL_TO,EQUAL_TO) (0.0,1.0) (0.05,0.05) BLOCKING
 
 		//TODO handle ASSERT message being passed to Server
-
+		System.out.println("Line of Code at line " + lineno + " is " + lineOfCode);
 		Scanner scn = new Scanner(lineOfCode);
 		// sanity check to make sure lineOfCode actually starts with "ASSERT"
 		try {
@@ -567,18 +567,20 @@ public class ProgramEntryGUI implements ActionListener {
 				Pattern p = Pattern.compile("\\(([^,]+),([^\\)]+)\\)"); // look for (###, ###)
 				Matcher m = p.matcher(text);
 				if (m.find()) {
-					if (m.groupCount() < 2) { // look for inequalities
-						ineqX = Inequality.valueOf(m.group(1));
-						ineqY = Inequality.valueOf(m.group(2));
+					if (m.groupCount() >= 2) { // look for inequalities
+						System.out.println("Group1: " + m.group(1) + "   Group2: " + m.group(2));
+						ineqX = Inequality.valueOf(m.group(1).trim());
+						ineqY = Inequality.valueOf(m.group(2).trim());
 					} else {
 						throw new ParseException("Invalid Inequality syntax on line " + lineno + ". Must be of the form \"(ineqX, ineqY)\".");
 					}
 				}
 				
 				if (m.find()) { // look for expected values
-					if (m.groupCount() < 2) {
-						expectedX = Double.parseDouble(m.group(1));
-						expectedY = Double.parseDouble(m.group(2));
+					if (m.groupCount() >= 2) {
+						System.out.println("Group1: " + m.group(1) + "   Group2: " + m.group(2));
+						expectedX = Double.parseDouble(m.group(1).trim());
+						expectedY = Double.parseDouble(m.group(2).trim());
 					} else {
 						throw new ParseException("Invalid expected values syntax on line " + lineno + ". Must be of the form \"(expectedX, expectedY)\".");
 					}
@@ -587,9 +589,10 @@ public class ProgramEntryGUI implements ActionListener {
 				}
 				
 				if (m.find()) { // look for delta values
-					if (m.groupCount() < 2) {
-						deltaX = Double.parseDouble(m.group(1));
-						deltaY = Double.parseDouble(m.group(2));
+					if (m.groupCount() >= 2) {
+						System.out.println("Group1: " + m.group(1) + "   Group2: " + m.group(2));
+						deltaX = Double.parseDouble(m.group(1).trim());
+						deltaY = Double.parseDouble(m.group(2).trim());
 					} else {
 						throw new ParseException("Invalid delta values syntax on line " + lineno + ". Must be of the form \"(deltaX, deltaY)\".");
 					}
@@ -600,9 +603,11 @@ public class ProgramEntryGUI implements ActionListener {
 				p = Pattern.compile("[\\s+]\\QBLOCKING\\E"); // look for BLOCKING
 				m = p.matcher(text);
 				blocking = m.find(); // true if BLOCKING exists
+				System.out.println("BLOCKING: " + blocking);
 				
 				
 			} catch (Exception e) {
+				e.printStackTrace();
 				throw new ParseException("Invalid assertion syntax on line " + lineno + ".");
 			}
 			
