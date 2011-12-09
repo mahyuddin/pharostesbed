@@ -659,13 +659,14 @@ public class RobotExpData {
 				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				
 				if (currEdge == null) {
-					Logger.logErr("Arrived at destination but currEdge is null!");
-					System.exit(1);
-				}
+					Logger.logWarn("Arrived at destination but currEdge is null!");
+					//System.exit(1);
+				} else {
 				
-				currEdge.setEndTime(timestamp);
-				pathEdges.add(currEdge);
-				currEdge = null;
+					currEdge.setEndTime(timestamp);
+					pathEdges.add(currEdge);
+					currEdge = null;
+				}
 			}
 			
 			// Extract when the GPS sensor failed.
@@ -1055,8 +1056,8 @@ public class RobotExpData {
 			PathEdge lastEdge = getPathEdge(numEdges()-1);
 			return lastEdge.getEndTime();
 		} else {
-			Logger.logErr("Robot did not traverse any edges!");
-			System.exit(1);
+			Logger.logWarn("Robot did not traverse any edges!");
+			//System.exit(1);
 		}
 		
 		return -1;
