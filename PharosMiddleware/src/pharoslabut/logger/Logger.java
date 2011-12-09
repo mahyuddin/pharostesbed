@@ -43,6 +43,19 @@ public class Logger {
 	}
 	
 	/**
+	 * Logs a warning message to StdErr.
+	 * The caller's class and method name is added to the front of the message.
+	 * 
+	 * @param msg The message to log.
+	 */
+	public static void logWarn(String msg) {
+		String result = getPrefix() + "WARNING: " + msg;
+		System.err.println(result);
+		if (Logger.flogger != null)
+			Logger.flogger.log(result);
+	}
+	
+	/**
 	 * Logs a message to StdOut.
 	 * The caller's class and method name is added to the front of the message.
 	 * 
