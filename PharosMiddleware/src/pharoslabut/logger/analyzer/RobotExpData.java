@@ -669,7 +669,7 @@ public class RobotExpData {
 			}
 			
 			// Extract when the GPS sensor failed.
-			else if (line.contains("ERROR: go: Unable to get the current location") 
+			else if (line.contains("go: ERROR: Unable to get the current location") 
 					|| line.contains("ERROR: Failed to get current location")) 
 			{
 				
@@ -679,7 +679,7 @@ public class RobotExpData {
 			}
 			
 			// Extract when the compass sensor failed.
-			else if (line.contains("ERROR: go: Unable to get the current heading")
+			else if (line.contains("go: ERROR: Unable to get the current heading")
 					|| line.contains("ERROR: Unable to get compass heading")) 
 			{
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
