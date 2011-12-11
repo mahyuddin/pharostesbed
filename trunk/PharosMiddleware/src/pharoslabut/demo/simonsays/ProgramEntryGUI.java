@@ -263,6 +263,8 @@ public class ProgramEntryGUI implements ActionListener {
 						
 						if (currCmd instanceof LocalAssertionCommand) {
 							AssertionRequestThread arThr = ((LocalAssertionCommand)currCmd).getAssertionRequestThread();
+							double startFreeMem = (double)Runtime.getRuntime().freeMemory()/(1024);
+							long startTime = System.nanoTime();
 							arThr.start();
 							if (arThr.isBlocking())
 								try {
@@ -272,6 +274,9 @@ public class ProgramEntryGUI implements ActionListener {
 									e1.printStackTrace();
 								}
 							
+							System.out.println("*******Assertion delayed execution by " + (System.nanoTime()-startTime) + "ns");
+							double endFreeMem = (double)Runtime.getRuntime().freeMemory()/(1024);
+							System.out.println("*******Assertion used " + (endFreeMem-startFreeMem) + "KB of memory.");
 							continue;
 						}
 						
@@ -329,7 +334,7 @@ public class ProgramEntryGUI implements ActionListener {
 		else if (msg instanceof CameraTiltMsg)
 			JOptionPane.showMessageDialog(frame, "About to tilt camera, note the current tilt angle.");
 		else if (msg instanceof RobotMoveMsg) {
-			JOptionPane.showMessageDialog(frame, "About to move robot, note the robot's current position.");
+//			JOptionPane.showMessageDialog(frame, "About to move robot, note the robot's current position.");
 //			Multilateration.saveCurrentLocation(); // this is the only time that saveCurrentLocation() should be called
 		}
 		else if (msg instanceof RobotTurnMsg)
@@ -353,6 +358,7 @@ public class ProgramEntryGUI implements ActionListener {
 			cppData.add(cpp);
 		}
 		else if (msg instanceof RobotMoveMsg) {
+			/*
 			double actualDist = getDouble("How many meters did the robot move?");
 			// use Euclidean distance formula instead of asking the user
 //			PlayerPoint2d curLoc = Multilateration.getCurrentLocation();
@@ -360,6 +366,7 @@ public class ProgramEntryGUI implements ActionListener {
 //			double actualDist = Math.sqrt(Math.pow(curLoc.getPx() - lastLoc.getPx(), 2) + Math.pow(curLoc.getPy() - lastLoc.getPy(), 2)); 
 			CPP cpp = new CPP("MOVE", ((RobotMoveMsg)msg).getDist(), actualDist);
 			cppData.add(cpp);
+			*/
 		}
 		else if (msg instanceof RobotTurnMsg) {
 			double actualAngle = getDouble("How many degrees did the robot turn?");
