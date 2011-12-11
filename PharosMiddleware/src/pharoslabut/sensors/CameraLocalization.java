@@ -24,12 +24,12 @@ public class CameraLocalization extends Thread {
 		this.checkInterval = checkInterval;
 		this.fileName = fileName;
 		
-		new Thread(this).start();
+//		new Thread(this).start();
 	}
 
 	@Override
 	public void run() {
-
+/*
 		while(true) {
 			try {
 				Runtime rt = Runtime.getRuntime();
@@ -77,6 +77,7 @@ public class CameraLocalization extends Thread {
 				e.printStackTrace();
 			}	
 		}
+		*/
 	}
 	
 	
@@ -89,7 +90,48 @@ public class CameraLocalization extends Thread {
 	 * @return the currentLocation
 	 */
 	public synchronized PlayerPoint2d getCurrentLocation() {
-		return currentLocation;
+		try {
+			Runtime rt = Runtime.getRuntime();
+			String cmd = "tail -n 2 " + fileName; // get last 2 lines of file
+			
+			Process pr = rt.exec(cmd);
+
+			BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+
+			String lastLine = input.readLine();
+			if (lastLine == null || lastLine == "") {
+				System.out.println("Last line of " + fileName + " was empty or null.");
+				return null;
+			}
+			System.out.println(lastLine);
+			 
+			Scanner sc = new Scanner(lastLine);
+			sc.useDelimiter(" ");
+
+			try {
+				if (sc.hasNext()) {
+					System.out.println(sc.next());
+					sc.useDelimiter(",");
+					Double x = null, y = null;
+					if (sc.hasNext()) {
+						x = Double.parseDouble(sc.next().trim());
+						if (sc.hasNext()) {
+							y = Double.parseDouble(sc.next().trim());
+							if (x != null && y != null) {
+								currentLocation = new PlayerPoint2d(x, y);
+								System.out.println("Current Location is (" + x + "," + y + ")");
+								return currentLocation;
+							}
+						}
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 }
