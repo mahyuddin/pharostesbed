@@ -261,6 +261,8 @@ public class CPSAssertSensor implements RangerListener, Position2DListener{
 			throw new NullPointerException("cameraLocalizer not configured properly, cannot use the AssertCameraLocalization method.");
 		
 		PlayerPoint2d curPos = cameraLocalizer.getCurrentLocation();
+		while (curPos == null)
+			curPos = cameraLocalizer.getCurrentLocation();
 		AssertionThread at = new AssertionThreadPosition2d("camera-based localization", expectedX, expectedY, curPos.getPx(), curPos.getPy(), deltaX, deltaY, ineqX, ineqY);
 		
 		at.runBlocking(blocking);
