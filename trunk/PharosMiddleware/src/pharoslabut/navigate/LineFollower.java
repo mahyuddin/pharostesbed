@@ -152,11 +152,15 @@ public class LineFollower implements Runnable {
 	 * 
 	 * @param errno The cause of the error.
 	 */
-	private void notifyListenersError(LineFollowerError errno) {
-		Enumeration<LineFollowerListener> e = listeners.elements();
-		while (e.hasMoreElements()) {
-			e.nextElement().lineFollowerError(errno);
-		}
+	private void notifyListenersError(final LineFollowerError errno) {
+		new Thread() {
+			public void run() {
+				Enumeration<LineFollowerListener> e = listeners.elements();
+				while (e.hasMoreElements()) {
+					e.nextElement().lineFollowerError(errno);
+				}
+			}
+		}.start();
 	}
 	
 	/**
