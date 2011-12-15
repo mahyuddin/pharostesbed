@@ -99,6 +99,11 @@ public class LineFollower implements Runnable {
 	 * is assigned a value when start() is called.
 	 */
 	private Thread lineFollowerThread = null;
+	
+	/**
+	 * The listeners for line follower events.
+	 */
+	private Vector<LineFollowerListener> listeners = new Vector<LineFollowerListener>();
 
 	/**
 	 * The constructor.
@@ -131,6 +136,27 @@ public class LineFollower implements Runnable {
 		ptzCmd.setTilt((float) 0);
 		Logger.log("Resetting position of the camera.");
 		ptz.setPTZ(ptzCmd);
+	}
+	
+	/**
+	 * Adds a listener to this object.
+	 * 
+	 * @param listener The listener to add.
+	 */
+	public void addListener(LineFollowerListener listener) {
+		listeners.add(listener);
+	}
+	
+	/**
+	 * Notifies the listeners of an error.
+	 * 
+	 * @param errno The cause of the error.
+	 */
+	private void notifyListenersError(LineFollowerError errno) {
+		Enumeration<LineFollowerListener> e = listeners.elements();
+		while (e.hasMoreElements()) {
+			e.nextElement().lineFollowerError(errno);
+		}
 	}
 	
 	/**
@@ -472,6 +498,7 @@ public class LineFollower implements Runnable {
 			if (System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
 				if (System.currentTimeMillis() - prevPrintTime > MIN_MSG_PRINT_DURATION) {
 					Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+					notifyListenersError(LineFollowerError.NO_BLOB);
 					prevSpeedCmd = speed;
 					prevAngleCmd = angle;
 					prevPanCmd = pan;
