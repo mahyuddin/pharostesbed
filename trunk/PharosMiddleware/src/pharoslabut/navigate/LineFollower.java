@@ -39,17 +39,18 @@ public class LineFollower implements Runnable {
 	/**
 	 * This is the maximum valid age of the blob data.  Anything older than that is discarded.
 	 */
-	public static final long BLOB_MAX_VALID_AGE = 1500;	//modified by sushen
+	public static final long BLOB_MAX_VALID_AGE = 1500;
 	
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = 0.5;		//modified by sushen
+	//public static final double MAX_SPEED = 0.5;
+	public static final double MAX_SPEED = 0.75;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
 	 */
-	public static final double MIN_SPEED = 0.2; //0.37;		//modified by sushen 
+	public static final double MIN_SPEED = 0.2;
 	
 	/**
 	 * The maximum turn angle of the robot in degrees.
@@ -88,6 +89,9 @@ public class LineFollower implements Runnable {
 	private double pan = 0;
 	private double panOld = 0;
 	
+	/**
+	 * Whether this line follower is paused.
+	 */
 	private boolean paused = false;
 	
 	/**
@@ -437,6 +441,12 @@ public class LineFollower implements Runnable {
 		return false;
 	}
 	
+	public static final long MIN_MSG_PRINT_DURATION = 1000;
+	double prevSpeedCmd = -1;
+	double prevAngleCmd = -1;
+	double prevPanCmd = -1;
+	long prevPrintTime = -1;
+	
 	/**
 	 * This contains the main loop of the LineFollower thread.
 	 */
@@ -458,10 +468,15 @@ public class LineFollower implements Runnable {
 					blobDataTimeStamp = System.currentTimeMillis(); // only update timestamp if the blob contained line data.
 			}
 			
-			
 			// If no blob data is received within a certain time window, stop the robot.
 			if (System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
-				Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+				if (System.currentTimeMillis() - prevPrintTime > MIN_MSG_PRINT_DURATION) {
+					Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+					prevSpeedCmd = speed;
+					prevAngleCmd = angle;
+					prevPanCmd = pan;
+					prevPrintTime = System.currentTimeMillis();
+				}
 				speed = angle = pan = 0;
 			}
 			
@@ -470,7 +485,15 @@ public class LineFollower implements Runnable {
 				speed = 0;
 			}
 			
-			Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
+			if (prevSpeedCmd != speed || prevAngleCmd != angle || prevPanCmd != pan 
+					|| System.currentTimeMillis() - prevPrintTime > MIN_MSG_PRINT_DURATION) 
+			{
+				Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
+				prevSpeedCmd = speed;
+				prevAngleCmd = angle;
+				prevPanCmd = pan;
+				prevPrintTime = System.currentTimeMillis();
+			}
 			
 			p2di.setSpeed(speed, dtor(angle));
 			
