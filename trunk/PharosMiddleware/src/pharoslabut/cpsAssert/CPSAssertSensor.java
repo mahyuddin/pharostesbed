@@ -6,9 +6,9 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.sensors.CameraLocalization;
 import pharoslabut.sensors.CompassDataBuffer;
-import pharoslabut.sensors.CricketData;
+//import pharoslabut.sensors.CricketData;
 import pharoslabut.sensors.CricketDataBuffer;
-import pharoslabut.sensors.CricketDataListener;
+//import pharoslabut.sensors.CricketDataListener;
 import pharoslabut.sensors.CricketInterface;
 import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.sensors.Position2DListener;
@@ -26,7 +26,11 @@ import playerclient3.structures.PlayerPose2d;
 import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
-
+/**
+ * A top-level class for controlling the sensors that provide the data needed to check CPS assertions.
+ * 
+ * @author Kevin Boos
+ */
 public class CPSAssertSensor implements RangerListener, Position2DListener{
 	
 	private static CricketDataBuffer cricketBuffer;
