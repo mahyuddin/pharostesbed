@@ -172,7 +172,7 @@ public class MCUInterface implements MCUConstants {
         		panAngle = (short)(byteBuffer.remove(0) << 8);
         		panAngle += byteBuffer.remove(0);
         		
-        		Logger.log("MCU Status Msg: tilt angle = " + tiltAngle + ", panAngle = " + panAngle);
+//        		Logger.log("MCU Status Msg: tilt angle = " + tiltAngle + ", panAngle = " + panAngle);
         		
         		byteBuffer.remove(0); // remove PROTEUS_END
         		return true;

@@ -10,7 +10,7 @@ import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 
 /**
- * This provides the hooks for controlling the iRobot Create.
+ * Provides methods for controlling the iRobot Create.
  * 
  * @author Chien-Liang Fok
  */
@@ -40,6 +40,9 @@ public class CreateRobotInterface {
 	private String playerIP;
 	private int playerPort;
 	
+	/**
+	 * The player client. This is the connection to the player server.
+	 */
 	private PlayerClient pclient = null;
 	
 	/**
@@ -50,26 +53,24 @@ public class CreateRobotInterface {
 	/**
 	 * The constructor.
 	 * 
-	 * @param playerIP The IP address of the player server that is controlling the iRobot Create.
-	 * @param playerPort The TCP port on which the player server is listening.
+	 * @param playerIP The IP address of player.
+	 * @param playerPort The TCP port of player.
 	 */
 	public CreateRobotInterface(String playerIP, int playerPort) {
 		this.playerIP = playerIP;
 		this.playerPort = playerPort;
 		
-		//connect();
 		stopPlayer();
-		if (SimonSaysServer.noClient)
-			startPlayer(); // in order to collect beacon data without using the client
+		startPlayer();
 	}
 	
 	/**
-	 * Connect to the Player server running on the robot.  If an error occurs, pause 
+	 * Connect to Player.  If an error occurs, pause 
 	 * for a second and then try again.  Repeat this process until a connection is 
 	 * successfully established.
 	 */
 	private void connect() {
-		while (!createConnection()) {
+		while (!connectToPlayer()) {
 			synchronized(this) {
 				Logger.log("Unable to connect to Player.  Pausing 1s then trying again...");
 				try {
@@ -82,33 +83,41 @@ public class CreateRobotInterface {
 	}
 	
 	/**
-	 * Creates a connection to the Player server.
+	 * Creates a connection to Player.
 	 * 
 	 * @return Whether a connection was established.
 	 */
-	private boolean createConnection() {
-		// Stop the player client if it is running...
+	private boolean connectToPlayer() {
+		
+		Logger.log("Connecting to player...");
+		
+		// If an existing player client exists, done.
 		if (pclient != null) {
-			pclient.close();
-			pclient = null;
-			stopPlayer();
+			Logger.log("Connection already exists, done.");
+			return true;
+//			Logger.log("Closing the existing connection to player.");
+//			pclient.close();
+//			pclient = null;
+//			stopPlayer();
 		}
 		
 		// Start the player server if it is not running...
 		if (!isPlayerRunning()) {
+			Logger.log("Player not running, starting it...");
 			if (!startPlayer()) {
 				Logger.logErr("Unable to start player server...");
 				return false;
 			} else
-				Logger.log("Player server started...");
+				Logger.log("Player started...");
 		} else
-			Logger.log("Player server is running...");
+			Logger.log("Player already running...");
 		
-		// Connect to the Player server...
+		
 		try {
 			pclient = new PlayerClient(playerIP, playerPort);
+			Logger.log("Connected to player.");
 		} catch(PlayerException e) {
-			Logger.logErr("ERROR: unable to conect to player sever at " + playerIP + ":" 
+			Logger.logErr("Unable to conect to player at " + playerIP + ":" 
 					+ playerPort + ", Player running = " + isPlayerRunning() + ", Error message: " + e.toString());
 			return false;
 		}
@@ -118,15 +127,27 @@ public class CreateRobotInterface {
 		if (motors == null) {
 			Logger.logErr("ERROR: motors is null");
 			return false;
-		}
+		} else
+			Logger.log("Subscribed to motors.");
 		
-		Logger.log("Changing Player server mode to PUSH...");
+		Logger.log("Changing Player to PUSH mode...");
 		pclient.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
 		Logger.log("Setting Player Client to run in continuous threaded mode...");
 		pclient.runThreaded(-1, -1);
 		
 		return true;
+	}
+	
+	private void disconnectFromPlayer() {
+		Logger.log("Closing connection to player.");
+		if (pclient != null) {
+			pclient.close();
+			pclient = null;
+			motors = null;
+		} else {
+			Logger.logWarn("Already disconnected from player.");
+		}
 	}
 	
 	/**
@@ -136,24 +157,26 @@ public class CreateRobotInterface {
 	 * @return true if successful.
 	 */
 	public boolean move(double dist) {
+		Logger.log("Moving the robot, dist = " + dist);
+		
 		if (dist == 0) {
-			Logger.log("dist is zero, aborting...");
+			Logger.log("dist is zero, done...");
 			return true;
 		}
 		
-		System.out.println("here1");
-		if (!isPlayerRunning()) {
-			Logger.log("player not running, reconnecting...");
-			connect();
-		}
+		connect();
+//		
+//		if (!isPlayerRunning()) {
+//			Logger.log("Player not running, reconnecting...");
+//			connect();
+//		}
 		
-		System.out.println("here2");
 		// Calibrate the distance
 		double calibratedDist;
 		
 		if (CALIBRATE_DISTANCE) { 
 			calibratedDist = (dist + 0.0755) / 0.933;
-			Logger.log("Desired distance = " + dist + ", Calibrated distance = " + calibratedDist);	
+			Logger.log("Calibrated distance = " + calibratedDist);	
 		} else
 			calibratedDist = dist;
 		
@@ -162,10 +185,6 @@ public class CreateRobotInterface {
 		int direction = dist < 0 ? -1 : 1;
 		int duration = (int)(Math.abs(dist) / ROBOT_SPEED * 1000); // in milliseconds
 		int heading = 0;
-		
-		System.out.println("about to use motors");
-		if (motors == null)
-			System.out.println("motors is null");
 		
 		motors.isDataReady(); // clears the readyPp2ddata flag
 		
@@ -177,6 +196,8 @@ public class CreateRobotInterface {
 		
 		Logger.log("Stop");
 		motors.setSpeed(0, 0);
+		
+		disconnectFromPlayer();
 		
 		return true;
 		
@@ -197,14 +218,16 @@ public class CreateRobotInterface {
 	 */
 	public boolean turn(double angle) {
 		if (angle == 0) {
-			Logger.log("angle is zero, returning without moving robot");
+			Logger.log("Turn angle is zero, done.");
 			return true;
 		}
 		
-		if (!isPlayerRunning()) {
-			Logger.log("player not running, reconnecting...");
-			connect();
-		}
+		connect();
+		
+//		if (!isPlayerRunning()) {
+//			Logger.log("player not running, reconnecting...");
+//			connect();
+//		}
 		
 		int direction = angle < 0 ? -1 : 1;
 		
@@ -234,6 +257,8 @@ public class CreateRobotInterface {
 		
 		Logger.log("Stopping turn...");
 		motors.setSpeed(0, 0);
+		
+		disconnectFromPlayer();
 		
 		return true;
 		
@@ -316,8 +341,10 @@ public class CreateRobotInterface {
 	 * @return true if successful.
 	 */
 	public boolean startPlayer() {
+		Logger.log("Starting player...");
+		
 		if (isPlayerRunning()) {
-			Logger.log("player already running");
+			Logger.logWarn("player already running");
 			return true;  // Do not start player if it is already running...
 		}
 		
@@ -352,7 +379,7 @@ public class CreateRobotInterface {
 			
 			int exitVal = pr.waitFor();
 			if (exitVal != 0)
-				Logger.log("Command 'dmesg' exited with code " + exitVal);
+				Logger.logErr("Command 'dmesg' exited with code " + exitVal);
 			
 			if (!errResponseText.equals(""))
 				Logger.logErr("Problem while running command 'dmesg': " + errResponseText);
@@ -387,8 +414,7 @@ public class CreateRobotInterface {
 
 			Logger.log("Robot config file saved to " + PLAYER_CONFIG_FILE);
 		} else {
-			String eMsg = "ERROR: iRobot Create's port is null";
-			Logger.logErr(eMsg);
+			Logger.logErr("iRobot Create's port is null");
 			return false;
 		}
 		
@@ -397,7 +423,7 @@ public class CreateRobotInterface {
 			Logger.log("Launching player server...");
 			rt.exec(PLAYER_SERVER + " " + PLAYER_CONFIG_FILE);
 			
-			// pause for half a second to allow player server to start
+			// pause to allow player server to start
 			synchronized(this) {
 				try{
 					this.wait(1000);
@@ -413,13 +439,13 @@ public class CreateRobotInterface {
 	}
 	
 	/**
-	 * Stops the player server and removes reference to the player client.
+	 * Stops the player server and removes the reference to the player client.
 	 * 
 	 * @return true if successful.
 	 */
 	public boolean stopPlayer() {
 		if (!isPlayerRunning()) {
-			Logger.log("player already stopped");
+			Logger.logWarn("Player already stopped.");
 			return true;  // abort if player is not running...
 		}
 		
@@ -434,117 +460,97 @@ public class CreateRobotInterface {
 			
 			int exitVal = pr.waitFor();
 			if (exitVal != 0) {
-				Logger.log("player exited with code " + exitVal);
+				Logger.logErr("Player exited with code " + exitVal);
 				return false;
 			} else
 				return true;
 		} catch(Exception e) {
-			Logger.logErr("Error while stopping player: " + e.toString());
+			Logger.logErr("Problem while stopping player: " + e.toString());
 			return false;
 		}
 	}
-//	
-//	private void logErr(String msg) {
-//		String result = "RobotInterface: " + msg;
-//		System.err.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
+	
+//	private static void usage() {
+//		System.setProperty ("PharosMiddleware.debug", "true");
+//		System.out.println("Usage: " + CreateRobotInterface.class.getName() + " <options>\n");
+//		System.out.println("Where <options> include:");
+//		System.out.println("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
+//		System.out.println("\t-pPort <port number>: The Player Server's port number (default 6665)");
+//		System.out.println("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
+//		System.out.println("\t-file <file name>: name of file in which to save results (default null)");
+//		System.out.println("\t-move <distance>: Move the robot forward or backwards.");
+//		System.out.println("\t-turn <angle>: Turn the robot side to side.");
+//		System.out.println("\t-debug: enable debug mode");
 //	}
 //	
-//	private void log(String msg) {
-//		String result = "CreateRobotInterface: " + msg;
-//		if (System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		if (flogger != null)
-//			flogger.log(result);
+//	/**
+//	 * Perform some basic tests on the RobotInterface.
+//	 * 
+//	 * @param args The command line arguments.
+//	 */
+//	public static void main(String[] args) {
+//		String pServerIP = "localhost";
+//		int pServerPort = 6665;
+//		String fileName = null;
+//		
+//		boolean doMove = false;
+//		boolean doTurn = false;
+//		double moveDist = 0;
+//		double turnAngle = 0;
+//		
+//		try {
+//			for (int i=0; i < args.length; i++) {
+//				if (args[i].equals("-pServer")) {
+//					pServerIP = args[++i];
+//				}
+//				else if (args[i].equals("-pPort")) {
+//					pServerPort = Integer.valueOf(args[++i]);
+//				}
+//				else if (args[i].equals("-file")) {
+//					fileName = args[++i];
+//				}
+//				else if (args[i].equals("-mcuPort")) {
+//					fileName = args[++i];
+//				}
+//				else if (args[i].equals("-move")) {
+//					doMove = true;
+//					moveDist = Double.valueOf(args[++i]).doubleValue();
+//				}
+//				else if (args[i].equals("-turn")) {
+//					doTurn = true;
+//					turnAngle = Double.valueOf(args[++i]).doubleValue();
+//				}
+//				else if (args[i].equals("-debug") || args[i].equals("-d")) {
+//					System.setProperty ("PharosMiddleware.debug", "true");
+//				}
+//				else {
+//					usage();
+//					System.exit(1);
+//				}
+//			}
+//		} catch(Exception e) {
+//			e.printStackTrace();
+//			usage();
+//			System.exit(1);
+//		}
+//		
+//		if (!doMove && !doTurn) {
+//			usage();
+//			System.exit(1);
+//		}
+//		
+//		if (fileName != null)
+//			Logger.setFileLogger(new FileLogger(fileName));
+//		
+//		CreateRobotInterface ri = new CreateRobotInterface(pServerIP, pServerPort);
+//		ri.startPlayer();
+//		
+//		if (doMove) {
+//			ri.move(moveDist);
+//		} else if (doTurn) {
+//			ri.turn(turnAngle / 180 * Math.PI);
+//		}
+//		
+//		System.exit(0);
 //	}
-	
-	private static void print(String msg) {
-		if (System.getProperty ("PharosMiddleware.debug") != null)
-			System.out.println("DemoServer: " + msg);
-	}
-	
-	private static void usage() {
-		System.setProperty ("PharosMiddleware.debug", "true");
-		print("Usage: " + CreateRobotInterface.class.getName() + " <options>\n");
-		print("Where <options> include:");
-		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
-		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
-		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
-		print("\t-file <file name>: name of file in which to save results (default null)");
-		print("\t-move <distance>: Move the robot forward or backwards.");
-		print("\t-turn <angle>: Turn the robot side to side.");
-		print("\t-debug: enable debug mode");
-	}
-	
-	/**
-	 * Perform some basic tests on the RobotInterface.
-	 * 
-	 * @param args The command line arguments.
-	 */
-	public static void main(String[] args) {
-		String pServerIP = "localhost";
-		int pServerPort = 6665;
-		String fileName = null;
-		
-		boolean doMove = false;
-		boolean doTurn = false;
-		double moveDist = 0;
-		double turnAngle = 0;
-		
-		try {
-			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-pServer")) {
-					pServerIP = args[++i];
-				}
-				else if (args[i].equals("-pPort")) {
-					pServerPort = Integer.valueOf(args[++i]);
-				}
-				else if (args[i].equals("-file")) {
-					fileName = args[++i];
-				}
-				else if (args[i].equals("-mcuPort")) {
-					fileName = args[++i];
-				}
-				else if (args[i].equals("-move")) {
-					doMove = true;
-					moveDist = Double.valueOf(args[++i]).doubleValue();
-				}
-				else if (args[i].equals("-turn")) {
-					doTurn = true;
-					turnAngle = Double.valueOf(args[++i]).doubleValue();
-				}
-				else if (args[i].equals("-debug") || args[i].equals("-d")) {
-					System.setProperty ("PharosMiddleware.debug", "true");
-				}
-				else {
-					usage();
-					System.exit(1);
-				}
-			}
-		} catch(Exception e) {
-			e.printStackTrace();
-			usage();
-			System.exit(1);
-		}
-		
-		if (!doMove && !doTurn) {
-			usage();
-			System.exit(1);
-		}
-		
-		if (fileName != null)
-			Logger.setFileLogger(new FileLogger(fileName));
-		
-		CreateRobotInterface ri = new CreateRobotInterface(pServerIP, pServerPort);
-		ri.startPlayer();
-		
-		if (doMove) {
-			ri.move(moveDist);
-		} else if (doTurn) {
-			ri.turn(turnAngle / 180 * Math.PI);
-		}
-		
-		System.exit(0);
-	}
 }
