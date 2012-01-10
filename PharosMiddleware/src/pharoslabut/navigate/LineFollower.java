@@ -153,11 +153,27 @@ public class LineFollower implements Runnable {
 	 * @param errno The cause of the error.
 	 */
 	private void notifyListenersError(final LineFollowerError errno) {
+		errorState = true;
 		new Thread() {
 			public void run() {
 				Enumeration<LineFollowerListener> e = listeners.elements();
 				while (e.hasMoreElements()) {
 					e.nextElement().lineFollowerError(errno);
+				}
+			}
+		}.start();
+	}
+	
+	/**
+	 * Notifies the listeners that the line follower is working again.
+	 */
+	private void notifyListenersNoError() {
+		errorState = false;
+		new Thread() {
+			public void run() {
+				Enumeration<LineFollowerListener> e = listeners.elements();
+				while (e.hasMoreElements()) {
+					e.nextElement().lineFollowerWorking();
 				}
 			}
 		}.start();
@@ -430,7 +446,7 @@ public class LineFollower implements Runnable {
 				// All of the following checks should not be necessary.  They were added
 				// to counter a null pointer exception being occasionally thrown.
 				if(blobListCopy != null && blobListCopy.length > 0 && blobListCopy[0] != null) {
-					int midPoint = data.getWidth()/2;
+					int midPoint = data.getWidth()/2;  // The midpoint is half of the image width dimension.
 					if( (blobListCopy[0].getArea() < BLOB_AREA_MIN_THRESHOLD) ) {
 						Logger.log("BLOB Area = " + blobListCopy[0].getArea());
 						adjustHeadingAndSpeed(blobListCopy[0], midPoint);
@@ -476,6 +492,7 @@ public class LineFollower implements Runnable {
 	double prevAngleCmd = -1;
 	double prevPanCmd = -1;
 	long prevPrintTime = -1;
+	boolean errorState = false;
 	
 	/**
 	 * This contains the main loop of the LineFollower thread.
@@ -527,6 +544,11 @@ public class LineFollower implements Runnable {
 			}
 			
 			p2di.setSpeed(speed, dtor(angle));
+			
+			// Update the listeners.  errorState will be set to false prior to notifying the
+			// listeners that the line follower is working.
+			if (errorState && speed > 0)
+				notifyListenersNoError();
 			
 			ptzCmd.setPan((float)pan);			//move camera, change to pan + PAN_OFFSET if not implemented in driver
 			ptz.setPTZ(ptzCmd);
