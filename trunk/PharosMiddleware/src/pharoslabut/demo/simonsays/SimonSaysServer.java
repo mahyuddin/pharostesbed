@@ -1,19 +1,19 @@
 package pharoslabut.demo.simonsays;
 
 import java.awt.Image;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+//import java.io.BufferedReader;
+//import java.io.FileNotFoundException;
+//import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.util.*;
-import java.util.Map.Entry;
+//import java.util.Map.Entry;
 
 import pharoslabut.cpsAssert.AssertionRequestMsg;
 import pharoslabut.cpsAssert.AssertionRequestThread;
-import pharoslabut.cpsAssert.AssertionResponseMsg;
-import pharoslabut.cpsAssert.CPSAssertSensor;
-import pharoslabut.cpsDemo.CPSRobot;
+//import pharoslabut.cpsAssert.AssertionResponseMsg;
+//import pharoslabut.cpsAssert.CPSAssertSensor;
+//import pharoslabut.cpsDemo.CPSRobot;
 import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
@@ -21,11 +21,11 @@ import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.sensors.CricketData;
-import pharoslabut.sensors.CricketDataListener;
-import pharoslabut.sensors.CricketInterface;
+//import pharoslabut.sensors.CricketDataListener;
+//import pharoslabut.sensors.CricketInterface;
 import pharoslabut.sensors.camera.axis.*;
 import playerclient3.structures.PlayerPoint3d;
-import playerclient3.structures.position2d.PlayerPosition2dGeom;
+//import playerclient3.structures.position2d.PlayerPosition2dGeom;
 
 /**
  * This server runs on the robot, and accepts camera commands from the client.
