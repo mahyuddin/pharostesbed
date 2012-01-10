@@ -4,6 +4,12 @@ import java.net.InetAddress;
 
 import pharoslabut.io.AckableMessage;
 
+/**
+ * This is a message that is used to control the player server.
+ * It allows the SimonSaysClient to start and stop the player server.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class PlayerControlMsg implements AckableMessage {
 	private static final long serialVersionUID = -1173422675134836470L;
 	private PlayerControlCmd cmd;
