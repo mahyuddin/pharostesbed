@@ -28,12 +28,15 @@ public class NavigateCompassGPS extends Navigate {
 	
 	public static final int COMPASS_MEDIAN_FILTER_LENGTH = 3;
 	
-	public static final int GPS_BUFFER_SIZE = 10;
-	public static final int GPS_SENSE_PERIOD = 1000; // The period at which the GPS is read in ms
+	//public static final int GPS_BUFFER_SIZE = 10;
+	//public static final int GPS_SENSE_PERIOD = 1000; // The period at which the GPS is read in ms
 	
 	//public static final double GPS_TARGET_RADIUS_METERS = 5.5;
+	//public static final double GPS_TARGET_RADIUS_METERS = 2.5;
+	public static final double GPS_TARGET_RADIUS_METERS = 1.5;
+	//public static final double GPS_TARGET_RADIUS_METERS = 2;
 	//public static final double GPS_TARGET_RADIUS_METERS = 3;
-	public static final double GPS_TARGET_RADIUS_METERS = 3.5;
+	//public static final double GPS_TARGET_RADIUS_METERS = 3.5;
 	
 	//public static final double NAV_SLOW_TURN_ANGLE = 0.2; // turn at an angle greater than this, then slow down
 	//public static final double NAV_SLOW_TURN_VELOCITY = 0.4; // the slower speed at which to turn
