@@ -38,8 +38,8 @@ import playerclient3.structures.PlayerPoint3d;
 public class SimonSaysServer implements MessageReceiver {
 	public static final int IMAGE_WIDTH = 640;
 	public static final int IMAGE_HEIGHT = 480;
-	public static String cricketSerialPort = "/dev/ttyUSB1";
-	public static String cricketFile = "cricketBeacons.txt";
+//	public static String cricketSerialPort = "/dev/ttyUSB1";
+//	public static String cricketFile = "cricketBeacons.txt";
 	public static boolean noClient = false;
 	
 	/**
@@ -285,13 +285,13 @@ public class SimonSaysServer implements MessageReceiver {
 		print("Where <options> include:");
 		print("\t-pServer <ip address>: The IP address of the Player Server (default localhost)");
 		print("\t-pPort <port number>: The Player Server's port number (default 6665)");
-		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
+		print("\t-port <port number>: This server's port number (default 8887)");
 		print("\t-mcuPort <port name>: The serial port on which the MCU is attached (default /dev/ttyS0)");
 		print("\t-cameraIP <camera IP address>: The IP address of the camera (default 192.168.0.20)");
 		print("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		print("\t-log <file name>: name of file in which to save results (default SimonSaysServer.log)");
-		print("\t-cricketFile <file name>: name of file where Cricket Beacon IDs and coordinates are stored (default cricketBeacons.txt)");
-		print("\t-cricketPort <port number>: tty port where the Cricket Listener is connected (default /dect/ttyUSB1");
+//		print("\t-cricketFile <file name>: name of file where Cricket Beacon IDs and coordinates are stored (default cricketBeacons.txt)");
+//		print("\t-cricketPort <port number>: tty port where the Cricket Listener is connected (default /dect/ttyUSB1");
 		print("\t-noClient: this option allows you to manually control the robot without the SimonSaysClient (default false)");
 		print("\t-debug: enable debug mode");
 	}
@@ -307,10 +307,10 @@ public class SimonSaysServer implements MessageReceiver {
 		
 		try {
 			for (int i=0; i < args.length; i++) {
-				if (args[i].equals("-pServer")) {
+				if (args[i].equals("-pServer")) { // player server IP address
 					pServerIP = args[++i];
 				}
-				else if (args[i].equals("-pPort")) {
+				else if (args[i].equals("-pPort")) { // player server TCP port
 					pServerPort = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-port")) {
@@ -325,12 +325,12 @@ public class SimonSaysServer implements MessageReceiver {
 				else if (args[i].equals("-cameraIP")) {
 					cameraIP = args[++i];
 				}
-				else if (args[i].equals("-cricketFile")) {
-					cricketFile = args[++i];
-				}
-				else if (args[i].equals("-cricketPort")) {
-					cricketSerialPort = args[++i];
-				}
+//				else if (args[i].equals("-cricketFile")) {
+//					cricketFile = args[++i];
+//				}
+//				else if (args[i].equals("-cricketPort")) {
+//					cricketSerialPort = args[++i];
+//				}
 				else if (args[i].equals("-noClient")) {
 					noClient = true;
 				}
