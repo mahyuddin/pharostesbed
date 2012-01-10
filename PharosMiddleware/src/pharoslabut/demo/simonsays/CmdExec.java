@@ -11,8 +11,8 @@ import pharoslabut.demo.simonsays.io.*;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
-import pharoslabut.sensors.CricketData;
-import playerclient3.structures.PlayerPoint3d;
+//import pharoslabut.sensors.CricketData;
+//import playerclient3.structures.PlayerPoint3d;
 
 /**
  * This runs on the SimonSaysClient and provides the API for 
@@ -140,14 +140,14 @@ public class CmdExec implements MessageReceiver {
 			this.rcvMsg = msg;
 			
 			if (rcvMsg instanceof CricketDataMsg) {
-				CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
-				CricketData cd = cricketMsg.getCricketData();
-				PlayerPoint3d coords = cricketMsg.getPoint();
+//				CricketDataMsg cricketMsg = (CricketDataMsg)rcvMsg;
+//				CricketData cd = cricketMsg.getCricketData();
+//				PlayerPoint3d coords = cricketMsg.getPoint();
 				
 				// pass new cricket data to Trilateration thread
-				double height = coords.getPz();
-				double dist = ((double)cd.getDistance())/100;
-				double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
+				//double height = coords.getPz();
+				//double dist = ((double)cd.getDistance())/100;
+				//double radius = Math.sqrt(Math.abs(dist * dist - height * height)); // pythagorean theorem to find distance along ground
 				
 //				bdc.newBeaconData(System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
 				//Multilateration.newBeaconReading(cd.getCricketID(), System.currentTimeMillis(), coords.getPx(), coords.getPy(), radius);
@@ -197,12 +197,19 @@ public class CmdExec implements MessageReceiver {
 	
 	/**
 	 * Stops the player server.
+	 * 
+	 * @return true if the message was sent successfully.
 	 */
 	public boolean stopPlayer() {
 		Logger.log("Stopping the player server...");
 		return sendMsg(new PlayerControlMsg(PlayerControlCmd.STOP));
 	}
 	
+	/**
+	 * Starts the player server.
+	 * 
+	 * @return true if the message was sent successfully.
+	 */
 	public boolean startPlayer() {
 		Logger.log("Starting the player server...");
 		return sendMsg(new PlayerControlMsg(PlayerControlCmd.START));
