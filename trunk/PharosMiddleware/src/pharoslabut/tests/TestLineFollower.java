@@ -69,12 +69,13 @@ public class TestLineFollower {
 		Logger.log("Created robot client.");
 		
 		LineFollower lf = new LineFollower(client);
-		lf.start();
 		
 		Logger.logDbg("Changing Player server mode to PUSH...");
 		client.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
 		
 		Logger.logDbg("Setting Player Client to run in continuous threaded mode...");
 		client.runThreaded(-1, -1);	
+		
+		lf.start();
 	}
 }
