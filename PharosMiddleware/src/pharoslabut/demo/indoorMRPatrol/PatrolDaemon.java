@@ -1,7 +1,5 @@
 package pharoslabut.demo.indoorMRPatrol;
 
-import java.util.Vector;
-
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
