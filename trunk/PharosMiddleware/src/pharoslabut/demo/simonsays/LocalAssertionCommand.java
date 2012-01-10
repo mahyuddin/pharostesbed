@@ -1,7 +1,7 @@
 package pharoslabut.demo.simonsays;
 
 import pharoslabut.cpsAssert.AssertionRequestThread;
-import pharoslabut.io.AckableMessage;
+//import pharoslabut.io.AckableMessage;
 
 public class LocalAssertionCommand extends Command {
 	
@@ -18,5 +18,4 @@ public class LocalAssertionCommand extends Command {
 		return arThr;
 	}
 	
-
 }
