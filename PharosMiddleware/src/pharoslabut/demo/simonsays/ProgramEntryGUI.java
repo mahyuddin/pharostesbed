@@ -11,8 +11,8 @@ import javax.swing.*;
 
 import pharoslabut.cpsAssert.AssertionRequestMsg;
 import pharoslabut.cpsAssert.AssertionRequestThread;
-import pharoslabut.cpsAssert.AssertionThread;
-import pharoslabut.cpsAssert.AssertionThreadPosition2d;
+//import pharoslabut.cpsAssert.AssertionThread;
+//import pharoslabut.cpsAssert.AssertionThreadPosition2d;
 import pharoslabut.cpsAssert.Inequality;
 import pharoslabut.cpsAssert.SensorType;
 import pharoslabut.demo.simonsays.io.CameraPanMsg;
@@ -22,7 +22,7 @@ import pharoslabut.demo.simonsays.io.RobotMoveMsg;
 import pharoslabut.demo.simonsays.io.RobotTurnMsg;
 import pharoslabut.io.*;
 import pharoslabut.logger.*;
-import playerclient3.structures.PlayerPoint2d;
+//import playerclient3.structures.PlayerPoint2d;
 
 /**
  * This class provides a GUI for entering programs to control the robot.
@@ -38,6 +38,8 @@ public class ProgramEntryGUI implements ActionListener {
 	private JButton submitButton;
 	private JFrame frame;
 	//private JLabel statusLabel = new JLabel("Debug Mode: False");
+	
+	private boolean enableDebugModeInit;
 	
 	private ProgramExecutor executor = null;
 	
@@ -65,12 +67,14 @@ public class ProgramEntryGUI implements ActionListener {
 	private JCheckBoxMenuItem debugModeMI;
 	
 	/**
-	 * The constructor initializes member variables.
+	 * The constructor.
 	 * 
 	 * @param cmdExec The command executor.
+	 * @param enableDebugModeInit Whether to enable debug mode initially
 	 */
-	public ProgramEntryGUI(CmdExec cmdExec) {
+	public ProgramEntryGUI(CmdExec cmdExec, boolean enableDebugModeInit) {
 		this.cmdExec = cmdExec;
+		this.enableDebugModeInit = enableDebugModeInit;
 		
 		cppData = new CPPData();
 		cppTable = new CPPTable(this, cppData);
@@ -131,7 +135,7 @@ public class ProgramEntryGUI implements ActionListener {
 		robotMenu.add(resetPlayerMI);
 		
 		// Create the "Debug" pull down menu
-		debugModeMI = new JCheckBoxMenuItem("Enable Debug Mode", true);
+		debugModeMI = new JCheckBoxMenuItem("Enable Debug Mode", enableDebugModeInit);
 		debugModeMI.setMnemonic(KeyEvent.VK_S);
 //		debugModeMI.addActionListener(new ActionListener() {
 //			public void actionPerformed(ActionEvent ae) {
