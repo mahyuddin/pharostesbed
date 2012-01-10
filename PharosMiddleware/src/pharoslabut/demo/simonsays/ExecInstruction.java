@@ -15,14 +15,14 @@ import pharoslabut.logger.*;
 //import playerclient3.structures.PlayerPoint3d;
 
 /**
- * This runs on the SimonSaysClient and provides the API for 
- * controlling the robot's movements and its camera. 
+ * Executes an instruction.  This runs on the SimonSaysClient and provides the API for 
+ * controlling the robot.
  * 
  * @author Chien-Liang Fok 
  * @author Kevin Boos
  * @see SimonSaysClient
  */
-public class CmdExec implements MessageReceiver {
+public class ExecInstruction implements MessageReceiver {
 	//public static final long MAX_ACK_LATENCY = 5000; // in milliseconds
 	
 	private TCPMessageSender tcpSender = TCPMessageSender.getSender();
@@ -45,7 +45,7 @@ public class CmdExec implements MessageReceiver {
 	 * @param destAddr The destination IP address.
 	 * @param destPort The destination port.
 	 */
-	public CmdExec(InetAddress destAddr, int destPort) {
+	public ExecInstruction(InetAddress destAddr, int destPort) {
 		this.destAddr = destAddr;
 		this.destPort = destPort;
 		
@@ -65,6 +65,14 @@ public class CmdExec implements MessageReceiver {
 		}
 	}
 	
+	public InetAddress getLocalAddress() {
+		return localAddress;
+	}
+	
+	public int getLocalPort() {
+		return localPort;
+	}
+	
 	/**
 	 * Halts the execution of commands.
 	 */
@@ -76,20 +84,19 @@ public class CmdExec implements MessageReceiver {
 	/**
 	 * Sends a message to the server and waits for an acknowledgment.
 	 * 
-	 * @return The success value within the acknowledgment.
+	 * @return Whether the send operation was successful.
 	 */
-	public boolean sendMsg(AckableMessage msg) {
-		
-		// Set the reply address and port so an acknowledgment can be returned.
-		msg.setReplyAddr(localAddress);
-		msg.setPort(localPort);
+	public boolean sendMsg(Message msg) {
 		
 		// Send the message
 		try {
 			rcvMsg = null;
 			if (msg instanceof AssertionRequestMsg)
 				((AssertionRequestMsg)msg).msgSent();
-			tcpSender.sendMessage(destAddr, destPort, msg);
+			if (!tcpSender.sendMessage(destAddr, destPort, msg)) {
+				Logger.logErr("Failed to send message!");
+				return false;
+			}
 		} catch (PharosException e1) {
 			e1.printStackTrace();
 			Logger.logErr("Failed to send message.");
@@ -130,7 +137,7 @@ public class CmdExec implements MessageReceiver {
 		
 //		if (result)
 //			bdc.stopTimer();
-			
+	
 		return result;
 	}
 	
@@ -202,7 +209,7 @@ public class CmdExec implements MessageReceiver {
 	 */
 	public boolean stopPlayer() {
 		Logger.log("Stopping the player server...");
-		return sendMsg(new PlayerControlMsg(PlayerControlCmd.STOP));
+		return sendMsg(new RobotInstrMsg(InstructionType.STOP_PLAYER, localAddress, localPort));
 	}
 	
 	/**
@@ -212,7 +219,7 @@ public class CmdExec implements MessageReceiver {
 	 */
 	public boolean startPlayer() {
 		Logger.log("Starting the player server...");
-		return sendMsg(new PlayerControlMsg(PlayerControlCmd.START));
+		return sendMsg(new RobotInstrMsg(InstructionType.START_PLAYER, localAddress, localPort));
 	}
 	
 	/**
@@ -290,19 +297,12 @@ public class CmdExec implements MessageReceiver {
 	 * @return The image taken, or null if error.
 	 */
 	public BufferedImage takeSnapshot() {
-		Logger.log("Sending take camera snapshot command to DemoServer...");
-		
-		// Create the message
-		CameraTakeSnapshotMsg takeSnapshotMsg = new CameraTakeSnapshotMsg();
-		
-		// Set the reply address and port so an acknowledgment can be returned.
-		takeSnapshotMsg.setReplyAddr(localAddress);
-		takeSnapshotMsg.setPort(localPort);
-		
+		Logger.log("Sending SNAPSHOT command to the robot...");
+
 		// Send the message
 		try {
 			rcvMsg = null;
-			tcpSender.sendMessage(destAddr, destPort, takeSnapshotMsg);
+			tcpSender.sendMessage(destAddr, destPort, new RobotInstrMsg(InstructionType.SNAPSHOT, localAddress, localPort));
 		} catch (PharosException e1) {
 			e1.printStackTrace();
 			Logger.logErr("ERROR: Failed to send message.");

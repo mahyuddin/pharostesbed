@@ -32,15 +32,15 @@ public class AssertionRequestThread extends Thread{
 		
 		startTime = System.currentTimeMillis();
 		
-		if (!local && !arMsg.isBlocking()) { // non-blocking
-			CmdDoneMsg cdm = new CmdDoneMsg(true);
-			try {
-				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), cdm);
-			} catch (PharosException e) {
-				e.printStackTrace();
-				Logger.logErr("Failed to send ack for AssertionRequestMsg: " + arMsg + ", error: " + e);
-			}
-		}
+//		if (!local && !arMsg.isBlocking()) { // non-blocking
+//			CmdDoneMsg cdm = new CmdDoneMsg(true);
+//			try {
+//				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), cdm);
+//			} catch (PharosException e) {
+//				e.printStackTrace();
+//				Logger.logErr("Failed to send ack for AssertionRequestMsg: " + arMsg + ", error: " + e);
+//			}
+//		}
 			
 		AssertionThread at = null;
 		// TODO parse data out of arMsg
@@ -77,28 +77,28 @@ public class AssertionRequestThread extends Thread{
 		// at this point, the assertion has finished no matter what
 		// therefore, getting the resultMessage is okay
 		// -- if the thread was locally executed, then the assertion result will already have been printed
-		if (!local) {
-			try {
-				AssertionResponseMsg respMsg = new AssertionResponseMsg(at.getResultMessage(), startTime, System.currentTimeMillis());
-				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), respMsg);
-			} catch (PharosException e) {
-				e.printStackTrace();
-				Logger.logErr("Failed to send AssertionResponseMessage for " + arMsg + ", error=" + e);
-			}
-		}
+//		if (!local) {
+//			try {
+//				AssertionResponseMsg respMsg = new AssertionResponseMsg(at.getResultMessage(), startTime, System.currentTimeMillis());
+//				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), respMsg);
+//			} catch (PharosException e) {
+//				e.printStackTrace();
+//				Logger.logErr("Failed to send AssertionResponseMessage for " + arMsg + ", error=" + e);
+//			}
+//		}
 		
 		// at this point, the response message has already been sent no matter what
 		// if it was non-blocking, the ack was already sent
 		// if it's blocking, then send the ack after the response message has been sent (here)
-		if (!local && arMsg.isBlocking()) { 
-			CmdDoneMsg cdm = new CmdDoneMsg(true);
-			try {
-				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), cdm);
-			} catch (PharosException e) {
-				e.printStackTrace();
-				Logger.logErr("Failed to send ack for AssertionRequestMsg.");
-			}
-		}
+//		if (!local && arMsg.isBlocking()) { 
+//			CmdDoneMsg cdm = new CmdDoneMsg(true);
+//			try {
+//				sender.sendMessage(arMsg.getReplyAddr(), arMsg.getPort(), cdm);
+//			} catch (PharosException e) {
+//				e.printStackTrace();
+//				Logger.logErr("Failed to send ack for AssertionRequestMsg.");
+//			}
+//		}
 	}
 	
 	

@@ -2,7 +2,7 @@ package pharoslabut.cpsAssert;
 
 import java.net.InetAddress;
 
-import pharoslabut.io.AckableMessage;
+import pharoslabut.io.AckedMsg;
 import pharoslabut.io.Message;
 import pharoslabut.io.Message.MsgType;
 
@@ -11,7 +11,7 @@ import pharoslabut.io.Message.MsgType;
  * 
  * @author Kevin Boos
  */
-public class AssertionResponseMsg implements AckableMessage {
+public class AssertionResponseMsg implements AckedMsg {
 
 	private static final long serialVersionUID = -4151583308474362953L;
 
@@ -64,25 +64,25 @@ public class AssertionResponseMsg implements AckableMessage {
 		return MsgType.CUSTOM;
 	}
 	
-	@Override
-	public void setReplyAddr(InetAddress address) {
-		this.address = address;
-	}
-
-	@Override
-	public void setPort(int port) {
-		this.port = port;
-	}
-
-	@Override
-	public InetAddress getReplyAddr() {
-		return address;
-	}
-
-	@Override
-	public int getPort() {
-		return port;
-	}
+//	@Override
+//	public void setReplyAddr(InetAddress address) {
+//		this.address = address;
+//	}
+//
+//	@Override
+//	public void setPort(int port) {
+//		this.port = port;
+//	}
+//
+//	@Override
+//	public InetAddress getReplyAddr() {
+//		return address;
+//	}
+//
+//	@Override
+//	public int getPort() {
+//		return port;
+//	}
 
 	/**
 	 * @return the assertionMsg
