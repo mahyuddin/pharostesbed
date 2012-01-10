@@ -1,9 +1,9 @@
 package pharoslabut.demo.cancr;
 
-import java.io.BufferedOutputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.nio.charset.Charset;
+//import java.io.BufferedOutputStream;
+//import java.io.OutputStream;
+//import java.net.Socket;
+//import java.nio.charset.Charset;
 
 import pharoslabut.RobotIPAssignments;
 import pharoslabut.exceptions.PharosException;
@@ -31,7 +31,7 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 	/**
 	 * The port that the local contextinator is listening on.
 	 */
-	private static final int port = 6666;
+	//private static final int port = 6666;
 	
 	/**
 	 * The location of the source.
@@ -65,7 +65,7 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 	
 	private long errorBeginTime;
 	
-	private boolean useContextinator = true;
+//	private boolean useContextinator = true;
 	
 	/**
 	 * The constructor.
@@ -75,12 +75,11 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 	 * @param playerPort The port of the player server.
 	 * @param contextinatorPort The port of the Contextinator.
 	 * @param startLoc The starting location.
-	 * @param useContextinator Whether to use the contextinator
 	 */
 	public SimpleIndoorMule(String expName, String playerIP, int playerPort, 
-			int contextinatorPort, Location startLoc, boolean useContextinator) 
+			int contextinatorPort, Location startLoc) 
 	throws PharosException {
-		this.useContextinator = useContextinator;
+//		this.useContextinator = useContextinator;
 		
 		String fileName = expName + "-" + RobotIPAssignments.getName() + "-SimpleIndoorMule_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		FileLogger expFlogger = new FileLogger(fileName);
@@ -207,7 +206,6 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 		int serverPort = 6665;
 		int contextinatorPort = 6666;
 		Location startPos = srcLoc;
-		boolean useContextinator = true;
 		
 		try {
 			for (int i=0; i < args.length; i++) {
@@ -233,8 +231,6 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 						usage();
 						System.exit(1);
 					}
-				} else if (args[i].equals("-noContext")) {
-					useContextinator = false;
 				} else if (args[i].equals("-h")) {
 					usage();
 					System.exit(0);
@@ -262,7 +258,7 @@ public class SimpleIndoorMule implements pharoslabut.navigate.LineFollowerListen
 		Logger.log("Starting Position: " + startPos);
 		
 		try {
-			new SimpleIndoorMule(expName, serverIP, serverPort, contextinatorPort, startPos, useContextinator);
+			new SimpleIndoorMule(expName, serverIP, serverPort, contextinatorPort, startPos);
 		} catch (PharosException e) {
 			e.printStackTrace();
 		}
