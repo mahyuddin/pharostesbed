@@ -7,8 +7,6 @@ following directories:
  
  - MCU-SimonSays: This is the 9S12 MCU code for the Simon Says demo.
 
- - MCU-AutoInt: This is the 9S12 MCU code for the Autonomous Intersection demo.
-
  - ProteusDriver: This is the Player Driver that allows the Player
    middleware to communicate with the robot's MCU.  The Player middleware
    provides basic access to robot sensors and actuators, e.g., movement
