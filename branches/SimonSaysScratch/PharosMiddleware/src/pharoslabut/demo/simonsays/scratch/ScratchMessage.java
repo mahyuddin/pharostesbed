@@ -29,57 +29,13 @@ public class ScratchMessage
   private String valStr = null;  
 
 
-  public ScratchMessage(String msg)
-  // convert message string into ScratchMessage field values
-  {
-    String[] args = StringToks.parseTokens(msg);
-    // for (String t: args)
-    //  System.out.println(t);
-
-    if (args.length < 2)    // 0 or 1 argument
-      System.err.println("Incorrectly formatted message");
-    else {
-      // assign message type
-      msgTypeStr = args[0].toLowerCase();
-      if (msgTypeStr.equals("broadcast"))
-        msgType = BROADCAST_MSG;
-      else if (msgTypeStr.equals("sensor-update"))
-        msgType = SENSOR_UPDATE_MSG;
-      else
-        System.err.println("Unknown message type");
-      
-      varName = extractName(args[1]);  // assign message name
-
-      // check no. of arguments and assign sensor-update value
-      if ((msgType == BROADCAST_MSG) && (args.length > 2))
-        System.err.println("Ignoring extra arguments in broadcast message");
-      else if (msgType == SENSOR_UPDATE_MSG) {
-        if (args.length < 3)
-          System.err.println("sensor-update message has no value");
-        else  {
-          valStr = args[2];
-          if (args.length > 3)
-            System.err.println("Ignoring extra arguments in sensor-update message");
-        }
-      }
-    }
-  }  // end of ScratchMessage()
-
-
-  private String extractName(String nm)
-  // extract the name which may be in quotes, and start with "Scratch-"
-  {
-    if (nm.charAt(0) == '\"')
-      nm = nm.substring(1, nm.length()-1);   // remove quotes
-
-    if (nm.startsWith("Scratch-"))
-      nm = nm.substring(8);    // remove "Scratch-"
-
-    // System.out.println("Extracted name: " + nm);
-    return nm;
-  }  // end of extractName()
-
-
+  public ScratchMessage(int type, String typeStr, String name, String val) {
+      msgType = type;
+      msgTypeStr = typeStr;
+      varName = name;
+      valStr = val;
+  }
+  
   // accessor methods
 
   public int getMessageType()
@@ -97,8 +53,8 @@ public class ScratchMessage
 
   public String toString()
   {
-    if (msgType ==  BROADCAST_MSG)
-      return msgTypeStr + " " + varName;
+    if (msgType == BROADCAST_MSG)
+      return msgTypeStr + " " + valStr;
     else if (msgType ==  SENSOR_UPDATE_MSG)
       return msgTypeStr + " " + varName + " " + valStr;
     else // unknown message

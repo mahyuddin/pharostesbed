@@ -1,5 +1,6 @@
 package pharoslabut.demo.simonsays.scratch;
 
+import java.util.LinkedList;
 import pharoslabut.demo.simonsays.CreateRobotInterface;
 
 public class ScratchTest {
@@ -19,16 +20,32 @@ public class ScratchTest {
 		
 		while (true) {
 			System.out.println("Waiting for message...");
-			ScratchMessage msg = sio.readMsg();
+			LinkedList<ScratchMessage> messages = sio.readMsg();
 			
-			System.out.println("Received msg: " + msg);
+			if (messages == null) {
+			    System.out.println("Unable to parse message.");
+			    continue;
+			}
 			
-			if (msg != null) {
-				if (msg.getName().equals("turn")) {
-					System.out.println("TURN " + msg.getValue());
-				}
-				else {
-					System.out.println("ERROR");
+			for (ScratchMessage msg: messages) {
+				System.out.println("Received msg: " + msg);
+				
+				if (msg != null) {
+				    if (msg.getMessageType() == ScratchMessage.BROADCAST_MSG) {
+				        System.out.println("B'CAST: " + msg.getValue());
+				    }
+				    else if (msg.getMessageType() == 
+				             ScratchMessage.SENSOR_UPDATE_MSG) {
+    					if (msg.getName().equals("turn")) {
+    						System.out.println("TURN " + msg.getValue());
+    					}
+    					else if (msg.getName().equals("move")) {
+                            System.out.println("MOVE " + msg.getValue());
+    					}
+    					else {
+    						System.out.println("Unknown sensor name");
+    					}
+				    }
 				}
 			}
 		}
