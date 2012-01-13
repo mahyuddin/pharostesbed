@@ -137,7 +137,7 @@ public class ScratchIO
             } 
             catch (IOException e) {
                 System.err.println("Message read error: " + e);
-                
+
                 return null;
             }
         }
@@ -147,7 +147,7 @@ public class ScratchIO
     }  // end of readMsg()
 
     private LinkedList<ScratchMessage> processMsg(String scratchMsg) {
-        System.out.println("string: <" + scratchMsg + ">");
+        //System.out.println("string: <" + scratchMsg + ">");
 
         LinkedList<ScratchMessage> messages = new LinkedList<ScratchMessage>();
 
@@ -157,49 +157,50 @@ public class ScratchIO
         String name;
         String val;
 
-        for (String t: args)
+        /*for (String t: args) {
             System.out.println("parse: " + t);
+        }*/
 
-                if (args.length < 2) {    // 0 or 1 argument
-                    System.err.println("Incorrectly formatted message");
+        if (args.length < 2) {    // 0 or 1 argument
+            System.err.println("Incorrectly formatted message");
+        }
+        else {
+            // assign message type
+            msgTypeStr = args[0].toLowerCase();
+
+            if (msgTypeStr.equals("broadcast")) {
+                msgType = ScratchMessage.BROADCAST_MSG;
+
+                for (int i = 1; i < args.length; ++i) {
+                    if (!args[i].isEmpty()) {
+                        val = extractName(args[i]);
+                        messages.push(new ScratchMessage(msgType, msgTypeStr, null, val));
+
+                        break;
+                    }
                 }
-                else {
-                    // assign message type
-                    msgTypeStr = args[0].toLowerCase();
+            }
+            else if (msgTypeStr.equals("sensor-update")) {
+                msgType = ScratchMessage.SENSOR_UPDATE_MSG;
 
-                    if (msgTypeStr.equals("broadcast")) {
-                        msgType = ScratchMessage.BROADCAST_MSG;
+                if (args.length > 2) {
+                    for (int i = 1; i < args.length - 1; i += 2) {
+                        name = extractName(args[i]);
+                        val = args[i + 1];
 
-                        for (int i = 1; i < args.length; ++i) {
-                            if (!args[i].isEmpty()) {
-                                val = extractName(args[i]);
-                                messages.push(new ScratchMessage(msgType, msgTypeStr, null, val));
-
-                                break;
-                            }
-                        }
+                        messages.push(new ScratchMessage(msgType, msgTypeStr, name, val));
                     }
-                    else if (msgTypeStr.equals("sensor-update")) {
-                        msgType = ScratchMessage.SENSOR_UPDATE_MSG;
-
-                        if (args.length > 2) {
-                            for (int i = 1; i < args.length - 1; i += 2) {
-                                name = extractName(args[i]);
-                                val = args[i + 1];
-
-                                messages.push(new ScratchMessage(msgType, msgTypeStr, name, val));
-                            }
-                        }
-                    }
-                    else {
-                        System.err.println("Unknown message type");
-                        msgTypeStr = "unknown";
-                        msgType = ScratchMessage.UNKNOWN_MSG;
-                    }
-
                 }
+            }
+            else {
+                System.err.println("Unknown message type");
+                msgTypeStr = "unknown";
+                msgType = ScratchMessage.UNKNOWN_MSG;
+            }
 
-                return messages;
+        }
+
+        return messages;
     }  // end of processMsg()
 
     private String extractName(String nm)
