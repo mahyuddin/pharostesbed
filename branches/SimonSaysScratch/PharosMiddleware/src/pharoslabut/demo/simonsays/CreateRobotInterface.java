@@ -57,11 +57,17 @@ public class CreateRobotInterface {
 	 * @param playerPort The TCP port of player.
 	 */
 	public CreateRobotInterface(String playerIP, int playerPort) {
-		this.playerIP = playerIP;
-		this.playerPort = playerPort;
-		
-		stopPlayer();
-		startPlayer();
+		this(playerIP, playerPort, true);
+	}
+	
+	public CreateRobotInterface(String playerIP, int playerPort, boolean playerIsLocal) {
+	    this.playerIP = playerIP;
+        this.playerPort = playerPort;
+        
+        if (playerIsLocal) {
+            stopPlayer();
+            startPlayer();
+        }
 	}
 	
 	/**

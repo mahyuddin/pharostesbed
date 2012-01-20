@@ -1,9 +1,46 @@
+/**
+ * - SSH to the robot
+ * - Kill the player process
+ * - Restart player with "player /usr/local/share/player/config/proteus-roomba.cfg"
+ * - Test with "playerjoy"
+ */
+
 package pharoslabut.demo.simonsays.scratch;
 
 import java.util.LinkedList;
 import pharoslabut.demo.simonsays.CreateRobotInterface;
 
 public class SimonSaysScratch {
+    
+    public enum ScratchCmd {
+        MOVE("move"),
+        TURN("turn"),
+        PAN("pan"),
+        TILT("tilt"),
+        SCREENSHOT("screenshot");
+        
+        private String text;
+        
+        ScratchCmd(String t) {
+            text = t;
+        }
+        
+        public String getText() {
+            return text;
+        }
+        
+        public static ScratchCmd fromString(String t) {
+            if (t != null) {
+                for (ScratchCmd s : ScratchCmd.values()) {
+                    if (t.equals(s.getText())) {
+                        return s;
+                    }
+                }
+            }
+            
+            return null;
+        }
+    }
 
     public static final int CREATE_PORT = 6665;
     
@@ -11,8 +48,8 @@ public class SimonSaysScratch {
     private ScratchIO myScratch;
     
     public SimonSaysScratch(String host) {
-        System.out.println("Creating robot interface");
-        myRobot = new CreateRobotInterface(host, CREATE_PORT);
+        System.out.println("Creating robot interface to host: " + host);
+        myRobot = new CreateRobotInterface(host, CREATE_PORT, false);
         
         System.out.println("Creating Scratch interface");
         myScratch = new ScratchIO();
@@ -20,10 +57,14 @@ public class SimonSaysScratch {
     
     public void execute() {
         System.out.println("*** Starting ***");
+        
+        // This call to readMsg consumes the initial messages from Scratch.
+        // These messages are then dropped.
+        LinkedList<ScratchMessage> messages = myScratch.readMsg();
 
         while (true) {
             System.out.println("Waiting for message...");
-            LinkedList<ScratchMessage> messages = myScratch.readMsg();
+            messages = myScratch.readMsg();
 
             if (messages == null) {
                 System.out.println("Unable to parse message.");
@@ -40,31 +81,48 @@ public class SimonSaysScratch {
 
             if (msg != null) {
                 if (msg.getMessageType() == ScratchMessage.BROADCAST_MSG) {
-                    System.out.println("B'CAST: " + msg.getValue());
+                    if (msg.getValue().equals(ScratchCmd.SCREENSHOT.getText())) {
+                        // TODO
+                    }
+                    else {
+                        System.out.println("ERROR: Unknown command");
+                    }
                 }
                 else if (msg.getMessageType() == 
                          ScratchMessage.SENSOR_UPDATE_MSG) {
-                    if (msg.getName().equals("turn")) {
+                    if (msg.getName().equals(ScratchCmd.TURN.getText())) {
                         double angle = Double.parseDouble(msg.getValue());
                         angle = Math.toRadians(angle);
                         
                         System.out.println("TURN " + angle + " radians");
                         
-                        myRobot.turn(angle);
+                        if (angle != 0) {
+                            myRobot.turn(angle);
+                        }
                     }
-                    else if (msg.getName().equals("move")) {
+                    else if (msg.getName().equals(ScratchCmd.MOVE.getText())) {
                         double dist = Double.parseDouble(msg.getValue());
                         
                         System.out.println("MOVE " + dist + " meters");
                         
-                        myRobot.move(dist);
+                        if (dist != 0) {
+                            myRobot.move(dist);
+                        }
+                    }
+                    else if (msg.getName().equals(ScratchCmd.PAN.getText())) {
+                        // TODO
+                    }
+                    else if (msg.getName().equals(ScratchCmd.TILT.getText())) {
+                        // TODO
                     }
                     else {
-                        System.out.println("Unknown sensor name");
+                        System.out.println("ERROR: Unknown command");
                     }
                 }
             }
         }
+        
+        myScratch.broadcastMsg("refresh");
     }
 
     /**
