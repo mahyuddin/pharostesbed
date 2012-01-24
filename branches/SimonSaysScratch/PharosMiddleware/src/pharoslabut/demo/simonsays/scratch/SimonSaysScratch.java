@@ -8,6 +8,8 @@
 package pharoslabut.demo.simonsays.scratch;
 
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
 import pharoslabut.demo.simonsays.CreateRobotInterface;
 
 public class SimonSaysScratch {
@@ -41,22 +43,59 @@ public class SimonSaysScratch {
             return null;
         }
     }
+    
+    public enum ScratchVirtVar {
+        VAR1("var1"),
+        VAR2("var2");
+        
+        private String text;
+        
+        ScratchVirtVar(String t) {
+            text = t;
+        }
+        
+        public String getText() {
+            return text;
+        }
+    }
 
     public static final int CREATE_PORT = 6665;
     
     private CreateRobotInterface myRobot;
     private ScratchIO myScratch;
+    private Map<ScratchVirtVar, Double> myVirtualVars;
     
+    /**
+     * Default constructor that connects to a robot running on the localhost.
+     */
+    public SimonSaysScratch() {
+        this("localhost");
+    }
+    
+    /**
+     * Constructor that connects to a robot running at 'host'.
+     * @param host Hostname of the machine running the robot.
+     */
     public SimonSaysScratch(String host) {
         System.out.println("Creating robot interface to host: " + host);
         myRobot = new CreateRobotInterface(host, CREATE_PORT, false);
         
         System.out.println("Creating Scratch interface");
         myScratch = new ScratchIO();
+        
+        myVirtualVars = new HashMap<ScratchVirtVar, Double>();
+        myVirtualVars.put(ScratchVirtVar.VAR1, 0.0);
+        myVirtualVars.put(ScratchVirtVar.VAR2, 0.0);
     }
     
+    /**
+     * Notifies Scratch of any virtual variables and then processes messages
+     * from Scratch as they arrive. The messages are then passed to the robot.
+     */
     public void execute() {
         System.out.println("*** Starting ***");
+
+        createVirtVars();
         
         // This call to readMsg consumes the initial messages from Scratch.
         // These messages are then dropped.
@@ -75,6 +114,27 @@ public class SimonSaysScratch {
         }
     }
     
+    /**
+     * Notifies Scratch of all virtual variables and initializes them to
+     * default values.
+     */
+    private void createVirtVars() {
+        System.out.println("Creating virtual variables");
+        
+        for (Map.Entry<ScratchVirtVar, Double> entry : myVirtualVars.entrySet()) {
+            myScratch.updateMsg((entry.getKey()).getText(),
+                                Double.toString(entry.getValue()));
+        }
+        
+        //myScratch.updateMsg(ScratchVirtVar.VAR1.getText(), "2.0");
+    }
+    
+    /**
+     * Processes the messages from Scratch by translating them into messages
+     * for the robot
+     * @param msgs A LinkedList<ScratchMessage> that contains the messages
+     * from Scratch.
+     */
     private void processMsgs(LinkedList<ScratchMessage> msgs) {
         for (ScratchMessage msg: msgs) {
             System.out.println("Received msg: " + msg);
@@ -126,13 +186,16 @@ public class SimonSaysScratch {
     }
 
     /**
-     * @param args
+     * Main method.
+     * @param args Command line arguments. If there are no arguments, the robot
+     * is assumed to be connected to localhost. Otherwise, the first argument is
+     * the hostname of the machine running the robot.
      */
     public static void main(String[] args) {
         SimonSaysScratch s;
         
         if (args.length == 0) {
-            s = new SimonSaysScratch("localhost");
+            s = new SimonSaysScratch();
         }
         else {
             s = new SimonSaysScratch(args[0]);
