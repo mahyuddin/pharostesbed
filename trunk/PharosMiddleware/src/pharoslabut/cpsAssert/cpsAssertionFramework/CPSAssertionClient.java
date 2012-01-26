@@ -16,6 +16,7 @@ import pharoslabut.io.MessageReceiver;
 import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.Logger;
+import playerclient3.structures.PlayerPoint2d;
 
 
 public class CPSAssertionClient implements MessageReceiver {
@@ -55,8 +56,12 @@ public class CPSAssertionClient implements MessageReceiver {
 	
 	
 	
-	
+	@SuppressWarnings("rawtypes") 
 	public void configCPPMapping(Object logicalReference, String actualSource) throws CPPMappingException {
+		
+		if (logicalReference == null) {
+			throw new CPPMappingException("Error: the logicalReference \"" + logicalReference + "\" is null. Its value must be initialized to non-null.");
+		}
 		
 		if (cppMappings.containsKey(logicalReference)) { // a source was already mapped to this logicalReference
 			throw new CPPMappingException("The logicalReference \"" + logicalReference + "\" is already mapped to actualSource \"" + cppMappings.get(logicalReference) + "\".");
@@ -85,6 +90,7 @@ public class CPSAssertionClient implements MessageReceiver {
 		}
 		
 		if (respMsg.doesSourceExist() && respMsg.doesDataTypeMatch() && logicalReference.equals(logicalReference) && actualSource.equals(respMsg.getActualSource())) { // successful
+			System.out.println("Successfully mapped logical reference to actual source " + actualSource);
 			cppMappings.put(logicalReference, actualSource);
 		}
 		else if (!respMsg.doesSourceExist()) {
@@ -122,13 +128,13 @@ public class CPSAssertionClient implements MessageReceiver {
 	public void newMessage(Message msg) {
 		synchronized(this) {
 			this.rcvMsg = msg;
-		}
 		
-		if (this.rcvMsg instanceof CmdDoneMsg) {
-			this.notifyAll();
-		} 
-		else if (this.rcvMsg instanceof CPPConfigResponseMsg) {
-			this.notifyAll();
+			if (this.rcvMsg instanceof CmdDoneMsg) {
+				this.notifyAll();
+			} 
+			else if (this.rcvMsg instanceof CPPConfigResponseMsg) {
+				this.notifyAll();
+			}
 		}
 		
 		System.out.println(" ****** Client received msg: " + msg);
@@ -161,10 +167,24 @@ public class CPSAssertionClient implements MessageReceiver {
 			cpsClient.tcpSender.sendMessage(serverIPaddr, serverPort, new RobotInstrMsg(InstructionType.START_PLAYER, serverIPaddr, localPort));
 			
 		} catch (PharosException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
+		
+		PlayerPoint2d robotLoc = new PlayerPoint2d(0, 0);
+		
+		try {
+			cpsClient.configCPPMapping(robotLoc, "cameraLocalization");
+		} catch (CPPMappingException ce) {
+			System.out.println(ce.getMessage());
+		}
+		
+		try {
+			cpsClient.configCPPMapping(robotLoc, "cameraLocalization");
+		} catch (CPPMappingException ce) {
+			System.out.println(ce.getMessage());
+		}
+			
 	}
 
 

@@ -135,18 +135,25 @@ public class CPSAssertionServer implements MessageReceiver {
 	private void handleCPPConfigRequest(CPPConfigRequestMsg msg) {
 		Object logicalReference = msg.getLogicalReference();
 		String actualSource = msg.getActualSource();
-		boolean sourceExists = false;
+		boolean sourceExists = true;
 		boolean dataTypeMatches = false; 
 		
 		// the client already checks for duplicate mappings of logicalReferences, no need to check again here
 		
 		// check to see if the source exists // this will need to be advanced text matching later
 		try {
+			System.out.println("logicalReference.class = " + logicalReference.getClass());
+			System.out.println("Found the sensor at index: " + Sensors.keywordMatcher(actualSource));
 			Entry<SensorType, Object> e = Sensors.getMatchedSensor(Sensors.keywordMatcher(actualSource)); 
 			
-			if (e.getValue().equals(logicalReference.getClass())) // not sure if this comparison is correct
-				dataTypeMatches = true;
-					
+			if (e != null) {
+				System.out.println("Sensor found has type: " + e.getKey() + ", " + e.getValue());
+				if (e.getValue().equals(logicalReference.getClass())) { // not sure if this comparison is correct 
+					dataTypeMatches = true;
+					System.out.println("data types matched!");
+				} else 
+					System.out.println("data types did not match.");
+			}		
 		} catch (IndexOutOfBoundsException ex) {
 			// means it couldn't find the sensor from the actualSource 
 			sourceExists = false; 
