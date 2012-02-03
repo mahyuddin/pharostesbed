@@ -16,7 +16,7 @@ import playerclient3.structures.*;
  */
 public class TestBlobFinderPTZ {
 	
-	public static final float PAN_INCREMENT = (float)0.05;
+	public static final float PAN_INCREMENT = (float)0.025;
 	public static final float TILT_INCREMENT = (float)0.05;
 	public static final long PAUSE_INTERVAL = 1;
 	
