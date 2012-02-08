@@ -204,7 +204,7 @@ void loop() {
     
       if (abs(_prevErr) > MOTOR_MAX_ERROR) {
         _currMotorCmd = MOTOR_STOP;
-        _prevErr = _totalErr = 0;
+        _prevErr = _totalErr = _throttledTargetSpeed = 0;
       } else {
         // Generate the new motor command
         _currMotorCmd += currSpeedErr/MOTOR_PID_P + MOTOR_PID_I * _totalErr + MOTOR_PID_D * deltaErr;
