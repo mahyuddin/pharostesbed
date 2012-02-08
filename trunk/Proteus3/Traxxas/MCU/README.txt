@@ -6,8 +6,13 @@ processor.
  - EncoderTest: spins the wheel slowly while sending the encoder values 
    over the serial port.  Be sure to the rear wheels are elevated when 
    running this!
+
+ - SpeedSteeringManualControl: allows user to manually control the speed 
+   via '+' and '-', and steering angle via '/' and '*' in serial console.
+
  - SteeringAngleManualControl: allows user to manually control the steering 
    angle via '+' and '-' in serial console.
+
  - SteeringAngleSweep: sweeps the steering angle stopping at the limits and
    the center.
 
