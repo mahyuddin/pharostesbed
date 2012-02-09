@@ -52,7 +52,7 @@
  * This is the number of milliseconds that can pass in which no
  * move command is received before the motor is stopped.
  */
-#define SAFETY_STOP_INTERVAL 1000
+#define SAFETY_STOP_INTERVAL 500
 
 struct MoveCmd {
   uint8_t begin;
