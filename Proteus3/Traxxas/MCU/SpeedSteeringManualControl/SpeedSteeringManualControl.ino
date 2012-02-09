@@ -44,7 +44,7 @@ enum PIN_ASSIGNMENTS {
 #define MOTOR_MIN_PULSE 1000
 #define MOTOR_MAX_PULSE 2000
 #define MOTOR_MAX_FORWARD 255
-#define MOTOR_STOP 85
+#define MOTOR_STOP 84
 #define MOTOR_MAX_BACKWARD 0
 #define MOTOR_POS_ACCEL_LIMIT 25  // The max positive acceleration in m/s/100ms
 #define MOTOR_NEG_ACCEL_LIMIT 50  // The max negative acceleration in m/s/100ms
