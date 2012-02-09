@@ -177,7 +177,7 @@ void loop() {
    */
    if (calcTimeDiff(_prevCmdTime, currTime) > SAFETY_STOP_INTERVAL) {
      // TODO: Toggle LED indicating error condition
-     _targetSpeed = MOTOR_STOP;
+     _targetSpeed = 0;  // set speed to be 0 cm/s
      steeringServo.write(STEERING_CENTER);
    }
   
@@ -250,7 +250,7 @@ void loop() {
     // Send the new motor command to the motor.
     _motorControl.write(_currMotorCmd);
     
-    /*Serial.print("target: ");
+    Serial.print("target: ");
     Serial.print(_targetSpeed);
     Serial.print(", actual: ");
     Serial.print(currSpeed);
@@ -259,7 +259,7 @@ void loop() {
     Serial.print(", total err: ");
     Serial.print(_totalErr);
     Serial.print(", prev err: ");
-    Serial.println(_prevErr);*/
+    Serial.println(_prevErr);
   }
 }
 
