@@ -56,10 +56,18 @@
 
 struct MoveCmd {
   uint8_t begin;
-  uint16_t steering; // the steering angle in tenths of degrees
-  uint16_t speed;
+  int16_t steering; // the steering angle in tenths of degrees
+  int16_t speed;
   uint8_t checksum;
 } moveCmd;
+
+struct StatusMsg {
+  int16_t targetSpeed;
+  int16_t currSpeed;
+  uint16_t motorCmd;
+  int16_t prevErr;
+  int16_t totalErr;
+} statusMsg;
 
 /*
  * Define the pins used by this program.
@@ -164,7 +172,7 @@ void loop() {
       
     } else {
       // first byte not start byte, discard it!  
-      Serial.println(startByte);
+      //Serial.println(startByte);
       toggleLED();
     }
     
@@ -250,7 +258,15 @@ void loop() {
     // Send the new motor command to the motor.
     _motorControl.write(_currMotorCmd);
     
-    Serial.print("target: ");
+    statusMsg.targetSpeed = _targetSpeed;
+    statusMsg.currSpeed = currSpeed;
+    statusMsg.motorCmd = _currMotorCmd;
+    statusMsg.prevErr = _prevErr;
+    statusMsg.totalErr = _totalErr;
+    
+    Serial.write((byte*)&statusMsg, sizeof(statusMsg));
+    Serial.flush();
+    /*Serial.print("target: ");
     Serial.print(_targetSpeed);
     Serial.print(", actual: ");
     Serial.print(currSpeed);
@@ -259,7 +275,7 @@ void loop() {
     Serial.print(", total err: ");
     Serial.print(_totalErr);
     Serial.print(", prev err: ");
-    Serial.println(_prevErr);
+    Serial.println(_prevErr);*/
   }
 }
 
