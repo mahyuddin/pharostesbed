@@ -163,7 +163,7 @@ void loop() {
       }
       if (checksum == _moveCmdBuff[sizeof(moveCmd)-1]) {
         // Checksum passed, accept command
-        _steeringAngle = 100 - moveCmd.steering * 8 / 65; // convert from tenths of a degree into servo command unit.
+        _steeringAngle = 100 - moveCmd.steering * 8 / 20; // convert from 1/10 degree into servo command unit.  Valid range -200 to 200.
         _targetSpeed = moveCmd.speed;
         
         _prevCmdTime = currTime;
