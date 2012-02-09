@@ -62,11 +62,13 @@ struct MoveCmd {
 } moveCmd;
 
 struct StatusMsg {
+  uint8_t begin;
   int16_t targetSpeed;
   int16_t currSpeed;
   uint16_t motorCmd;
   int16_t prevErr;
   int16_t totalErr;
+  uint8_t checksum;
 } statusMsg;
 
 /*
@@ -83,7 +85,8 @@ enum PIN_ASSIGNMENTS {
 
 byte _ledState = HIGH;
 byte* _moveCmdBuff = (byte*)&moveCmd;
- 
+byte* _statusMsgBuff = (byte*)&statusMsg;
+
 // Variable declarations
 Servo _motorControl;
 
@@ -258,11 +261,19 @@ void loop() {
     // Send the new motor command to the motor.
     _motorControl.write(_currMotorCmd);
     
+    statusMsg.begin = PROTEUS_BEGIN;
     statusMsg.targetSpeed = _targetSpeed;
     statusMsg.currSpeed = currSpeed;
     statusMsg.motorCmd = _currMotorCmd;
     statusMsg.prevErr = _prevErr;
     statusMsg.totalErr = _totalErr;
+    
+    // compute checksum
+    byte checksum = 0;
+    for (int i=0; i < sizeof(StatusMsg) - 1; i++) {
+      checksum ^= _statusMsgBuff[i];
+    }
+    statusMsg.checksum = checksum;
     
     Serial.write((byte*)&statusMsg, sizeof(statusMsg));
     Serial.flush();
