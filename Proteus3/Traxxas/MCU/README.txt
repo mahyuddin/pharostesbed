@@ -3,6 +3,10 @@ processor based on the Arduino Pro Mini 5V 16MHz w/ Atmel ATmega328.
 This directory contains various firmwares that can be installed on this
 processor.
 
+ - Driver_v1: The first version of the driver.  It includes a simple
+   test Python script that causes the robot to move forward at 1m/s
+   and 0 degree steering angle.
+
  - EncoderTest: spins the wheel slowly while sending the encoder values 
    over the serial port.  Be sure to the rear wheels are elevated when 
    running this!
