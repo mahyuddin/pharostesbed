@@ -86,7 +86,11 @@ watchdog = []
 m = SerialMonitor(ser, watchdog)
 m.start()
 
-data = (PROTEUS_START, 0, 100, 0x40) # Move forward at 100cm/s with 0 degree steering angle
+#data = (PROTEUS_START, 0, 100, 0x40) # Move at 100cm/s with 0 degree steering angle
+#data = (PROTEUS_START, 200, 100, 0x88) # Move at 100cm/s with 200 1/10 degree steering angle
+#data = (PROTEUS_START, -200, 100, 0x87) # Move at 100cm/s with -200 1/10 degree steering angle
+data = (PROTEUS_START, -200, -100, 0x80) # Move at -100cm/s with -200 1/10 degree steering angle
+
 bytes = struct.pack("<BhhB", *data)
 
 #data = (0x24, 0, 0, 0x64, 0, 0x40) # Move forward at 100cm/s
