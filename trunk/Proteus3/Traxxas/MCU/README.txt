@@ -8,7 +8,7 @@ processor.
    and 0 degree steering angle.
 
  - EncoderTest: spins the wheel slowly while sending the encoder values 
-   over the serial port.  Be sure to the rear wheels are elevated when 
+   over the serial port.  Be sure the rear wheels are elevated when 
    running this!
 
  - SpeedSteeringManualControl: allows user to manually control the speed 
