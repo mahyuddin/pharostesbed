@@ -34,8 +34,8 @@ ProteusServo steeringServo;
 
 void setup() {
   Serial.begin(115200);
-  swSerial.begin(9600);
-  //swSerial.begin(19200);
+  //swSerial.begin(9600);
+  swSerial.begin(19200);
   steeringServo.attach(STEERING_PWM_PIN, STEERING_MIN_PULSE, STEERING_MAX_PULSE);
   steeringServo.write(STEERING_CENTER);
   pinMode(LED_PIN, OUTPUT);  // enable LED
