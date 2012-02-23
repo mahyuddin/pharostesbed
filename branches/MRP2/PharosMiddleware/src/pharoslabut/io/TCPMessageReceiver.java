@@ -6,14 +6,15 @@ import java.net.*;
 import pharoslabut.logger.Logger;
 
 /**
- * Accepts clients connects and listens for messages of these clients.
+ * Accepts client connections over a TCP socket and listens for messages 
+ * from these clients.
  *
  * @author Chien-Liang Fok
  * @version 08/01/2011
  */
 public class TCPMessageReceiver implements Runnable {
     /**
-	 * A reference to the object using this receiver.
+	 * The receiver to which incoming messages to be delivered.
 	 */
     private MessageReceiver receiver;
     
@@ -23,24 +24,19 @@ public class TCPMessageReceiver implements Runnable {
     private ServerSocket ss;
     
     /**
-	 * The thread that accepts incoming connections.
+	 * The thread that accepts client connections.
 	 */
     private Thread acceptThread;
 	
 	/**
-	 * The port being listened to.
+	 * The TCP port to use.
 	 */
 	private int port;
-	
-	/**
-	 * A file logger for recording debug data.
-	 */
-//	private FileLogger flogger = null;
     
 	/**
-	 * A constructor for creating a TCPMessageReceiver that listens to any free port.
+	 * A constructor for creating a TCPMessageReceiver on any free TCP port.
 	 *
-	 * @param receiver The message receiver two which received messages should be sent.
+	 * @param receiver The message receiver to which received messages should be sent.
 	 * @param port the port on which to listen for connections
 	 */
     public TCPMessageReceiver(MessageReceiver receiver){
@@ -49,7 +45,7 @@ public class TCPMessageReceiver implements Runnable {
     }
     
     /**
-	 * A constructor for creating a TCPMessageReceiver that listens to a specific port.
+	 * A constructor for creating a TCPMessageReceiver on a specific TCP port.
 	 *
 	 * @param receiver The message receiver two which received messages should be sent.
 	 * @param port the port on which to listen for connections.  If -1, select a random port that is available.
@@ -184,7 +180,7 @@ public class TCPMessageReceiver implements Runnable {
 		private ObjectInputStream in;
 
 		/**
-		 * Creates a clientHandler.
+		 * Creates a ClientHandler.
 		 */
 		public ClientHandler(Socket socket) {
 			this.socket = socket;
@@ -195,8 +191,8 @@ public class TCPMessageReceiver implements Runnable {
 		 * Sits in a loop listening for incoming messages.
 		 */
 		public void run() {
-			// extract the input and output streams
-			// be sure to create the output stream before the input stream
+			// Extract the input and output streams.
+			// Be sure to create the output stream before the input stream.
 			try {
 				os = socket.getOutputStream();
 				oos = new ObjectOutputStream(os);
@@ -229,8 +225,7 @@ public class TCPMessageReceiver implements Runnable {
 			}
 			
 			if (msg != null) {
-				
-				// First send an Ack if the message is an AckMsg.
+				// If the message is an AckMsg, send an Ack.
 				try {
 					if (msg instanceof AckedMsg) {
 						Logger.log("Message was an AckedMsg, sending ack.");
@@ -257,22 +252,5 @@ public class TCPMessageReceiver implements Runnable {
 				e.printStackTrace();
 			}
 		}
-		
-//		void logErr(String msg) {
-//			String result = "TCPMessageReceiver: ClientHandler: ERROR: " + msg;
-//			System.err.println(result);
-//			if (flogger != null)
-//				flogger.log(result);
-//		}
-//		
-//		void log(String msg) {
-//			String result = "TCPMessageReceiver: ClientHandler: " + msg;
-//			
-//			if (System.getProperty ("PharosMiddleware.debug") != null)
-//				System.out.println(result);
-//			
-//			if (flogger != null)
-//				flogger.log(result);
-//		}
     }
 }

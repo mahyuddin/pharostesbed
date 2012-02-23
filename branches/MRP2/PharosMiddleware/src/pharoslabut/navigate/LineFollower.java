@@ -39,17 +39,18 @@ public class LineFollower implements Runnable {
 	/**
 	 * This is the maximum valid age of the blob data.  Anything older than that is discarded.
 	 */
-	public static final long BLOB_MAX_VALID_AGE = 1500;	//modified by sushen
+	public static final long BLOB_MAX_VALID_AGE = 1500;
 	
 	/**
 	 * The maximum speed of the robot in meters per second.
 	 */
-	public static final double MAX_SPEED = 0.5;		//modified by sushen
+	//public static final double MAX_SPEED = 0.5;
+	public static final double MAX_SPEED = 0.75;
 	
 	/**
 	 * The minimum speed of the robot in meters per second.
 	 */
-	public static final double MIN_SPEED = 0.2; //0.37;		//modified by sushen 
+	public static final double MIN_SPEED = 0.2;
 	
 	/**
 	 * The maximum turn angle of the robot in degrees.
@@ -88,6 +89,9 @@ public class LineFollower implements Runnable {
 	private double pan = 0;
 	private double panOld = 0;
 	
+	/**
+	 * Whether this line follower is paused.
+	 */
 	private boolean paused = false;
 	
 	/**
@@ -95,6 +99,11 @@ public class LineFollower implements Runnable {
 	 * is assigned a value when start() is called.
 	 */
 	private Thread lineFollowerThread = null;
+	
+	/**
+	 * The listeners for line follower events.
+	 */
+	private Vector<LineFollowerListener> listeners = new Vector<LineFollowerListener>();
 
 	/**
 	 * The constructor.
@@ -127,6 +136,47 @@ public class LineFollower implements Runnable {
 		ptzCmd.setTilt((float) 0);
 		Logger.log("Resetting position of the camera.");
 		ptz.setPTZ(ptzCmd);
+	}
+	
+	/**
+	 * Adds a listener to this object.
+	 * 
+	 * @param listener The listener to add.
+	 */
+	public void addListener(LineFollowerListener listener) {
+		listeners.add(listener);
+	}
+	
+	/**
+	 * Notifies the listeners of an error.
+	 * 
+	 * @param errno The cause of the error.
+	 */
+	private void notifyListenersError(final LineFollowerError errno) {
+		errorState = true;
+		new Thread() {
+			public void run() {
+				Enumeration<LineFollowerListener> e = listeners.elements();
+				while (e.hasMoreElements()) {
+					e.nextElement().lineFollowerError(errno);
+				}
+			}
+		}.start();
+	}
+	
+	/**
+	 * Notifies the listeners that the line follower is working again.
+	 */
+	private void notifyListenersNoError() {
+		errorState = false;
+		new Thread() {
+			public void run() {
+				Enumeration<LineFollowerListener> e = listeners.elements();
+				while (e.hasMoreElements()) {
+					e.nextElement().lineFollowerWorking();
+				}
+			}
+		}.start();
 	}
 	
 	/**
@@ -396,7 +446,7 @@ public class LineFollower implements Runnable {
 				// All of the following checks should not be necessary.  They were added
 				// to counter a null pointer exception being occasionally thrown.
 				if(blobListCopy != null && blobListCopy.length > 0 && blobListCopy[0] != null) {
-					int midPoint = data.getWidth()/2;
+					int midPoint = data.getWidth()/2;  // The midpoint is half of the image width dimension.
 					if( (blobListCopy[0].getArea() < BLOB_AREA_MIN_THRESHOLD) ) {
 						Logger.log("BLOB Area = " + blobListCopy[0].getArea());
 						adjustHeadingAndSpeed(blobListCopy[0], midPoint);
@@ -437,6 +487,13 @@ public class LineFollower implements Runnable {
 		return false;
 	}
 	
+	public static final long MIN_MSG_PRINT_DURATION = 1000;
+	double prevSpeedCmd = -1;
+	double prevAngleCmd = -1;
+	double prevPanCmd = -1;
+	long prevPrintTime = -1;
+	boolean errorState = false;
+	
 	/**
 	 * This contains the main loop of the LineFollower thread.
 	 */
@@ -458,10 +515,16 @@ public class LineFollower implements Runnable {
 					blobDataTimeStamp = System.currentTimeMillis(); // only update timestamp if the blob contained line data.
 			}
 			
-			
 			// If no blob data is received within a certain time window, stop the robot.
 			if (System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
-				Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+				if (System.currentTimeMillis() - prevPrintTime > MIN_MSG_PRINT_DURATION) {
+					Logger.logErr("No valid blob data within time window of " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+					notifyListenersError(LineFollowerError.NO_BLOB);
+					prevSpeedCmd = speed;
+					prevAngleCmd = angle;
+					prevPanCmd = pan;
+					prevPrintTime = System.currentTimeMillis();
+				}
 				speed = angle = pan = 0;
 			}
 			
@@ -470,9 +533,22 @@ public class LineFollower implements Runnable {
 				speed = 0;
 			}
 			
-			Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
+			if (prevSpeedCmd != speed || prevAngleCmd != angle || prevPanCmd != pan 
+					|| System.currentTimeMillis() - prevPrintTime > MIN_MSG_PRINT_DURATION) 
+			{
+				Logger.log("Sending Command, speed=" + speed + ", angle=" + angle + ", pan=" +pan);
+				prevSpeedCmd = speed;
+				prevAngleCmd = angle;
+				prevPanCmd = pan;
+				prevPrintTime = System.currentTimeMillis();
+			}
 			
 			p2di.setSpeed(speed, dtor(angle));
+			
+			// Update the listeners.  errorState will be set to false prior to notifying the
+			// listeners that the line follower is working.
+			if (errorState && speed > 0)
+				notifyListenersNoError();
 			
 			ptzCmd.setPan((float)pan);			//move camera, change to pan + PAN_OFFSET if not implemented in driver
 			ptz.setPTZ(ptzCmd);

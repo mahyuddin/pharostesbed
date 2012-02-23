@@ -59,25 +59,29 @@ public class TCPMessageSender implements MessageSender {
     /**
      * Sends a message via a TCP socket.
      *
-     * @param msg the message to be sent.
-     * @throws PharosException whenever an error occurs.
+	 * @param address The destination address.
+	 * @param port The destination port.
+	 * @param msg The message to be sent.
+	 * @return Whether the send was successful.
+	 * @throws PharosException Whenever a problem occurs during message transmission.
      */
-    public void sendMessage(InetAddress address, int port, Message msg) throws PharosException {
-    	new Thread(new SendingThread(address, port, msg)).start();
+    public boolean sendMessage(InetAddress address, int port, Message msg) throws PharosException {
+    	MsgSender sender = new MsgSender(address, port, msg);
+    	return sender.doSend();
     }
 	
-	private class SendingThread implements Runnable {
+	private class MsgSender {
 		InetAddress address;
 		int port;
 		Message msg;
 		
-		public SendingThread(InetAddress address, int port, Message msg) {
+		public MsgSender(InetAddress address, int port, Message msg) {
 			this.address = address;
 			this.port = port;
 			this.msg = msg;
 		}
 		
-		public void run () {
+		public boolean doSend() {
 		  	int numTries = 0;
 	    	boolean success = false;
 	    	String errMsg = null;
@@ -175,8 +179,10 @@ public class TCPMessageSender implements MessageSender {
 	    	
 	    	if (!success) {
 	    		Logger.logErr("Send Failed!");
+	    		return false;
 	    	} else {
 	    		Logger.log("Send success!");
+	    		return success;
 	    	}
 		}
 	}

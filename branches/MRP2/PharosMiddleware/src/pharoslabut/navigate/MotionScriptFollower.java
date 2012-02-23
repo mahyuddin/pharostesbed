@@ -70,11 +70,11 @@ public class MotionScriptFollower implements Runnable {
 	
 	/**
 	 * Starts the robot following the motion script.
-	 * This method should only be called when the WayPointFoller is stopped.  If it
-	 * is called when the WayPointFollower is running, a false value will be returned.
+	 * This method should only be called when this MotionScriptFollower is stopped.  If it
+	 * is called when this class is running, a false value will be returned.
 	 * 
 	 * @param script The motion script to follow.
-	 * @param doneListener The listener that should be notified when the WayPointFoller is done.
+	 * @param doneListener The listener that should be notified when the MotionScriptFollower is done.
 	 * @return true if the call was successful, false otherwise.
 	 */
 	public boolean start(MotionScript script, MotionScriptFollowerDoneListener doneListener) {

@@ -6,15 +6,15 @@ import java.io.*;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import pharoslabut.demo.simonsays.io.PlayerControlCmd;
-import pharoslabut.demo.simonsays.io.PlayerControlMsg;
+import pharoslabut.cpsAssert.CPSAssertSensor;
+import pharoslabut.demo.simonsays.io.RobotInstrMsg;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 //import pharoslabut.io.*;
 
 /**
- * This is the main class that launches client side of the demo application.
- * Be sure the DemoServer is running prior to launching this class.
+ * This is the main class that launches client side of the SimonSays application.
+ * Be sure the SimonSaysServer is running prior to launching this class.
  * 
  * @author Chien-Liang Fok
  * @author Kevin Boos
@@ -22,10 +22,19 @@ import pharoslabut.logger.Logger;
  */
 public class SimonSaysClient {
 	
+	/**
+	 * Whether to enable CPS assertions.
+	 */
+	private static boolean enableCPSAssert = false;
+	
+	/**
+	 * Whether to enable debug mode initially.
+	 */
+	private static boolean enableDebugModeInit = false;
+	
 //	private TCPMessageSender tcpSender;
-	private CmdExec cmdExec;
-	public static boolean testing = false;
-	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
+	private ExecInstruction instrExec;
+//	public static BeaconDataCollector bdc = new BeaconDataCollector("beaconData.txt");
 	
 	/**
 	 * The Constructor.
@@ -42,25 +51,28 @@ public class SimonSaysClient {
 			Logger.setFileLogger(new FileLogger(logFileName));
 		
 		try {
-//			if (connect) {
-//				// Create the connection to the server...
-//				tcpSender = TCPMessageSender.getSender();
-//			}
 			
-			// initialize the Trilateration process
-//			new Multilateration(0, 0).start(); // robot's starting coordinates (x,y)
+			if (enableCPSAssert) {
+				// set up camera-based localization (must run on client as of now)
+				new CPSAssertSensor(null, null, 
+						false, null, null, null, null, 
+						false, null, null, null, 
+						false, null, null, null, 
+						true, null, 100, "/home/ut/localization.txt", 
+						false, null, null, null);
+			}
 			
 			// Create the component that executes the commands of the user-provided program...
-			cmdExec = new CmdExec(InetAddress.getByName(serverIP), serverPort);
+			instrExec = new ExecInstruction(InetAddress.getByName(serverIP), serverPort);
 			
-			// send an initial PlayerControlMsg with the START cmd, this adds this client to the server's client list
-			cmdExec.sendMsg(new PlayerControlMsg(PlayerControlCmd.START));			
+			// Send an initial PlayerControlMsg with the START cmd, this adds this client to the server's client list
+			instrExec.sendMsg(new RobotInstrMsg(InstructionType.START_PLAYER, instrExec.getLocalAddress(), instrExec.getLocalPort()));			
 			
 			// Create a GUI for allowing users to interact with the system...
 			// See: http://download.oracle.com/javase/6/docs/api/javax/swing/package-summary.html#threading
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
-					new ProgramEntryGUI(cmdExec).show();
+					new ProgramEntryGUI(instrExec, enableDebugModeInit).show();
 				}
 			});
 		} catch(IOException ioe) {
@@ -71,14 +83,6 @@ public class SimonSaysClient {
 			System.exit(1);
 		}
 	}
-	
-//	private void log(String msg) {
-//		String result = "DemoClient: " + msg;
-//		System.out.println(result);
-//		if (flogger != null) {
-//			flogger.log(result);
-//		}
-//	}
 	
 	private static void print(String msg) {
 		if (System.getProperty ("PharosMiddleware.debug") != null)
@@ -92,6 +96,8 @@ public class SimonSaysClient {
 		print("\t-server <ip address>: The IP address of the Demo Server (default localhost)");
 		print("\t-port <port number>: The Demo Server's port bnumber (default 8887)");
 		print("\t-log <log file name>: name of file in which to save results (default DemoClient.log)");
+		print("\t-enableCPSAssert: Enable CPS assertions.");
+		print("\t-enableDebugMode: Enable debug mode.");
 //		print("\t-noconnect: do not server (useful for debugging)");
 		print("\t-debug: enable debug mode");
 	}
@@ -113,16 +119,18 @@ public class SimonSaysClient {
 				else if (args[i].equals("-port")) {
 					serverPort = Integer.valueOf(args[++i]);
 				}
+				else if (args[i].equals("-enableCPSAssert")) {
+					enableCPSAssert = true;
+				}
+				else if (args[i].equals("-enableDebugMode")) {
+					enableDebugModeInit = true;
+				}
 //				else if (args[i].equals("-noconnect")) {
 //					connect = false;
 //				}
 				else if (args[i].equals("-log")) {
 					logfileName = args[++i];
 				}
-				else if (args[i].equals("-testing")) {
-					testing = true;
-				}
-
 				else {
 					usage();
 					System.exit(1);

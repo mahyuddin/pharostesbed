@@ -3,9 +3,11 @@ package pharoslabut.sensors;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.Logger;
 
 import playerclient3.RangerInterface;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 import playerclient3.structures.ranger.PlayerRangerData;
 
 /**
@@ -25,6 +27,16 @@ public class RangerDataBuffer implements Runnable {
 	private RangerInterface ranger;
 	
 	/**
+	 * The time at which the last Position2D device reading was received.
+	 */
+	private long lastTimeStamp = System.currentTimeMillis();
+	
+	/**
+	 * The most recent Position2D device reading.
+	 */
+	private PlayerRangerData recentRangerReading = null;
+	
+	/**
 	 * Whether the thread that reads compass data is running.
 	 */
 	private boolean running = false;
@@ -37,7 +49,7 @@ public class RangerDataBuffer implements Runnable {
 	/**
 	 * The constructor.
 	 * 
-	 * @param compass The proxy to the compass device.
+	 * @param ranger The proxy to the IR device.
 	 */
 	public RangerDataBuffer(RangerInterface ranger) {
 		this.ranger = ranger;
@@ -63,9 +75,9 @@ public class RangerDataBuffer implements Runnable {
     }
     
     /**
-     * Notifies each of the registered GPSListener objects that a new PlayerGpsData is available.
+     * Notifies each of the registered RangerListener objects that a new PlayerRangerData is available.
      * 
-     * @param pgdata The new PlayerGpsData that is available.
+     * @param pgdata The new PlayerRangerData that is available.
      */
     private void notifyRangerListeners(final PlayerRangerData prdata) {
     	if (listeners.size() > 0) {
@@ -81,7 +93,7 @@ public class RangerDataBuffer implements Runnable {
     }
     
 	/**
-	 * Starts the CompassDataBuffer.  Creates a thread for reading compass data.
+	 * Starts the RangerDataBuffer.  Creates a thread for reading ranger data.
 	 */
 	public synchronized void start() {
 		if (!running) {
@@ -91,15 +103,30 @@ public class RangerDataBuffer implements Runnable {
 	}
 	
 	/**
-	 * Stops the CompassDataBuffer.  Allows the thread that reads compass data to terminate.
+	 * Stops the RangerDataBuffer.  Allows the thread that reads ranger data to terminate.
 	 */
 	public synchronized void stop() {
 		if (running)
 			running = false;
 	}
 	
+	
+    /**
+	 * Returns the most recent Ranger device reading.
+	 * 
+	 * @return The most recent Position2D device reading
+	 * @throws NoNewDataException If no new data was received (the most recent reading is null).
+	 */
+	public synchronized PlayerRangerData getRecentData() throws NoNewDataException {
+		if (recentRangerReading == null)
+			throw new NoNewDataException("No Ranger data available yet.");
+		return recentRangerReading;
+	}
+	
+	
+	
 	/**
-	 * Removes expired compass readings.
+	 * Removes expired ranger readings.
 	 */
 	public void run() {
 		Logger.log("thread starting...");
@@ -109,6 +136,10 @@ public class RangerDataBuffer implements Runnable {
 			// If new compass data is available, get it and notify the listeners.
 			if (ranger.isDataReady()) {
 				PlayerRangerData newData = ranger.getData();
+				
+				recentRangerReading = newData;
+				lastTimeStamp = System.currentTimeMillis();
+				
 				notifyRangerListeners(newData);
 			}
 			

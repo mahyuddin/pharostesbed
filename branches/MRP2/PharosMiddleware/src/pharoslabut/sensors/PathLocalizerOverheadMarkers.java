@@ -67,7 +67,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 	/**
 	 * The total distance traveled by the robot in meters.
 	 */
-	private double totalDistTraveled = 0;
+	//private double totalDistTraveled = 0;
 	
 	/**
 	 * The number of consecutive sensor measurements in which the marker is not detected.
