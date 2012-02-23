@@ -1,9 +1,9 @@
 package pharoslabut.demo.simonsays.io;
 
-import pharoslabut.demo.simonsays.BeaconReading;
 import pharoslabut.demo.simonsays.SimonSaysClient;
 import pharoslabut.demo.simonsays.SimonSaysServer;
 import pharoslabut.io.Message;
+import pharoslabut.sensors.CricketBeaconReading;
 
 /**
  * This message is sent by the SimonSaysServer to the SimonSaysClient with
@@ -15,7 +15,7 @@ import pharoslabut.io.Message;
  */
 public class BeaconReadingMsg implements Message {
 
-	public BeaconReading getBeaconReading() {
+	public CricketBeaconReading getBeaconReading() {
 		return beaconReading;
 	}
 
@@ -24,7 +24,7 @@ public class BeaconReadingMsg implements Message {
 	/**
 	 * the data collected from this cricket beacon
 	 */
-	private BeaconReading beaconReading;
+	private CricketBeaconReading beaconReading;
 	
 	/**
 	 * The constructor.
@@ -32,7 +32,7 @@ public class BeaconReadingMsg implements Message {
 	 * @param br the BeaconReading
 	 * @param pt the coordinates (x,y) of this cricket beacon
 	 */
-	public BeaconReadingMsg(BeaconReading br) {
+	public BeaconReadingMsg(CricketBeaconReading br) {
 		this.beaconReading = br;
 	}
 	

@@ -12,8 +12,8 @@ import pharoslabut.demo.simonsays.SimonSaysClient;
 import pharoslabut.demo.simonsays.SimonSaysServer;
 
 /**
- * This message is sent by the SimonSaysServer to the SimonSaysClient after
- * it takes the snapshot.  It contains an image taken by the camera.
+ * This message contains an image taken by the camera.  It is sent by 
+ * the SimonSaysServer to the SimonSaysClient. 
  * 
  * @author Chien-Liang Fok
  * @see SimonSaysClient

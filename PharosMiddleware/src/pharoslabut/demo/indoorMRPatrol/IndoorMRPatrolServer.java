@@ -219,12 +219,17 @@ public class IndoorMRPatrolServer implements MessageReceiver, WiFiBeaconListener
 		return true;
 	}
 	
+	/**
+	 * Initializes this server.
+	 * 
+	 * @return true if successful.
+	 */
 	private boolean initIndoorMRPatrolServer() {
 		new TCPMessageReceiver(this, indoorMRPatrolServerPort);
 		return true;
 	}
 	
-	    /**
+	/**
      * Initializes the components that transmit and receive beacons.
      * 
      * @param expType

@@ -2,6 +2,11 @@ package pharoslabut.demo.indoorMRPatrol;
 
 import java.net.InetAddress;
 
+/**
+ * Contains the settings of a single robot in an indoor multi-robot patrol experiment.
+ * 
+ * @author Chien-Liang Fok
+ */
 public class RobotExpSettings implements java.io.Serializable {
 	
 	private static final long serialVersionUID = -6833303603496561692L;

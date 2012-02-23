@@ -16,9 +16,13 @@ public interface MessageSender {
 	/**
 	 * Sends a message.
 	 *
-	 * @param msg the message to be sent.
+	 * @param address The destination address.
+	 * @param port The destination port.
+	 * @param msg The message to be sent.
+	 * @return Whether the send was successful.
+	 * @throws PharosException Whenever a problem occurs during message transmission.
 	 */
-	public void sendMessage(InetAddress address, int port, Message msg) throws PharosException;
+	public boolean sendMessage(InetAddress address, int port, Message msg) throws PharosException;
 	
 	/**
 	 * Returns the singlecast protocol type of this MessageSender.

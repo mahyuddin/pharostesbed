@@ -2,7 +2,7 @@ package pharoslabut.demo.simonsays.io;
 
 import pharoslabut.demo.simonsays.SimonSaysClient;
 import pharoslabut.demo.simonsays.SimonSaysServer;
-import pharoslabut.io.Message;
+import pharoslabut.io.AckedMsg;
 
 /**
  * This message is sent by the SimonSaysServer to the SimonSaysClient telling
@@ -12,7 +12,7 @@ import pharoslabut.io.Message;
  * @see SimonSaysClient
  * @see SimonSaysServer
  */
-public class CmdDoneMsg implements Message {
+public class CmdDoneMsg implements AckedMsg {
 	private static final long serialVersionUID = 4417385349057427024L;
 	private boolean success;
 	

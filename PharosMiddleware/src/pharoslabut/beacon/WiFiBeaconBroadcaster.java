@@ -28,7 +28,8 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     private MulticastSocket mSocket = null;    
 
     /**
-     * Creates a BeaconBroadcaster.  Note that it does not automatically start beaconing.
+     * Creates a BeaconBroadcaster that does not shim context.  
+     * Note that it does not automatically start beaconing.
      * To start beaconing, call the start() method.
      *
      * @param mCastAddr the multicast group address to use.

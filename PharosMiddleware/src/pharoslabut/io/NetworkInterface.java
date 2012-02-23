@@ -3,8 +3,6 @@ package pharoslabut.io;
 import java.net.InetAddress;
 import java.util.*;
 
-import pharoslabut.logger.FileLogger;
-
 /**
  * A top-level class for the network interface.
  * 
@@ -16,11 +14,6 @@ public abstract class NetworkInterface {
 	 * These are the registered message receivers.
 	 */
 	private Vector<MessageReceiver> rcvrs = new Vector<MessageReceiver>();
-	
-//	/**
-//	 * The file logger for recording debug data.
-//	 */
-//	protected FileLogger flogger = null;
 	
 	/**
 	 * Returns the local port on which the network interface is listening for packets.

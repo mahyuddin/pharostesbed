@@ -38,6 +38,15 @@ public class PlayerPoint3d implements java.io.Serializable {
     private double pz;        // Z [m]
 
 
+    public PlayerPoint3d() {}
+    
+    
+    public PlayerPoint3d(double x, double y, double z) {
+    	this.px = x;
+    	this.py = y;
+    	this.pz = z;
+    }
+    
     /**
      * @return X [m]
      */

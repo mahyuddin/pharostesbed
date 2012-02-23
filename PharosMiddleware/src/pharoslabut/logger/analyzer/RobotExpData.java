@@ -659,17 +659,18 @@ public class RobotExpData {
 				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
 				
 				if (currEdge == null) {
-					Logger.logErr("Arrived at destination but currEdge is null!");
-					System.exit(1);
-				}
+					Logger.logWarn("Arrived at destination but currEdge is null!");
+					//System.exit(1);
+				} else {
 				
-				currEdge.setEndTime(timestamp);
-				pathEdges.add(currEdge);
-				currEdge = null;
+					currEdge.setEndTime(timestamp);
+					pathEdges.add(currEdge);
+					currEdge = null;
+				}
 			}
 			
 			// Extract when the GPS sensor failed.
-			else if (line.contains("ERROR: go: Unable to get the current location") 
+			else if (line.contains("go: ERROR: Unable to get the current location") 
 					|| line.contains("ERROR: Failed to get current location")) 
 			{
 				
@@ -679,7 +680,7 @@ public class RobotExpData {
 			}
 			
 			// Extract when the compass sensor failed.
-			else if (line.contains("ERROR: go: Unable to get the current heading")
+			else if (line.contains("go: ERROR: Unable to get the current heading")
 					|| line.contains("ERROR: Unable to get compass heading")) 
 			{
 				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
@@ -1055,8 +1056,8 @@ public class RobotExpData {
 			PathEdge lastEdge = getPathEdge(numEdges()-1);
 			return lastEdge.getEndTime();
 		} else {
-			Logger.logErr("Robot did not traverse any edges!");
-			System.exit(1);
+			Logger.logWarn("Robot did not traverse any edges!");
+			//System.exit(1);
 		}
 		
 		return -1;

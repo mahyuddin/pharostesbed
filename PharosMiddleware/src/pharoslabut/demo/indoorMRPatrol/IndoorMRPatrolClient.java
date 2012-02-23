@@ -23,7 +23,7 @@ public class IndoorMRPatrolClient {
      * The constructor.
      * 
      * @param expConfigFileName The name of the file containing the experiment configuration.
-     * @see pharoslabut.experiment.ExpConfig
+     * @see pharoslabut.demo.indoorMRPatrol.ExpConfig
      * @see pharoslabut.navigate.motionscript.MotionScriptReader
      */
 	public IndoorMRPatrolClient(String expConfigFileName) {

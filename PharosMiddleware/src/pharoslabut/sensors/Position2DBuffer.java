@@ -1,9 +1,11 @@
 package pharoslabut.sensors;
 
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 
 //import pharoslabut.logger.FileLogger;
+import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.Logger;
 
 import playerclient3.Position2DInterface;
@@ -13,6 +15,7 @@ import playerclient3.structures.position2d.PlayerPosition2dData;
  * Polls for new Position2D data and generates an event whenever new data arrives.
  * 
  * @author Chien-Liang Fok
+ * @author Kevin Boos
  */
 public class Position2DBuffer implements Runnable {
 	
@@ -22,17 +25,27 @@ public class Position2DBuffer implements Runnable {
 	public static final int POSITION2D_BUFFER_REFRESH_PERIOD = 100;
 	
 	/**
-	 * A proxy to the compass device.
+	 * A proxy to the Position2D device.
 	 */
 	private Position2DInterface pos2di;
 	
 	/**
-	 * Listeners for compass events.
+	 * Listeners for Position2D events.
 	 */
 	private Vector<Position2DListener> pos2dListeners = new Vector<Position2DListener>();
 	
 	/**
-	 * Whether the thread that reads compass data is running.
+	 * The time at which the last Position2D device reading was received.
+	 */
+	private long lastTimeStamp = System.currentTimeMillis();
+	
+	/**
+	 * The most recent Position2D device reading.
+	 */
+	private PlayerPosition2dData recentPosition2dReading = null;
+	
+	/**
+	 * Whether the thread that reads Position2D data is running.
 	 */
 	private boolean running = false;
 	
@@ -63,7 +76,7 @@ public class Position2DBuffer implements Runnable {
 	}
 	
 	/**
-	 * Stops the Position2DBuffer.  Allows the thread that reads compass data to terminate.
+	 * Stops the Position2DBuffer.  Allows the thread that reads Position2D data to terminate.
 	 */
 	public synchronized void stop() {
 		if (running) {
@@ -119,8 +132,21 @@ public class Position2DBuffer implements Runnable {
 //		this.flogger = flogger;
 //	}
 	
+    /**
+	 * Returns the most recent Position2D device reading.
+	 * 
+	 * @return The most recent Position2D device reading
+	 * @throws NoNewDataException If no new data was received (the most recent reading is null).
+	 */
+	public synchronized PlayerPosition2dData getRecentData() throws NoNewDataException {
+		if (recentPosition2dReading == null)
+			throw new NoNewDataException("No Posiiton2D data available yet.");
+		return recentPosition2dReading;
+	}
+    
+    
 	/**
-	 * Removes expired compass readings.
+	 * Removes expired Position2D readings.
 	 */
 	public void run() {
 		Logger.log("thread starting...");
@@ -129,6 +155,9 @@ public class Position2DBuffer implements Runnable {
 			// If new Position2D data is available, get it!
 			if (pos2di.isDataReady()) {
 				PlayerPosition2dData newData = pos2di.getData();
+				
+				recentPosition2dReading = newData;
+				lastTimeStamp = System.currentTimeMillis();
 				
 				// Notify the listeners
 				notifyP2DListeners(newData);
