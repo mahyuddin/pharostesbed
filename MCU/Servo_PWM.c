@@ -20,6 +20,7 @@
 #include "Types.h"
 #include "TaskHandler.h"
 #include "Command.h"
+//#include "SerialDriver.c"
 #include <stdio.h>
 
 uint8_t ActualSetpoint1 = 128, ActualSetpoint2 = 128, ActualSetpoint3 = 128, ActualSetpoint4 = 128;
@@ -27,7 +28,7 @@ uint8_t TargetSetpoint1 = 128, TargetSetpoint2 = 128, TargetSetpoint3 = 128, Tar
 uint8_t MaxChangePerPeriod = 6;
 
 bool Servo1Enabled, Servo2Enabled, Servo3Enabled, Servo4Enabled;
-
+ 
 /**
  * Enable PWM channels 0-7.
  * Inputs: none
@@ -172,12 +173,32 @@ unsigned char Servo4_status(){
 void Motor_setSpeed(int16_t setpoint) {
 	
 	// Output the direction signal, which is attached to PTT_PTT2
+
 	if(setpoint < 0) { 
 		PTT_PTT2 = 0;
 		setpoint *= -1;
-	} else
+	  //zhaq
+	  SerialDriver_sendByte1(128); //address
+ 
+    SerialDriver_sendByte1(1);   //forward
+  
+    SerialDriver_sendByte1(setpoint/16);  //0-127 0 stop 127 full forward
+    
+    SerialDriver_sendByte1(((setpoint/16)+1+128) & 0x7f); //checksum=address+forward+data
+    // */
+	} else{
+	   
 		PTT_PTT2 = 1;
-		
+		//zhaq
+		SerialDriver_sendByte1(128);
+ 
+    SerialDriver_sendByte1(0);
+  
+    SerialDriver_sendByte1(setpoint/16);
+    
+    SerialDriver_sendByte1(((setpoint/16)+0+128) & 0x7f);
+	}
+	
 	// set the PWM signal
 	PWMDTY01 = setpoint;
 }

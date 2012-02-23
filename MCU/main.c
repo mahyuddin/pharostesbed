@@ -4,7 +4,7 @@
  * micro-controller.
  *
  * Author: Chien-Liang Fok <liangfok@mail.utexas.edu>
- * Last updated: 11/29/2010
+   Last Edited: Zahidul Haq <zahidul.haq@mail.utexas.edu> on 11/15/2011 //zhaq
  */
 
 #include <hidef.h>           /* common defines and macros */
@@ -22,13 +22,21 @@
 #include "Compass.h"
 #include "adc.h"
 #include "I2CDriver.h"
+#include "SCI1.h"        //zhaq
+
+#define MOTOR_CONTROLLER_ON (PORTA & 0x80)
 
 void main(void) {
 	PLL_Init();   // Eclk @ 24MHz
 	Timer_Init(); // TCNT @ 333.3ns, TOF @ 21.84ms
 	LED_Init();
 	I2CDriver_init();
-	
+	SCI1_Init(9600);//zhaq
+	DDRP |= 0x80;
+	DDRA =0x00;
+	while(!MOTOR_CONTROLLER_ON){};
+	Timer_mwait(3000);
+  	SerialDriver_sendByte1(170);
 	MotorControl_init();
 	TaskHandler_init();
 	Servo_init();
@@ -51,5 +59,6 @@ void main(void) {
 		 * point in time in the TaskHandler.
 		 */
 		TaskHandler_processNextTask();
+		
 	} 
 }

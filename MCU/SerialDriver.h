@@ -66,4 +66,15 @@ void SerialDriver_processRxBytes(void);
  */
 void SerialDriver_sendByte(uint8_t data);
 
+/**
+ * Wait for buffer to be empty, output 8-bit to serial port
+ * interrupt synchronization.
+ *
+ * TODO: Get rid of this busy wait.
+ *
+ * Input: SCI port, 8-bit data to be transferred
+ * Output: none
+ */
+void SerialDriver_sendByte1(uint8_t data);
+
 #endif /* _SERIAL_DRIVER_H */

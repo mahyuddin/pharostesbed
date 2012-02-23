@@ -64,7 +64,7 @@ void MotorControl_init(void) {
 	
 	// Configure the safe mode interupt (ECT Channel 5, interupt 13)
 	TIOS |= TIOS_CH5_INT13_BIT;  // Set Enhanced Capture Timer Channel 5 to be output compare.  This is interrupt 13.
-	MotorControl_enableSafeMode(); // By default use safe mode
+	MotorControl_enableSafeMode(); // By default use safe mode    //zhaq
 }
 
 /**
@@ -128,17 +128,10 @@ int16_t controlledIncrement(int16_t velocityError) {
  */
 void MotorControl_updateSpeed(void) {
 	if (_targetSpeed == 0) {
-	  /*
 	  // Exponential decrease in speed
 	  if (_currentMotorPower != 0) {
 	    // since we cannot multiple by 0.8, we instead do the following
 		  _currentMotorPower = (_currentMotorPower * 4) / 5;
-	  }
-	  */
-	  
-	  // Immediately stop the robot when the target speed is zero.
-	  if (_currentMotorPower != 0) {
-	     _currentMotorPower = 0;
 	  }
 		Motor_setSpeed(_currentMotorPower);
 	} else {
@@ -236,7 +229,7 @@ interrupt 14 void motorSpeedInterrupt(void) {
 	TFLG1 = TFLG1_CH6_INT14_BIT; // Acknowledge ECT Channel 6 interrupt
 	
 	_int14Count++;
-	if (_int14Count == 10) { // 20ms * 10 = 200ms (5Hz)
+	if (_int14Count == 10) { // 20ms * 10 = 200ms (5Hz)   //zhaq
 		TaskHandler_postTask(&MotorControl_updateSpeed);
 		_int14Count = 0;
 	}
