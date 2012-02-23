@@ -284,42 +284,12 @@ void Command_sendDataFiveHz() {
  */
 void Command_sendDataSevenHz() {
   
-	//if (_heartbeatReceived) {
-	//	if (_interfacesEnabled & IR_INTERFACE)
-	//		Command_sendIRPacket();
-	//}
-}
-
-/**
- * This is called by interrupt 9 at 10Hz (100ms period).
- */
-void Command_sendDataTenHz() {
-  
-	//if (_heartbeatReceived) {
-	//	if (_interfacesEnabled & IR_INTERFACE)
-	//		Command_sendIRPacket();
-	//}
-}
-
-/**
- * This is called by interrupt 9 at 25Hz (40ms period).
- */
-void Command_sendDataTwentyFiveHz() {
-  
 	if (_heartbeatReceived) {
 		if (_interfacesEnabled & IR_INTERFACE)
 			Command_sendIRPacket();
-	}
-}
-
-/**
- * This is called by interrupt 9 at 50Hz (20ms period).
- */
-void Command_sendDataFiftyHz() {
-  
-	//if (_heartbeatReceived) {
-	//	if (_interfacesEnabled & IR_INTERFACE)
-	//		Command_sendIRPacket();
+	}// else {
+	//	LED_GREEN2 = LED_OFF;
+	//	LED_BLUE2 = LED_OFF;
 	//}
 }
 
@@ -424,21 +394,9 @@ interrupt 9 void sendDataInterrupt(void) {
 		TaskHandler_postTask(&Command_sendDataFiveHz);
 	}
 	
-	//if (_int9Count % 7 == 0) { // 20mc * 7 = 140ms (~7Hz)
-	//  TaskHandler_postTask(&Command_sendDataSevenHz);
-	//}
-	
-  //if (_int9Count % 5 == 0) { // 20mc * 5 = 100ms (~10Hz)
-	//  TaskHandler_postTask(&Command_sendDataTenHz);
-	//}
-	
-	if (_int9Count % 2 == 0) { // 20mc * 2 = 40ms (~25Hz)
-	  TaskHandler_postTask(&Command_sendDataTwentyFiveHz);
+	if (_int9Count % 7 == 0) { // 20mc * 7 = 140ms (~7Hz)
+	  TaskHandler_postTask(&Command_sendDataSevenHz);
 	}
-	
-	//TaskHandler_postTask(&Command_sendDataFiftyHz);
-	
-	
 	
 	/*
 	 * If a heart beat message is not received inbetween two executions

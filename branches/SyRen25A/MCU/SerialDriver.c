@@ -80,6 +80,10 @@ void addToRxSerialBuffer(uint8_t data) {
 uint8_t _serialTxBuffer[SERIAL_TX_BUFFER_SIZE];
 uint16_t _txBuffStartIndx = 0; // points to the next Rx byte to process
 uint16_t _txBuffEndIndx = 0; // points to the location where the next Rx byte should be stored
+
+uint8_t _serialTxBuffer1[SERIAL_TX_BUFFER_SIZE];
+uint16_t _txBuffStartIndx1 = 0; // points to the next Rx byte to process
+uint16_t _txBuffEndIndx1 = 0; // points to the location where the next Rx byte should be stored
 /**
  * Calculates the next index into the serial rx buffer.
  */
@@ -87,7 +91,26 @@ uint16_t nextTxBuffIndx(uint16_t indx) {
 	return (indx + 1) % SERIAL_TX_BUFFER_SIZE;
 }
 
-/**
+/**     //zhaq
+ * Adds a new byte to the serial data buffer.
+ * This is called by a foreground process.  Since it 
+ * does not execute within an interrupt process, it 
+ * returns TRUE if it was successful, FALSE otherwise.
+ */
+bool addToTxSerialBuffer1(uint8_t data) {
+	uint16_t nxtEndIndx = nextTxBuffIndx(_txBuffEndIndx1);
+	if (nxtEndIndx != _txBuffStartIndx1) {
+		_serialTxBuffer1[_txBuffEndIndx1] = data; // save the data
+		_txBuffEndIndx1 = nxtEndIndx; // advance the TX buffer's end index
+		return TRUE;
+	} else {
+		// The serial buffer overflowed!
+		LED_RED3 ^= 1;
+		return FALSE;
+	}
+}
+
+/**   
  * Adds a new byte to the serial data buffer.
  * This is called by a foreground process.  Since it 
  * does not execute within an interrupt process, it 
@@ -106,6 +129,7 @@ bool addToTxSerialBuffer(uint8_t data) {
 	}
 }
 
+
 /**
  * Removes a byte of data from the Tx serial buffer.
  *
@@ -116,6 +140,21 @@ bool removeFromTxSerialBuffer(uint8_t* data) {
 	if (_txBuffStartIndx != _txBuffEndIndx) { // If there is data in the buffer ...
 		(*data) = _serialTxBuffer[_txBuffStartIndx];
 		_txBuffStartIndx = nextTxBuffIndx(_txBuffStartIndx);
+		return TRUE;
+	} else
+		return FALSE;
+}
+
+/**       //zhaq
+ * Removes a byte of data from the Tx serial buffer.
+ *
+ * @param data A pointer to where the data should be stored.
+ * @return TRUE if data was obtained.
+ */
+bool removeFromTxSerialBuffer1(uint8_t* data) {
+	if (_txBuffStartIndx1 != _txBuffEndIndx1) { // If there is data in the buffer ...
+		(*data) = _serialTxBuffer1[_txBuffStartIndx1];
+		_txBuffStartIndx1 = nextTxBuffIndx(_txBuffStartIndx1);
 		return TRUE;
 	} else
 		return FALSE;
@@ -238,7 +277,19 @@ void SerialDriver_sendByte(uint8_t data) {
 	SCI0CR2 = 0xAC; /* arm TDRE */
 }
 
-
+/**    //zhaq
+ * Wait for buffer to be empty, output 8-bit to serial port
+ * interrupt synchronization.
+ *
+ * TODO: Get rid of this busy wait.
+ *
+ * Input: SCI port, 8-bit data to be transferred
+ * Output: none
+ */
+void SerialDriver_sendByte1(uint8_t data) {
+	while (!addToTxSerialBuffer1(data)) { }; // spin if TxFifo is full
+	SCI1CR2 = 0x88; /* arm TDRE */     //zhaq changed 0xAC 
+}
 
 /**
  * This interrupt executes whenever a serial event associated with
@@ -275,17 +326,17 @@ interrupt 20 void SCI0Handler(void) {
  *  - RDRF (Receive Data Register Full) but is set when new data is received
  *  - TDRE (Transmit Data Register Empty) bit is set when transmit data register becomes empty.
  */
-/*interrupt 21 void SCI1Handler(void){
+interrupt 21 void SCI1Handler(void){
 	char data; 
-	if(SCI1SR1 & RDRF) { 
-		RxFifo_Put(1,SCI1DRL); // clears RDRF
-	}
+	//if(SCI1SR1 & RDRF) { 
+//		RxFifo_Put(1,SCI1DRL); // clears RDRF
+//	}
 	
 	if((SCI1CR2 & 0x80) && (SCI1SR1 & TDRE)) {
-		if(TxFifo_Get(1, &data)) {
+		if(removeFromTxSerialBuffer1(&data)) {
 			SCI1DRL = data;   // clears TDRE
 		} else {
 			SCI1CR2 = 0x2c;   // disarm TDRE
 		}
 	}
-}*/
+}
