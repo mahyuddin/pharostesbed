@@ -4,7 +4,7 @@ import java.util.Vector;
 import pharoslabut.behavior.management.WorldModel;
 
 /**
- * A top-level super-clas for all behaviors.
+ * A top-level super-class for all behaviors.
  * 
  * @author Noa Agmon
  * @author Chien-Liang Fok
