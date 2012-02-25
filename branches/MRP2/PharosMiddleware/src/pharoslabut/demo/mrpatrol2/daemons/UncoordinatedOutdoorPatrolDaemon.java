@@ -12,6 +12,7 @@ import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.Location;
+import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
 
 /**
@@ -19,27 +20,23 @@ import pharoslabut.sensors.PathLocalizerOverheadMarkers;
  * 
  * @author Chien-Liang Fok
  */
-public class UncoordinatedOutdoorPatrolDaemon extends PatrolDaemon implements Runnable, WiFiBeaconListener {
-	
-	/**
-	 * The robot's starting location even before the experiment begins.
-	 */
-	private Location homeLocation;
+public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implements Runnable, WiFiBeaconListener {
 	
 	/**
 	 * The constructor.
 	 * 
-	 * @param settings The experiment settings.
+	 * @param expConfig The experiment settings.
+	 * 
 	 * @param lineFollower The line follower.
 	 * @param pathLocalizer The path localizer.
 	 * @param numRounds The number of rounds to patrol.
 	 * @param wifiBeaconBroadcaster The beacon broadcaster.
 	 * @param wifiBeaconReceiver The beacon receiver.
 	 */
-	public UncoordinatedOutdoorPatrolDaemon(ExpConfig expConfig,
+	public UncoordinatedOutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort,
 			WiFiBeaconBroadcaster wifiBeaconBroadcaster, WiFiBeaconReceiver wifiBeaconReceiver) 
 	{
-		super(expConfig);
+		super(expConfig, mobilityPlane, playerServerIP, playerServerPort);
 		
 		// Use beacons just so we can easily synchronize the clocks of everyone.
 		Logger.logDbg("Adding self as beacon listener.");
@@ -66,8 +63,7 @@ public class UncoordinatedOutdoorPatrolDaemon extends PatrolDaemon implements Ru
 		Logger.logDbg("Thread starting at time " + startTime + "...");
 		
 		// Get the home starting location
-		// TODO
-		homeLocation = getCurrentLocation();
+		getHomeLocation();
 		
 		// Go to the starting locations
 		// TODO
