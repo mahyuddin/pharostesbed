@@ -12,6 +12,7 @@ import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.demo.mrpatrol2.config.CoordinationType;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.ExpType;
+import pharoslabut.demo.mrpatrol2.daemons.PatrolDaemon;
 import pharoslabut.demo.mrpatrol2.daemons.UncoordinatedOutdoorPatrolDaemon;
 import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.demo.mrpatrol2.msgs.LoadExpSettingsMsg;
@@ -31,6 +32,7 @@ import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.sensors.RangerDataBuffer;
+import playerclient3.GPSInterface;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
@@ -44,7 +46,7 @@ import playerclient3.structures.PlayerConstants;
  * @see pharoslabut.demo.mrpatrol2.ExpCoordinator
  * @author Chien-Liang Fok
  */
-public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, ProteusOpaqueListener {
+public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	
 	/**
 	 * The name of the local robot.
@@ -64,7 +66,7 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
     /**
      * The player client that connects to the player server.
      */
-	private PlayerClient playerClient = null;
+//	private PlayerClient playerClient = null;
 	
 	/**
 	 * This TCP port on which this server listens.
@@ -98,9 +100,19 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 	private FileLogger debugFileLogger = null;
 	
 	/**
-	 * The message that contains the experiment configuraiton settings.
+	 * The message that contains the experiment configuration settings.
 	 */
 	private ExpConfig expConfig;
+	
+	/**
+	 * The patrol daemon used in this experiment.
+	 */
+	private PatrolDaemon patrolDaemon;
+	
+	/**
+	 * The mobility plane used.
+	 */
+	private MotionArbiter.MotionType mobilityPlane;
 	
 	//private pharoslabut.wifi.UDPRxTx udpTest;
 	
@@ -124,6 +136,8 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
 		
+		this.mobilityPlane = mobilityPlane;
+		
 		/*
 		 * If we're running in debug mode, start logging debug statements even before the experiment begins.
 		 */
@@ -143,89 +157,27 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 			e1.printStackTrace();
 		}
 		
-		if (!initIndoorMRPatrolServer()) {
+		if (!initPatrolServer()) {
 			Logger.logErr("Failed to initialize the Pharos server!");
 			System.exit(1);
 		}
-		
-		if (!createPlayerClient(mobilityPlane)) {
-			Logger.logErr("Failed to connect to Player server!");
-			System.exit(1);
-		}
 	}
 	
 	/**
-	 * Creates the player client and obtains the necessary interfaces from it.
+	 * Initializes this server.  This simply starts the TCPMessageReceiver.
 	 * 
 	 * @return true if successful.
 	 */
-	private boolean createPlayerClient(MotionArbiter.MotionType mobilityPlane) {
-		
-		// Connect to the player server.
-		try {
-			playerClient = new PlayerClient(playerServerIP, playerServerPort);
-		} catch(PlayerException e) {
-			Logger.logErr("Unable to connecting to Player: ");
-			Logger.logErr("    [ " + e.toString() + " ]");
-			return false;
-		}
-		Logger.log("Created player client.");
-		
-		// Subscribe to the ranger proxy.
-//		RangerInterface ri = playerClient.requestInterfaceRanger(0, PlayerConstants.PLAYER_OPEN_MODE);
-//		RangerDataBuffer rangerBuffer = new RangerDataBuffer(ri);
-//		rangerBuffer.start();
-//		Logger.log("Subscribed to the ranger proxy.");
-		
-		Position2DInterface p2di = playerClient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (p2di == null) {
-			Logger.logErr("motors is null");
-			return false;
-		}
-		Position2DBuffer pos2DBuffer = new Position2DBuffer(p2di);
-		pos2DBuffer.start();
-		Logger.logDbg("Subscribed to Position2d proxy.");
-		
-		
-//		// Start the PathLocalizerOverheadMarkers
-//		pathLocalizer = new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer);
-//		Logger.log("Created the PathLocalizerOverheadMarkers.");
-//		
-//		// Start the robot following the line
-//		lineFollower = new LineFollower(playerClient);
-//		Logger.log("Created the line follower.");
-		
-		Logger.log("Subscribing to opaque interface.");
-		ProteusOpaqueInterface oi = (ProteusOpaqueInterface)playerClient.requestInterfaceOpaque(0, PlayerConstants.PLAYER_OPEN_MODE);
-		if (oi == null) {
-			Logger.logErr("opaque interface is null");
-			return false;
-		} else {
-			oi.addOpaqueListener(this);
-			Logger.log("Subscribed to opaque proxy.");
-		}
-		
-		Logger.log("Changing Player server mode to PUSH...");
-		playerClient.requestDataDeliveryMode(playerclient3.structures.PlayerConstants.PLAYER_DATAMODE_PUSH);
-		
-		Logger.log("Setting Player Client to run in continuous threaded mode...");
-		playerClient.runThreaded(-1, -1);
-		
-		return true;
-	}
-	
-	/**
-	 * Initializes this server.
-	 * 
-	 * @return true if successful.
-	 */
-	private boolean initIndoorMRPatrolServer() {
+	private boolean initPatrolServer() {
 		new TCPMessageReceiver(this, serverPort);
 		return true;
 	}
 	
 	/**
-     * Initializes the components that transmit and receive beacons.
+     * Initializes the components that transmit and receive beacons.  This does not
+     * actually start transmitting beacons.  To start transmitting beacons, a beacon
+     * must be set in the WiFiBeaconBroadcaster and the start() method must be called
+     * on this object.
      * 
      * @return true if successful.
      */
@@ -319,7 +271,7 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 			stopExp();
 			break;
 		default:
-			Logger.log("Unknown Message: " + msg);
+			patrolDaemon.newMessage(msg);
 		}
 	}
 	
@@ -329,32 +281,28 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 	
 	/**
 	 * Starts the experiment.
-	 * 
 	 */
 	private void startExp() {
 		
-		// Start the file logger and set it in the Logger.
+		// Start the file logger...
 		String fileName = expConfig.getExpName() + "-" + robotName + "-MRPatrol2_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		FileLogger expFlogger = new FileLogger(fileName);
 		Logger.setFileLogger(expFlogger);
 		
 		Logger.log("Starting experiment at time " + System.currentTimeMillis() + "...");
-		
-		// Start the individual components
-//		if (compassDataBuffer != null)			compassDataBuffer.start();
-		
-//		pathLocalizer.start();
-//        
-//        ContextHandler contextHandler = ContextHandler.getInstance();
-//        ExpType expType = startExpMsg.getExpType();
-
         Logger.log("Patrol type: " + expConfig.getExpType());
         
         switch (expConfig.getExpType()) {
 			case INDOOR:
 				// to do...
+				Logger.logDbg("Indoor experiments not implemented yet.");
+				break;
 			case OUTDOOR:
 				startOutdoorExp();
+				break;
+			default:
+				Logger.logErr("Unknown experiment type " + expConfig.getExpType());
+				System.exit(1);
 		}
 		
 	}
@@ -371,7 +319,7 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
         
         switch(expConfig.getCoordinationType()) {
         case NONE:
-        	new UncoordinatedOutdoorPatrolDaemon(expConfig, wifiBeaconBroadcaster, wifiBeaconReceiver);
+        	patrolDaemon = new UncoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, playerServerIP, playerServerPort, wifiBeaconBroadcaster, wifiBeaconReceiver);
         	break;
         case PASSIVE:
         	break;
@@ -429,13 +377,7 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener, Pro
 		Logger.setFileLogger(debugFileLogger);
 	}
 	
-	@Override
-	public void newOpaqueData(ProteusOpaqueData opaqueData) {
-		if (opaqueData.getDataCount() > 0) {
-			String s = new String(opaqueData.getData());
-			Logger.log("MCU Message: " + s);
-		}
-	}
+	
 	
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
