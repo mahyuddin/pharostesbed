@@ -105,7 +105,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		Logger.logDbg("Resetting the odometer...");
 		motors.resetOdometry();
 		
-		Logger.logDbg("Listening for Position2D events (odmeter data)...");
+		Logger.logDbg("Listening for Position2D events (odometer data)...");
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
