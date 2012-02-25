@@ -5,10 +5,12 @@ import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.beacon.WiFiBeaconListener;
 import pharoslabut.beacon.WiFiBeaconReceiver;
+import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
 import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.exceptions.PharosException;
+import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.Location;
@@ -57,16 +59,31 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 	}
 	
 	@Override
+	public void newMessage(Message msg) {
+		// TODO Auto-generated method stub
+		
+	}
+	
+	@Override
 	public void run() {
 		long startTime = System.currentTimeMillis();
+		RobotExpSettings mySettings = expConfig.getMySettings();
+		String firstWaypointName = mySettings.getFirstWaypoint();
 		
 		Logger.logDbg("Thread starting at time " + startTime + "...");
 		
 		// Get the home starting location
-		getHomeLocation();
+		saveHomeLocation();
 		
-		// Go to the starting locations
-		// TODO
+		// Go to the starting location
+		Location firstWaypoint = expConfig.getWaypoint(firstWaypointName);
+		if (firstWaypoint != null) {
+			Logger.log("Going to first waypoint " + firstWaypoint);
+			goToLocation(firstWaypoint);
+		} else {
+			Logger.logErr("Unable to go to first waypoint.");
+			System.exit(1);
+		}
 		
 		// Wait till it's time to start.
 		long currTime = System.currentTimeMillis();
@@ -83,42 +100,37 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 		}
 		
 		// For each round...
+		int wpCount = 1;  // A counter for the number of waypoints visited.  Starts at 1 b/c robot is already at first waypoint.
 		for (int round = 0; round < expConfig.getNumRounds(); round++) {
-			// Go to each waypoint along the route
+			Logger.logDbg("Begin patrol round " + round);
+			
+			int wpIndx = (expConfig.getWaypointIndex(firstWaypointName) + 1) % expConfig.getNumWaypoints();
+			
+			// Visit each waypoint in the patrol route...
+			for (int wpCnt = 0; wpCnt < expConfig.getNumWaypoints(); wpCnt++) {
+				Waypoint wp = expConfig.getWaypoint(wpIndx);
+				Logger.logDbg("Going to waypoint " + wpIndx + ", name = " + wp.getName() + ", loc = " + wp.getLoc() + ", num waypoints visited = " + wpCount);
+				goToLocation(wp.getLoc());
+				
+				wpIndx++; wpCount++;
+				wpIndx %= expConfig.getNumWaypoints();
+			}
 			
 		}
 		
 		// Go back to the home location.
-		
-//		if (!checkDone()) {
-//			while (!checkDone()) {
-//				
-				// Go to each waypoint in the route!
-//				synchronized(this) {
-//					if (!numMarkersSeenUpdated) {
-//						try {
-//							this.wait();
-//						} catch (InterruptedException e) {
-//							Logger.logErr("Exception while waiting: [" + e.getMessage() + "]");
-//							e.printStackTrace();
-//						}
-//					} else
-//						numMarkersSeenUpdated = false;
-//				}
-//			}
-//		} else {
-//			Logger.log("WARNING: The experiment was completed even before it started!");
-//			System.exit(0);
-//		}
+		Logger.logDbg("Completed patrolling the route " + expConfig.getNumRounds() + " times.  Heading back to home location.");
+		gotoHomeLocation();
 		
 		Logger.log("Experiment completed!");
-		//lineFollower.stop();
 		Logger.log("Program exiting.");
 		System.exit(0);
 	}
 
 	/**
-	 * This is only used for time synchronization.
+	 * This is only used for off-line time synchronization.  I.e., when analyzing the
+	 * log files of multiple robots, the transmission time can be compared with the
+	 * reception time to determine how far off the various clocks are.
 	 */
 	@Override
 	public void beaconReceived(WiFiBeaconEvent be) {
@@ -135,6 +147,5 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 					+ beacon.getAddress() + ")");
 			e.printStackTrace();
 		}
-		
 	}
 }

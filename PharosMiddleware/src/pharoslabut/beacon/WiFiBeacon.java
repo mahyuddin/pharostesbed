@@ -51,9 +51,9 @@ public class WiFiBeacon implements java.io.Serializable {
 	/**
 	 * This constructor is used during the analysis of log files.
 	 * 
-	 * @param ipAddress
-	 * @param port
-	 * @param seqNum
+	 * @param address The address of this host.
+	 * @param port The single-cast port number being used.
+	 * @param seqNum The beacon's sequence number.
 	 */
 	public WiFiBeacon(String ipAddress, int port, long seqNum) {
 		try {
