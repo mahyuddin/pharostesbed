@@ -437,6 +437,41 @@ public class ExpConfig implements java.io.Serializable {
 		return waypoints;
 	}
 	
+	/**
+	 * Returns the index of a particular waypoint in the patrol route.  The index
+	 * is the order of the waypoints in the route.  The first waypoint has index 0.
+	 * This method terminates the program if the waypoint does not exist.
+	 * 
+	 * @param waypointName The name of the waypoint.
+	 * @return The index of the waypoint.
+	 */
+	public int getWaypointIndex(String waypointName) {
+		for (int i=0; i < waypoints.size(); i++) {
+			if (waypoints.get(i).getName().equals(waypointName))
+				return i;
+		}
+		Logger.logErr("Unable to get index of waypoint with name \"" + waypointName + "\"");
+		System.exit(1);
+		return -1;
+	}
+	
+	/**
+	 * Returns the waypoint with a specific index. The first waypoint in the route has index 0.
+	 *  This method terminates the program if a waypoint with the specified index does not exist.
+	 * 
+	 * @param index The index of the waypoint.  
+	 * @return The waypoint at the specified index.
+	 */
+	public Waypoint getWaypoint(int index) {
+		if (index >= 0 && index < waypoints.size())
+			return waypoints.get(index);
+		else {
+			Logger.logErr("Unable to get waypoint with index " + index);
+			System.exit(1);
+			return null;
+		}
+	}
+	
 	public String toString() {
 		StringBuffer sb = new StringBuffer(getClass().getName() + "\n");
 		sb.append("\tExp name = " + getExpName() + "\n");

@@ -4,13 +4,17 @@ package pharoslabut.demo.mrpatrol2.daemons;
 import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
+import pharoslabut.sensors.Position2DBuffer;
+import pharoslabut.sensors.Position2DListener;
 import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
+import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 
 /**
  * The top-level class of all PatrolDaemons used in the multi-robot patrol 2 (MRP2)
@@ -18,7 +22,7 @@ import playerclient3.structures.PlayerConstants;
  * 
  * @author Chien-Liang Fok
  */
-public abstract class PatrolDaemon implements ProteusOpaqueListener {
+public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DListener {
 	/**
 	 * The experiment configuration.
 	 */
@@ -60,6 +64,11 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener {
 	protected PlayerClient playerClient;
 	
 	/**
+	 * Provides access to the mobility plane.
+	 */
+	protected Position2DInterface motors;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param expConfig The experiment settings.
@@ -96,6 +105,24 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener {
 		} else {
 			oi.addOpaqueListener(this);
 		}
+		
+		Logger.logDbg("Subscribing to motor interface...");
+		motors = playerClient.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
+		if (motors == null) {
+			Logger.logErr("Motors is null");
+			System.exit(1);
+		}
+		
+		Logger.logDbg("Listening for Position2D events (odometer data)...");
+		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
+		p2dBuff.addPos2DListener(this);
+		p2dBuff.start();
+		
+	}
+	
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		Logger.log(data.toString());
 	}
 	
 	/**
@@ -103,9 +130,7 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener {
 	 * 
 	 * @param msg The incoming message.
 	 */
-	public void newMessage(Message msg) {
-		
-	}
+	public abstract void newMessage(Message msg);
 	
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {
