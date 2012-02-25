@@ -4,11 +4,14 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Vector;
 
+import pharoslabut.RobotIPAssignments;
 import pharoslabut.demo.mrpatrol2.Waypoint;
+import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 
@@ -17,7 +20,9 @@ import pharoslabut.navigate.Location;
  * 
  * @author Chien-Liang Fok
  */
-public class ExpConfig {
+public class ExpConfig implements java.io.Serializable {
+	
+	private static final long serialVersionUID = -6844595389153177043L;
 
 	/**
 	 * The name of the experiment.
@@ -360,6 +365,10 @@ public class ExpConfig {
 		return networkType;
 	}
 	
+	/**
+	 * 
+	 * @return The start delay time in seconds.
+	 */
 	public long getStartDelay() {
 		return startDelay;
 	}
@@ -386,6 +395,38 @@ public class ExpConfig {
 	
 	public Iterator<RobotExpSettings> getRobotItr() {
 		return team.iterator();
+	}
+	
+	/**
+	 * 
+	 * @return The experiment settings for the local robot.  Returns null
+	 * if no settings for the local robot are found.
+	 */
+	public RobotExpSettings getMySettings() {
+		
+		InetAddress pharosIP = null;
+		try {
+			InetAddress.getByName(RobotIPAssignments.getAdHocIP());
+		} catch (PharosException e1) {
+			Logger.logErr("Unable to get ad hoc IP address: " + e1.getMessage());
+			e1.printStackTrace();
+			return null;
+		} catch (UnknownHostException e) {
+			Logger.logErr("Failed to get ad hoc IP address: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
+		
+		
+		Enumeration<RobotExpSettings> e = team.elements();
+		while (e.hasMoreElements()) {
+			RobotExpSettings res = e.nextElement();
+			if (res.getIP().equals(pharosIP))
+				return res;
+		}
+		
+		Logger.logErr("Unble to find RobotExpSettings for robot with IP " + pharosIP);
+		return null;
 	}
 	
 	public Vector<RobotExpSettings> getTeam() {
