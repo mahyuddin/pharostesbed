@@ -21,7 +21,7 @@ import pharoslabut.navigate.MotionArbiter;
  * 
  * @author Chien-Liang Fok
  */
-public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implements WiFiBeaconListener {
+public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 	
 	/**
 	 * The constructor.
@@ -121,27 +121,5 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 		addBehavior(bHome);
 		
 		Logger.logDbg("Creating behavior " + bHome);
-	}
-
-	/**
-	 * This is only used for off-line time synchronization.  I.e., when analyzing the
-	 * log files of multiple robots, the transmission time can be compared with the
-	 * reception time to determine how far off the various clocks are.
-	 */
-	@Override
-	public void beaconReceived(WiFiBeaconEvent be) {
-		BeaconMsg beacon = (BeaconMsg)be.getBeacon();
-		try {
-			if (beacon.getSenderID() == RobotIPAssignments.getID()) {
-				Logger.log("Ignoring my own beacon.");
-			} else {
-				String robotName = RobotIPAssignments.getName(beacon.getAddress());
-				Logger.logDbg("Received beacon from " + robotName);
-			}
-		} catch (PharosException e) {
-			Logger.logErr("While processing beacon, unable to determine robot's name based on its IP address (" 
-					+ beacon.getAddress() + ")");
-			e.printStackTrace();
-		}
 	}
 }

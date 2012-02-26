@@ -16,6 +16,7 @@ import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
+import pharoslabut.beacon.WiFiBeaconListener;
 import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
@@ -32,7 +33,7 @@ import playerclient3.structures.position2d.PlayerPosition2dData;
  * 
  * @author Chien-Liang Fok
  */
-public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DListener, Runnable {
+public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DListener, Runnable, WiFiBeaconListener {
 	/**
 	 * The experiment configuration.
 	 */
