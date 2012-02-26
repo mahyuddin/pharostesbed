@@ -11,7 +11,7 @@ import pharoslabut.RobotIPAssignments;
  * transmitting the beacon.
  *
  * @author Chien-Liang Fok
- * @version 11/09/2010
+ * @version 02/26/2012
  */
 public class WiFiBeacon implements java.io.Serializable {
 	private static final long serialVersionUID = 5257691949384329827L;
@@ -30,6 +30,11 @@ public class WiFiBeacon implements java.io.Serializable {
      * A unique sequence number.
      */
     private long seqNum = 0;
+    
+    /**
+     * The timestamp as recorded by the transmitter's system clock.
+     */
+    private long timestamp;
 	
     /**
      * A default constructor for allowing subclasses to be serializable.
@@ -64,6 +69,21 @@ public class WiFiBeacon implements java.io.Serializable {
 		}
 		this.port = port;
 		this.seqNum = seqNum;
+	}
+	
+	/**
+	 * 
+	 * @return The timestamp.
+	 */
+	public long getTimestamp() {
+		return timestamp;
+	}
+	
+	/**
+	 * Updates this beacon's timestamp.
+	 */
+	public void updateTimestamp() {
+		timestamp = System.currentTimeMillis();
 	}
 	
 	/**
@@ -105,7 +125,7 @@ public class WiFiBeacon implements java.io.Serializable {
 	 */
 	public String toString() {
 		StringBuffer sBuff = new StringBuffer("(");
-		sBuff.append(address.getHostAddress() + ":" + port + "," + seqNum + ")");
+		sBuff.append(address.getHostAddress() + ":" + port + "," + seqNum + ", " + timestamp + ")");
 		return sBuff.toString();
 	}
 }
