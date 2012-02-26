@@ -1,6 +1,9 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
@@ -10,6 +13,7 @@ import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
+import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
@@ -22,7 +26,7 @@ import playerclient3.structures.position2d.PlayerPosition2dData;
  * 
  * @author Chien-Liang Fok
  */
-public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DListener {
+public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DListener, Runnable {
 	/**
 	 * The experiment configuration.
 	 */
@@ -36,7 +40,7 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 	/**
 	 * The number of waypoints visited.
 	 */
-	protected volatile int numWaypointsVisited = 0;
+//	protected volatile int numWaypointsVisited = 0;
 	
 	/**
 	 * Whether the experiment is done.
@@ -67,6 +71,11 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 	 * Provides access to the mobility plane.
 	 */
 	protected Position2DInterface motors;
+	
+	/**
+	 * The behaviors of the patrol daemon.
+	 */
+	private Vector<Behavior> behaviors = new Vector<Behavior>();
 	
 	/**
 	 * The constructor.
@@ -139,30 +148,61 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 			Logger.log("MCU Message: " + s);
 		}
 	}
-	
-//	/**
-//	 * This is called whenever a marker is detected.
-//	 */
-//	@Override
-//	public void markerEvent(int numMarkers, double distance) {
-//		Logger.log("MARKER DETECTED: Total = " + numMarkers + ", At marker " + (startingMarkerID + numMarkers) % numMarkersPerRound);
-//		synchronized(this) {
-//			this.numMarkersSeen = numMarkers;
-//			this.numMarkersSeenUpdated = true;
-//			this.notifyAll();
-//		}
-//	}
 
+//	/**
+//	 * Checks whether the experiment is done.  The experiment is done when
+//	 * the number of markers seen is equal to the number of markers per round
+//	 * times the number of rounds in the experiment.
+//	 * 
+//	 * @return True if the experiment is done.
+//	 */
+//	protected boolean checkDone() {
+//		int numWaypointsVisitedWhenDone = expConfig.getNumWaypoints() * expConfig.getNumRounds();
+//		Logger.logDbg("Waypoints visited = " + numWaypointsVisited + ", total when done = " + numWaypointsVisitedWhenDone);
+//		return numWaypointsVisited >= numWaypointsVisitedWhenDone;
+//	}
+	
 	/**
-	 * Checks whether the experiment is done.  The experiment is done when
-	 * the number of markers seen is equal to the number of markers per round
-	 * times the number of rounds in the experiment.
+	 * Adds a behavior to this daemon.
 	 * 
-	 * @return True if the experiment is done.
+	 * @param b The behavior to add.
 	 */
-	protected boolean checkDone() {
-		int numWaypointsVisitedWhenDone = expConfig.getNumWaypoints() * expConfig.getNumRounds();
-		Logger.logDbg("Waypoints visited = " + numWaypointsVisited + ", total when done = " + numWaypointsVisitedWhenDone);
-		return numWaypointsVisited >= numWaypointsVisitedWhenDone;
+	protected void addBehavior(Behavior b) {
+		behaviors.add(b);
+	}
+	
+	@Override
+	public void run() {
+		long startTime = System.currentTimeMillis();
+		Logger.logDbg("Thread starting at time " + startTime + "...");
+		
+		while (true) {
+			int numDone = 0;
+			
+			// Go through each behavior and start those that can start
+			Enumeration<Behavior> e = behaviors.elements();
+			while (e.hasMoreElements()) {
+				Behavior b = e.nextElement();
+				if (b.canStart()) {
+					b.start();
+				} else if (b.isDone())
+					numDone++;
+			}
+			
+			if (numDone == behaviors.size()) {
+				Logger.log("All behaviors done!");
+				Logger.log("Experiment completed!");
+				Logger.log("Program exiting.");
+				System.exit(0);
+			}
+			
+			synchronized(this) {
+				try {
+					this.wait(100);  // have daemon thread cycle at 10Hz
+				} catch (InterruptedException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
 	}
 }

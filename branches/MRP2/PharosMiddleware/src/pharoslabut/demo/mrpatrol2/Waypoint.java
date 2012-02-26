@@ -15,9 +15,16 @@ public class Waypoint implements java.io.Serializable {
 	
 	private Location loc;
 	
-	public Waypoint(String name, Location loc) {
+	/**
+	 * The maximum speed in m/s at which the robot should travel 
+	 * towards the waypoint. 
+	 */
+	private double speed;
+	
+	public Waypoint(String name, Location loc, double speed) {
 		this.name = name;
 		this.loc = loc;
+		this.speed = speed;
 	}
 	
 	public String getName() {
@@ -28,7 +35,11 @@ public class Waypoint implements java.io.Serializable {
 		return loc;
 	}
 	
+	public double getSpeed() {
+		return speed;
+	}
+	
 	public String toString() {
-		return name + ", " + loc;
+		return "Waypoint " + name + ", " + loc + ", " + speed + " m/s";
 	}
 }

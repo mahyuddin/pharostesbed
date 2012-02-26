@@ -120,10 +120,10 @@ public class ExpConfig implements java.io.Serializable {
 						String[] elem = line.split("[\\s]+");
 						try {
 							expName = elem[1];
-							Logger.log("Experiment name: " + expName);
+//							Logger.log("Experiment name: " + expName);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("EXP_TYPE")) {
@@ -138,10 +138,10 @@ public class ExpConfig implements java.io.Serializable {
 								System.err.println("Unknown experiment type " + elem[1]);
 								System.exit(1);	
 							}
-							Logger.log("Experiment type: " + expType);
+//							Logger.log("Experiment type: " + expType);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("COORDINATION_TYPE")) {
@@ -157,13 +157,13 @@ public class ExpConfig implements java.io.Serializable {
 							else if (coordTypeStr.equals("ANTICIPATED_VARIABLE"))
 								coordType = CoordinationType.ANTICIPATED_VARIABLE;
 							else {
-								System.err.println("Unknown coordination type " + elem[1]);
+								Logger.logErr("Unknown coordination type " + elem[1]);
 								System.exit(1);	
 							}
-							Logger.log("Coordination type: " + coordType);
+//							Logger.log("Coordination type: " + coordType);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("COORDINATION_STRENGTH")) {
@@ -175,13 +175,13 @@ public class ExpConfig implements java.io.Serializable {
 							else if (coordStrengthStr.equals("TIGHT"))
 								coordStrength = CoordinationStrength.TIGHT;
 							else {
-								System.err.println("Unknown coordination strength " + elem[1]);
+								Logger.logErr("Unknown coordination strength " + elem[1]);
 								System.exit(1);	
 							}
-							Logger.log("Coordination strength: " + coordStrength);
+//							Logger.log("Coordination strength: " + coordStrength);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("COORDINATION_INFO")) {
@@ -193,10 +193,10 @@ public class ExpConfig implements java.io.Serializable {
 							else if (coordInfoStr.equals("GLOBAL"))
 								coordInfo = CoordinationInfo.GLOBAL;
 							else {
-								System.err.println("Unknown coordination info " + elem[1]);
+								Logger.logErr("Unknown coordination info " + elem[1]);
 								System.exit(1);	
 							}
-							Logger.log("Coordination info: " + coordInfo);
+//							Logger.log("Coordination info: " + coordInfo);
 						} catch(Exception e) {
 							e.printStackTrace();
 							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
@@ -211,33 +211,45 @@ public class ExpConfig implements java.io.Serializable {
 							else if (coordInfoStr.equals("P2P"))
 								networkType = NetworkType.P2P;
 							else {
-								System.err.println("Unknown network type " + elem[1]);
+								Logger.logErr("Unknown network type " + elem[1]);
 								System.exit(1);	
 							}
-							Logger.log("Network type: " + networkType);
+//							Logger.log("Network type: " + networkType);
 						} catch(Exception e) {
 							e.printStackTrace();
 							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("START_DELAY")) {
-						String[] elem = line.split("[\\s]+");
-						startDelay = Long.valueOf(elem[1]);
-						Logger.log("Start delay: " + startDelay);
+						try {
+							String[] elem = line.split("[\\s]+");
+							startDelay = Long.valueOf(elem[1]);
+						} catch(Exception e) {
+							e.printStackTrace();
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							System.exit(1);
+						}
+//						Logger.log("Start delay: " + startDelay);
 					} else if (line.contains("CENTRAL_COORDINATOR")) {
 						String[] elem = line.split("[\\s]+");
 						try {
 							coordinatorIP = InetAddress.getByName(elem[1]);
 							coordinatorPort = Integer.valueOf(elem[2]);
-							Logger.log("Coordinator: IP: " + coordinatorIP + ", port: " + coordinatorPort);
+//							Logger.log("Coordinator: IP: " + coordinatorIP + ", port: " + coordinatorPort);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("NUM_ROUNDS")) {
-						String[] elem = line.split("[\\s]+");
-						numRounds = Integer.valueOf(elem[1]);
+						try {
+							String[] elem = line.split("[\\s]+");
+							numRounds = Integer.valueOf(elem[1]);
+						} catch(Exception e) {
+							e.printStackTrace();
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							System.exit(1);
+						}
 					} else if (line.contains("ROBOT")) {
 						try {
 							String[] elem = line.split("[\\s]+");
@@ -250,7 +262,7 @@ public class ExpConfig implements java.io.Serializable {
 							team.add(rs);
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else if (line.contains("WAYPOINT")) {
@@ -259,12 +271,13 @@ public class ExpConfig implements java.io.Serializable {
 							String name = elem[1];
 							double latitude = Double.valueOf(elem[2]);
 							double longitude = Double.valueOf(elem[3]);
+							double speed = Double.valueOf(elem[4]);
 							Location loc = new Location(latitude, longitude);
 							
-							waypoints.add(new Waypoint(name, loc));
+							waypoints.add(new Waypoint(name, loc, speed));
 						} catch(Exception e) {
 							e.printStackTrace();
-							System.err.println("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
 					} else {
@@ -483,16 +496,19 @@ public class ExpConfig implements java.io.Serializable {
 		sb.append("\tStart delay = " + startDelay + "\n");
 		sb.append("\tCentral Coordinator = " + getCoordinatorIP() + ":" + getCoordinatorPort() + "\n");
 		sb.append("\tNum Rounds = " + getNumRounds() + "\n");
-		sb.append("\tRobots:\n");
-		Iterator<RobotExpSettings> itr = team.iterator();
-		while (itr.hasNext()) {
-			sb.append("\t\t" + itr.next().toString() + "\n");
-		}
+		
 		sb.append("\tWaypoints:\n");
 		Iterator<Waypoint> wp = waypoints.iterator();
 		while (wp.hasNext()) {
 			sb.append("\t\t" + wp.next().toString() + "\n");
 		}
+		
+		sb.append("\tRobots:\n");
+		Iterator<RobotExpSettings> itr = team.iterator();
+		while (itr.hasNext()) {
+			sb.append("\t\t" + itr.next().toString() + "\n");
+		}
+		
 		return sb.toString();
 	}
 }
