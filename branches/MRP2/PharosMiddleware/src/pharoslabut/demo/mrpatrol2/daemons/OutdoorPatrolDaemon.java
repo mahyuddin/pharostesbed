@@ -1,7 +1,11 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
+import pharoslabut.RobotIPAssignments;
+import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
+import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.exceptions.NoNewDataException;
+import pharoslabut.exceptions.PharosException;
 //import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
@@ -160,25 +164,26 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 		return result;
 	}
 	
-//	/**
-//	 * Moves the robot to the home location.
-//	 */
-//	protected void gotoHomeLocation() {
-//		if (homeLocation != null) {
-//			Logger.logDbg("Going to home location " + homeLocation);
-//			goToLocation(homeLocation);
-//		} else {
-//			Logger.logErr("Home location not set!");
-//			System.exit(1);
-//		}
-//	}
-	
-//	protected void goToLocation(Location loc) {
-//		if (navigatorCompassGPS != null) {
-//			navigatorCompassGPS.go(loc, SPEED_TO_HOME);
-//		} else {
-//			Logger.logErr("Navigator not initialized.");
-//			System.exit(1);
-//		}
-//	}
+	/**
+	 * This is only used for off-line time synchronization.  I.e., when analyzing the
+	 * log files of multiple robots, the transmission time can be compared with the
+	 * reception time to determine how far off the various clocks are.
+	 */
+	@Override
+	public void beaconReceived(WiFiBeaconEvent be) {
+		BeaconMsg beacon = (BeaconMsg)be.getBeacon();
+		try {
+			if (beacon.getSenderID() == RobotIPAssignments.getID()) {
+				Logger.logDbg("Ignoring my own beacon.");
+			} else {
+				String robotName = RobotIPAssignments.getName(beacon.getAddress());
+				long deltaTime = System.currentTimeMillis() - beacon.getTimestamp();
+				Logger.logDbg("Received beacon from " + robotName + ", transmission time = " + deltaTime);
+			}
+		} catch (PharosException e) {
+			Logger.logErr("While processing beacon, unable to determine robot's name based on its IP address (" 
+					+ beacon.getAddress() + ")");
+			e.printStackTrace();
+		}
+	}
 }
