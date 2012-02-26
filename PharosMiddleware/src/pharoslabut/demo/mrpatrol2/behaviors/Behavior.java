@@ -3,7 +3,7 @@ package pharoslabut.demo.mrpatrol2.behaviors;
 import java.util.Enumeration;
 import java.util.Vector;
 
-import pharoslabut.demo.mrpatrol2.config.ExpConfig;
+//import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.logger.Logger;
 
 /**
@@ -105,6 +105,7 @@ public abstract class Behavior implements Runnable {
 	public void start() {
 		started = true;
 		startTime = System.currentTimeMillis();
+		Logger.log("Behavior " + getName() + " starting at time " + startTime);
 		new Thread(this).start();
 	}
 

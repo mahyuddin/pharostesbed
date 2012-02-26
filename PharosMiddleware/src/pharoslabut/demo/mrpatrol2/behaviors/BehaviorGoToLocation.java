@@ -39,7 +39,6 @@ public class BehaviorGoToLocation extends Behavior {
 	
 	@Override
 	public void run() {
-		Logger.log("Behavior " + getName() + " starting.");
 		navigatorCompassGPS.go(destLoc, speed);
 		isDone = true;
 		Logger.log("Behavior " + getName() + " done.");

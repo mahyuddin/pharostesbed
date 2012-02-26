@@ -18,6 +18,11 @@ import java.util.*;
  */
 public class LoadExpSettingsMsg implements Message {
 	
+	private static final long serialVersionUID = 8887305031683467554L;
+	
+	/**
+	 * The experiment configuration.
+	 */
 	private ExpConfig expConfig;
 	
 	/**
