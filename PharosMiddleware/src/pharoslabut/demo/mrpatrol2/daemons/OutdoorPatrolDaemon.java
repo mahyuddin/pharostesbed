@@ -2,15 +2,15 @@ package pharoslabut.demo.mrpatrol2.daemons;
 
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.exceptions.NoNewDataException;
-import pharoslabut.io.Message;
+//import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.navigate.NavigateCompassGPS;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
-import pharoslabut.sensors.Position2DBuffer;
-import pharoslabut.sensors.Position2DListener;
+//import pharoslabut.sensors.Position2DBuffer;
+//import pharoslabut.sensors.Position2DListener;
 import playerclient3.GPSInterface;
 //import playerclient3.PlayerClient;
 //import playerclient3.PlayerException;
@@ -43,7 +43,7 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	 * starting the experiment and to which the robot should move after the
 	 * end of the experiment.
 	 */
-	private Location homeLocation;
+	//private Location homeLocation;
 	
 	/**
 	 * A buffer for incoming compass data.
@@ -63,10 +63,10 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	/**
 	 * Navigates a robot from its current location to a specified location.
 	 */
-	private NavigateCompassGPS navigatorCompassGPS;
+	protected NavigateCompassGPS navigatorCompassGPS;
 	
 	/**
-	 * The constructor.
+	 * The constructor.  It initializes the player client for outdoor patrol daemons.
 	 * 
 	 * @param expConfig The experiment configuration.
 	 * @param mobilityPlane The mobility plane used.
@@ -135,13 +135,16 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	}
 	
 	/**
-	 * Obtains the robot's home location.  This is a blocking call until GPS data becomes available.
-	 * The home location is saved in variable 'homeLocation'.
+	 * Obtains the robot's location.  This is a blocking call until GPS data becomes available.
+	 * 
+	 * @return The current GPS location
 	 */
-	protected void saveHomeLocation() {
-		while (homeLocation == null) {
+	protected Location getLocation() {
+		Location result = null;
+		
+		while (result == null) {
 			try {
-				homeLocation = new Location(gpsDataBuffer.getCurrLoc());
+				result = new Location(gpsDataBuffer.getCurrLoc());
 			} catch(NoNewDataException e) {
 				Logger.logDbg("No GPS data, pausing for one second then trying again...");
 				synchronized(this) {
@@ -153,28 +156,29 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 				}
 			}
 		}
-		Logger.logDbg("Home location: " + homeLocation);
+		Logger.logDbg("Current location: " + result);
+		return result;
 	}
 	
-	/**
-	 * Moves the robot to the home location.
-	 */
-	protected void gotoHomeLocation() {
-		if (homeLocation != null) {
-			Logger.logDbg("Going to home location " + homeLocation);
-			goToLocation(homeLocation);
-		} else {
-			Logger.logErr("Home location not set!");
-			System.exit(1);
-		}
-	}
+//	/**
+//	 * Moves the robot to the home location.
+//	 */
+//	protected void gotoHomeLocation() {
+//		if (homeLocation != null) {
+//			Logger.logDbg("Going to home location " + homeLocation);
+//			goToLocation(homeLocation);
+//		} else {
+//			Logger.logErr("Home location not set!");
+//			System.exit(1);
+//		}
+//	}
 	
-	protected void goToLocation(Location loc) {
-		if (navigatorCompassGPS != null) {
-			navigatorCompassGPS.go(loc, SPEED_TO_HOME);
-		} else {
-			Logger.logErr("Navigator not initialized.");
-			System.exit(1);
-		}
-	}
+//	protected void goToLocation(Location loc) {
+//		if (navigatorCompassGPS != null) {
+//			navigatorCompassGPS.go(loc, SPEED_TO_HOME);
+//		} else {
+//			Logger.logErr("Navigator not initialized.");
+//			System.exit(1);
+//		}
+//	}
 }
