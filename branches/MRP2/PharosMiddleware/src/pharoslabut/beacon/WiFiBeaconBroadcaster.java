@@ -128,6 +128,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 			try{
 				ByteArrayOutputStream bs = new ByteArrayOutputStream();
 				ObjectOutputStream os = new ObjectOutputStream(bs);
+				beacon.updateTimestamp();
 				os.writeObject(beacon);
 				os.flush();
 				os.close();
