@@ -267,6 +267,9 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
         	break;
         case ANTICIPATED_VARIABLE:
         	break;
+        default:
+        	Logger.logErr("Unknown coordination type " + expConfig.getCoordinationType());
+        	System.exit(1);
         }
         
         if (patrolDaemon != null) {
@@ -284,7 +287,7 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 //			motionArbiter.setFileLogger(null);
 //		}
 		
-		Logger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
+		Logger.log("Stopping the Patrol Daemon.");
 		if (patrolDaemon != null) {
 //			wifiBeaconBroadcaster.setFileLogger(null);
 			patrolDaemon.stop();
