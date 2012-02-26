@@ -21,7 +21,7 @@ import pharoslabut.navigate.MotionArbiter;
  * 
  * @author Chien-Liang Fok
  */
-public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implements WiFiBeaconListener {
+public class LooselyCoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implements WiFiBeaconListener {
 	
 	/**
 	 * The constructor.
@@ -33,7 +33,8 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 	 * @param mCastAddress The multi-cast address for transmitting beacons.
 	 * @param mCastPort The multi-cast port for transmitting beacons.
 	 */
-	public UncoordinatedOutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort,
+	public LooselyCoordinatedOutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, 
+			String playerServerIP, int playerServerPort,
 			String mCastAddress, int mCastPort) 
 	{
 		super(expConfig, mobilityPlane, playerServerIP, playerServerPort, mCastAddress, mCastPort);
