@@ -112,7 +112,10 @@ public class ExpCoordinator {
 				else if (args[i].equals("-debug") || args[i].equals("-d")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
-				else {
+				else if (args[i].equals("-h")) {
+					usage();
+					System.exit(1);
+				} else {
 					System.setProperty ("PharosMiddleware.debug", "true");
 					print("Unknown parameter: " + args[i]);
 					usage();

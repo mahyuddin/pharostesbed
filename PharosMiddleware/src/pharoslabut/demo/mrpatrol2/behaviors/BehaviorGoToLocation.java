@@ -35,6 +35,8 @@ public class BehaviorGoToLocation extends Behavior {
 	public BehaviorGoToLocation(String name, NavigateCompassGPS navigatorCompassGPS, Location destLoc, double speed) {
 		super(name);
 		this.navigatorCompassGPS = navigatorCompassGPS;
+		this.destLoc = destLoc;
+		this.speed = speed;
 	}
 	
 	@Override
@@ -44,10 +46,10 @@ public class BehaviorGoToLocation extends Behavior {
 		Logger.log("Behavior " + getName() + " done.");
 	}
 
-	@Override
-	public boolean canStart() {
-		return super.canStart();
-	}
+//	@Override
+//	public boolean canStart() {
+//		return super.canStart();
+//	}
 
 	@Override
 	public boolean isDone() {

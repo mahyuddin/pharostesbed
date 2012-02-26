@@ -1,8 +1,8 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
-import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeaconEvent;
-import pharoslabut.beacon.WiFiBeaconListener;
+//import pharoslabut.RobotIPAssignments;
+//import pharoslabut.beacon.WiFiBeaconEvent;
+//import pharoslabut.beacon.WiFiBeaconListener;
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
@@ -10,7 +10,7 @@ import pharoslabut.demo.mrpatrol2.behaviors.BehaviorWaitTime;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
 import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
-import pharoslabut.exceptions.PharosException;
+//import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
@@ -44,15 +44,12 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		
 		Logger.logDbg("Starting the beaconing.");
 		RobotExpSettings settings = expConfig.getMySettings();
-		
-		if (settings != null) {
-			wifiBeaconBroadcaster.setBeacon(new BeaconMsg(settings.getIP(), settings.getPort()));
-			wifiBeaconBroadcaster.start(minPeriod, maxPeriod, txPower);
-			createBehaviors();
-		} else {
-			Logger.logErr("Unable to get robot settings.");
+		wifiBeaconBroadcaster.setBeacon(new BeaconMsg(settings.getIP(), settings.getPort()));
+		if (!wifiBeaconBroadcaster.start(minPeriod, maxPeriod, txPower)) {
+			Logger.logErr("Unable to start the beacons.");
 			System.exit(1);
 		}
+		createBehaviors();
 	}
 	
 	@Override
@@ -66,6 +63,8 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 	 */
 	private void createBehaviors() {
 		
+		Logger.logDbg("Creating the behaviors used in the experiment.");
+		
 		RobotExpSettings mySettings = expConfig.getMySettings();
 		String firstWaypointName = mySettings.getFirstWaypoint();
 		int firstWaypointIndx = expConfig.getWaypointIndex(firstWaypointName);
@@ -73,18 +72,18 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		// Create behavior that moves the robot to the starting location.
 		Location firstWaypoint = expConfig.getWaypoint(firstWaypointName);
 		if (firstWaypoint == null) {
-			Logger.logErr("Unable to go to first waypoint.");
+			Logger.logErr("Unable to get first waypoint.");
 			System.exit(1);
 		}
 
 //		Logger.logDbg("Creating a behavior that moves the robot to the first waypoint at " + firstWaypoint);
-		Behavior b0 = new BehaviorGoToLocation("GoToLoc 0 (" + firstWaypointName + ")", navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
+		Behavior b0 = new BehaviorGoToLocation("GoToLoc_0_" + firstWaypointName, navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
 		addBehavior(b0);
 		Logger.logDbg("Creating behavior " + b0);
 			
 		// Create a behavior that waits till it's time to start.
 //		Logger.logDbg("Creating a behavior that forces the robot to wait at the first waypoint until the wait delay has elapsed.");
-		Behavior waitBehavior = new BehaviorWaitTime("Wait at First Waypoint", b0, expConfig.getStartDelay() * 1000);
+		Behavior waitBehavior = new BehaviorWaitTime("Wait_at_First_Waypoint", b0, expConfig.getStartDelay() * 1000);
 		addBehavior(waitBehavior);
 		Logger.logDbg("Creating behavior " + waitBehavior);
 		
@@ -101,7 +100,7 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				
 //				Logger.logDbg("Creating a behavior that goes to waypoint " + wpIndx + ", name = " + wp.getName() + ", loc = " + wp.getLoc() + ", speed = " + wp.getSpeed() + ", num waypoints visited = " + wpCount);
 				
-				Behavior currBehavior = new BehaviorGoToLocation("GoToLoc " + wpCount + " (" + wp.getName() + ")", navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
+				Behavior currBehavior = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
 				currBehavior.addPrerequisite(prevBehavior);
 				addBehavior(currBehavior);
 				prevBehavior = currBehavior;
@@ -116,7 +115,7 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		
 		// Get the home starting location
 		Location homeLocation = getLocation();
-		Behavior bHome = new BehaviorGoToLocation("GoToLoc " + wpCount + " (home)", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
+		Behavior bHome = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_home", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
 		bHome.addPrerequisite(prevBehavior);
 		addBehavior(bHome);
 		

@@ -412,22 +412,21 @@ public class ExpConfig implements java.io.Serializable {
 	
 	/**
 	 * 
-	 * @return The experiment settings for the local robot.  Returns null
-	 * if no settings for the local robot are found.
+	 * @return The experiment settings for the local robot.
 	 */
 	public RobotExpSettings getMySettings() {
 		
 		InetAddress pharosIP = null;
 		try {
-			InetAddress.getByName(RobotIPAssignments.getAdHocIP());
+			pharosIP = InetAddress.getByName(RobotIPAssignments.getAdHocIP());
 		} catch (PharosException e1) {
 			Logger.logErr("Unable to get ad hoc IP address: " + e1.getMessage());
 			e1.printStackTrace();
-			return null;
+			System.exit(1);
 		} catch (UnknownHostException e) {
 			Logger.logErr("Failed to get ad hoc IP address: " + e.getMessage());
 			e.printStackTrace();
-			return null;
+			System.exit(1);
 		}
 		
 		
@@ -439,6 +438,7 @@ public class ExpConfig implements java.io.Serializable {
 		}
 		
 		Logger.logErr("Unble to find RobotExpSettings for robot with IP " + pharosIP);
+		System.exit(1);
 		return null;
 	}
 	
