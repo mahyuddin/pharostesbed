@@ -1,22 +1,22 @@
 package pharoslabut.demo.mrpatrol2;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeacon;
-import pharoslabut.beacon.WiFiBeaconBroadcaster;
+//import java.net.InetAddress;
+//import java.net.UnknownHostException;
+//
+//import pharoslabut.RobotIPAssignments;
+//import pharoslabut.beacon.WiFiBeacon;
+//import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.beacon.WiFiBeaconListener;
-import pharoslabut.beacon.WiFiBeaconReceiver;
-import pharoslabut.demo.mrpatrol2.config.CoordinationType;
+//import pharoslabut.beacon.WiFiBeaconReceiver;
+//import pharoslabut.demo.mrpatrol2.config.CoordinationType;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
-import pharoslabut.demo.mrpatrol2.config.ExpType;
+//import pharoslabut.demo.mrpatrol2.config.ExpType;
 import pharoslabut.demo.mrpatrol2.daemons.PatrolDaemon;
 import pharoslabut.demo.mrpatrol2.daemons.UncoordinatedOutdoorPatrolDaemon;
-import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
+//import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.demo.mrpatrol2.msgs.LoadExpSettingsMsg;
-import pharoslabut.demo.mrpatrol2.msgs.StartExpMsg;
+//import pharoslabut.demo.mrpatrol2.msgs.StartExpMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;
@@ -24,20 +24,20 @@ import pharoslabut.io.SetTimeMsg;
 import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
-import pharoslabut.navigate.LineFollower;
+//import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.MotionArbiter;
-import pharoslabut.sensors.PathLocalizerOverheadMarkers;
-import pharoslabut.sensors.Position2DBuffer;
-import pharoslabut.sensors.ProteusOpaqueData;
-import pharoslabut.sensors.ProteusOpaqueInterface;
-import pharoslabut.sensors.ProteusOpaqueListener;
-import pharoslabut.sensors.RangerDataBuffer;
-import playerclient3.GPSInterface;
-import playerclient3.PlayerClient;
-import playerclient3.PlayerException;
-import playerclient3.Position2DInterface;
-import playerclient3.RangerInterface;
-import playerclient3.structures.PlayerConstants;
+//import pharoslabut.sensors.PathLocalizerOverheadMarkers;
+//import pharoslabut.sensors.Position2DBuffer;
+//import pharoslabut.sensors.ProteusOpaqueData;
+//import pharoslabut.sensors.ProteusOpaqueInterface;
+//import pharoslabut.sensors.ProteusOpaqueListener;
+//import pharoslabut.sensors.RangerDataBuffer;
+//import playerclient3.GPSInterface;
+//import playerclient3.PlayerClient;
+//import playerclient3.PlayerException;
+//import playerclient3.Position2DInterface;
+//import playerclient3.RangerInterface;
+//import playerclient3.structures.PlayerConstants;
 
 /**
  * This runs on each robot.  It handles the execution of the multi-robot patrol 2 (MRP2)
@@ -82,10 +82,6 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 * The WiFi multicast port.
 	 */
     private int mCastPort;
-	
-	// Components for sending and receiving WiFi beacons
-	private WiFiBeaconBroadcaster wifiBeaconBroadcaster;
-	private WiFiBeaconReceiver wifiBeaconReceiver;
 	
 	// Components for sending and receiving TelosB beacons
 	//private TelosBeaconBroadcaster telosRadioSignalMeter;
@@ -170,57 +166,6 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 */
 	private boolean initPatrolServer() {
 		new TCPMessageReceiver(this, serverPort);
-		return true;
-	}
-	
-	/**
-     * Initializes the components that transmit and receive beacons.  This does not
-     * actually start transmitting beacons.  To start transmitting beacons, a beacon
-     * must be set in the WiFiBeaconBroadcaster and the start() method must be called
-     * on this object.
-     * 
-     * @return true if successful.
-     */
-    private boolean initWiFiBeacons() {
-    	// Obtain the multicast address		
-		InetAddress mCastGroupAddress = null;
-		try {
-			mCastGroupAddress = InetAddress.getByName(mCastAddress);
-		} catch (UnknownHostException uhe) {
-			Logger.logErr("Problems getting multicast address");
-			uhe.printStackTrace();
-			return false;
-		}
-		
-		String pharosIP;
-		try {
-			pharosIP = RobotIPAssignments.getAdHocIP();
-		} catch (PharosException e1) {
-			Logger.logErr("Unable to get ad hoc IP address: " + e1.getMessage());
-			e1.printStackTrace();
-			return false;
-		}
-		
-		// Obtain the correct network interface (ad hoc wireless).
-		String pharosNI;
-		try {
-			pharosNI = RobotIPAssignments.getAdHocNetworkInterface();
-		} catch (PharosException e1) {
-			Logger.logErr("Unable to get ad hoc network interface: " + e1.getMessage());
-			e1.printStackTrace();
-			return false;
-		}
-		
-		if (pharosIP == null || pharosNI == null) {
-			Logger.logErr("Unable to get pharos IP or pharos network interface...");
-			return false;
-		}
-		
-		wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
-        wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort);
-        
-        // Start receiving beacons
-		wifiBeaconReceiver.start();
 		return true;
 	}
 	
@@ -311,15 +256,10 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 * Starts the appropriate outdoor MRPatrol 2 daemon.
 	 */
 	private void startOutdoorExp() {
-		if (!initWiFiBeacons()) {
-            Logger.logErr("Beacon initialization failed, exiting!");
-            System.exit(1);
-        }
 		
-        
         switch(expConfig.getCoordinationType()) {
         case NONE:
-        	patrolDaemon = new UncoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, playerServerIP, playerServerPort, wifiBeaconBroadcaster, wifiBeaconReceiver);
+        	patrolDaemon = new UncoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, playerServerIP, playerServerPort, mCastAddress, mCastPort);
         	break;
         case PASSIVE:
         	break;
@@ -327,6 +267,10 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
         	break;
         case ANTICIPATED_VARIABLE:
         	break;
+        }
+        
+        if (patrolDaemon != null) {
+        	new Thread(patrolDaemon).start();
         }
 	}
 	
@@ -341,9 +285,9 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 //		}
 		
 		Logger.log("PharosServer: Stopping the WiFi beacon broadcaster.");
-		if (wifiBeaconBroadcaster != null) {
+		if (patrolDaemon != null) {
 //			wifiBeaconBroadcaster.setFileLogger(null);
-			wifiBeaconBroadcaster.stop();
+			patrolDaemon.stop();
 		}
 		
 //		Logger.log("PharosServer: Stopping the WiFi beacon receiver.");

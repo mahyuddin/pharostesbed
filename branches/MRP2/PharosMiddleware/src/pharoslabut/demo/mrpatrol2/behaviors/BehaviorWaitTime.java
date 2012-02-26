@@ -44,8 +44,6 @@ public class BehaviorWaitTime extends Behavior {
 
 	@Override
 	public void run() {
-		Logger.log("Behavior " + getName() + " starting.");
-		
 		// Wait until it's time to start.
 		long currTime = System.currentTimeMillis();
 		long deltaTime = currTime - referenceBehavior.getStartTime();

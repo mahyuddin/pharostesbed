@@ -1,9 +1,12 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Vector;
 
+import pharoslabut.RobotIPAssignments;
 import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
@@ -12,8 +15,11 @@ import pharoslabut.sensors.Position2DListener;
 import pharoslabut.sensors.ProteusOpaqueData;
 import pharoslabut.sensors.ProteusOpaqueInterface;
 import pharoslabut.sensors.ProteusOpaqueListener;
+import pharoslabut.beacon.WiFiBeaconBroadcaster;
+import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
+import pharoslabut.exceptions.PharosException;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
@@ -43,7 +49,7 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 //	protected volatile int numWaypointsVisited = 0;
 	
 	/**
-	 * Whether the experiment is done.
+	 * Whether the patrol daemon's threads should continue to run.
 	 */
 	protected boolean done = false;
 	
@@ -77,15 +83,24 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 	 */
 	private Vector<Behavior> behaviors = new Vector<Behavior>();
 	
+	// Components for sending and receiving WiFi beacons
+	protected WiFiBeaconBroadcaster wifiBeaconBroadcaster;
+	
+	protected WiFiBeaconReceiver wifiBeaconReceiver;
+	
 	/**
 	 * The constructor.
 	 * 
 	 * @param expConfig The experiment settings.
 	 * @param mobilityPlane The mobility plane used.
+	 * @param mCastAddress The multicast address for transmitting and receiving beacons
+	 * @param mCastPort The multicast port for transmitting and receiving beacons.
 	 */
-	public PatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane) {
+	public PatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String mCastAddress, int mCastPort) {
 		this.expConfig = expConfig;
 		this.mobilityPlane = mobilityPlane;
+		
+		initWiFiBeacons(mCastAddress, mCastPort);
 	}
 	
 	/**
@@ -126,7 +141,54 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
+	}
+	
+	/**
+     * Initializes the components that transmit and receive beacons.  This does not
+     * actually start transmitting beacons.  To start transmitting beacons, a beacon
+     * must be set in the WiFiBeaconBroadcaster and the start() method must be called
+     * on this object.
+     */
+    private void initWiFiBeacons(String mCastAddress, int mCastPort) {
+    	// Obtain the multicast address		
+		InetAddress mCastGroupAddress = null;
+		try {
+			mCastGroupAddress = InetAddress.getByName(mCastAddress);
+		} catch (UnknownHostException uhe) {
+			Logger.logErr("Problems getting multicast address");
+			uhe.printStackTrace();
+			System.exit(1);
+		}
 		
+		String pharosIP = null;
+		try {
+			pharosIP = RobotIPAssignments.getAdHocIP();
+		} catch (PharosException e1) {
+			Logger.logErr("Unable to get ad hoc IP address: " + e1.getMessage());
+			e1.printStackTrace();
+			System.exit(1);
+		}
+		
+		// Obtain the correct network interface (ad hoc wireless).
+		String pharosNI = null;
+		try {
+			pharosNI = RobotIPAssignments.getAdHocNetworkInterface();
+		} catch (PharosException e1) {
+			Logger.logErr("Unable to get ad hoc network interface: " + e1.getMessage());
+			e1.printStackTrace();
+			System.exit(1);
+		}
+		
+		if (pharosIP == null || pharosNI == null) {
+			Logger.logErr("Unable to get pharos IP or pharos network interface...");
+			System.exit(1);
+		}
+		
+		wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
+        wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort);
+        
+        // Start receiving beacons
+		wifiBeaconReceiver.start();
 	}
 	
 	@Override
@@ -171,12 +233,22 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 		behaviors.add(b);
 	}
 	
+	/**
+	 * Stops the patrol daemon.
+	 */
+	public void stop() {
+		if (wifiBeaconReceiver != null)
+			wifiBeaconReceiver.stop();
+		if (wifiBeaconBroadcaster != null)
+			wifiBeaconBroadcaster.stop();
+		done = true;
+	}
+	
 	@Override
 	public void run() {
-		long startTime = System.currentTimeMillis();
-		Logger.logDbg("Thread starting at time " + startTime + "...");
+		Logger.logDbg("Thread starting at time " + System.currentTimeMillis() + "...");
 		
-		while (true) {
+		while (!done) {
 			int numDone = 0;
 			
 			// Go through each behavior and start those that can start
@@ -198,11 +270,13 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 			
 			synchronized(this) {
 				try {
-					this.wait(100);  // have daemon thread cycle at 10Hz
+					this.wait(100);  // daemon thread cycles at 10Hz
 				} catch (InterruptedException e1) {
 					e1.printStackTrace();
 				}
 			}
 		}
+		
+		Logger.logDbg("Thread terminating.");
 	}
 }

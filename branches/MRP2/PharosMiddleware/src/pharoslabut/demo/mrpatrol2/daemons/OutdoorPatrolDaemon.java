@@ -73,8 +73,8 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	 * @param playerServerIP The IP address of the player server.
 	 * @param playerServerPort The TCP port on which the player server listens.
 	 */
-	public OutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort) {
-		super(expConfig, mobilityPlane);
+	public OutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort, String mCastAddress, int mCastPort) {
+		super(expConfig, mobilityPlane, mCastAddress, mCastPort);
 		initPlayerClient(playerServerIP, playerServerPort);
 	}
 	
@@ -135,13 +135,13 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	}
 	
 	/**
-	 * Obtains the robot's location.  This is a blocking call until GPS data becomes available.
+	 * Obtains the robot's location.  This is a blocking call.  It does not return until GPS data becomes available.
 	 * 
 	 * @return The current GPS location
 	 */
 	protected Location getLocation() {
 		Location result = null;
-		
+		Logger.logDbg("Getting current location...");
 		while (result == null) {
 			try {
 				result = new Location(gpsDataBuffer.getCurrLoc());

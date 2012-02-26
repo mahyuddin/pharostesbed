@@ -1,10 +1,10 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
 import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeaconBroadcaster;
+//import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.beacon.WiFiBeaconListener;
-import pharoslabut.beacon.WiFiBeaconReceiver;
+//import pharoslabut.beacon.WiFiBeaconReceiver;
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
@@ -40,9 +40,9 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 	 * @param wifiBeaconReceiver The beacon receiver.
 	 */
 	public UncoordinatedOutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort,
-			WiFiBeaconBroadcaster wifiBeaconBroadcaster, WiFiBeaconReceiver wifiBeaconReceiver) 
+			String mCastAddress, int mCastPort) 
 	{
-		super(expConfig, mobilityPlane, playerServerIP, playerServerPort);
+		super(expConfig, mobilityPlane, playerServerIP, playerServerPort, mCastAddress, mCastPort);
 		
 		// Use beacons just so we can easily synchronize the clocks of everyone.
 		Logger.logDbg("Adding self as beacon listener.");
@@ -54,7 +54,6 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 		if (settings != null) {
 			wifiBeaconBroadcaster.setBeacon(new BeaconMsg(settings.getIP(), settings.getPort()));
 			wifiBeaconBroadcaster.start(minPeriod, maxPeriod, txPower);
-		
 			createBehaviors();
 		} else {
 			Logger.logErr("Unable to get robot settings.");
@@ -68,6 +67,9 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon implem
 		// do nothing here.
 	}
 	
+	/**
+	 * Generates all of the behaviors used in this experiment.
+	 */
 	public void createBehaviors() {
 		
 		RobotExpSettings mySettings = expConfig.getMySettings();
