@@ -73,22 +73,21 @@ public abstract class Behavior implements Runnable {
 	 * 
 	 * @return Whether this behavior can start.
 	 */
-	public boolean canStart() {
-		if (started || isDone()) {
-			Logger.logDbg("Behavior " + name + " cannot start b/c it was already started or is already done.");
-			return false;
-		}
+	public CanStart canStart() {
+		if (isDone())
+			return new CanStart(false, "already done");
+		
+		if (started)
+			return new CanStart(false, "currently running");
 		
 		Enumeration<Behavior> e = prerequisites.elements();
 		while (e.hasMoreElements()) {
 			Behavior b = e.nextElement();
-			if (!b.isDone()) {
-				Logger.logDbg("Behavior " + name + " cannot start b/c prerequisite behavior " + b.getName() + " is not done.");
-				return false;
-			}
+			if (!b.isDone())
+				return new CanStart(false, "prerequisite " + b.getName() + " not done.");
 		}
-		Logger.logDbg("Behavior " + name + " can start!");
-		return true;
+		
+		return new CanStart(true, "Can run");
 	}
 	
 	/**
@@ -127,7 +126,34 @@ public abstract class Behavior implements Runnable {
 		while (e.hasMoreElements()) {
 			prereqStr.append(e.nextElement().getName() + ", ");
 		}
-		String pStr = prereqStr.substring(0, prereqStr.length()-2) + "]";
+		String pStr = prereqStr.toString();
+		if (prerequisites.size() > 0)
+			pStr = pStr.substring(0, pStr.length() - 2) + "]";
+		else
+			pStr += "]";
 		return "name = " + name + ", canStart = " + canStart() + ", started = " + started + ", startTime = " + startTime + ", done = " + isDone() + ", prerequisites = " + pStr;
+	}
+	
+	/**
+	 * A container for whether a behavior can start and why.
+	 * 
+	 * @author Chien-Liang Fok
+	 */
+	public class CanStart {
+		private boolean canStart;
+		private String reason;
+		
+		public CanStart(boolean canStart, String reason) {
+			this.canStart = canStart;
+			this.reason = reason;
+		}
+		
+		public boolean getCanStart() {
+			return canStart;
+		}
+		
+		public String getReason() {
+			return reason;
+		}
 	}
 }

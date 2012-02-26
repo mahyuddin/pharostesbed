@@ -252,14 +252,42 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 		while (!done) {
 			int numDone = 0;
 			
-			// Go through each behavior and start those that can start
+			// Create a vector for holding behaviors that can start.
+			Vector<Behavior> startableBehaviors = new Vector<Behavior>();
+			
+			StringBuffer sb1 = new StringBuffer();
+			
+			// Go through each behavior find out which can start
 			Enumeration<Behavior> e = behaviors.elements();
 			while (e.hasMoreElements()) {
 				Behavior b = e.nextElement();
-				if (b.canStart()) {
-					b.start();
-				} else if (b.isDone())
+				pharoslabut.demo.mrpatrol2.behaviors.Behavior.CanStart cs = b.canStart();
+				if (cs.getCanStart()) {
+					startableBehaviors.add(b);
+				} else {
+					sb1.append("\n\t" + b.getName() + " - " + cs.getReason());
+				}
+				
+				if (b.isDone())
 					numDone++;
+			}
+			
+			StringBuffer sb2 = new StringBuffer("\nThe following " + startableBehaviors.size() + " behaviors can start:");
+			e = startableBehaviors.elements();
+			while (e.hasMoreElements()) {
+				sb2.append("\n\t" + e.nextElement().getName());
+			}
+			
+			Logger.logDbg("Refresh cycle results:" 
+					+ sb2.toString() 
+					+ "\nThe following " + (behaviors.size() - startableBehaviors.size()) 
+					+ " behaviors cannot start:" + sb1.toString() 
+					+ "\nDone: " + numDone + " of " + behaviors.size());
+			
+			// Start the startable behaviors.
+			e = startableBehaviors.elements();
+			while (e.hasMoreElements()) {
+				e.nextElement().start();
 			}
 			
 			if (numDone == behaviors.size()) {
