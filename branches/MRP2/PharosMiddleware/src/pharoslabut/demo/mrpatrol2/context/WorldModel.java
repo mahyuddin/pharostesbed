@@ -1,4 +1,4 @@
-package pharoslabut.demo.mrpatrol2.daemons;
+package pharoslabut.demo.mrpatrol2.context;
 
 import java.util.Enumeration;
 import java.util.Hashtable;
