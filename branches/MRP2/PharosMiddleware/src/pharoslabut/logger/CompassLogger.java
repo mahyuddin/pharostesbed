@@ -188,6 +188,7 @@ public class CompassLogger implements Position2DListener, ProteusOpaqueListener 
 		System.err.println("\t-index <index>: the index of the compass device (default 1)");
 		System.err.println("\t-log <file name>: The name of the file into which the compass data is logged (default null)");
 		System.err.println("\t-time <period>: The amount of time in seconds to record data (default infinity)");
+		System.err.println("\t-gui: show the GUI");
 		System.err.println("\t-nostatus: Do not subscribe to opaque interface to get status messages");
 		System.err.println("\t-d: enable debug output");
 	}
