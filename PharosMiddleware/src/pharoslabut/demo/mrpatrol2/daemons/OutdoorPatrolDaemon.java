@@ -93,8 +93,14 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 		
 		Logger.logDbg("Subscribing to compass interface...");
 		Position2DInterface compass;
-		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
-				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
+		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE
+				
+				// The following was commented out b/c when accessing the compass through
+				// an arduino, it is published through position2d index 2
+				//|| mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS
+				
+				) 
+		{
 			compass = playerClient.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
 		} else {
 			compass = playerClient.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
