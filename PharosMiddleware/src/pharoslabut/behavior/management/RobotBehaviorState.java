@@ -5,7 +5,7 @@ package pharoslabut.behavior.management;
  * 
  * @author Chien-Liang Fok
  * @author Noa Agmon
- * @see pharoslabut.behavior.WorldModel
+ * @see pharoslabut.demo.mrpatrol2.context.WorldModel
  */
 public class RobotBehaviorState {
 	private String robotIP;
