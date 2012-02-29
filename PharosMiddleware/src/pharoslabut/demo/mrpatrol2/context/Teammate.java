@@ -105,6 +105,6 @@ public class Teammate implements java.io.Serializable {
 	 * @return A string representation of this class.
 	 */
 	public String toString() {
-		return "Teammate: " + name + ", numWaypointsVisited = " + numWaypointsVisited + ", lastUpdateTime = " + lastUpdateTime;
+		return "Teammate " + name + ", numWaypointsVisited = " + numWaypointsVisited + ", lastUpdateTime = " + lastUpdateTime;
 	}
 }

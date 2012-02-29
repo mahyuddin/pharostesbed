@@ -43,7 +43,7 @@ public class RobotExpSettings implements java.io.Serializable {
 	 * in the patrol route.
 	 */
 	public RobotExpSettings(String name, InetAddress ip, int port, String firstWaypoint) {
-		this.name = name;
+		this.name = name.toUpperCase();
 		this.ip = ip;
 		this.port = port;
 		this.firstWaypoint = firstWaypoint;
