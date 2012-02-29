@@ -1,5 +1,6 @@
 package pharoslabut.demo.mrpatrol2.context;
 
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -43,10 +44,19 @@ public class WorldModel implements java.io.Serializable {
 	}
 	
 	/**
+	 * Obtains a list of all teammates.
+	 * 
+	 * @return All teammates.
+	 */
+	public Collection<Teammate> getTeammates() {
+		return teammates.values();
+	}
+	
+	/**
 	 * Obtains a list of active teammates.
 	 * 
 	 * @param maxTimeDelta The max difference between the current time and the last time the teammate
-	 * was update. 
+	 * was updated. 
 	 * @return A list of active teammates.
 	 */
 	public Vector<Teammate> getActiveTeammates(long maxTimeDelta) {

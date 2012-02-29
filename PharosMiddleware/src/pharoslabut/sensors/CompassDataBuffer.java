@@ -209,25 +209,29 @@ public class CompassDataBuffer implements Runnable {
 		// If new compass data is available, get it!
 		if (compass.isDataReady()) {
 			PlayerPosition2dData newData = compass.getData();
-			double newHeading = newData.getPos().getPa();
-			
-			headingBuffer[headingBufferIndx] = newHeading;
-			
-			// Update the headingBufferIndx
-			headingBufferIndx++;
-			headingBufferIndx %= COMPASS_BUFFER_SIZE;
-			
-			// Update the number of elements in the compass buffer
-			headingBufferSize++;
-			if (headingBufferSize > COMPASS_BUFFER_SIZE) 
-				headingBufferSize = COMPASS_BUFFER_SIZE;
-			
-			// Update the last time stamp and add a log statement
-			lastTimeStamp = System.currentTimeMillis();
-			Logger.log("New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
-			
-			// Notify the listeners
-			notifyP2DListeners(newData);
+			try {
+				double newHeading = newData.getPos().getPa();
+
+				headingBuffer[headingBufferIndx] = newHeading;
+
+				// Update the headingBufferIndx
+				headingBufferIndx++;
+				headingBufferIndx %= COMPASS_BUFFER_SIZE;
+
+				// Update the number of elements in the compass buffer
+				headingBufferSize++;
+				if (headingBufferSize > COMPASS_BUFFER_SIZE) 
+					headingBufferSize = COMPASS_BUFFER_SIZE;
+
+				// Update the last time stamp and add a log statement
+				lastTimeStamp = System.currentTimeMillis();
+				Logger.log("New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
+
+				// Notify the listeners
+				notifyP2DListeners(newData);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	

@@ -47,6 +47,10 @@ public class NavigateCompassGPS extends Navigate {
 	
 	private MotionTask prevTask = null;
 	
+	/**
+	 * Whether we are done navigating to a particular location.
+	 */
+	private boolean done;
 	
 	/**
 	 * A constructor.
@@ -64,6 +68,10 @@ public class NavigateCompassGPS extends Navigate {
 		this.gpsDataBuffer = gpsDataBuffer;
 	}
 	
+	/**
+	 * Sends a stop command to the robot.  Note that the navigation component may still cause the 
+	 * robot to continue to move.  To stop the navigation process, call stop().
+	 */
 	public void stopRobot() {
 		MotionTask mt = new MotionTask(Priority.SECOND, 0 /* velocity */, 0 /* heading */);
 		motionArbiter.submitTask(mt);
@@ -315,7 +323,7 @@ public class NavigateCompassGPS extends Navigate {
 	 * @return true if the robot successfully reached the destination
 	 */
 	public boolean go(Location dest, double velocity) {
-		boolean done = false;
+		done = false;
 		boolean success = false;
 		
 		while (!done) {
@@ -350,8 +358,16 @@ public class NavigateCompassGPS extends Navigate {
 				}
 			}
 		}
+		stopRobot();
 		Logger.log("Done going to " + dest + ", success=" + success);
 		return success;
+	}
+	
+	/**
+	 * Stops the navigation process.
+	 */
+	public void stop() {
+		done = true;
 	}
 	
 //	private void logErr(String msg) {

@@ -139,7 +139,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 				DatagramPacket beaconPacket
 				= new DatagramPacket(beaconBytes,  beaconBytes.length, mCastAddr, mCastPort);
 
-				Logger.log("Broadcasting Beacon: " + beacon);
+				Logger.logDbg("Broadcasting Beacon: " + beacon + ", num bytes = " + beaconBytes.length);
 
 				// broadcast the beacon
 				mSocket.send(beaconPacket);
