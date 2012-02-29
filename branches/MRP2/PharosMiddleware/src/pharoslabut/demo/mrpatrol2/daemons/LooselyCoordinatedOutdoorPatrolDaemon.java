@@ -1,16 +1,12 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
-import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeaconEvent;
-import pharoslabut.beacon.WiFiBeaconListener;
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
+import pharoslabut.demo.mrpatrol2.behaviors.BehaviorBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorWaitTime;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
-import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
-import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
@@ -35,31 +31,20 @@ public class LooselyCoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 	 */
 	public LooselyCoordinatedOutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, 
 			String playerServerIP, int playerServerPort,
+			int serverPort,
 			String mCastAddress, int mCastPort) 
 	{
-		super(expConfig, mobilityPlane, playerServerIP, playerServerPort, mCastAddress, mCastPort);
-		
-		// Use beacons just so we can easily synchronize the clocks of everyone.
-		Logger.logDbg("Adding self as beacon listener.");
-		wifiBeaconReceiver.addBeaconListener(this);
-		
-		Logger.logDbg("Starting the beaconing.");
-		RobotExpSettings settings = expConfig.getMySettings();
-		
-		if (settings != null) {
-			wifiBeaconBroadcaster.setBeacon(new BeaconMsg(settings.getIP(), settings.getPort()));
-			wifiBeaconBroadcaster.start(minPeriod, maxPeriod, txPower);
-			createBehaviors();
-		} else {
-			Logger.logErr("Unable to get robot settings.");
-			System.exit(1);
-		}
+		super(expConfig, mobilityPlane, playerServerIP, playerServerPort, serverPort, mCastAddress, mCastPort);
+		createBehaviors();
 	}
 	
+	/**
+	 * Handle incoming messages.  There are two types of messages that can come in:
+	 * 
+	 */
 	@Override
 	public void newMessage(Message msg) {
-		// Since this is an uncoordinated patrol, we expect no messages to be exchanged and thus
-		// do nothing here.
+		
 	}
 	
 	/**
@@ -67,30 +52,47 @@ public class LooselyCoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 	 */
 	private void createBehaviors() {
 		
+		Logger.logDbg("Creating the behaviors used in the experiment.");
+		
 		RobotExpSettings mySettings = expConfig.getMySettings();
+		
+		if (mySettings == null) {
+			Logger.logErr("Unable to get robot settings.");
+			System.exit(1);
+		}
+		
 		String firstWaypointName = mySettings.getFirstWaypoint();
 		int firstWaypointIndx = expConfig.getWaypointIndex(firstWaypointName);
 		
-		// Create behavior that moves the robot to the starting location.
+		// Create a behavior that moves the robot to the starting location.
+		// Note that this behavior has no prerequisites so it should start immediately when the experiment begins.
 		Location firstWaypoint = expConfig.getWaypoint(firstWaypointName);
 		if (firstWaypoint == null) {
-			Logger.logErr("Unable to go to first waypoint.");
+			Logger.logErr("Unable to get first waypoint.");
 			System.exit(1);
 		}
-
-//		Logger.logDbg("Creating a behavior that moves the robot to the first waypoint at " + firstWaypoint);
-		Behavior b0 = new BehaviorGoToLocation("GoToLoc 0 (" + firstWaypointName + ")", navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
+		Behavior b0 = new BehaviorGoToLocation("GoToLoc_0_" + firstWaypointName, navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
 		addBehavior(b0);
 		Logger.logDbg("Creating behavior " + b0);
 			
-		// Create a behavior that waits till it's time to start.
-//		Logger.logDbg("Creating a behavior that forces the robot to wait at the first waypoint until the wait delay has elapsed.");
-		Behavior waitBehavior = new BehaviorWaitTime("Wait at First Waypoint", b0, expConfig.getStartDelay() * 1000);
+		// Create a behavior that waits till it's time to start.  
+		// Note that this behavior has no prerequisites so it should start immediately when the experiment begins.
+		Behavior waitBehavior = new BehaviorWaitTime("Wait_at_First_Waypoint", expConfig.getStartDelay() * 1000);
 		addBehavior(waitBehavior);
 		Logger.logDbg("Creating behavior " + waitBehavior);
 		
-		// For each round...
+		// Create a behavior that starts the beaconing.
+		// Note that this behavior has no prerequisites so it should start immediately when the experiment begins.
+		Behavior beaconBehavior = new BehaviorBeacon("Beacon", mCastAddress, mCastPort, serverPort);
+		addBehavior(beaconBehavior);
+		
+		// By initializing the prevBehavior to be waitBehavior, we make 
+		// the robot wait at the first waypoint until the waitBehavior is done. 
+		// This enables the robots to reach their first waypoints prior to 
+		// embarking on the multi-robot patrol.
 		Behavior prevBehavior = waitBehavior;
+		
+		// For each round...
 		int wpCount = 1;  // A counter for the total number of waypoints visited.  Starts at 1 b/c robot is already at first waypoint.
 		for (int round = 0; round < expConfig.getNumRounds(); round++) {
 			
@@ -98,26 +100,29 @@ public class LooselyCoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 			
 			// Visit each waypoint in the patrol route...
 			for (int wpCnt = 0; wpCnt < expConfig.getNumWaypoints(); wpCnt++) {
+				
 				Waypoint wp = expConfig.getWaypoint(wpIndx);
-				
-//				Logger.logDbg("Creating a behavior that goes to waypoint " + wpIndx + ", name = " + wp.getName() + ", loc = " + wp.getLoc() + ", speed = " + wp.getSpeed() + ", num waypoints visited = " + wpCount);
-				
-				Behavior currBehavior = new BehaviorGoToLocation("GoToLoc " + wpCount + " (" + wp.getName() + ")", navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
+
+				Behavior currBehavior = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
 				currBehavior.addPrerequisite(prevBehavior);
+
 				addBehavior(currBehavior);
 				prevBehavior = currBehavior;
-				
+
 				Logger.logDbg("Creating behavior " + currBehavior);
-				
+
 				wpIndx++; wpCount++;
 				wpIndx %= expConfig.getNumWaypoints();
 			}
 			
 		}
 		
+		// Make the beacon behavior stop after the robot arrives at the last waypoint in patrol.
+		beaconBehavior.addDependency(prevBehavior);
+		
 		// Get the home starting location
 		Location homeLocation = getLocation();
-		Behavior bHome = new BehaviorGoToLocation("GoToLoc " + wpCount + " (home)", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
+		Behavior bHome = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_home", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
 		bHome.addPrerequisite(prevBehavior);
 		addBehavior(bHome);
 		

@@ -1,22 +1,9 @@
 package pharoslabut.demo.mrpatrol2;
 
-//import java.net.InetAddress;
-//import java.net.UnknownHostException;
-//
-//import pharoslabut.RobotIPAssignments;
-//import pharoslabut.beacon.WiFiBeacon;
-//import pharoslabut.beacon.WiFiBeaconBroadcaster;
-import pharoslabut.beacon.WiFiBeaconEvent;
-import pharoslabut.beacon.WiFiBeaconListener;
-//import pharoslabut.beacon.WiFiBeaconReceiver;
-//import pharoslabut.demo.mrpatrol2.config.CoordinationType;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
-//import pharoslabut.demo.mrpatrol2.config.ExpType;
 import pharoslabut.demo.mrpatrol2.daemons.PatrolDaemon;
 import pharoslabut.demo.mrpatrol2.daemons.UncoordinatedOutdoorPatrolDaemon;
-//import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.demo.mrpatrol2.msgs.LoadExpSettingsMsg;
-//import pharoslabut.demo.mrpatrol2.msgs.StartExpMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.Message;
 import pharoslabut.io.MessageReceiver;
@@ -24,20 +11,7 @@ import pharoslabut.io.SetTimeMsg;
 import pharoslabut.io.TCPMessageReceiver;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
-//import pharoslabut.navigate.LineFollower;
 import pharoslabut.navigate.MotionArbiter;
-//import pharoslabut.sensors.PathLocalizerOverheadMarkers;
-//import pharoslabut.sensors.Position2DBuffer;
-//import pharoslabut.sensors.ProteusOpaqueData;
-//import pharoslabut.sensors.ProteusOpaqueInterface;
-//import pharoslabut.sensors.ProteusOpaqueListener;
-//import pharoslabut.sensors.RangerDataBuffer;
-//import playerclient3.GPSInterface;
-//import playerclient3.PlayerClient;
-//import playerclient3.PlayerException;
-//import playerclient3.Position2DInterface;
-//import playerclient3.RangerInterface;
-//import playerclient3.structures.PlayerConstants;
 
 /**
  * This runs on each robot.  It handles the execution of the multi-robot patrol 2 (MRP2)
@@ -46,7 +20,7 @@ import pharoslabut.navigate.MotionArbiter;
  * @see pharoslabut.demo.mrpatrol2.ExpCoordinator
  * @author Chien-Liang Fok
  */
-public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
+public class MRPatrol2Server implements MessageReceiver {
 	
 	/**
 	 * The name of the local robot.
@@ -63,11 +37,6 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 */
 	private int playerServerPort;
 	
-    /**
-     * The player client that connects to the player server.
-     */
-//	private PlayerClient playerClient = null;
-	
 	/**
 	 * This TCP port on which this server listens.
 	 */
@@ -82,12 +51,6 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 * The WiFi multicast port.
 	 */
     private int mCastPort;
-	
-	// Components for sending and receiving TelosB beacons
-	//private TelosBeaconBroadcaster telosRadioSignalMeter;
-	
-	//private MotionScript gpsMotionScript;
-	//private RelativeMotionScript relMotionScript;
 	
 	/**
 	 * This is the file logger that is used for debugging purposes.  It is used when debug mode is enabled
@@ -117,17 +80,17 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 * 
 	 * @param playerServerIP The player server's IP address.
 	 * @param playerServerPort The player server's port.
-	 * @param pharosServerPort This server's port.
+	 * @param serverPort This server's port.
 	 * @param mCastAddress The multicast address over which to broadcast WiFi beacons.
 	 * @param mCastPort the multicast port over which to broadcast WiFi beacons.
 	 * @param mobilityPlane The type of mobility plane being used.
 	 */
-	public MRPatrol2Server(String playerServerIP, int playerServerPort, int pharosServerPort, 
+	public MRPatrol2Server(String playerServerIP, int playerServerPort, int serverPort, 
 			String mCastAddress, int mCastPort, MotionArbiter.MotionType mobilityPlane) 
 	{
 		this.playerServerIP = playerServerIP;
 		this.playerServerPort = playerServerPort;
-		this.serverPort = pharosServerPort;
+		this.serverPort = serverPort;
 		
 		this.mCastAddress = mCastAddress;
 		this.mCastPort = mCastPort;
@@ -259,7 +222,10 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 		
         switch(expConfig.getCoordinationType()) {
         case NONE:
-        	patrolDaemon = new UncoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, playerServerIP, playerServerPort, mCastAddress, mCastPort);
+        	patrolDaemon = new UncoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, 
+        			playerServerIP, playerServerPort, 
+        			serverPort, 
+        			mCastAddress, mCastPort);
         	break;
         case PASSIVE:
         	break;
@@ -282,53 +248,14 @@ public class MRPatrol2Server implements MessageReceiver, WiFiBeaconListener {
 	 */
 	private void stopExp() {
 		Logger.log("Stopping the experiment.");
-//		
-//		if (motionArbiter != null) {
-//			motionArbiter.setFileLogger(null);
-//		}
 		
 		Logger.log("Stopping the Patrol Daemon.");
-		if (patrolDaemon != null) {
-//			wifiBeaconBroadcaster.setFileLogger(null);
+		if (patrolDaemon != null)
 			patrolDaemon.stop();
-		}
-		
-//		Logger.log("PharosServer: Stopping the WiFi beacon receiver.");
-//		if (wifiBeaconReceiver != null) {
-//			wifiBeaconReceiver.setFileLogger(null);
-//		}
-		
-//		Logger.log("PharosServer: Stopping the GPS data buffer.");
-//		if (gpsDataBuffer != null)	{
-////			gpsDataBuffer.setFileLogger(null);
-////			gpsDataBuffer.stop();
-//		}
-		
-//		Logger.log("PharosServer: Stopping the compass data buffer.");
-//		if (compassDataBuffer != null) {
-////			compassDataBuffer.setFileLogger(null);
-//			compassDataBuffer.stop();
-//		}
-//		
-//		Logger.log("PharosServer: Stopping the TelosB signal meter.");
-//		if (telosRadioSignalMeter != null) {
-////			telosRadioSignalMeter.setFileLogger(null);
-//			telosRadioSignalMeter.stop();
-//		}
-		
-		//flogger.log("PharosServer: Stopping the UDP tester.");
-		//udpTest.stop();
 		
 		// Restore the debug file logger since the experiment has stopped.
 		Logger.logDbg("Stopping experiment log file.");
 		Logger.setFileLogger(debugFileLogger);
-	}
-	
-	
-	
-	@Override
-	public void beaconReceived(WiFiBeaconEvent be) {
-		Logger.log("Received beacon: " + be);
 	}
 	
 	private static void print(String msg) {

@@ -4,18 +4,13 @@ import pharoslabut.logger.Logger;
 
 /**
  * A behavior that pauses the robot until a certain amount of time 
- * has passed.  The reference time is the start time of the reference
- * behavior.
+ * has passed.  The reference time is when the behavior first starts
+ * to run.
  * 
  * @author Chien-Liang Fok
  *
  */
 public class BehaviorWaitTime extends Behavior {
-
-	/**
-	 * The reference behavior.
-	 */
-	private Behavior referenceBehavior;
 	
 	/**
 	 * The amount of time to wait.  The reference time is the start time of the
@@ -35,30 +30,23 @@ public class BehaviorWaitTime extends Behavior {
 	 * @param referenceBehavior The behavior whose start time defines the temporal reference point.
 	 * @param waitTime The wait time in milliseconds.
 	 */
-	public BehaviorWaitTime(String name, Behavior referenceBehavior, long waitTime) {
+	public BehaviorWaitTime(String name, long waitTime) {
 		super(name);
-		this.referenceBehavior = referenceBehavior;
 		this.waitTime = waitTime;
-		addPrerequisite(referenceBehavior);  // This behavior cannot start until the reference behavior is done.
 	}
 
 	@Override
 	public void run() {
 		// Wait until it's time to start.
-		long currTime = System.currentTimeMillis();
-		long deltaTime = currTime - referenceBehavior.getStartTime();
-		if (deltaTime < waitTime) {
-			long remainingWaitTime = waitTime - deltaTime;
-			Logger.logDbg("Pausing for " + remainingWaitTime + " milliseconds, deltaTime = " + deltaTime + ", waitTime = " + waitTime);
-			synchronized(this) {
-				try {
-					this.wait(remainingWaitTime);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+		
+		Logger.logDbg("Pausing for " + waitTime + " milliseconds");
+		synchronized(this) {
+			try {
+				this.wait(waitTime);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				Logger.logWarn("Interrupted while waiting. + " + e.getLocalizedMessage());
 			}
-		} else {
-			Logger.logDbg("No need to wait!  waitTime = " + waitTime + ", deltaTime = " + deltaTime);
 		}
 		
 		isDone = true;
@@ -75,7 +63,14 @@ public class BehaviorWaitTime extends Behavior {
 	 */
 	@Override
 	public String toString() {
-		return "BehaviorWaitTime " + super.toString() + ", waitTime = " + waitTime + ", isDone = " + isDone + ", referenceBehavior = " + referenceBehavior.getName() + ", referenceStartTime = " + referenceBehavior.getStartTime();
+		return "BehaviorWaitTime " + super.toString() + ", waitTime = " + waitTime + ", isDone = " + isDone;
 	}
 
+	@Override
+	public void stop() {
+		synchronized(this) {
+			this.notifyAll();
+		}
+		isDone = true;
+	}
 }

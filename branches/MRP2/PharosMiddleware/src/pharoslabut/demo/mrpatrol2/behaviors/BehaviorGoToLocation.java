@@ -63,4 +63,11 @@ public class BehaviorGoToLocation extends Behavior {
 	public String toString() {
 		return "BehaviorGoToLocation " + super.toString() + ", destLoc = " + destLoc + ", speed = " + speed;
 	}
+
+	@Override
+	public void stop() {
+		navigatorCompassGPS.stop();
+		isDone = true;
+		
+	}
 }

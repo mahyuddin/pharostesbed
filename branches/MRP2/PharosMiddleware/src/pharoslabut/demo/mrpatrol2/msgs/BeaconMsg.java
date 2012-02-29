@@ -18,12 +18,6 @@ public class BeaconMsg extends WiFiBeacon {
 	private int numWaypointsTraversed;
 	
 	/**
-	 * Default constructor.
-	 */
-	//public BeaconMsg() {	
-	//}
-	
-	/**
 	 * The constructor.
 	 * 
 	 * @param address The address of this host.
@@ -38,8 +32,8 @@ public class BeaconMsg extends WiFiBeacon {
 	 * 
 	 * @param numMarkersTraversed The number of markers traversed.
 	 */
-	public void setWaypointsTraversed(int numMarkersTraversed) {
-		this.numWaypointsTraversed = numMarkersTraversed;
+	public void setWaypointsTraversed(int numWaypointsTraversed) {
+		this.numWaypointsTraversed = numWaypointsTraversed;
 	}
 	
 	/**
@@ -56,8 +50,10 @@ public class BeaconMsg extends WiFiBeacon {
 	 */
 	public String toString() {
 		StringBuffer sBuff = new StringBuffer("(");
-		sBuff.append(getAddress().getHostAddress() + ":" + getPort() 
-				+ ", " + getSeqNum() + ", " + numWaypointsTraversed + ")");
+		sBuff.append(getAddress().getHostAddress() + ":" + getPort()); 
+		sBuff.append(", seqno = " + getSeqNum());
+		sBuff.append(", timestamp = " + getTimestamp()); 
+		sBuff.append(", numWaypointsTraversed = " + numWaypointsTraversed + ")");
 		return sBuff.toString();
 	}	
 }

@@ -1,23 +1,14 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
-import pharoslabut.RobotIPAssignments;
-import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
-import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.exceptions.NoNewDataException;
-import pharoslabut.exceptions.PharosException;
-//import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.navigate.NavigateCompassGPS;
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
-//import pharoslabut.sensors.Position2DBuffer;
-//import pharoslabut.sensors.Position2DListener;
 import playerclient3.GPSInterface;
-//import playerclient3.PlayerClient;
-//import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 
@@ -76,9 +67,16 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 	 * @param mobilityPlane The mobility plane used.
 	 * @param playerServerIP The IP address of the player server.
 	 * @param playerServerPort The TCP port on which the player server listens.
+	 * @param serverPort The TCP port on which the local MRPatrol2Server is listening.
+	 * @param mCastAddress The multicast address.
+	 * @param mCastPort The multicast port.
 	 */
-	public OutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, String playerServerIP, int playerServerPort, String mCastAddress, int mCastPort) {
-		super(expConfig, mobilityPlane, mCastAddress, mCastPort);
+	public OutdoorPatrolDaemon(ExpConfig expConfig, MotionArbiter.MotionType mobilityPlane, 
+			String playerServerIP, int playerServerPort, 
+			int serverPort, 
+			String mCastAddress, int mCastPort) 
+	{
+		super(expConfig, mobilityPlane, serverPort, mCastAddress, mCastPort);
 		initPlayerClient(playerServerIP, playerServerPort);
 	}
 	
@@ -168,28 +166,5 @@ public abstract class OutdoorPatrolDaemon extends PatrolDaemon {
 		}
 		Logger.logDbg("Current location: " + result);
 		return result;
-	}
-	
-	/**
-	 * This is only used for off-line time synchronization.  I.e., when analyzing the
-	 * log files of multiple robots, the transmission time can be compared with the
-	 * reception time to determine how far off the various clocks are.
-	 */
-	@Override
-	public void beaconReceived(WiFiBeaconEvent be) {
-		BeaconMsg beacon = (BeaconMsg)be.getBeacon();
-		try {
-			if (beacon.getSenderID() == RobotIPAssignments.getID()) {
-				Logger.logDbg("Ignoring my own beacon.");
-			} else {
-				String robotName = RobotIPAssignments.getName(beacon.getAddress());
-				long deltaTime = System.currentTimeMillis() - beacon.getTimestamp();
-				Logger.logDbg("Received beacon from " + robotName + ", transmission time = " + deltaTime);
-			}
-		} catch (PharosException e) {
-			Logger.logErr("While processing beacon, unable to determine robot's name based on its IP address (" 
-					+ beacon.getAddress() + ")");
-			e.printStackTrace();
-		}
 	}
 }

@@ -18,11 +18,6 @@ public abstract class Behavior implements Runnable {
 	 */
 	private String name;
 	
-//	/**
-//	 * The experiment configuration.
-//	 */
-//	protected ExpConfig expConfig;
-
 	/**
 	 * Whether this behavior is started.
 	 */
@@ -40,13 +35,17 @@ public abstract class Behavior implements Runnable {
 	private Vector<Behavior> prerequisites = new Vector<Behavior>();
 	
 	/**
+	 * This behavior must terminate when all dependencies are done.
+	 */
+	private Vector<Behavior> dependencies = new Vector<Behavior>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param name The name of the behavior.
 	 */
 	public Behavior(String name) {
 		this.name = name;
-//		this.expConfig = expConfig;
 	}
 	
 	/**
@@ -57,6 +56,39 @@ public abstract class Behavior implements Runnable {
 	 */
 	public void addPrerequisite(Behavior b) {
 		prerequisites.add(b);
+	}
+	
+	/**
+	 * Adds a dependency to this behavior.  Dependencies are behaviors that this behavior depends on.
+	 * This behavior should terminate when all of these dependencies are done.  If at least one
+	 * dependency behavior is not done, this behavior's dependency is met.
+	 * 
+	 * @param b The dependency behavior.
+	 */
+	public void addDependency(Behavior b) {
+		dependencies.add(b);
+	}
+	
+	/**
+	 * Determines if the dependencies are met.
+	 * 
+	 * @return Whether all of the dependencies are met.
+	 */
+	protected boolean dependenciesMet() {
+		if (dependencies.size() == 0)
+			return true;
+		
+		Enumeration<Behavior> e = dependencies.elements();
+		while (e.hasMoreElements()) {
+			Behavior b = e.nextElement();
+			if (!b.isDone())
+				return true;
+		}
+		
+		// There were dependencies and all of them are done.
+		// Thus, this behavior did not meet all of the dependencies
+		// and should terminate.
+		return false;
 	}
 	
 	/**
@@ -99,13 +131,24 @@ public abstract class Behavior implements Runnable {
 	public abstract boolean isDone();
 	
 	/**
+	 * Stops the behavior.  After calling this method, a call to isDone() must
+	 * return true.  Once stop is called, the behavior's thread must run to completion.
+	 * In addition, a stopped behavior cannot be started again.
+	 */
+	public abstract void stop();
+	
+	/**
 	 * Starts this behavior running.
 	 */
 	public void start() {
-		started = true;
-		startTime = System.currentTimeMillis();
-		Logger.log("Behavior " + getName() + " starting at time " + startTime);
-		new Thread(this).start();
+		if (isDone()) {
+			Logger.logErr("Attempting to start a behavior that is already done.  Ignoring command.");
+		} else {
+			started = true;
+			startTime = System.currentTimeMillis();
+			Logger.log("Behavior " + getName() + " starting at time " + startTime);
+			new Thread(this).start();
+		}
 	}
 
 	/**
