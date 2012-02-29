@@ -1,6 +1,7 @@
 package pharoslabut.demo.mrpatrol2;
 
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
+import pharoslabut.demo.mrpatrol2.daemons.CoordinatedOutdoorPatrolDaemon;
 import pharoslabut.demo.mrpatrol2.daemons.PatrolDaemon;
 import pharoslabut.demo.mrpatrol2.daemons.UncoordinatedOutdoorPatrolDaemon;
 import pharoslabut.demo.mrpatrol2.msgs.LoadExpSettingsMsg;
@@ -228,6 +229,11 @@ public class MRPatrol2Server implements MessageReceiver {
         			mCastAddress, mCastPort);
         	break;
         case PASSIVE:
+        	patrolDaemon = new CoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, 
+            		playerServerIP, playerServerPort, 
+            		serverPort, 
+            		mCastAddress, mCastPort, expConfig.getCoordinationStrength());
+        	 	
         	break;
         case ANTICIPATED_FIXED:
         	break;

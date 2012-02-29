@@ -8,6 +8,7 @@ import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.beacon.WiFiBeaconEvent;
 import pharoslabut.beacon.WiFiBeaconListener;
 import pharoslabut.beacon.WiFiBeaconReceiver;
+import pharoslabut.demo.mrpatrol2.context.WorldModel;
 import pharoslabut.demo.mrpatrol2.msgs.BeaconMsg;
 import pharoslabut.exceptions.PharosException;
 import pharoslabut.logger.Logger;
@@ -38,6 +39,12 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 	private boolean isDone = false;
 	
 	/**
+	 * The world model to update.  It is updated using information
+	 * contained within incoming beacons.
+	 */
+	private WorldModel worldModel = null;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param name The name of the behavior.
@@ -46,10 +53,25 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
      * @param serverPort The port number that the server is listening to on the local robot.  This information is included in the beacons.
 	 */
 	public BehaviorBeacon(String name, String mCastAddress, int mCastPort, int serverPort) {
+		this(name, mCastAddress, mCastPort, serverPort, null);
+	}
+	
+	/**
+	 * The constructor.
+	 * 
+	 * @param name The name of the behavior.
+	 * @param mcastGroupAddress the multicast address to listen in on.
+     * @param mcastport the multicast port to listen in on.
+     * @param serverPort The port number that the server is listening to on the local robot.  This information is included in the beacons.
+     * @param worldModel The world model to update with information contained within the beacons.
+	 */
+	public BehaviorBeacon(String name, String mCastAddress, int mCastPort, int serverPort, WorldModel worldModel) {
 		super(name);
 		
 		// Create the components that send and receive beacons.
 		initWiFiBeacons(mCastAddress, mCastPort);
+		
+		this.worldModel = worldModel;
 		
 		// Create the beacon.
 		try {
@@ -60,7 +82,6 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 			e.printStackTrace();
 			System.exit(1);
 		}
-		
 	}
 	
 	/**
@@ -105,6 +126,15 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 		
 		wifiBeaconReceiver = new WiFiBeaconReceiver(mCastAddress, mCastPort, pharosNI);
         wifiBeaconBroadcaster = new WiFiBeaconBroadcaster(mCastGroupAddress, pharosIP, mCastPort);
+	}
+	
+	/**
+	 * Sets the number of waypoints traversed within the beacon.
+	 * 
+	 * @param numWaypointsTraversed the number of waypoints traversed.
+	 */
+	public void setWaypointsTraversed(int numWaypointsTraversed) {
+		beacon.setWaypointsTraversed(numWaypointsTraversed);
 	}
 
 	@Override
@@ -155,6 +185,11 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 				String robotName = RobotIPAssignments.getName(beacon.getAddress());
 				long deltaTime = System.currentTimeMillis() - beacon.getTimestamp();
 				Logger.log("Received beacon from " + robotName + ", latency = " + deltaTime + ", beacon = " + beacon);
+				
+				if (worldModel != null) {
+					worldModel.updateTeammate(robotName, beacon.getNumWaypointsTraversed(), beacon.getTimestamp());
+					Logger.logDbg("Updated world model: " + worldModel);
+				}
 			}
 		} catch (PharosException e) {
 			Logger.logErr("While processing beacon, unable to determine robot's name based on its IP address (" 
