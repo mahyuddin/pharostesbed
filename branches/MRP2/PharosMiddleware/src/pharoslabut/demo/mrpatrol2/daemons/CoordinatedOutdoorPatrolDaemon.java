@@ -2,12 +2,14 @@ package pharoslabut.demo.mrpatrol2.daemons;
 
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
+import pharoslabut.demo.mrpatrol2.behaviors.BehaviorAnticipatedUpdateBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorCoordination;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorUpdateBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorWaitTime;
 import pharoslabut.demo.mrpatrol2.config.CoordinationStrength;
+import pharoslabut.demo.mrpatrol2.config.CoordinationType;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
 import pharoslabut.demo.mrpatrol2.context.WorldModel;
@@ -143,10 +145,19 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				Logger.logDbg("Creating behavior " + currBehavior);
 				
 				// Add a behavior that updates the number of waypoints traversed in the beacon
-				Behavior updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount);
-				updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
-				addBehavior(updateBeaconBehavior);
-				Logger.logDbg("Creating behavior " + updateBeaconBehavior);
+				if (expConfig.getCoordinationType() == CoordinationType.PASSIVE) {
+					Behavior updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount);
+					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+					addBehavior(updateBeaconBehavior);
+					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
+				} else if (expConfig.getCoordinationType() == CoordinationType.ANTICIPATED_FIXED) {
+					
+					Behavior updateBeaconBehavior = new BehaviorAnticipatedUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount, 
+							(BehaviorGoToLocation)prevBehavior, expConfig.getAheadTime());
+					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+					addBehavior(updateBeaconBehavior);
+					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
+				}
 				
 				prevBehavior = currBehavior;  // The next behavior should only begin after the coordination behavior is complete.
 				
@@ -156,14 +167,14 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 			
 		}
 		
-		// Make the beacon behavior stop after the robot arrives at the last waypoint in patrol.
-		beaconBehavior.addDependency(prevBehavior);
-		
 		// Get the home starting location
 		Location homeLocation = getLocation();
 		Behavior bHome = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_home", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
 		bHome.addPrerequisite(prevBehavior);
 		addBehavior(bHome);
+		
+		// Make the beacon behavior stop after the robot arrives back home.
+		beaconBehavior.addDependency(bHome);
 		
 		Logger.logDbg("Creating behavior " + bHome);
 	}

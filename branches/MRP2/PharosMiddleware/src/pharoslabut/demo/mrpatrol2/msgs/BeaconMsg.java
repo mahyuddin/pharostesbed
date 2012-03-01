@@ -18,6 +18,12 @@ public class BeaconMsg extends WiFiBeacon {
 	private int numWaypointsTraversed;
 	
 	/**
+	 * This will be set to true when the transmitter is anticipating
+	 * arrival at the next waypoint.
+	 */
+	private boolean anticipated;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param address The address of this host.
@@ -25,6 +31,18 @@ public class BeaconMsg extends WiFiBeacon {
 	 */
 	public BeaconMsg(InetAddress address, int port) {
 		super(address, port);
+	}
+	
+	public void setAnticipated() {
+		anticipated = true;
+	}
+	
+	public void unsetAnticipated() {
+		anticipated = false;
+	}
+	
+	public boolean getAnticipated() {
+		return anticipated;
 	}
 	
 	/**
@@ -53,7 +71,8 @@ public class BeaconMsg extends WiFiBeacon {
 		sBuff.append(getAddress().getHostAddress() + ":" + getPort()); 
 		sBuff.append(", seqno = " + getSeqNum());
 		sBuff.append(", timestamp = " + getTimestamp()); 
-		sBuff.append(", numWaypointsTraversed = " + numWaypointsTraversed + ")");
+		sBuff.append(", numWaypointsTraversed = " + numWaypointsTraversed);
+		sBuff.append(", anticipated = " + anticipated + ")");
 		return sBuff.toString();
 	}	
 }

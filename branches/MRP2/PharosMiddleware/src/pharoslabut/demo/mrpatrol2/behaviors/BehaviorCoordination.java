@@ -67,7 +67,9 @@ public class BehaviorCoordination extends Behavior {
 	 * by the time this behavior runs.
 	 * @param coordStrength The type of coordination.
 	 */
-	public BehaviorCoordination(String name, WorldModel worldModel, int numWaypointsVisited, CoordinationStrength coordStrength) {
+	public BehaviorCoordination(String name, WorldModel worldModel, int numWaypointsVisited, 
+			CoordinationStrength coordStrength) 
+	{
 		super(name);
 		this.worldModel = worldModel;
 		this.numWaypointsVisited = numWaypointsVisited;
