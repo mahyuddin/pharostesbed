@@ -144,7 +144,7 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				
 				// Add a behavior that updates the number of waypoints traversed in the beacon
 				Behavior updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount);
-				currBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+				updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
 				addBehavior(updateBeaconBehavior);
 				Logger.logDbg("Creating behavior " + updateBeaconBehavior);
 				

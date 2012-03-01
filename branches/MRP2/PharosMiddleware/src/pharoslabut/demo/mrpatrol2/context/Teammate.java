@@ -54,7 +54,7 @@ public class Teammate implements java.io.Serializable {
 	 */
 	public void updateNumWaypointsVisited(int numWaypointsVisited, long lastUpdateTime) {
 		if (this.lastUpdateTime < lastUpdateTime) {
-			if (this.numWaypointsVisited < numWaypointsVisited) {
+			if (this.numWaypointsVisited <= numWaypointsVisited) {
 				this.numWaypointsVisited = numWaypointsVisited;
 				this.lastUpdateTime = lastUpdateTime;
 			} else {
