@@ -52,6 +52,12 @@ public class NavigateCompassGPS extends Navigate {
 	 */
 	private boolean done;
 	
+	
+	private double distanceToDestination;
+	
+	
+	private double instantaneousSpeed;
+	
 	/**
 	 * A constructor.
 	 * 
@@ -237,6 +243,10 @@ public class NavigateCompassGPS extends Navigate {
 			return null;
 		}
 	}
+	
+	public boolean areWeThereYet(long aheadTime) {
+		return (distanceToDestination / instantaneousSpeed) < aheadTime;
+	}
 
 	public double getCompassHeading(){
 		try {
@@ -251,6 +261,10 @@ public class NavigateCompassGPS extends Navigate {
 	public void SubmitMotionTask(TargetDirection targetDirection, double velocity){
 		double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
 		double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
+		
+		// For bookkeeping purposes, used by method areWeThereYet()
+		instantaneousSpeed = currVel;
+		
 		//headingError * MIN_VELOCITY/currVel;
 		/*
 		 * Positive heading error means the robot must turn left.
@@ -290,6 +304,10 @@ public class NavigateCompassGPS extends Navigate {
 	private boolean doNextMotionTask(Location currLoc, double currHeading, Location dest, double velocity) {
 		TargetDirection targetDirection = locateTarget(currLoc, currHeading, dest);
 		boolean done = false;
+		
+		// Save statistics in local variables.  This is used by
+		// the areWeThereYet(...) method.
+		distanceToDestination = targetDirection.getDistance();
 		
 		if (targetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
 			Logger.log("Destination reached!");

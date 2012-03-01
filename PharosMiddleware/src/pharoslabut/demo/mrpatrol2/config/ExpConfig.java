@@ -88,6 +88,11 @@ public class ExpConfig implements java.io.Serializable {
 	private Vector<Waypoint> waypoints = new Vector<Waypoint>();
 	
 	/**
+	 * The ahead time used in fixed anticipated experiments.
+	 */
+	private long aheadTime;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param fileName The name of the file containing the experiment specifications.
@@ -250,6 +255,15 @@ public class ExpConfig implements java.io.Serializable {
 							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
 							System.exit(1);
 						}
+					} else if (line.contains("AHEAD_TIME")) {
+						try {
+							String[] elem = line.split("[\\s]+");
+							aheadTime = Long.valueOf(elem[1]);
+						} catch(Exception e) {
+							e.printStackTrace();
+							Logger.logErr("Syntax error on line " + lineno + " of experiment script " + fileName + ":\n" + line);
+							System.exit(1);
+						}
 					} else if (line.contains("ROBOT")) {
 						try {
 							String[] elem = line.split("[\\s]+");
@@ -398,6 +412,10 @@ public class ExpConfig implements java.io.Serializable {
 		return numRounds;
 	}
 	
+	public long getAheadTime() {
+		return aheadTime;
+	}
+	
 	public int getNumWaypoints() {
 		return waypoints.size();
 	}
@@ -496,7 +514,7 @@ public class ExpConfig implements java.io.Serializable {
 		sb.append("\tStart delay = " + startDelay + "\n");
 		sb.append("\tCentral Coordinator = " + getCoordinatorIP() + ":" + getCoordinatorPort() + "\n");
 		sb.append("\tNum Rounds = " + getNumRounds() + "\n");
-		
+		sb.append("\tAhead Time = " + getAheadTime() + "\n");
 		sb.append("\tWaypoints:\n");
 		Iterator<Waypoint> wp = waypoints.iterator();
 		while (wp.hasNext()) {

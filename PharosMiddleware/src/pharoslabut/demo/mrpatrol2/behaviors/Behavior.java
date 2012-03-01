@@ -21,7 +21,7 @@ public abstract class Behavior implements Runnable {
 	/**
 	 * Whether this behavior is started.
 	 */
-	private boolean started = false;
+	protected boolean started = false;
 	
 	/**
 	 * The start time of this behavior.
@@ -32,12 +32,12 @@ public abstract class Behavior implements Runnable {
 	 * All of the behaviors in this vector must be done before this
 	 * behavior can run.
 	 */
-	private Vector<Behavior> prerequisites = new Vector<Behavior>();
+	protected Vector<Behavior> prerequisites = new Vector<Behavior>();
 	
 	/**
 	 * This behavior must terminate when all dependencies are done.
 	 */
-	private Vector<Behavior> dependencies = new Vector<Behavior>();
+	protected Vector<Behavior> dependencies = new Vector<Behavior>();
 	
 	/**
 	 * The constructor.

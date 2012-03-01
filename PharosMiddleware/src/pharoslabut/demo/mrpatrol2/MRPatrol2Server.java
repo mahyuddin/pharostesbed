@@ -229,13 +229,12 @@ public class MRPatrol2Server implements MessageReceiver {
         			mCastAddress, mCastPort);
         	break;
         case PASSIVE:
+        case ANTICIPATED_FIXED:
         	patrolDaemon = new CoordinatedOutdoorPatrolDaemon(expConfig, mobilityPlane, 
             		playerServerIP, playerServerPort, 
             		serverPort, 
             		mCastAddress, mCastPort, expConfig.getCoordinationStrength());
         	 	
-        	break;
-        case ANTICIPATED_FIXED:
         	break;
         case ANTICIPATED_VARIABLE:
         	break;

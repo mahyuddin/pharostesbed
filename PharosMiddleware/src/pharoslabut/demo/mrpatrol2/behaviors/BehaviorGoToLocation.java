@@ -46,6 +46,9 @@ public class BehaviorGoToLocation extends Behavior {
 		Logger.log("Behavior " + getName() + " done.");
 	}
 
+	public boolean areWeThereYet(long aheadTime) {
+		return navigatorCompassGPS.areWeThereYet(aheadTime);
+	}
 //	@Override
 //	public boolean canStart() {
 //		return super.canStart();
