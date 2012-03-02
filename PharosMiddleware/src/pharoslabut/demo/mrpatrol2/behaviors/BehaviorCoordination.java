@@ -59,6 +59,12 @@ public class BehaviorCoordination extends Behavior {
 	private CoordinationStrength coordStrength;
 	
 	/**
+	 * The latency of coordination.  This is only valid after this
+	 * behavior is done.
+	 */
+	private long latency;
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param name The name of the behavior.
@@ -82,7 +88,7 @@ public class BehaviorCoordination extends Behavior {
 	 */
 	@Override
 	public void run() {
-		
+		latency = System.currentTimeMillis();
 		while (!isDone) {
 			
 			StringBuffer sb = new StringBuffer("Checking if team is synchronized (" + numWaypointsVisited + " waypoints)");
@@ -131,6 +137,16 @@ public class BehaviorCoordination extends Behavior {
 			}
 		}
 
+		latency = System.currentTimeMillis() - latency;
+	}
+	
+	/**
+	 * 
+	 * @return The amount of time (in milliseconds) for the coordination process 
+	 * to complete.  THIS IS ONLY VALID AFTER THE BEHAVIOR IS DONE.
+	 */
+	public long getLatency() {
+		return latency;
 	}
 
 	@Override

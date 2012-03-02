@@ -10,7 +10,7 @@ public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 	 * The time prior to reaching the next waypoint when we should
 	 * start coordinating with teammates.
 	 */
-	private final long aheadTime;
+	private long aheadTime;
 	
 	/**
 	 * The go to location behavior that should be running when this behavior
@@ -36,6 +36,14 @@ public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 		super(name, bb, numWaypointsTraversed);
 		this.prevGoToLoc = prevGoToLoc;
 		this.aheadTime = aheadTime;
+	}
+	
+	public void setAheadTime(long aheadTime) {
+		this.aheadTime = aheadTime;
+	}
+	
+	public long getAheadTime() {
+		return aheadTime;
 	}
 	
 	@Override
