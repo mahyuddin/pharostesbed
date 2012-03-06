@@ -18,7 +18,7 @@ import pharoslabut.logger.Logger;
  * 
  * @author Chien-Liang Fok
  */
-public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
+public class BehaviorBeacon extends Behavior implements WiFiBeaconListener, UpdateBeaconBehavior {
 	
 	public static final long MIN_BEACON_PERIOD = 1000;
 	public static final long MAX_BEACON_PERIOD = 2000;
@@ -45,7 +45,7 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 	private WorldModel worldModel = null;
 	
 	/**
-	 * The constructor.
+	 * The constructor.  This is used by the uncoordinated outdoor patrol daemon.
 	 * 
 	 * @param name The name of the behavior.
 	 * @param mcastGroupAddress the multicast address to listen in on.
@@ -57,7 +57,7 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 	}
 	
 	/**
-	 * The constructor.
+	 * The constructor.  This is used by the coordinated outdoor patrol daemon.
 	 * 
 	 * @param name The name of the behavior.
 	 * @param mcastGroupAddress the multicast address to listen in on.
@@ -133,6 +133,7 @@ public class BehaviorBeacon extends Behavior implements WiFiBeaconListener {
 	 * 
 	 * @param numWaypointsTraversed the number of waypoints traversed.
 	 */
+	@Override
 	public void setWaypointsTraversed(int numWaypointsTraversed) {
 		beacon.setWaypointsTraversed(numWaypointsTraversed);
 	}

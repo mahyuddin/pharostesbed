@@ -38,12 +38,6 @@ public class UncoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		createBehaviors();
 	}
 	
-	@Override
-	public void newMessage(Message msg) {
-		// Since this is an uncoordinated patrol, we expect no messages to be exchanged and thus
-		// do nothing here.
-	}
-	
 	/**
 	 * Generates all of the behaviors used in this patrol experiment.
 	 * 
