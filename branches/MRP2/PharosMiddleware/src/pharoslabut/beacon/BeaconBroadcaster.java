@@ -37,11 +37,11 @@ public abstract class BeaconBroadcaster implements Runnable {
      * 
      * @return a random value between minPeriod and maxPeriod.
      */
-    protected long randPeriod() {
-    	long diff = maxPeriod - minPeriod;
-    	double random = Math.random();
-    	return (long)(random * diff + minPeriod);
-    }
+//    protected long randPeriod() {
+//    	long diff = maxPeriod - minPeriod;
+//    	double random = Math.random();
+//    	return (long)(random * diff + minPeriod);
+//    }
     
     /**
      * Starts the broadcasting of beacons.
@@ -101,7 +101,7 @@ public abstract class BeaconBroadcaster implements Runnable {
     		sendBeacon();
     		try {
     			synchronized(this) {
-    				long delayPeriod = randPeriod();
+    				long delayPeriod = pharoslabut.util.Random.randPeriod(minPeriod, maxPeriod);
     				Logger.logDbg("Time till next beacon = " + delayPeriod);
     				wait(delayPeriod);
     			}
