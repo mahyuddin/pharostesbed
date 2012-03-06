@@ -2,13 +2,14 @@ package pharoslabut.demo.mrpatrol2.msgs;
 
 import java.net.InetAddress;
 import pharoslabut.beacon.WiFiBeacon;
+import pharoslabut.io.Message;
 
 /**
  * This is the beacon periodically broadcasted during a multi-robot patrol 2 (MRP2) experiment.
  *
  * @author Chien-Liang Fok
  */
-public class BeaconMsg extends WiFiBeacon {
+public class BeaconMsg extends WiFiBeacon implements Message {
 	
 	private static final long serialVersionUID = 2947617778419351120L;
 	
@@ -17,11 +18,11 @@ public class BeaconMsg extends WiFiBeacon {
 	 */
 	private int numWaypointsTraversed;
 	
-	/**
-	 * This will be set to true when the transmitter is anticipating
-	 * arrival at the next waypoint.
-	 */
-	private boolean anticipated;
+//	/**
+//	 * This will be set to true when the transmitter is anticipating
+//	 * arrival at the next waypoint.
+//	 */
+//	private boolean anticipated;
 	
 	/**
 	 * The constructor.
@@ -33,17 +34,17 @@ public class BeaconMsg extends WiFiBeacon {
 		super(address, port);
 	}
 	
-	public void setAnticipated() {
-		anticipated = true;
-	}
-	
-	public void unsetAnticipated() {
-		anticipated = false;
-	}
-	
-	public boolean getAnticipated() {
-		return anticipated;
-	}
+//	public void setAnticipated() {
+//		anticipated = true;
+//	}
+//	
+//	public void unsetAnticipated() {
+//		anticipated = false;
+//	}
+//	
+//	public boolean getAnticipated() {
+//		return anticipated;
+//	}
 	
 	/**
 	 * Sets the number of markers traversed.
@@ -61,6 +62,11 @@ public class BeaconMsg extends WiFiBeacon {
 		return numWaypointsTraversed;
 	}
 	
+	@Override
+	public MsgType getType() {
+		return MsgType.CUSTOM;
+	}	
+	
 	/**
 	 * Returns a String representation of this class.
 	 *
@@ -72,7 +78,7 @@ public class BeaconMsg extends WiFiBeacon {
 		sBuff.append(", seqno = " + getSeqNum());
 		sBuff.append(", timestamp = " + getTimestamp()); 
 		sBuff.append(", numWaypointsTraversed = " + numWaypointsTraversed);
-		sBuff.append(", anticipated = " + anticipated + ")");
+//		sBuff.append(", anticipated = " + anticipated + ")");
 		return sBuff.toString();
-	}	
+	}
 }
