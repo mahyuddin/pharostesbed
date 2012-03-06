@@ -117,20 +117,28 @@ public class BehaviorTCPBeacon extends Behavior implements UpdateBeaconBehavior,
 	public void run() {
 		while (!isDone) {
 			
-			StringBuffer sb = new StringBuffer("Transmitting beacon to each teammate individually.");
+			StringBuffer sb = new StringBuffer("Transmitting beacon to each teammate individually:");
 			
 			// For each neighbor, transmit a state message to it.
 			Iterator<Teammate> teammates = worldModel.getTeammates().iterator();
 			while (teammates.hasNext()) {
-				Teammate teammate = teammates.next();
-				RobotExpSettings teammateSettings = expConfig.getTeamateSettings(teammate.getName());
-				try {
-					msgSender.sendMessage(teammateSettings.getIP(), teammateSettings.getPort(), beacon);
-					sb.append("\n\t" + teammate.getName() + " - Success");
-				} catch (PharosException e) {
-					e.printStackTrace();
-					sb.append("\n\t" + teammate.getName() + " - Fail " + e.getMessage());
-				}
+				final Teammate teammate = teammates.next();
+				
+				sb.append("\n\t" + teammate.getName());
+				
+				// Spawn a new thread for each transmission to prevent a broken network
+				// connection from halting the transmission to other teammates.
+				new Thread(new Runnable() {
+					public void run() {
+						RobotExpSettings teammateSettings = expConfig.getTeamateSettings(teammate.getName());
+						try {
+							msgSender.sendMessage(teammateSettings.getIP(), teammateSettings.getPort(), beacon);
+						} catch (PharosException e) {
+							e.printStackTrace();
+							Logger.logErr("Unable to send TCP beacon to " + teammate.getName());
+						}
+					}
+				}).start();
 			}
 			
 			Logger.logDbg(sb.toString());
