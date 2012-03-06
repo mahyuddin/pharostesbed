@@ -460,6 +460,24 @@ public class ExpConfig implements java.io.Serializable {
 		return null;
 	}
 	
+	/**
+	 * 
+	 * @param name The name of the teammate.
+	 * @return The experiment settings for the specified teammate.
+	 */
+	public RobotExpSettings getTeamateSettings(String name) {
+		Enumeration<RobotExpSettings> e = team.elements();
+		while (e.hasMoreElements()) {
+			RobotExpSettings res = e.nextElement();
+			if (res.getName().equals(name))
+				return res;
+		}
+		
+		Logger.logErr("Unble to find RobotExpSettings for robot of name " + name);
+		System.exit(1);
+		return null;
+	}
+	
 	public Vector<RobotExpSettings> getTeam() {
 		return team;
 	}
