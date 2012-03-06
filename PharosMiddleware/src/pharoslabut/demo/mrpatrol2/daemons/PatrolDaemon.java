@@ -4,6 +4,7 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import pharoslabut.io.Message;
+import pharoslabut.io.MessageReceiver;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.sensors.Position2DBuffer;
@@ -92,6 +93,11 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 	private Vector<Behavior> behaviors = new Vector<Behavior>();
 	
 	/**
+	 * Holds the objects that should receive incoming messages.
+	 */
+	private Vector<MessageReceiver> msgRcvrs = new Vector<MessageReceiver>();
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param expConfig The experiment settings.
@@ -161,7 +167,30 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 	 * 
 	 * @param msg The incoming message.
 	 */
-	public abstract void newMessage(Message msg);
+	public void newMessage(Message msg) {
+		Enumeration<MessageReceiver> e = msgRcvrs.elements();
+		while (e.hasMoreElements()) {
+			e.nextElement().newMessage(msg);
+		}
+	}
+	
+	/**
+	 * Adds a message receiver so that it can receive incoming messages.
+	 * 
+	 * @param msgRcvr The message receiver to add.
+	 */
+	public void addMsgRcvr(MessageReceiver msgRcvr) {
+		msgRcvrs.add(msgRcvr);
+	}
+	
+	/**
+	 * Removes a message receiver.  Once removed, it will not be notified of new incoming messages.
+	 * 
+	 * @param msgRcvr The message receiver to remove.
+	 */
+	public void removeMsgRcvr(MessageReceiver msgRcvr) {
+		msgRcvrs.remove(msgRcvr);
+	}
 	
 	@Override
 	public void newOpaqueData(ProteusOpaqueData opaqueData) {

@@ -1,15 +1,18 @@
 package pharoslabut.demo.mrpatrol2.behaviors;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import pharoslabut.logger.Logger;
 
 /**
- * Updates when it runs.
+ * Updates the beacon when it runs.
  * 
  * @author Chien-Liang Fok
  */
 public class BehaviorUpdateBeacon extends Behavior {
 
-	private BehaviorBeacon bb;
+	private Vector<UpdateBeaconBehavior> setToUpdate = new Vector<UpdateBeaconBehavior>();
 	
 	private boolean isDone = false;
 	
@@ -19,21 +22,26 @@ public class BehaviorUpdateBeacon extends Behavior {
 	 * The constructor.
 	 * 
 	 * @param name The name of the behavior
-	 * @param bb The behavior to update.
 	 * @param numWaypointsTraversed The number of waypoints the robot has traversed by the
 	 * time this behavior executes.
 	 */
-	public BehaviorUpdateBeacon(String name, BehaviorBeacon bb, int numWaypointsTraversed) {
+	public BehaviorUpdateBeacon(String name, int numWaypointsTraversed) {
 		super(name);
-		this.bb = bb;
 		this.numWaypointsTraversed = numWaypointsTraversed;
+	}
+	
+	public void addBehaviorToUpdate(UpdateBeaconBehavior ubb) {
+		this.setToUpdate.add(ubb);
 	}
 
 	@Override
 	public void run() {
 		if (!isDone) {
 			Logger.logDbg("Setting numWaypointsTraversed in beacon to be " + numWaypointsTraversed);
-			bb.setWaypointsTraversed(numWaypointsTraversed);
+			Enumeration<UpdateBeaconBehavior> e = setToUpdate.elements();
+			while (e.hasMoreElements()) {
+				e.nextElement().setWaypointsTraversed(numWaypointsTraversed);
+			}
 			isDone = true;
 		}
 	}

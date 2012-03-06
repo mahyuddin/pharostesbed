@@ -23,17 +23,16 @@ public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 	/**
 	 * 
 	 * @param name
-	 * @param bb
 	 * @param numWaypointsTraversed
 	 * @param prevGoToLoc The previous go to location behavior.
 	 * @param aheadTime the time before the prevGoToLoc behavior finishes when
 	 * this behavior should start.
 	 */
-	public BehaviorAnticipatedUpdateBeacon(String name, BehaviorBeacon bb,
+	public BehaviorAnticipatedUpdateBeacon(String name,
 			int numWaypointsTraversed,
 			BehaviorGoToLocation prevGoToLoc, long aheadTime) 
 	{
-		super(name, bb, numWaypointsTraversed);
+		super(name, numWaypointsTraversed);
 		this.prevGoToLoc = prevGoToLoc;
 		this.aheadTime = aheadTime;
 	}

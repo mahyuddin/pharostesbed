@@ -1,11 +1,15 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
+import java.util.Enumeration;
+import java.util.Vector;
+
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorAnticipatedUpdateBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorCoordination;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
+import pharoslabut.demo.mrpatrol2.behaviors.BehaviorTCPBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorUpdateBeacon;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorWaitTime;
 import pharoslabut.demo.mrpatrol2.config.CoordinationStrength;
@@ -14,6 +18,7 @@ import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
 import pharoslabut.demo.mrpatrol2.context.WorldModel;
 import pharoslabut.io.Message;
+import pharoslabut.io.MessageReceiver;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;
@@ -44,15 +49,6 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 	{
 		super(expConfig, mobilityPlane, playerServerIP, playerServerPort, serverPort, mCastAddress, mCastPort);
 		createBehaviors(coordStrength);
-	}
-	
-	/**
-	 * Handle incoming messages.  There are two types of messages that can come in:
-	 * 
-	 */
-	@Override
-	public void newMessage(Message msg) {
-		
 	}
 	
 	/**
@@ -113,6 +109,11 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		BehaviorBeacon beaconBehavior = new BehaviorBeacon("Beacon", mCastAddress, mCastPort, serverPort, worldModel);
 		addBehavior(beaconBehavior);
 		
+		// Create a behavior that transmits beacons using TCP
+		BehaviorTCPBeacon beaconTCPBehavior = new BehaviorTCPBeacon("Beacon", serverPort, worldModel, expConfig);
+		addMsgRcvr(beaconTCPBehavior);  // allow this behavior to receive TCP messages.
+		addBehavior(beaconTCPBehavior);
+		
 		// By initializing the prevBehavior to be waitBehavior, we make 
 		// the robot wait at the first waypoint until the waitBehavior is done. 
 		// This enables the robots to reach their first waypoints prior to 
@@ -131,35 +132,39 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				Waypoint wp = expConfig.getWaypoint(wpIndx);
 
 				// Add a GoToLocation behavior to go to the next waypoint.
-				Behavior currBehavior = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
-				currBehavior.addPrerequisite(prevBehavior);
-				addBehavior(currBehavior);
-				Logger.logDbg("Creating behavior " + currBehavior);
+				BehaviorGoToLocation behaviorGoToLoc = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
+				behaviorGoToLoc.addPrerequisite(prevBehavior);
+				addBehavior(behaviorGoToLoc);
+				Logger.logDbg("Creating behavior " + behaviorGoToLoc);
 				
-				prevBehavior = currBehavior;
+				prevBehavior = behaviorGoToLoc;
 				
 				// Add coordination behavior after reaching each waypoint.
-				currBehavior = new BehaviorCoordination("Coordination_" + wpCount, worldModel, wpCount, coordStrength);
-				currBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
-				addBehavior(currBehavior);
-				Logger.logDbg("Creating behavior " + currBehavior);
+				BehaviorCoordination behaviorCoordination = new BehaviorCoordination("Coordination_" + wpCount, worldModel, wpCount, coordStrength);
+				behaviorCoordination.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+				addBehavior(behaviorCoordination);
+				Logger.logDbg("Creating behavior " + behaviorCoordination);
 				
 				// Add a behavior that updates the number of waypoints traversed in the beacon
 				if (expConfig.getCoordinationType() == CoordinationType.PASSIVE) {
-					Behavior updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount);
+					BehaviorUpdateBeacon updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, wpCount);
+					updateBeaconBehavior.addBehaviorToUpdate(beaconBehavior);
+					updateBeaconBehavior.addBehaviorToUpdate(beaconTCPBehavior);
 					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
 					addBehavior(updateBeaconBehavior);
 					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
 				} else if (expConfig.getCoordinationType() == CoordinationType.ANTICIPATED_FIXED) {
 					
-					Behavior updateBeaconBehavior = new BehaviorAnticipatedUpdateBeacon("UpdateBeacon_" + wpCount, beaconBehavior, wpCount, 
+					BehaviorAnticipatedUpdateBeacon updateBeaconBehavior = new BehaviorAnticipatedUpdateBeacon("UpdateBeacon_" + wpCount, wpCount, 
 							(BehaviorGoToLocation)prevBehavior, expConfig.getAheadTime());
+					updateBeaconBehavior.addBehaviorToUpdate(beaconBehavior);
+					updateBeaconBehavior.addBehaviorToUpdate(beaconTCPBehavior);
 					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
 					addBehavior(updateBeaconBehavior);
 					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
 				}
 				
-				prevBehavior = currBehavior;  // The next behavior should only begin after the coordination behavior is complete.
+				prevBehavior = behaviorCoordination;  // The next behavior should only begin after the coordination behavior is complete.
 				
 				wpIndx++; wpCount++;
 				wpIndx %= expConfig.getNumWaypoints();
