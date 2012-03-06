@@ -20,7 +20,7 @@ public class BehaviorDynamicAnticipated extends Behavior {
 	}
 	
 	private long computeAheadTime(Vector<Long> latencies) {
-		long aheadTime;
+		long aheadTime = 0;
 		
 		long prevAheadTime = behUpdateBeacon.getAheadTime();
 		//...
@@ -33,7 +33,7 @@ public class BehaviorDynamicAnticipated extends Behavior {
 		// exchange latencies of previous coordination with active teammates
 		
 		// compute the next aheadTime
-		long aheadTime = ...;
+		long aheadTime = 0;
 		
 		nextUpdate.setAheadTime(aheadTime);
 
