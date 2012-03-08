@@ -24,6 +24,8 @@ public class BehaviorGoToLocation extends Behavior {
 	
 	boolean isDone = false;
 	
+//	Behavior childBehavior = null;
+	
 	/**
 	 * The constructor.
 	 * 
@@ -39,6 +41,14 @@ public class BehaviorGoToLocation extends Behavior {
 		this.speed = speed;
 	}
 	
+	public Location getDestination() {
+		return destLoc;
+	}
+	
+//	public void setChildBehavior(Behavior childBehavior) {
+//		this.childBehavior = childBehavior;
+//	}
+	
 	@Override
 	public void run() {
 		navigatorCompassGPS.go(destLoc, speed);
@@ -47,6 +57,16 @@ public class BehaviorGoToLocation extends Behavior {
 	}
 
 	public boolean areWeThereYet(long aheadTime) {
+		if (isDone()) {
+			//Logger.logDbg("We are there because this behavior is done.");
+			return true;
+		}
+		
+		if (!started) {
+			//Logger.logDbg("We are not there yet because this behavior is not started.");
+			return false;
+		}
+		
 		return navigatorCompassGPS.areWeThereYet(aheadTime);
 	}
 //	@Override

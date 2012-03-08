@@ -16,7 +16,7 @@ public class BehaviorUpdateBeacon extends Behavior {
 	
 	private boolean isDone = false;
 	
-	private int numWaypointsTraversed;
+	protected int numWaypointsTraversed;
 	
 	/**
 	 * The constructor.

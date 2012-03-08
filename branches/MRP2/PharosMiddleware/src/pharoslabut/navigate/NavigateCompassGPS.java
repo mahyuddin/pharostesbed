@@ -245,7 +245,10 @@ public class NavigateCompassGPS extends Navigate {
 	}
 	
 	public boolean areWeThereYet(long aheadTime) {
-		return (distanceToDestination / instantaneousSpeed) < aheadTime;
+		boolean result = (distanceToDestination / instantaneousSpeed) * 1000 < aheadTime;
+		Logger.logDbg("distanceToDestination = " + distanceToDestination 
+				+ ", instantaneousSpeed = " + instantaneousSpeed + ", aheadTime = " + aheadTime + ", result = " + result);
+		return result;
 	}
 
 	public double getCompassHeading(){

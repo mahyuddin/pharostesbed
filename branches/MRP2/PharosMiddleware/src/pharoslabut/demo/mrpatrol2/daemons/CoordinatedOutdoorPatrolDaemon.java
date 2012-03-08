@@ -94,7 +94,7 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 			Logger.logErr("Unable to get first waypoint.");
 			System.exit(1);
 		}
-		Behavior b0 = new BehaviorGoToLocation("GoToLoc_0_" + firstWaypointName, navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
+		BehaviorGoToLocation b0 = new BehaviorGoToLocation("GoToLoc_0_" + firstWaypointName, navigatorCompassGPS, firstWaypoint, SPEED_TO_FIRST_WAYPOINT);
 		addBehavior(b0);
 		Logger.logDbg("Creating behavior " + b0);
 			
@@ -106,11 +106,11 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		
 		// Create a behavior that starts the beaconing.
 		// Note that this behavior has no prerequisites so it should start immediately when the experiment begins.
-		BehaviorBeacon beaconBehavior = new BehaviorBeacon("Beacon", mCastAddress, mCastPort, serverPort, worldModel);
+		BehaviorBeacon beaconBehavior = new BehaviorBeacon("BeaconUDP", mCastAddress, mCastPort, serverPort, worldModel);
 		addBehavior(beaconBehavior);
 		
 		// Create a behavior that transmits beacons using TCP
-		BehaviorTCPBeacon beaconTCPBehavior = new BehaviorTCPBeacon("Beacon", serverPort, worldModel, expConfig);
+		BehaviorTCPBeacon beaconTCPBehavior = new BehaviorTCPBeacon("BeaconTCP", serverPort, worldModel, expConfig);
 		addMsgRcvr(beaconTCPBehavior);  // allow this behavior to receive TCP messages.
 		addBehavior(beaconTCPBehavior);
 		
@@ -137,29 +137,30 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				addBehavior(behaviorGoToLoc);
 				Logger.logDbg("Creating behavior " + behaviorGoToLoc);
 				
-				prevBehavior = behaviorGoToLoc;
-				
 				// Add coordination behavior after reaching each waypoint.
 				BehaviorCoordination behaviorCoordination = new BehaviorCoordination("Coordination_" + wpCount, worldModel, wpCount, coordStrength);
-				behaviorCoordination.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+				behaviorCoordination.addPrerequisite(behaviorGoToLoc); // the prerequisite is to reach the waypoint
 				addBehavior(behaviorCoordination);
 				Logger.logDbg("Creating behavior " + behaviorCoordination);
 				
 				// Add a behavior that updates the number of waypoints traversed in the beacon
 				if (expConfig.getCoordinationType() == CoordinationType.PASSIVE) {
+					
+					
 					BehaviorUpdateBeacon updateBeaconBehavior = new BehaviorUpdateBeacon("UpdateBeacon_" + wpCount, wpCount);
 					updateBeaconBehavior.addBehaviorToUpdate(beaconBehavior);
 					updateBeaconBehavior.addBehaviorToUpdate(beaconTCPBehavior);
-					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+					updateBeaconBehavior.addPrerequisite(behaviorGoToLoc); // the prerequisite is to reach the waypoint
 					addBehavior(updateBeaconBehavior);
 					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
 				} else if (expConfig.getCoordinationType() == CoordinationType.ANTICIPATED_FIXED) {
 					
 					BehaviorAnticipatedUpdateBeacon updateBeaconBehavior = new BehaviorAnticipatedUpdateBeacon("UpdateBeacon_" + wpCount, wpCount, 
-							(BehaviorGoToLocation)prevBehavior, expConfig.getAheadTime());
+							behaviorGoToLoc, expConfig.getAheadTime());
 					updateBeaconBehavior.addBehaviorToUpdate(beaconBehavior);
 					updateBeaconBehavior.addBehaviorToUpdate(beaconTCPBehavior);
 					updateBeaconBehavior.addPrerequisite(prevBehavior); // the prerequisite is to reach the waypoint
+//					updateBeaconBehavior.addCurrentlyRunningBehavior(behaviorGoToLoc);
 					addBehavior(updateBeaconBehavior);
 					Logger.logDbg("Creating behavior " + updateBeaconBehavior);
 				}
@@ -180,6 +181,7 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		
 		// Make the beacon behavior stop after the robot arrives back home.
 		beaconBehavior.addDependency(bHome);
+		beaconTCPBehavior.addDependency(bHome);
 		
 		Logger.logDbg("Creating behavior " + bHome);
 	}
