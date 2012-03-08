@@ -164,7 +164,7 @@ public class BehaviorCoordination extends Behavior {
 	 */
 	@Override
 	public String toString() {
-		return "BehaviorTightCoordination " + super.toString() 
+		return "BehaviorCoordination " + super.toString() 
 			+ ", numWaypointsVisited = " + numWaypointsVisited 
 			+ ", worldModel = " + worldModel 
 			+ ", coordStrength = " + coordStrength;

@@ -3,6 +3,7 @@ package pharoslabut.demo.mrpatrol2.behaviors;
 import java.util.Enumeration;
 
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior.CanStart;
+import pharoslabut.logger.Logger;
 
 public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 
@@ -60,6 +61,9 @@ public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 				return new CanStart(false, "prerequisite " + b.getName() + " not done.");
 		}
 		
+//		if (!currentlyRunningRequirementMet())
+//			return new CanStart(false, "a behavior that must be running concurrently is not yet running");
+		
 		// check if the time till reaching the next waypoint is < threshold
 		if (prevGoToLoc.areWeThereYet(aheadTime)) {
 			return new CanStart(true, "time to start coordinating.");
@@ -67,4 +71,11 @@ public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 			return new CanStart(false, "Not time to start coordinating yet.");
 	}
 
+	/**
+	 * @return A string representation of this class.
+	 */
+	@Override
+	public String toString() {
+		return "BehaviorAnticipatedUpdateBeacon " + super.toString() + ", numWaypointsTraversed = " + numWaypointsTraversed;
+	}
 }

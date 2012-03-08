@@ -35,6 +35,11 @@ public abstract class Behavior implements Runnable {
 	protected Vector<Behavior> prerequisites = new Vector<Behavior>();
 	
 	/**
+	 * Behaviors that must be running when this behavior begins to run.
+	 */
+	protected Vector<Behavior> currentlyRunningBehaviors = new Vector<Behavior>();
+	
+	/**
 	 * This behavior must terminate when all dependencies are done.
 	 */
 	protected Vector<Behavior> dependencies = new Vector<Behavior>();
@@ -68,6 +73,25 @@ public abstract class Behavior implements Runnable {
 	public void addDependency(Behavior b) {
 		dependencies.add(b);
 	}
+	
+//	public void addCurrentlyRunningBehavior(Behavior b) {
+//		currentlyRunningBehaviors.add(b);
+//	}
+//	
+//	protected boolean currentlyRunningRequirementMet() {
+//		if (currentlyRunningBehaviors.size() == 0)
+//			return true;
+//		
+//		Enumeration<Behavior> e = currentlyRunningBehaviors.elements();
+//		while (e.hasMoreElements()) {
+//			Behavior b = e.nextElement();
+//			if (!b.isRunning())
+//				return false;
+//		}
+//		
+//		// All behaviors in the currentRunning list are running.
+//		return true;
+//	}
 	
 	/**
 	 * Determines if the dependencies are met.
@@ -129,6 +153,14 @@ public abstract class Behavior implements Runnable {
 	 * @return Whether this behavior is done.
 	 */
 	public abstract boolean isDone();
+	
+	/**
+	 * 
+	 * @return Whether the behavior is running running.
+	 */
+	public boolean isRunning() {
+		return !isDone() && started;
+	}
 	
 	/**
 	 * Stops the behavior.  After calling this method, a call to isDone() must
@@ -197,6 +229,10 @@ public abstract class Behavior implements Runnable {
 		
 		public String getReason() {
 			return reason;
+		}
+		
+		public String toString() {
+			return canStart + " - " + reason;
 		}
 	}
 }

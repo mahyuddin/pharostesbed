@@ -200,6 +200,9 @@ public class MotionArbiter implements Runnable {
 //			flogger.log(result);
 //	}
 	
+	boolean pendingStop = false;
+	long pendingStopTimestamp = 0;
+	
 	/**
 	 * Sits in a loop periodically sending movement commands to the robot.
 	 * It is necessary to continuously send movement commands because otherwise
@@ -216,15 +219,30 @@ public class MotionArbiter implements Runnable {
 				motionTask = currTask;
 			}
 			
+			// Only stop the robot if I receive a stop command and no other commands within one second.
 			if (motionTask != null) {
-				sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
-
-				// No point in repeatedly sending a stop motion command
-				// (The robot will by default stop when no command is received)
+				
 				if (motionTask.isStop()) {
-					Logger.logDbg("MotionTask is stop, resorting to initial state");
-					currTask = null;
+					if (!pendingStop) {
+						pendingStop = true;
+						pendingStopTimestamp = System.currentTimeMillis();
+					} else {
+						if (System.currentTimeMillis() - pendingStopTimestamp > 1500) {
+							sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
+							
+							// No point in repeatedly sending a stop motion command
+							// (The robot will by default stop when no command is received)
+							if (motionTask.isStop()) {
+								Logger.logDbg("MotionTask is stop, resorting to initial state");
+								currTask = null;
+							} 
+						}
+					}
+				} else {
+					pendingStop = false;
+					sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
 				}
+				
 			} else {
 				// There is no motion task to execute...
 
