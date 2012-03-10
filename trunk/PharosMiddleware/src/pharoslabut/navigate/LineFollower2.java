@@ -92,7 +92,9 @@ public class LineFollower2 implements Runnable, BlobDataConsumer {
 	 * @param motors The robot's motors.
 	 * @param ptz The camera's PTZ actuators.
 	 */
-	public LineFollower2(BlobDataProvider provider, Position2DInterface motors, PtzInterface ptz) {
+	public LineFollower2(BlobDataProvider provider, Position2DInterface motors, 
+			PtzInterface ptz)
+	{
 		
 		Logger.log("Registering as blob data consumer.");
 		provider.addBlobDataConsumer(this);
