@@ -2,14 +2,17 @@ package pharoslabut.tests;
 
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
-import pharoslabut.navigate.LineFollower;
+import pharoslabut.navigate.LineFollower2;
+import pharoslabut.sensors.BlobDataProvider;
 import pharoslabut.sensors.PathLocalizerOverheadMarkers;
 import pharoslabut.sensors.PathLocalizerOverheadMarkersListener;
 import pharoslabut.sensors.Position2DBuffer;
 import pharoslabut.sensors.RangerDataBuffer;
+import playerclient3.BlobfinderInterface;
 import playerclient3.PlayerClient;
 import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
+import playerclient3.PtzInterface;
 import playerclient3.RangerInterface;
 import playerclient3.structures.PlayerConstants;
 
@@ -20,7 +23,7 @@ import playerclient3.structures.PlayerConstants;
  */
 public class TestOverheadMarkerReactionTime implements PathLocalizerOverheadMarkersListener {
 
-	private LineFollower lineFollower;
+	private LineFollower2 lineFollower;
 	
 	/**
 	 * The constructor.
@@ -44,14 +47,31 @@ public class TestOverheadMarkerReactionTime implements PathLocalizerOverheadMark
 		pos2DBuffer.start();
 		Logger.logDbg("Created Position2dProxy.");
 		
+		// Subscribe to blobfinder
+		BlobfinderInterface bfi = null;
+		try {
+			bfi = client.requestInterfaceBlobfinder(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to blob finder proxy."); System.exit(1);}
+		Logger.log("Created BlobFinder.");
+		
+		// Subscribe to PTZ
+		PtzInterface ptz = null;
+		try {
+			ptz = client.requestInterfacePtz(0, PlayerConstants.PLAYER_OPEN_MODE);
+		} catch (PlayerException e) { Logger.logErr("Could not connect to PTZ proxy."); System.exit(1);}
+		Logger.logDbg("Connected to PTZ proxy.");
+		
 		// Start the PathLocalizerOverheadMarkers 
 		PathLocalizerOverheadMarkers markerDetector = new PathLocalizerOverheadMarkers(rangerBuffer, pos2DBuffer, false /* no GUI */);
 		Logger.log("Created the PathLocalizerOverheadMarkers.");
 		markerDetector.addListener(this);
 		markerDetector.start();
 		
+		
+		BlobDataProvider bdp = new BlobDataProvider(bfi);
+		
 		// Start the robot following the line
-		lineFollower = new LineFollower(client);
+		lineFollower = new LineFollower2(bdp, p2di, ptz);
 		lineFollower.start();
 		Logger.log("Started the line follower.");
 		
