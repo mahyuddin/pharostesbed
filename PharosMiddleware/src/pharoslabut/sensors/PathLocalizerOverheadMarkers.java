@@ -206,7 +206,7 @@ public class PathLocalizerOverheadMarkers implements RangerListener, Position2DL
 					// that are greater than THRESHOLD_NONEXIST_MARKER before concluding for sure.
 				}
 			} else {
-				// This is a duplicate "no marker" signal.  Ingnore it.
+				// This is a duplicate "no marker" signal.  Ignore it.
 			}
 		} else if (range < THRESHOLD_EXIST_MARKER) {
 			// We may be under a marker
