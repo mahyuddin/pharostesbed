@@ -347,6 +347,18 @@ public class LineFollower2 implements Runnable, BlobDataConsumer {
 	long prevPrintTime = -1;
 	boolean errorState = false;
 	
+	
+	boolean override = false;
+	double overrideSteeringAngle;
+	double overrideSpeed;
+	
+	// The following was added for the "evade" operating in the autonomous intersection.
+	public synchronized void override(double steeringAngle, double speed) {
+		this.override = true;
+		this.overrideSteeringAngle = steeringAngle;
+		this.overrideSpeed = speed;
+	}
+	
 	/**
 	 * This contains the main loop of the LineFollower thread.
 	 */
@@ -357,24 +369,29 @@ public class LineFollower2 implements Runnable, BlobDataConsumer {
 		
 		while(!done) {
 			
-			// If new blob data is available, get and process it.
-			synchronized(this) {
-				if (newBlobData) {
-					newBlobData = false;
-					if (processBlobs(blobData)) {
-						blobDataTimeStamp = System.currentTimeMillis(); // only update timestamp if the blob contained line data.
-						speed = robotController.getSpeed();
-						steeringAngle = robotController.getSteeringAngle();
-					} else
-						speed = steeringAngle = 0;
+			if (!override) {
+				// If new blob data is available, get and process it.
+				synchronized(this) {
+					if (newBlobData) {
+						newBlobData = false;
+						if (processBlobs(blobData)) {
+							blobDataTimeStamp = System.currentTimeMillis(); // only update timestamp if the blob contained line data.
+							speed = robotController.getSpeed();
+							steeringAngle = robotController.getSteeringAngle();
+						} else
+							speed = steeringAngle = 0;
+					}
 				}
-			}
-			
-			// If no blob data is received within a threshold time window, stop the robot.
-			if (speed != 0 && steeringAngle != 0 && System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
-				Logger.logErr("No valid blob data in past " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
-				notifyListenersError(LineFollowerError.NO_BLOB);
-				speed = steeringAngle = 0;
+				
+				// If no blob data is received within a threshold time window, stop the robot.
+				if (speed != 0 && steeringAngle != 0 && System.currentTimeMillis() - blobDataTimeStamp > BLOB_MAX_VALID_AGE) {
+					Logger.logErr("No valid blob data in past " + BLOB_MAX_VALID_AGE + "ms, stopping robot.");
+					notifyListenersError(LineFollowerError.NO_BLOB);
+					speed = steeringAngle = 0;
+				}
+			} else {
+				speed = overrideSpeed;
+				steeringAngle = overrideSteeringAngle;
 			}
 			
 			if (paused) {
