@@ -256,17 +256,20 @@ public abstract class PatrolDaemon implements ProteusOpaqueListener, Position2DL
 					numDone++;
 			}
 			
-			StringBuffer sb2 = new StringBuffer("\nThe following " + startableBehaviors.size() + " behaviors can start:");
-			e = startableBehaviors.elements();
-			while (e.hasMoreElements()) {
-				sb2.append("\n\t" + e.nextElement().getName());
+			// Only print if at least one behavior can start.
+			if (startableBehaviors.size() > 0) {
+				StringBuffer sb2 = new StringBuffer("\nThe following " + startableBehaviors.size() + " behaviors can start:");
+				e = startableBehaviors.elements();
+				while (e.hasMoreElements()) {
+					sb2.append("\n\t" + e.nextElement().getName());
+				}
+				
+				Logger.logDbg("Refresh cycle results:" 
+						+ sb2.toString() 
+						+ "\nThe following " + (behaviors.size() - startableBehaviors.size()) 
+						+ " behaviors cannot start:" + sb1.toString() 
+						+ "\nDone: " + numDone + " of " + behaviors.size());
 			}
-			
-			Logger.logDbg("Refresh cycle results:" 
-					+ sb2.toString() 
-					+ "\nThe following " + (behaviors.size() - startableBehaviors.size()) 
-					+ " behaviors cannot start:" + sb1.toString() 
-					+ "\nDone: " + numDone + " of " + behaviors.size());
 			
 			// Start the startable behaviors.
 			e = startableBehaviors.elements();
