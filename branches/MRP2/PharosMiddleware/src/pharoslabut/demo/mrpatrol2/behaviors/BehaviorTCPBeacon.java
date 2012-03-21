@@ -1,7 +1,6 @@
 package pharoslabut.demo.mrpatrol2.behaviors;
 
 import java.net.InetAddress;
-import java.util.Collection;
 import java.util.Iterator;
 
 import pharoslabut.RobotIPAssignments;
