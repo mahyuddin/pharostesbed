@@ -29,6 +29,7 @@ public class CompassCircleTest {
 	 * @param serverIP The IP address of the robot.
 	 * @param serverPort The port on which the robot is listening.
 	 * @param time The duration in milliseconds that the robot should move in circles.
+	 * @param compassIndex The index of the compass.
 	 * @param logFileName The log file in which to save results.
 	 * @param showGUI Whether to show the GUI.
 	 * @param mobilityPlane The type of mobility plane being used.
@@ -36,7 +37,7 @@ public class CompassCircleTest {
 	 * @param turnAngle The heading in which to turn in degrees.
 	 * @param getStatusMsgs Whether to subscribe to status messages sent from the Proteus MCU.
 	 */
-	public CompassCircleTest(String serverIP, int serverPort, int time, 
+	public CompassCircleTest(String serverIP, int serverPort, int time, int compassIndex,
 			boolean showGUI, MotionArbiter.MotionType mobilityPlane, 
 			double speed, double turnAngle, boolean getStatusMsgs) 
 	{
@@ -57,25 +58,15 @@ public class CompassCircleTest {
 			System.exit(1);
 		}
 		MotionArbiter motionArbiter = new MotionArbiter(mobilityPlane, motors);
-//		motionArbiter.setFileLogger(flogger);
 		
 		Logger.log("Start the robot moving in circles...");
 		MotionTask circleTask = new MotionTask(Priority.SECOND, speed, Math.toRadians(turnAngle));
 		if (motionArbiter.submitTask(circleTask))
 			Logger.log("Circular motion task accepted...");
 		
-		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
-		// while the Segway RMP 50's compass is on index 2.
 		Logger.log("Creating a CompassLogger...");
 		CompassLogger compassLogger;
-		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
-				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
-			compassLogger = new CompassLogger(serverIP, serverPort, 1 /* device index */, 
-					showGUI, getStatusMsgs);
-		} else {
-			compassLogger = new CompassLogger(serverIP, serverPort, 2 /* device index */, 
-						showGUI, getStatusMsgs);
-		}
+		compassLogger = new CompassLogger(serverIP, serverPort, compassIndex, showGUI, getStatusMsgs);
 		
 		Logger.log("Starting to log compass readings...");
 		if (compassLogger.start()) {
@@ -121,6 +112,7 @@ public class CompassCircleTest {
 		System.err.println("Where <options> include:");
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
+		System.err.println("\t-compassIndex <index number>: The index of the compass device (default 1)");
 		System.err.println("\t-time <period in s>: duration of test (default infinity)");
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
 		System.err.println("\t-gui: display GUI (default not shown)");
@@ -134,6 +126,7 @@ public class CompassCircleTest {
 		int time = 0;
 		String serverIP = "localhost";
 		int serverPort = 6665;
+		int compassIndex = 1;
 		double speed = 0.6;
 		double turnAngle = -20;
 		boolean showGUI = false;
@@ -151,6 +144,9 @@ public class CompassCircleTest {
 				else if (args[i].equals("-time")) {
 					time = Integer.valueOf(args[++i]);
 				} 
+				else if (args[i].equals("-compassIndex")) {
+					compassIndex = Integer.valueOf(args[++i]);
+				}
 				else if (args[i].equals("-log")) {
 					Logger.setFileLogger(new FileLogger(args[++i], false));
 				}
@@ -197,12 +193,13 @@ public class CompassCircleTest {
 		System.out.println("Server IP: " + serverIP);
 		System.out.println("Server port: " + serverPort);
 		System.out.println("Time: " + time + "s");
+		System.out.println("Compass Index: " + compassIndex);
 		System.out.println("ShowGUI: " + showGUI);
 		System.out.println("Mobility Plane: " + mobilityPlane);
 		System.out.println("Speed: " + speed);
 		System.out.println("Turn Angle: " + turnAngle);
 		
-		new CompassCircleTest(serverIP, serverPort, time, showGUI, mobilityPlane,
+		new CompassCircleTest(serverIP, serverPort, time, compassIndex, showGUI, mobilityPlane,
 				speed, turnAngle, getStatusMsgs);
 	}
 }
