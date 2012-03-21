@@ -2,12 +2,14 @@ package pharoslabut.navigate;
 
 import pharoslabut.sensors.CompassDataBuffer;
 import pharoslabut.sensors.GPSDataBuffer;
+import pharoslabut.sensors.Position2DListener;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.exceptions.NoNewDataException;
 import playerclient3.structures.gps.PlayerGpsData;
+import playerclient3.structures.position2d.PlayerPosition2dData;
 
 /**
  * Navigates a car to a specified destination.  It calculates which direction
@@ -19,14 +21,18 @@ import playerclient3.structures.gps.PlayerGpsData;
  * 
  * @author Chien-Liang Fok
  */
-public class NavigateCompassGPS extends Navigate {
+public class NavigateCompassGPS extends Navigate implements Position2DListener {
+	/**
+	 * The maximum age of the latest heading measurement in milliseconds.
+	 */
+	public static final double MAX_HEADING_LATENCY = 500;
 	
 	public static final double ERROR_HEADING = Double.MIN_VALUE;
 	// Define the maximum turn angle in radians.  This is for the Traxxas mobility plane.
 	// TODO: Generalize the MAX_TURN_ANGLE to work with any mobility plane
 	public static final double MAX_TURN_ANGLE = 0.35; 
 	
-	public static final int COMPASS_MEDIAN_FILTER_LENGTH = 3;
+	//public static final int COMPASS_MEDIAN_FILTER_LENGTH = 3;
 	
 	//public static final int GPS_BUFFER_SIZE = 10;
 	//public static final int GPS_SENSE_PERIOD = 1000; // The period at which the GPS is read in ms
@@ -43,7 +49,7 @@ public class NavigateCompassGPS extends Navigate {
 	
 	private GPSDataBuffer gpsDataBuffer;
 	private MotionArbiter motionArbiter;
-	private CompassDataBuffer compassDataBuffer;
+	//private CompassDataBuffer compassDataBuffer;
 	
 	private MotionTask prevTask = null;
 	
@@ -58,6 +64,9 @@ public class NavigateCompassGPS extends Navigate {
 	
 	private double instantaneousSpeed;
 	
+	private double currHeading;
+	private long currHeadingTimestamp;
+	
 	/**
 	 * A constructor.
 	 * 
@@ -70,7 +79,8 @@ public class NavigateCompassGPS extends Navigate {
 			GPSDataBuffer gpsDataBuffer) 
 	{
 		this.motionArbiter = motionArbiter;
-		this.compassDataBuffer = compassDataBuffer;
+		//this.compassDataBuffer = compassDataBuffer;
+		compassDataBuffer.addPos2DListener(this);
 		this.gpsDataBuffer = gpsDataBuffer;
 	}
 	
@@ -251,17 +261,16 @@ public class NavigateCompassGPS extends Navigate {
 		return result;
 	}
 
+	/**
+	 * This is called by BehGotoGPSCoord.
+	 * TODO Remove this method.
+	 * @return
+	 */
 	public double getCompassHeading(){
-		try {
-			return compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
-		} catch (NoNewDataException e) {
-			e.printStackTrace();
-			Logger.logErr("Unable to get compass heading\n");
-			return ERROR_HEADING;
-		}
+		return currHeading;
 	}
 	
-	public void SubmitMotionTask(TargetDirection targetDirection, double velocity){
+	public void submitMotionTask(TargetDirection targetDirection, double velocity){
 		double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
 		double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
 		
@@ -330,7 +339,7 @@ public class NavigateCompassGPS extends Navigate {
 			Logger.logErr("Invalid distance: Greater than 2km (" + targetDirection.getDistance() + "), stopping robot...");
 				stopRobot();
 		} else {
-			SubmitMotionTask(targetDirection, velocity);
+			submitMotionTask(targetDirection, velocity);
 		}
 		return done;
 	}
@@ -343,7 +352,7 @@ public class NavigateCompassGPS extends Navigate {
 	 * @param velocity The speed in meters per second that the robot should travel at.
 	 * @return true if the robot successfully reached the destination
 	 */
-	public boolean go(Location dest, double velocity) {
+	public synchronized boolean go(Location dest, double velocity) {
 		done = false;
 		boolean success = false;
 		
@@ -353,10 +362,15 @@ public class NavigateCompassGPS extends Navigate {
 			try {
 				currLoc = new Location(gpsDataBuffer.getCurrLoc());
 				if (GPSDataBuffer.isValid(currLoc)) {
-					double currHeading = compassDataBuffer.getMedian(COMPASS_MEDIAN_FILTER_LENGTH);
-					done = doNextMotionTask(currLoc, currHeading, dest, velocity);
-					if (done) success = true;
-					//dprevLoc = currLoc;
+					long headingAge = System.currentTimeMillis() - currHeadingTimestamp;
+					if (headingAge < MAX_HEADING_LATENCY) {
+						done = doNextMotionTask(currLoc, currHeading, dest, velocity);
+						if (done) success = true;
+					} else {
+						String errMsg = "Max heading data age exceeded (" + headingAge + " >= " + MAX_HEADING_LATENCY + ")";
+						Logger.logErr(errMsg);
+						throw new NoNewDataException(errMsg);
+					}
 				} else {
 					Logger.logErr("Invalid current location " + currLoc + ", halting robot...");
 					stopRobot();
@@ -389,6 +403,17 @@ public class NavigateCompassGPS extends Navigate {
 	 */
 	public void stop() {
 		done = true;
+	}
+
+	/**
+	 * Stores the new heading measurement and record its time stamp.
+	 */
+	@Override
+	public void newPlayerPosition2dData(PlayerPosition2dData data) {
+		synchronized(this) {
+			currHeading = data.getPos().getPa();
+			currHeadingTimestamp = System.currentTimeMillis();
+		}
 	}
 	
 //	private void logErr(String msg) {
