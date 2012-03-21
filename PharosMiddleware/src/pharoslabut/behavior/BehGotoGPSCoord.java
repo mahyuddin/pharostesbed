@@ -146,7 +146,7 @@ public class BehGotoGPSCoord extends Behavior {
 		if(_simulateAll)
 			return;
 		if (_lastTargetDirection != null && (_lastCurrHeading != NavigateCompassGPS.ERROR_HEADING)) { 
-			navigator.SubmitMotionTask(_lastTargetDirection, speed);
+			navigator.submitMotionTask(_lastTargetDirection, speed);
 			Logger.log("Running action, _LastTargetDirection=" + _lastTargetDirection + ", velocity=" + speed + "\n");
 		} else { //stop robot if we have no GPS data
 			if(_lastTargetDirection == null)
