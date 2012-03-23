@@ -5,8 +5,11 @@ import pharoslabut.sensors.GPSDataBuffer;
 import pharoslabut.sensors.Position2DListener;
 import pharoslabut.tasks.MotionTask;
 import pharoslabut.tasks.Priority;
+import pharoslabut.util.ThreadControl;
 //import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
+import pharoslabut.logger.analyzer.Line;
+import pharoslabut.logger.analyzer.motion.SpatialDivergence;
 import pharoslabut.exceptions.NoNewDataException;
 import playerclient3.structures.gps.PlayerGpsData;
 import playerclient3.structures.position2d.PlayerPosition2dData;
@@ -23,49 +26,106 @@ import playerclient3.structures.position2d.PlayerPosition2dData;
  */
 public class NavigateCompassGPS extends Navigate implements Position2DListener {
 	/**
-	 * The maximum age of the latest heading measurement in milliseconds.
+	 * Specifies the navigation component's cycle time in milliseconds.
+	 * For example, a value of 100ms means the navigation process updates
+	 * the direction and speed of the robot at 10Hz.
+	 */
+	public static final int NAV_CYCLE_PERIOD = 200;
+	
+	/**
+	 * The maximum age of a valid heading measurement in milliseconds.
 	 */
 	public static final double MAX_HEADING_LATENCY = 500;
 	
-	public static final double ERROR_HEADING = Double.MIN_VALUE;
-	// Define the maximum turn angle in radians.  This is for the Traxxas mobility plane.
-	// TODO: Generalize the MAX_TURN_ANGLE to work with any mobility plane
-	public static final double MAX_TURN_ANGLE = 0.35; 
+	/**
+	 * The threshold steering angle error in radians above which the robot will use
+	 * a separate controller to turn towards the next waypoint.
+	 */
+	public static final double MAJOR_HEADING_CORRECTION_THRESHOLD = 0.1744; // 10 degrees
+	//public static final double MAJOR_HEADING_CORRECTION_THRESHOLD = 0.35; // 20 degrees
 	
-	//public static final int COMPASS_MEDIAN_FILTER_LENGTH = 3;
+	/**
+	 * The multiplier used when correcting for spatial errors.
+	 * It was observed that the spatial error typically is between 0 and 1.5 meters.
+	 */
+	public static final double SPATIAL_ERROR_FIX = 0.1744; // 10 degrees
 	
-	//public static final int GPS_BUFFER_SIZE = 10;
-	//public static final int GPS_SENSE_PERIOD = 1000; // The period at which the GPS is read in ms
+	/**
+	 * The proportional gain constant of the navigation PID controller.
+	 * This value controls the significance of the *present* error.
+	 */
+	public static final double Kp = 0.5;
 	
-	//public static final double GPS_TARGET_RADIUS_METERS = 5.5;
-	//public static final double GPS_TARGET_RADIUS_METERS = 2.5;
-	public static final double GPS_TARGET_RADIUS_METERS = 1.5;
-	//public static final double GPS_TARGET_RADIUS_METERS = 2;
-	//public static final double GPS_TARGET_RADIUS_METERS = 3;
-	//public static final double GPS_TARGET_RADIUS_METERS = 3.5;
+	/**
+	 * The integral gain constant of the navigation PID controller.
+	 * This value controls the significance of the *past* error.
+	 */
+	public static final double Ki = 0;
 	
-	//public static final double NAV_SLOW_TURN_ANGLE = 0.2; // turn at an angle greater than this, then slow down
-	//public static final double NAV_SLOW_TURN_VELOCITY = 0.4; // the slower speed at which to turn
+	/**
+	 * The derivative gain constant of the navigation PID controller.
+	 * This value controls the significance of the *future* error.
+	 */
+	public static final double Kd = 0;
 	
+	/**
+	 * The total error of the system.
+	 */
+	private double totalError;
+	
+	/**
+	 * The previous heading error.  This is used to calculate the change in error
+	 * over time.
+	 */
+	private double previousError;
+	
+	/**
+	 * The maximum turn angle in radians.  The value 0.35 radians (20 degrees) is for 
+	 * the Traxxas mobility plane.
+	 * 
+	 * See: http://pharos.ece.utexas.edu/wiki/index.php/Proteus_III_Robot#Steering_Angle_Range
+	 */
+	private double maxSteeringAngle = 0.35; 
+	
+	/**
+	 * The speed of the robot (in m/s) while it is performing major corrections to its heading.
+	 */
+	private double headingCorrectionSpeed = 0.5;
+	
+	/**
+	 * The threshold distance (in meters) to a waypoint before the robot
+	 * concludes that it's "close enough" to the waypoint and stops 
+	 * navigating.
+	 */
+	public static final double GPS_TARGET_RADIUS_METERS = 2.5;
+
 	private GPSDataBuffer gpsDataBuffer;
 	private MotionArbiter motionArbiter;
-	//private CompassDataBuffer compassDataBuffer;
-	
-	private MotionTask prevTask = null;
 	
 	/**
 	 * Whether we are done navigating to a particular location.
 	 */
 	private boolean done;
 	
-	
 	private double distanceToDestination;
-	
 	
 	private double instantaneousSpeed;
 	
+	/**
+	 * The current heading measurement.
+	 */
 	private double currHeading;
+	
+	/**
+	 * The time stamp of the current heading measurement.
+	 */
 	private long currHeadingTimestamp;
+	
+	/**
+	 * Maintain a local MotionTask object that is continuously updated to 
+	 * limit the number of MotionTask objects created within this object.
+	 */
+	private MotionTask motionTask = new MotionTask();
 	
 	/**
 	 * A constructor.
@@ -89,8 +149,8 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 	 * robot to continue to move.  To stop the navigation process, call stop().
 	 */
 	public void stopRobot() {
-		MotionTask mt = new MotionTask(Priority.SECOND, 0 /* velocity */, 0 /* heading */);
-		motionArbiter.submitTask(mt);
+		motionTask.update(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
+		motionArbiter.submitTask(motionTask);
 	}
 	
 	/**
@@ -104,42 +164,12 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 	private double calcControlledVelocity(double distance, double desiredVelocity, double desiredHeading) {
 		
 		// The robot wants to make a very sharp turn; slow down
-		if (Math.abs(desiredHeading) > MAX_TURN_ANGLE) {
-			// The following was used by M8-Exp1-8
-			//return 0.5;
-			
-			// The following was used by M8-Exp9
+		if (Math.abs(desiredHeading) > maxSteeringAngle)
 			return 0.6;
-		}
 		
 		// These numbers are tuned for the Traxxas Mobility Plane.
 		// TODO: Generalize the controlled-velocity-generating-algorithm so it works with any mobility plane
 		
-		// This was used for M8Exp1-10
-//		if (distance > 15)
-//			return desiredVelocity;
-//		else if (distance > 10)
-//			return (desiredVelocity > 1.5) ? 1.5 : desiredVelocity;
-//		else if (distance > 7)
-//			return (desiredVelocity > 1.0) ? 1.0 : desiredVelocity;
-//		else if (distance > 5)
-//			return (desiredVelocity > 0.7) ? 0.7 : desiredVelocity;
-//		else
-//			return (desiredVelocity > 0.5) ? 0.5 : desiredVelocity;
-		
-		// This was used for M8Exp11
-//		if (distance > 10)
-//			return desiredVelocity;
-//		else if (distance > 6)
-//			return (desiredVelocity > 1.5) ? 1.5 : desiredVelocity;
-//		else if (distance > 4)
-//			return (desiredVelocity > 1.0) ? 1.0 : desiredVelocity;
-//		else if (distance > 3)
-//			return (desiredVelocity > 0.7) ? 0.7 : desiredVelocity;
-//		else
-//			return (desiredVelocity > 0.5) ? 0.5 : desiredVelocity;
-		
-		// This was used for M8Exp12
 		if (distance > 6)
 			return desiredVelocity;
 		else if (distance > 5)
@@ -152,97 +182,101 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 			return (desiredVelocity > 0.5) ? 0.5 : desiredVelocity;
 	}
 	
-	/**
-	 * Calculates the proper heading of the robot.  As the robot's velocity increases,
-	 * the heading should be throttled more to prevent the robot from weaving side-to-side.
-	 * 
-	 * @param velocity The velocity of the robot in m/s
-	 * @param desiredHeading The desired heading in radians.  0 radians is straight ahead, 
-	 * negative is turn left, positive is turn right.
-	 * @return The proper heading that the robot should head in taking into considering
-	 * the speed at which the robot is moving.
-	 */
-	private double calcControlledHeading(double velocity, double desiredHeading) {
-		
-		// Make sure the heading falls within the acceptable range for the Traxxas mobility plane 
-		double clippedHeading = (Math.abs(desiredHeading) > MAX_TURN_ANGLE) ? MAX_TURN_ANGLE : Math.abs(desiredHeading);
-		if (desiredHeading < 0)
-			clippedHeading *= -1;
-		
-		// These numbers are tuned for the Traxxas Mobility Plane.
-		// TODO: Generalize the controlled-heading-generating-algorithm so it works with any mobility plane
-		
-		// the following values were used for M8 Exp1-8
-//		if (velocity < 0.8)
+//	/**
+//	 * Calculates the proper heading of the robot.  As the robot's velocity increases,
+//	 * the heading should be throttled more to prevent the robot from weaving side-to-side.
+//	 * 
+//	 * @param velocity The velocity of the robot in m/s
+//	 * @param desiredHeading The desired heading in radians.  0 radians is straight ahead, 
+//	 * negative is turn left, positive is turn right.
+//	 * @return The proper heading that the robot should head in taking into considering
+//	 * the speed at which the robot is moving.
+//	 */
+//	private double calcControlledHeading(double velocity, double desiredHeading) {
+//		
+//		// Make sure the heading falls within the acceptable range for the Traxxas mobility plane 
+//		double clippedHeading = (Math.abs(desiredHeading) > MAX_TURN_ANGLE) ? MAX_TURN_ANGLE : Math.abs(desiredHeading);
+//		if (desiredHeading < 0)
+//			clippedHeading *= -1;
+//		
+//		// These numbers are tuned for the Traxxas Mobility Plane.
+//		// TODO: Generalize the controlled-heading-generating-algorithm so it works with any mobility plane
+//		
+//		// the following values were used for M8 Exp1-8
+////		if (velocity < 0.8)
+////			return clippedHeading;
+////		else if (velocity < 1.1)
+////			return 0.8 * clippedHeading;
+////		else if (velocity < 1.6)
+////			return 0.4 * clippedHeading;
+////		else if (velocity < 2.1)
+////			return 0.3 * clippedHeading;
+////		else
+////			return 0.2 * clippedHeading;
+//		
+//		// the following was use by M8 Exp9, the turn angle was under-dampened
+////		if (velocity < 0.8)
+////			return clippedHeading;
+////		else if (velocity < 1.1)
+////			return 0.8 * clippedHeading;
+////		else if (velocity < 1.6)
+////			return 0.45 * clippedHeading;
+////		else if (velocity < 2.1)
+////			return 0.4 * clippedHeading;
+////		else
+////			return 0.35 * clippedHeading;
+//	
+//		// the following was use by M8 Exp9,
+////		if (velocity < 0.8)
+////			return clippedHeading;
+////		else if (velocity < 1.1)
+////			return 0.8 * clippedHeading;
+////		else if (velocity < 1.6)
+////			return 0.42 * clippedHeading;
+////		else if (velocity < 2.1)
+////			return 0.35 * clippedHeading;
+////		else
+////			return 0.25 * clippedHeading;
+//
+////		if (velocity < 0.4)
+////			return clippedHeading;
+////		else if (velocity < 0.6) 
+////			return 0.9 * clippedHeading;
+////		else if (velocity < 0.8)
+////			return 0.8 * clippedHeading;
+////		else if (velocity < 1.0)
+////			return 0.7 * clippedHeading;
+////		else if (velocity < 1.2)
+////			return 0.6 * clippedHeading;
+////		else if (velocity < 1.4)
+////			return 0.42 * clippedHeading;
+////		else if (velocity < 1.6)
+////			return 0.35 * clippedHeading;
+////		else
+////			return 0.25 * clippedHeading;
+//
+//		if (velocity < 0.3)
 //			return clippedHeading;
-//		else if (velocity < 1.1)
+//		else if (velocity < 0.4)
 //			return 0.8 * clippedHeading;
-//		else if (velocity < 1.6)
-//			return 0.4 * clippedHeading;
-//		else if (velocity < 2.1)
-//			return 0.3 * clippedHeading;
-//		else
-//			return 0.2 * clippedHeading;
-		
-		// the following was use by M8 Exp9, the turn angle was under-dampened
-//		if (velocity < 0.8)
-//			return clippedHeading;
-//		else if (velocity < 1.1)
-//			return 0.8 * clippedHeading;
-//		else if (velocity < 1.6)
-//			return 0.45 * clippedHeading;
-//		else if (velocity < 2.1)
-//			return 0.4 * clippedHeading;
-//		else
-//			return 0.35 * clippedHeading;
-	
-		// the following was use by M8 Exp9,
-//		if (velocity < 0.8)
-//			return clippedHeading;
-//		else if (velocity < 1.1)
-//			return 0.8 * clippedHeading;
-//		else if (velocity < 1.6)
-//			return 0.42 * clippedHeading;
-//		else if (velocity < 2.1)
-//			return 0.35 * clippedHeading;
-//		else
-//			return 0.25 * clippedHeading;
-
-//		if (velocity < 0.4)
-//			return clippedHeading;
-//		else if (velocity < 0.6) 
-//			return 0.9 * clippedHeading;
-//		else if (velocity < 0.8)
-//			return 0.8 * clippedHeading;
-//		else if (velocity < 1.0)
+//		else if (velocity < 0.5)
 //			return 0.7 * clippedHeading;
-//		else if (velocity < 1.2)
+//		else if (velocity < 0.6) 
 //			return 0.6 * clippedHeading;
+//		else if (velocity < 0.8)
+//			return 0.5 * clippedHeading;
+//		else if (velocity < 1.0)
+//			return 0.4 * clippedHeading;
+//		else if (velocity < 1.2)
+//			return 0.3 * clippedHeading;
 //		else if (velocity < 1.4)
-//			return 0.42 * clippedHeading;
-//		else if (velocity < 1.6)
-//			return 0.35 * clippedHeading;
-//		else
 //			return 0.25 * clippedHeading;
-
-		if (velocity < 0.4)
-			return clippedHeading;
-		else if (velocity < 0.6) 
-			return 0.8 * clippedHeading;
-		else if (velocity < 0.8)
-			return 0.7 * clippedHeading;
-		else if (velocity < 1.0)
-			return 0.6 * clippedHeading;
-		else if (velocity < 1.2)
-			return 0.5 * clippedHeading;
-		else if (velocity < 1.4)
-			return 0.35 * clippedHeading;
-		else if (velocity < 1.6)
-			return 0.25 * clippedHeading;
-		else
-			return 0.15 * clippedHeading;
-
-	}
+//		else if (velocity < 1.6)
+//			return 0.15 * clippedHeading;
+//		else
+//			return 0.1 * clippedHeading;
+//
+//	}
 	
 	public PlayerGpsData getLocation(){
 		try {
@@ -270,117 +304,191 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 		return currHeading;
 	}
 	
-	public void submitMotionTask(TargetDirection targetDirection, double velocity){
-		double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
-		double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
-		
-		// For bookkeeping purposes, used by method areWeThereYet()
-		instantaneousSpeed = currVel;
-		
-		//headingError * MIN_VELOCITY/currVel;
-		/*
-		 * Positive heading error means the robot must turn left.
-		 * Negative heading error means the robot must turn right.
-		 */
-		//double headingError = targetDirection.getHeadingError();
-
-		// slow down if the turning rate is too fast
-		//if (Math.abs(headingError) > NAV_SLOW_TURN_ANGLE) {
-		//	currVel = NAV_SLOW_TURN_VELOCITY;
-	    //}
-		
-		//double MAX_VELOCITY = 2.0; // m/s
-		//double MIN_VELOCITY = 0.4;
-		
-		// If the heading error is greater than X and the speed is greater than X, 
-		// proportionally decrease the change in heading sent to the robot
-		//double robotHeadingInstr = headingError * MIN_VELOCITY/currVel;
-
-		MotionTask mt = new MotionTask(Priority.SECOND, currVel, robotHeadingInstr);
-		motionArbiter.submitTask(mt);
-		prevTask = mt;
-		
-		Logger.log("Current Instruction:\n\tVelocity: + " + mt.getVelocity() + "\n\tHeading: " + mt.getHeading());
-	}
+//	public void submitMotionTask(double heading, double speed) {
+////		double currVel = calcControlledVelocity(targetDirection.getDistance(), velocity, targetDirection.getHeadingError());
+////		double robotHeadingInstr = calcControlledHeading(currVel, targetDirection.getHeadingError()); 
+////		
+//		// For bookkeeping purposes, used by method areWeThereYet()
+//		
+////		prevTask = motionTask;
+//		
+////		Logger.log("Current Instruction:\n\tVelocity: + " + motionTask.getSpeed() + "\n\tHeading: " + motionTask.getHeading());
+//	}
 	
 	/**
 	 * Calculates the next motion task that should be submitted to the MotionArbiter.
 	 * The new motion tasks heading should ensure the robot continues to move towards the next way point.
 	 * 
 	 * @param currLoc The current location.
-	 * @param currHeading The current heading.
-	 * @param dest The destination location
-	 * @param velocity The velocity at which to travel towards the destination
+	 * @param currHeading The current heading in radians.
+	 * @param idealRoute The ideal route that the robot should travel on.
+	 * @param desiredSpeed The desired speed (in m/s) to travel towards the destination
 	 * @return Whether the destination has been reached.
 	 */
-	private boolean doNextMotionTask(Location currLoc, double currHeading, Location dest, double velocity) {
-		TargetDirection targetDirection = locateTarget(currLoc, currHeading, dest);
-		boolean done = false;
+	private boolean doNextMotionTask(Location currLoc, double currHeading, 
+			Line idealRoute, double desiredSpeed) 
+	{
+		boolean arrivedAtDest = false;
+		Location idealLoc = idealRoute.getLocationClosestTo(currLoc);
+		SpatialDivergence divergence = new SpatialDivergence(currLoc, idealLoc, idealRoute);
 		
-		// Save statistics in local variables.  This is used by
-		// the areWeThereYet(...) method.
-		distanceToDestination = targetDirection.getDistance();
+		// Save statistics in local variables.  This is used by areWeThereYet(...).
+		distanceToDestination = currLoc.distanceTo(idealRoute.getStopLoc());
 		
-		if (targetDirection.getDistance() < GPS_TARGET_RADIUS_METERS) {
+		// If we are close enough to the destination location, stop.
+		if (distanceToDestination < GPS_TARGET_RADIUS_METERS) {
 			Logger.log("Destination reached!");
-			done = true;
+			arrivedAtDest = true;
+			stopRobot();
+			Logger.log("Arrived at destination " + idealRoute.getStopLoc() + "!");
+		} 
+		
+		// If the destination is some huge value, there must be an error, so stop.
+		else if (distanceToDestination > 2000) {
+			Logger.logErr("Invalid distance: Greater than 2km (" + distanceToDestination + "), stopping robot...");
+			stopRobot();
+		} 
+		
+		// Figure out how to adjust the steering angle and speed to continue to move towards 
+		// the destination.
+		else {
+			TargetDirection targetDirection = locateTarget(currLoc, currHeading, idealRoute.getStopLoc());
 
-			// Submit a stop motion task
-			if (prevTask != null) {
-				motionArbiter.revokeTask(prevTask);
-				prevTask = null;
-			}
-			MotionTask mt = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
-			motionArbiter.submitTask(mt);
-			prevTask = mt;
+			/*  If the heading error is greater than MAJOR_HEADING_CORRECTION_THRESHOLD,
+			 *  simply turn the robot at its maximum steering angle at a slow speed in
+			 *  the correct direction. 
+			 *  
+			 *  positive --> robot is pointing too far to the right --> must turn left
+			 *  negative --> robot is pointing too far to the left --> must turn right
+			 */
+			double headingError = targetDirection.getHeadingError();
 			
-			Logger.log("Arrived at destination " + dest + "!");
-		} else if (targetDirection.getDistance() > 2000) {
-			Logger.logErr("Invalid distance: Greater than 2km (" + targetDirection.getDistance() + "), stopping robot...");
-				stopRobot();
-		} else {
-			submitMotionTask(targetDirection, velocity);
+			if (Math.abs(headingError) > MAJOR_HEADING_CORRECTION_THRESHOLD) {
+				
+				double steeringAngle = maxSteeringAngle;
+				
+				/* A negative heading error means the robot is pointing too far to the
+				 * left.  Thus, the steering angle should be negative to turn the robot
+				 * right.
+				 */
+				if (headingError < 0)
+					steeringAngle *= -1;
+				motionTask.update(Priority.SECOND, headingCorrectionSpeed, steeringAngle);
+				motionArbiter.submitTask(motionTask);
+				
+				Logger.log("Performing major correction:" +
+						"\n\tHeading (radians): " + currHeading +
+						"\n\tHeading error (radians): " + headingError +
+						"\n\tDistance to destination (m): " + targetDirection.getDistance() +
+						"\n\tSteering angle cmd: " + steeringAngle +
+						"\n\tSpeed cmd (m/s): " + headingCorrectionSpeed);
+			} else {
+				 
+				// Update the values of the PID controller
+				totalError += headingError;
+				double deltaHeadingErr = headingError - previousError;
+				previousError = headingError;
+
+				/*
+				 * Since a positive heading error indicates that the robot should turn left, Kp > 0.
+				 */
+				double steeringAngle = Kp * headingError + Ki * totalError + Kp * deltaHeadingErr;
+
+				/* Adjust the steering angle slightly to account for the spatial error.
+				 * It was observed that the spatialError is typically between 0 and 1.5. 
+				 * 
+				 * positive spatial error --> The robot is *right* of the ideal path --> should turn left.
+				 * negative spatial error --> The robot is *left* of the ideal path --> should turn right.
+				 */
+				double spatialError = divergence.getDivergence();
+				double steeringAngleAdjusted = steeringAngle + SPATIAL_ERROR_FIX * spatialError;
+				
+				// Cap the steering angle to the min and max values.
+				if (steeringAngleAdjusted > maxSteeringAngle)
+					steeringAngleAdjusted = maxSteeringAngle;
+				if (steeringAngleAdjusted < -maxSteeringAngle)
+					steeringAngleAdjusted = -maxSteeringAngle;
+
+				double speed = calcControlledVelocity(distanceToDestination, desiredSpeed, steeringAngleAdjusted);
+
+				Logger.log("PID controller state:" + 
+						"\n\tHeading (radians): " + currHeading +
+						"\n\tHeading error (radians): " + headingError +
+						"\n\tDistance to destination (m): " + distanceToDestination +
+						"\n\tAbsolute divergence error (m): " + spatialError +
+						"\n\tTotal error (radians): " + totalError +
+						"\n\tDelta error (radians): " + deltaHeadingErr +
+						"\n\t[Kp, Ki, Kd]: [" + Kp + ", " + Ki + ", " + Kd + "]" +
+						"\n\tSteering angle cmd: " + steeringAngle + 
+						"\n\tAdjusted Steering angle cmd:" + steeringAngleAdjusted +
+						"\n\tSpeed cmd (m/s): " + speed);
+
+				instantaneousSpeed = speed;
+
+				motionTask.update(Priority.SECOND, speed, steeringAngle);
+				motionArbiter.submitTask(motionTask);
+			}
 		}
-		return done;
+		return arrivedAtDest;
 	}
 	
 	/**
-	 * Moves a robot to a particular location at a certain speed.  If either the GPS location or heading
+	 * Navigates the robot to a particular location at a certain speed.
+	 * It requires location and heading information.  Typically, location is provided
+	 * by GPS, while heading is provided by compass.  If either the location or heading 
 	 * information is unavailable, halt the robot.
 	 * 
-	 * @param dest The destination location.
-	 * @param velocity The speed in meters per second that the robot should travel at.
+	 * @param startLoc The ideal starting location.  This may be null.  If it is null,
+	 * the location of the robot when this method is first called is used as the 
+	 * starting location.
+	 * @param endLoc The destination location.
+	 * @param speed The speed in meters per second at which the robot should travel.
 	 * @return true if the robot successfully reached the destination
 	 */
-	public synchronized boolean go(Location dest, double velocity) {
+	public synchronized boolean go(Location startLoc, Location endLoc, double speed) {
 		done = false;
 		boolean success = false;
+		
+		while (startLoc == null) {
+			Logger.logDbg("Starting location not specified, obtaining and using current location as start position.");
+			try {
+				startLoc = new Location(gpsDataBuffer.getCurrLoc());
+				Logger.logDbg("Starting location set to " + startLoc);
+			} catch(NoNewDataException nnde) {
+				Logger.logErr("Unable to get the current location, retrying in 1s...");
+				ThreadControl.pause(this, 1000);
+			}
+		}
+		
+		Line idealRoute = new Line(startLoc, endLoc);
 		
 		while (!done) {
 			Location currLoc = null;
 			
+			// Get the current location...
 			try {
 				currLoc = new Location(gpsDataBuffer.getCurrLoc());
-				if (GPSDataBuffer.isValid(currLoc)) {
-					long headingAge = System.currentTimeMillis() - currHeadingTimestamp;
-					if (headingAge < MAX_HEADING_LATENCY) {
-						done = doNextMotionTask(currLoc, currHeading, dest, velocity);
+			} catch(NoNewDataException nnde) {
+				Logger.logErr("Unable to get the current location, halting robot...");	
+				stopRobot();
+			}
+			
+			if (currLoc != null) {
+				// Check if the heading information is valid...
+
+				long headingAge = System.currentTimeMillis() - currHeadingTimestamp;
+				if (headingAge < MAX_HEADING_LATENCY) {
+					if (GPSDataBuffer.isValid(currLoc)) {
+						done = doNextMotionTask(currLoc, currHeading, idealRoute, speed);
 						if (done) success = true;
 					} else {
-						String errMsg = "Max heading data age exceeded (" + headingAge + " >= " + MAX_HEADING_LATENCY + ")";
-						Logger.logErr(errMsg);
-						throw new NoNewDataException(errMsg);
+						Logger.logErr("Invalid current location " + currLoc + ", halting robot...");
+						stopRobot();
 					}
 				} else {
-					Logger.logErr("Invalid current location " + currLoc + ", halting robot...");
+					Logger.logErr("Max heading data age exceeded (" + headingAge + " >= " + MAX_HEADING_LATENCY + ")");
 					stopRobot();
 				}
-			} catch(NoNewDataException nnde) {
-				if (currLoc == null) {
-					Logger.logErr("Unable to get the current location, halting robot...");
-				} else
-					Logger.logErr("Unable to get the current heading, halting robot...");
-				stopRobot();
 			}
 			
 			if (!done) {
@@ -394,7 +502,7 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 			}
 		}
 		stopRobot();
-		Logger.log("Done going to " + dest + ", success=" + success);
+		Logger.log("Done going to " + endLoc + ", success=" + success);
 		return success;
 	}
 	
@@ -406,92 +514,13 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 	}
 
 	/**
-	 * Stores the new heading measurement and record its time stamp.
+	 * This is called whenever new compass data arrives.  Stores the new heading 
+	 * measurement and records its time stamp.
 	 */
 	@Override
-	public void newPlayerPosition2dData(PlayerPosition2dData data) {
-		synchronized(this) {
-			currHeading = data.getPos().getPa();
-			currHeadingTimestamp = System.currentTimeMillis();
-		}
+	public synchronized  void newPlayerPosition2dData(PlayerPosition2dData data) {
+		currHeading = data.getPos().getPa();
+		currHeadingTimestamp = System.currentTimeMillis();
+		Logger.log("Updating heading, currHeading = " + currHeading + ", timestamp = " + currHeadingTimestamp);
 	}
-	
-//	private void logErr(String msg) {
-//		String result = "NavigateCompassGPS: ERROR: " + msg;
-//		
-//		System.err.println(result);
-//		
-//		// always log text to file if a FileLogger is present
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
-//	
-//	private void log(String msg) {
-//		String result = "NavigateCompassGPS: " + msg;
-//		
-//		// only print log text to string if in debug mode
-//		if (System.getProperty ("PharosMiddleware.debug") != null)
-//			System.out.println(result);
-//		
-//		// always log text to file if a FileLogger is present
-//		if (flogger != null)
-//			flogger.log(result);
-//	}
-//	
-//	public static final void main(String[] args) {
-//		String serverIP = "10.11.12.20";
-//		int serverPort = 6665;
-//		
-//		// Enable debug output
-//		System.setProperty ("PharosMiddleware.debug", "true"); 
-//		
-//		PlayerClient client = null;
-//		try {
-//			client = new PlayerClient(serverIP, serverPort);
-//		} catch(PlayerException e) {
-//			System.err.println("Error connecting to Player: ");
-//			System.err.println("    [ " + e.toString() + " ]");
-//			System.exit (1);
-//		}
-//		
-//		Position2DInterface motors = client.requestInterfacePosition2D(0, PlayerConstants.PLAYER_OPEN_MODE);
-//		Position2DInterface compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
-//		GPSInterface gps = client.requestInterfaceGPS(0, PlayerConstants.PLAYER_OPEN_MODE);
-//		
-//		if (motors == null) {
-//			System.err.println("motors is null");
-//			System.exit(1);
-//		}
-//		
-//		if (compass == null) {
-//			System.err.println("compass is null");
-//			System.exit(1);
-//		}
-//		
-//		if (gps == null) {
-//			System.err.println("gps is null");
-//			System.exit(1);
-//		}
-//		
-//		CompassDataBuffer compassDataBuffer = new CompassDataBuffer(compass);
-//		GPSDataBuffer gpsDataBuffer = new GPSDataBuffer(gps);
-//		MotionArbiter motionArbiter = new MotionArbiter(motors);
-//		
-//		String fileName = "NavigateCompassGPS_" + FileLogger.getUniqueNameExtension() + ".log"; 
-//		FileLogger flogger = new FileLogger(fileName);
-//		
-//		NavigateCompassGPS navigator = new NavigateCompassGPS(motionArbiter, compassDataBuffer, gpsDataBuffer, flogger);
-//		
-//		// TEST CODE:  See if the robot is able to move to a specific destination
-//		//Location destLoc = new Location(30.2655183,	-97.7690083); // barton springs point A
-//		//Location destLoc = new Location(30.2657367,	-97.7684767); // barton springs point B
-//		Location destLoc = new Location(30.2657533,	-97.7680267); // barton springs point C  
-//			
-//		
-//		//double velocity = 0.4; // go relatively slowly
-//		double velocity = 1; // go relatively briskly
-//		if (!navigator.go(destLoc, velocity)) {
-//			flogger.log("Failed to reach to destination.");
-//		}
-//	}
 }

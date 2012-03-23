@@ -55,19 +55,19 @@ public class SimpleMule implements ProteusOpaqueListener {
 				gpsDataBuffer);
 		
 		Logger.log("Going to the source...");
-		navigatorGPS.go(srcLoc, velocity);
+		navigatorGPS.go(null, srcLoc, velocity);
 		pause(pauseTime);
 		
 		int counter = 0;
 		while(true) {
 			Logger.log("Going to the sink " + counter + "...");
-			navigatorGPS.go(sinkLoc, velocity);
+			navigatorGPS.go(srcLoc, sinkLoc, velocity);
 			contextSender.setDestLoc(sinkLoc);
 			
 			pause(pauseTime);
 			
 			Logger.log("Going to the source " + counter + "...");
-			navigatorGPS.go(srcLoc, velocity);
+			navigatorGPS.go(sinkLoc, srcLoc, velocity);
 			contextSender.setDestLoc(srcLoc);
 			
 			counter++;

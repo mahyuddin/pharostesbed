@@ -157,8 +157,7 @@ public class RouteVisualizer extends JPanel {
 	    		
 	    		Coordinate currCoord = coordConv.getCoordinate(currDiv.getCurrLoc());
 	    		Coordinate idealCoord = coordConv.getCoordinate(currDiv.getIdealLoc());
-	    		boolean absolute = false;
-	    		if (currDiv.getDivergence(absolute) < 0)
+	    		if (currDiv.getDivergence() < 0)
 	    			g.setColor(Color.MAGENTA);
 	    		else
 	    			g.setColor(Color.CYAN);

@@ -18,7 +18,7 @@ public class BehaviorGoToLocation extends Behavior {
 	 */
 	private NavigateCompassGPS navigatorCompassGPS;
 	
-	private Location destLoc;
+	private Location startLoc, destLoc;
 	
 	private double speed;
 	
@@ -27,16 +27,34 @@ public class BehaviorGoToLocation extends Behavior {
 //	Behavior childBehavior = null;
 	
 	/**
+	 * A constructor that is used when the starting location is not known.
+	 * 
+	 * @param name The name of the behavior.
+	 * @param navigatorCompassGPS The navigator that uses compass and GPS sensors.
+	 * @param destLoc The ideal destination location.
+	 * @param speed The speed at which to travel towards the destination location.
+	 */
+	public BehaviorGoToLocation(String name, NavigateCompassGPS navigatorCompassGPS, 
+			Location destLoc, double speed) 
+	{
+		this(name, navigatorCompassGPS, null, destLoc, speed);
+	}
+	
+	/**
 	 * The constructor.
 	 * 
 	 * @param name The name of the behavior.
 	 * @param navigatorCompassGPS The navigator that uses compass and GPS sensors.
-	 * @param destLoc The destination location.
+	 * @param startLoc The ideal starting location.
+	 * @param destLoc The ideal destination location.
 	 * @param speed The speed at which to travel towards the destination location.
 	 */
-	public BehaviorGoToLocation(String name, NavigateCompassGPS navigatorCompassGPS, Location destLoc, double speed) {
+	public BehaviorGoToLocation(String name, NavigateCompassGPS navigatorCompassGPS, 
+			Location startLoc, Location destLoc, double speed) 
+	{
 		super(name);
 		this.navigatorCompassGPS = navigatorCompassGPS;
+		this.startLoc = startLoc;
 		this.destLoc = destLoc;
 		this.speed = speed;
 	}
@@ -51,7 +69,7 @@ public class BehaviorGoToLocation extends Behavior {
 	
 	@Override
 	public void run() {
-		navigatorCompassGPS.go(destLoc, speed);
+		navigatorCompassGPS.go(startLoc, destLoc, speed);
 		isDone = true;
 		Logger.log("Behavior " + getName() + " done.");
 	}

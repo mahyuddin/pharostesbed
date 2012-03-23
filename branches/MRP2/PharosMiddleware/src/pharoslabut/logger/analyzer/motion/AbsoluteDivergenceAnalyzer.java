@@ -77,7 +77,11 @@ public class AbsoluteDivergenceAnalyzer {
 		while (e.hasMoreElements()) {
 			SpatialDivergence sd = e.nextElement();
 			
-			double divergence = sd.getDivergence(absolute);
+			double divergence = 0;
+			if (absolute)
+				divergence = sd.getAbsoluteDivergence();
+			else
+				divergence = sd.getDivergence();
 			
 			flogger.log(sd.getTimeStamp() 
 					+ "\t" + (sd.getTimeStamp() - robotData.getStartTime()) 
@@ -131,7 +135,12 @@ public class AbsoluteDivergenceAnalyzer {
 		while (e.hasMoreElements()) {
 			SpatialDivergence currDiv = e.nextElement();
 			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
-			absDivSeries.add(currTime, currDiv.getDivergence(noheading));
+			double divergence = 0;
+			if (noheading)
+				divergence = currDiv.getAbsoluteDivergence();
+			else
+				divergence = currDiv.getDivergence();
+			absDivSeries.add(currTime, divergence);
 		}
 		
 		// Create two data series containing the times when the robot starts heading 

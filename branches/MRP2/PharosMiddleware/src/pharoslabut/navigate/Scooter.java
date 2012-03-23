@@ -44,7 +44,7 @@ public class Scooter implements Runnable {
 		
 			pause(1500);
 			
-			currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+			currTask = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 			Logger.log("Submitting: " + currTask);
 			motionArbiter.submitTask(currTask);
 			

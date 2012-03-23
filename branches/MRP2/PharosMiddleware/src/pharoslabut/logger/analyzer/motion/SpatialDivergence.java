@@ -31,15 +31,26 @@ public class SpatialDivergence {
 	private Location idealLoc;
 	
 	/**
-	 * The constructor.
+	 * A constructor that uses the current time as the timestamp.
+	 * 
+	 * @param currLoc The current location.
+	 * @param idealLoc The ideal location.
+	 * @param idealPath The ideal path along which the robot should travel.
+	 */
+	public SpatialDivergence(Location currLoc, Location idealLoc, Line idealPath) {
+		this(System.currentTimeMillis(), currLoc, idealLoc, idealPath);
+	}
+	
+	/**
+	 * A constructor.
 	 * 
 	 * @param timeStamp The time stamp of the divergence measurement.
 	 * @param currLoc The current location.
 	 * @param idealLoc The ideal location.
 	 * @param idealPath The ideal path along which the robot should travel.
 	 */
-	public SpatialDivergence(long timeStamp, Location currLoc, Location idealLoc, Line idealPath)
-			//double actualHeading, double idealHeading) 
+	public SpatialDivergence(long timeStamp, Location currLoc, Location idealLoc, 
+			Line idealPath) 
 	{
 		this.timeStamp = timeStamp;
 		this.currLoc = currLoc;
@@ -77,26 +88,28 @@ public class SpatialDivergence {
 	}
 	
 	/**
-	 * @return The absolute value of the divergence.
+	 * @return The absolute value of the divergence in meters.
 	 */
-	public double getDivergence() {
-		return getDivergence(true);
+	public double getAbsoluteDivergence() {
+		return Math.abs(getDivergence());
 	}
 	
 	/**
+	 * Returns the divergence (in meters) between the robot's current location and its
+	 * ideal location.  A positive value means the robot is right of the line, whereas
+	 * a negative value means the robot is left of the line.
 	 * 
-	 * @param noheading Whether to ignore the heading when determining the sign of the divergence.
-	 * @return The divergence.
+	 * @return The divergence in meters.
 	 */
-	public double getDivergence(boolean absolute) {
+	public double getDivergence() {
 		double divergence = currLoc.distanceTo(idealLoc);
-		if (!absolute && Line.isLocationLeftOf(getCurrLoc(), getIdealPath()))
+		if (Line.isLocationLeftOf(getCurrLoc(), getIdealPath()))
 			divergence *= -1;
 		return divergence;
 	}
 	
 	public String toString() {
 		return "SpatialDivergence: " + timeStamp + "\t" + currLoc + "\t" + idealLoc 
-			+ "\t" + getDivergence(); // + "\t" + getIdealHeading() + "\t" + getActualHeading();
+			+ "\t" + getAbsoluteDivergence();
 	}
 }
