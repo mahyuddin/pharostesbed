@@ -1,4 +1,4 @@
-package pharoslabut.tests;
+package pharoslabut.missions;
 
 import playerclient3.*;
 import playerclient3.structures.PlayerConstants;
@@ -16,7 +16,7 @@ import pharoslabut.sensors.GPSDataBuffer;
  * 
  * @author Chien-Liang Fok
  */
-public class TestNavigateCompassGPS implements Position2DListener {
+public class MM23TestNavigateCompassGPS implements Position2DListener {
 	
 	private CompassDataBuffer compassDataBuffer;
 	
@@ -32,20 +32,10 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	 * @param serverPort The port of the player server.
 	 * @param mobilityPlane The type of mobility plane to use.
 	 * @param compassIndex The index of the compass device.
-	 * @param latitude The latitude of the destination location.
-	 * @param longitude The longitude of the destination location.
-	 * @param velocity The velocity at which to travel in m/s.
-	 * @param fileName The name of the file in which to log debug info, may be null.
 	 */
-	public TestNavigateCompassGPS(String serverIP, int serverPort, 
-			MotionArbiter.MotionType mobilityPlane, int compassIndex,
-			double latitude, double longitude, double velocity, String fileName) 
+	public MM23TestNavigateCompassGPS(String serverIP, int serverPort, 
+			MotionArbiter.MotionType mobilityPlane, int compassIndex) 
 	{
-		if (fileName != null) {
-			FileLogger flogger = new FileLogger(fileName);
-			Logger.setFileLogger(flogger);
-		}
-
 		Logger.logDbg("Connecting to player server " + serverIP + ":" + serverPort + "...");
 		PlayerClient client = null;
 		try {
@@ -115,14 +105,22 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		Logger.logDbg("Creating NavigateCompassGPS object...");
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, gpsDataBuffer);
 		
-		Location destLoc = new Location(latitude, longitude);
-		Logger.log("Going to: " + destLoc + " at " + velocity);
+		Location wp1 = new Location(30.2824279,	-97.7245635);
+		Location wp2 = new Location(30.2821587,	-97.7245004);
 		
-		if (!navigatorGPS.go(null, destLoc, velocity))
-			Logger.logErr("Unable to reach " + destLoc); 
-		else
-			Logger.log("SUCCESS!");
+		Logger.log("Going to waypoint 1 " + wp1 + " at 1m/s");
+		if (!navigatorGPS.go(null, wp1, 1)) {
+			Logger.logErr("Unable to reach " + wp1);
+			System.exit(1);
+		}
 		
+		Logger.log("Going to waypoint 2 " + wp2 + " at 1m/s");
+		if (!navigatorGPS.go(wp1, wp2, 1)) {
+			Logger.logErr("Unable to reach " + wp2);
+			System.exit(1);
+		}
+		
+		Logger.log("Done!");
 		System.exit(0);
 	}
 
@@ -153,25 +151,16 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		System.err.println("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
 		System.err.println("\t-compassIndex <index>: The index of the compass device (default 1)");
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
-		System.err.println("\t-latitude <latitude>: The latitude of the destination location (default 30.385645)");
-		System.err.println("\t-longitude <longitude>: The longitude of the destination location (default -97.7251983)");
-		System.err.println("\t-velocity <speed>: The velocity in m/s that the robot should move (default 1.5)");
 		System.err.println("\t-d: Enable debug mode");
 	}
 	
 	public static final void main(String[] args) {
 		
-		String fileName = null;
 		String serverIP = "localhost";
 		int serverPort = 6665;
 		
 		MotionArbiter.MotionType mobilityPlane = MotionArbiter.MotionType.MOTION_TRAXXAS;
-		
-		double latitude = Double.MAX_VALUE;  
-		double longitude = Double.MAX_VALUE;
-		
-		double velocity = 1.5;
-
+				
 		int compassIndex = 1;
 		
 		try {
@@ -183,7 +172,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 					serverPort = Integer.valueOf(args[++i]);
 				} 
 				else if (args[i].equals("-log")) {
-					fileName = args[++i];
+					Logger.setFileLogger(new FileLogger(args[++i], true));
 				}
 				else if (args[i].equals("-mobilityPlane") || args[i].equals("-mp")) {
 					String mp = args[++i].toLowerCase();
@@ -202,15 +191,6 @@ public class TestNavigateCompassGPS implements Position2DListener {
 				else if (args[i].equals("-compassIndex")) {
 					compassIndex = Integer.valueOf(args[++i]);
 				}
-				else if (args[i].equals("-latitude")) {
-					latitude = Double.valueOf(args[++i]);
-				}
-				else if (args[i].equals("-longitude")) {
-					longitude = Double.valueOf(args[++i]);
-				}
-				else if (args[i].equals("-velocity")) {
-					velocity = Double.valueOf(args[++i]);
-				}
 				else if (args[i].equals("-d") || args[i].equals("-debug")) {
 					System.setProperty ("PharosMiddleware.debug", "true");
 				}
@@ -225,17 +205,6 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			System.exit(1);
 		}
 		
-		if (latitude == Double.MAX_VALUE) {
-			System.err.println("Latitude not specified.");
-			System.exit(1);
-		}
-		
-		if (longitude == Double.MAX_VALUE) {
-			System.err.println("Longitude not specified.");
-			System.exit(1);
-		}
-		
-		new TestNavigateCompassGPS(serverIP, serverPort, mobilityPlane, 
-				compassIndex, latitude, longitude, velocity, fileName);
+		new MM23TestNavigateCompassGPS(serverIP, serverPort, mobilityPlane, compassIndex);
 	}
 }

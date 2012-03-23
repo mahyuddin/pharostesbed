@@ -120,6 +120,8 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		// embarking on the multi-robot patrol.
 		Behavior prevBehavior = waitBehavior;
 		
+		Location prevWP = firstWaypoint;
+		
 		// For each round...
 		int wpCount = 1;  // A counter for the total number of waypoints visited.  Starts at 1 b/c robot is already at first waypoint.
 		for (int round = 0; round < expConfig.getNumRounds(); round++) {
@@ -132,9 +134,12 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 				Waypoint wp = expConfig.getWaypoint(wpIndx);
 
 				// Add a GoToLocation behavior to go to the next waypoint.
-				BehaviorGoToLocation behaviorGoToLoc = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), navigatorCompassGPS, wp.getLoc(), wp.getSpeed());
+				BehaviorGoToLocation behaviorGoToLoc = 
+					new BehaviorGoToLocation("GoToLoc_" + wpCount + "_" + wp.getName(), 
+						navigatorCompassGPS, prevWP, wp.getLoc(), wp.getSpeed());
 				behaviorGoToLoc.addPrerequisite(prevBehavior);
 				addBehavior(behaviorGoToLoc);
+				prevWP = wp.getLoc();
 				Logger.logDbg("Creating behavior " + behaviorGoToLoc);
 				
 				// Add coordination behavior after reaching each waypoint.
@@ -175,7 +180,8 @@ public class CoordinatedOutdoorPatrolDaemon extends OutdoorPatrolDaemon {
 		
 		// Get the home starting location
 		Location homeLocation = getLocation();
-		Behavior bHome = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_home", navigatorCompassGPS, homeLocation, SPEED_TO_HOME);
+		Behavior bHome = new BehaviorGoToLocation("GoToLoc_" + wpCount + "_home", 
+				navigatorCompassGPS, prevWP, homeLocation, SPEED_TO_HOME);
 		bHome.addPrerequisite(prevBehavior);
 		addBehavior(bHome);
 		

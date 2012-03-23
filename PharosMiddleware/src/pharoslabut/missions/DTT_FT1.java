@@ -107,7 +107,7 @@ public class DTT_FT1 implements Position2DListener {
 		motionArbiter.submitTask(currTask);
 		pause(5000);
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 		Logger.log("Submitting motion task: " + currTask);
 		motionArbiter.submitTask(currTask);
 		

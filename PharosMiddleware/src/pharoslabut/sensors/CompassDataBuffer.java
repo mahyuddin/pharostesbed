@@ -134,17 +134,21 @@ public class CompassDataBuffer implements Runnable {
     private void notifyP2DListeners(final PlayerPosition2dData pp2ddata) {
     	if (pos2dListeners.size() > 0) {
     		//log("notifyP2DListeners: Notifying listeners of new compass data...");
-    		new Thread(new Runnable() {
-    			public void run() {
-    				Enumeration<Position2DListener> e = pos2dListeners.elements();
-    				while (e.hasMoreElements()) {
-    					e.nextElement().newPlayerPosition2dData(pp2ddata);
-    				}
-    			}
-
-    		}).start();
-    	} //else
-    		//log("notifyP2DListeners: No listeners present...");
+    		Enumeration<Position2DListener> e = pos2dListeners.elements();
+			while (e.hasMoreElements()) {
+				e.nextElement().newPlayerPosition2dData(pp2ddata);
+			}
+			
+//    		new Thread(new Runnable() {
+//    			public void run() {
+//    				Enumeration<Position2DListener> e = pos2dListeners.elements();
+//    				while (e.hasMoreElements()) {
+//    					e.nextElement().newPlayerPosition2dData(pp2ddata);
+//    				}
+//    			}
+//
+//    		}).start();
+    	}
     }
 	
 //	/**

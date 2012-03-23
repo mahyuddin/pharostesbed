@@ -114,6 +114,8 @@ public class MotionArbiter implements Runnable {
 		boolean result = false;
 		
 		if (currTask != null) {
+			// Only accept the new task if its priority is greater than or equal to
+			// the existing task.
 			if (currTask.isEqualPriorityTo(mt) || mt.isHigherPriorityThan(currTask)) {
 				currTask = mt;
 				Logger.logDbg("Accepting task " + currTask);
@@ -124,7 +126,7 @@ public class MotionArbiter implements Runnable {
 			}
 		} else {
 			
-			// Always accept the task if there is no current task being executed.
+			// Always accept the task if there is no current task.
 			currTask = mt;
 			Logger.logDbg("Accepting task " + currTask);
 			notifyAll();
@@ -228,7 +230,7 @@ public class MotionArbiter implements Runnable {
 						pendingStopTimestamp = System.currentTimeMillis();
 					} else {
 						if (System.currentTimeMillis() - pendingStopTimestamp > 1500) {
-							sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
+							sendMotionCmd(motionTask.getSpeed(), motionTask.getSteeringAngle());
 							
 							// No point in repeatedly sending a stop motion command
 							// (The robot will by default stop when no command is received)
@@ -240,7 +242,7 @@ public class MotionArbiter implements Runnable {
 					}
 				} else {
 					pendingStop = false;
-					sendMotionCmd(motionTask.getVelocity(), motionTask.getHeading());
+					sendMotionCmd(motionTask.getSpeed(), motionTask.getSteeringAngle());
 				}
 				
 			} else {
@@ -248,7 +250,7 @@ public class MotionArbiter implements Runnable {
 
 				if (!isStopped) {
 					// The robot is not stopped...stop the robot.
-					sendMotionCmd(MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+					sendMotionCmd(MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 				}
 
 				// Task queue is empty and there is no task to run, wait for a motion task to 

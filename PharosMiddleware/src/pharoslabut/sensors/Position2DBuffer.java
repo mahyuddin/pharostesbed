@@ -1,6 +1,6 @@
 package pharoslabut.sensors;
 
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Vector;
 
@@ -110,15 +110,19 @@ public class Position2DBuffer implements Runnable {
      */
     private void notifyP2DListeners(final PlayerPosition2dData pp2ddata) {
     	if (pos2dListeners.size() > 0) {
-    		new Thread(new Runnable() {
-    			public void run() {
-    				Enumeration<Position2DListener> e = pos2dListeners.elements();
-    				while (e.hasMoreElements()) {
-    					e.nextElement().newPlayerPosition2dData(pp2ddata);
-    				}
-    			}
-
-    		}).start();
+    		Enumeration<Position2DListener> e = pos2dListeners.elements();
+			while (e.hasMoreElements()) {
+				e.nextElement().newPlayerPosition2dData(pp2ddata);
+			}
+//    		new Thread(new Runnable() {
+//    			public void run() {
+//    				Enumeration<Position2DListener> e = pos2dListeners.elements();
+//    				while (e.hasMoreElements()) {
+//    					e.nextElement().newPlayerPosition2dData(pp2ddata);
+//    				}
+//    			}
+//
+//    		}).start();
     	}
     }
 	
