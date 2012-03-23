@@ -1,10 +1,7 @@
 package pharoslabut.cpsAssert;
 
-import pharoslabut.demo.simonsays.io.CmdDoneMsg;
 import pharoslabut.exceptions.NoNewDataException;
-import pharoslabut.exceptions.PharosException;
 import pharoslabut.io.TCPMessageSender;
-import pharoslabut.logger.Logger;
 
 public class AssertionRequestThread extends Thread{
 	

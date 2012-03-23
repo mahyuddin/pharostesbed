@@ -1,10 +1,7 @@
 package pharoslabut.cpsAssert;
 
 import java.net.InetAddress;
-
 import pharoslabut.io.AckedMsg;
-import pharoslabut.io.Message;
-import pharoslabut.io.Message.MsgType;
 
 /**
  * This message is sent from Client to Server with an AssertionRequest
@@ -14,9 +11,6 @@ import pharoslabut.io.Message.MsgType;
 public class AssertionResponseMsg implements AckedMsg {
 
 	private static final long serialVersionUID = -4151583308474362953L;
-
-	private InetAddress address;
-	private int port;
 	
 	/**
 	 * the result of the assertion.
