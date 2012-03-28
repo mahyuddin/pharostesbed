@@ -60,7 +60,7 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 	 * The integral gain constant of the navigation PID controller.
 	 * This value controls the significance of the *past* error.
 	 */
-	public static final double Ki = 0;
+	public static final double Ki = 0.02;
 	
 	/**
 	 * The derivative gain constant of the navigation PID controller.
@@ -365,7 +365,11 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 			
 			if (Math.abs(headingError) > MAJOR_HEADING_CORRECTION_THRESHOLD) {
 				
-				double steeringAngle = maxSteeringAngle;
+				double steeringAngleMultiplier = Math.abs(headingError) / 0.6;
+				if (steeringAngleMultiplier > 1)
+					steeringAngleMultiplier = 1;
+				
+				double steeringAngle = maxSteeringAngle * steeringAngleMultiplier;
 				
 				/* A negative heading error means the robot is pointing too far to the
 				 * left.  Thus, the steering angle should be negative to turn the robot
@@ -378,7 +382,7 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 				
 				Logger.log("Performing major correction:" +
 						"\n\tHeading (radians): " + currHeading +
-						"\n\tHeading error (radians): " + headingError +
+						"\n\tHeading error (radians): " + headingError + ", multiplier = " + steeringAngleMultiplier +
 						"\n\tDistance to destination (m): " + targetDirection.getDistance() +
 						"\n\tSteering angle cmd: " + steeringAngle +
 						"\n\tSpeed cmd (m/s): " + headingCorrectionSpeed);

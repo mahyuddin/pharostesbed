@@ -131,6 +131,7 @@ public class BehaviorTCPBeacon extends Behavior implements UpdateBeaconBehavior,
 					public void run() {
 						RobotExpSettings teammateSettings = expConfig.getTeamateSettings(teammate.getName());
 						try {
+							beacon.updateTimestamp();
 							msgSender.sendMessage(teammateSettings.getIP(), teammateSettings.getPort(), beacon);
 						} catch (PharosException e) {
 							e.printStackTrace();
