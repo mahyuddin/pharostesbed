@@ -1,7 +1,7 @@
 package pharoslabut.demo.mrpatrol2.daemons;
 
-import java.util.Enumeration;
-import java.util.Vector;
+//import java.util.Enumeration;
+//import java.util.Vector;
 
 import pharoslabut.demo.mrpatrol2.Waypoint;
 import pharoslabut.demo.mrpatrol2.behaviors.Behavior;
@@ -17,8 +17,8 @@ import pharoslabut.demo.mrpatrol2.config.CoordinationType;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
 import pharoslabut.demo.mrpatrol2.context.WorldModel;
-import pharoslabut.io.Message;
-import pharoslabut.io.MessageReceiver;
+//import pharoslabut.io.Message;
+//import pharoslabut.io.MessageReceiver;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;
