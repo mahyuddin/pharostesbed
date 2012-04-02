@@ -112,7 +112,7 @@ public class VisualizeHeadingAndSpeed {
 	private void showPlot() {
 		// Create the various data series...
 		XYSeries headingSeries = new XYSeries("Estimated Heading");
-		XYSeries headingCmdSeries = new XYSeries("Turn Direction Command");
+		XYSeries headingCmdSeries = new XYSeries("Steering Angle Command");
 		XYSeries speedSeries = new XYSeries("Estimated Speed");
 		XYSeries speedCmdSeries = new XYSeries("Desired Speed");
 		
