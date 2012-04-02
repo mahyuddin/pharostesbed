@@ -143,14 +143,21 @@ public class BehaviorTCPBeacon extends Behavior implements UpdateBeaconBehavior,
 			
 			Logger.logDbg(sb.toString());
 			
-			try {
-    			synchronized(this) {
-    				long delayPeriod = pharoslabut.util.Random.randPeriod(MIN_BEACON_PERIOD, MAX_BEACON_PERIOD);
-    				Logger.logDbg("Time till next transmission = " + delayPeriod);
-    				wait(delayPeriod);
-    			}
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			if (!dependenciesMet()) {
+				Logger.logDbg("Dependencies not met! stopping...");
+				stop();
+			}
+			
+			if (!isDone()) {
+				try {
+					synchronized(this) {
+						long delayPeriod = pharoslabut.util.Random.randPeriod(MIN_BEACON_PERIOD, MAX_BEACON_PERIOD);
+						Logger.logDbg("Time till next transmission = " + delayPeriod);
+						wait(delayPeriod);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
