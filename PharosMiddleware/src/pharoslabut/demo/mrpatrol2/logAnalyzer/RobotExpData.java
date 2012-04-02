@@ -1053,7 +1053,7 @@ public class RobotExpData {
 			
 			// Check if the timestamp falls between the current and next motion commands
 			else if (currCmd.time <= timestamp && timestamp < nxtCmd.time) {
-				Logger.log("Found relevant motion command at index " + indx);
+				Logger.logDbg("Found relevant motion command at index " + indx);
 				return indx;
 			}
 			
