@@ -2,8 +2,8 @@ package pharoslabut.demo.mrpatrol2.behaviors;
 
 import java.util.Enumeration;
 
-import pharoslabut.demo.mrpatrol2.behaviors.Behavior.CanStart;
-import pharoslabut.logger.Logger;
+//import pharoslabut.demo.mrpatrol2.behaviors.Behavior.CanStart;
+//import pharoslabut.logger.Logger;
 
 public class BehaviorAnticipatedUpdateBeacon extends BehaviorUpdateBeacon {
 
