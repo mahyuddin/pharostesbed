@@ -7,7 +7,7 @@ import pharoslabut.demo.mrpatrol2.behaviors.BehaviorGoToLocation;
 import pharoslabut.demo.mrpatrol2.behaviors.BehaviorWaitTime;
 import pharoslabut.demo.mrpatrol2.config.ExpConfig;
 import pharoslabut.demo.mrpatrol2.config.RobotExpSettings;
-import pharoslabut.io.Message;
+//import pharoslabut.io.Message;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;
