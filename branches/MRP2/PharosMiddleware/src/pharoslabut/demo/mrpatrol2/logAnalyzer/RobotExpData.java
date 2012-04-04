@@ -38,6 +38,12 @@ public class RobotExpData {
 	private long expStartTime;
 	
 	/**
+	 * The start time of the actual patrol.  This is when the robots stop 
+	 * waiting at their first waypoints.
+	 */
+	private long patrolStartTime;
+	
+	/**
 	 * Details of a single edge in the path the robot traveled.
 	 */
 	private Vector<PathEdge> pathEdges = new Vector<PathEdge>();
@@ -83,6 +89,9 @@ public class RobotExpData {
 	 */
 	private Vector<WiFiBeaconRx> wifiBeaconRxs = new Vector<WiFiBeaconRx>();
 	
+	/**
+	 * Maps the behavior name to the BehaviorGoToLocationState.
+	 */
 	private Hashtable<String, BehaviorGoToLocationState> goToLocBehaviors 
 		= new Hashtable<String, BehaviorGoToLocationState>();
 	
@@ -110,6 +119,24 @@ public class RobotExpData {
 		}
 	}
 
+	public String getWaypointName(Location loc) {
+		BehaviorGoToLocationState relBeh = null;
+		
+		Iterator<BehaviorGoToLocationState> itr = goToLocBehaviors.values().iterator();
+		while (itr.hasNext()) {
+			BehaviorGoToLocationState currBeh = itr.next();
+			if (currBeh.getDestLoc().equals(loc))
+				relBeh = currBeh;
+		}
+		
+		if (relBeh != null) {
+			String behName = relBeh.getName();
+			String[] tokens = behName.split("_");
+			return tokens[2];
+		}
+		else
+			return "Unknown name for waypoint " + loc;
+	}
 	
 	/**
 	 * Determines whether the robot actually ran in the experiment.
@@ -230,14 +257,15 @@ public class RobotExpData {
 		PathEdge currEdge = null;
 		PlayerGpsData currLoc = null;
 		boolean expStartTimeSet = false;
+		boolean patrolStarted = false;
 		
-		while ((line = br.readLine()) != null){
+		while ((line = br.readLine()) != null) {
 			
-			// Extract the experiment start times.
+			// Save the experiment start time
 			if (line.contains("Starting experiment at time:")) {
 				String[] tokens = line.split("[: ]");
 				expStartTime = Long.valueOf(tokens[8]);
-				Logger.logDbg("expStartTime = " + expStartTime);
+				//Logger.logDbg("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			}
 			else if (line.contains("Starting experiment at time ")) {
@@ -246,14 +274,19 @@ public class RobotExpData {
 				
 				String[] tokens = startingLine.split("[.\\s]");
 				expStartTime = Long.valueOf(tokens[0]);
-				Logger.logDbg("expStartTime = " + expStartTime);
+				//Logger.logDbg("expStartTime = " + expStartTime);
 				expStartTimeSet = true;
 			} 
 			
+			// Save the patrol start time
+			else if (line.contains("BehaviorWaitTime") && line.contains("done")) {
+				patrolStarted = true;
+				this.patrolStartTime = Long.valueOf(line.substring(1,line.indexOf(']')));
+			}
+			
+			// Save the GoToLocation behaviors
 			else if (line.contains("Creating behavior BehaviorGoToLocation")) {
 				String[] tokens = line.split("[=,]");
-				
-				
 				String behName = tokens[1].substring(1);  // use substring to remove leading space
 				double latitude = Double.valueOf(tokens[13].substring(2));
 				double longitude = Double.valueOf(tokens[14]);
@@ -271,40 +304,6 @@ public class RobotExpData {
 				if (behState == null)
 					System.err.println("Unable to get GoToLoc behavior with name \"" + behName + "\"");
 				currEdge = new PathEdge(behState.getDestLoc(), timestamp, behState.getSpeed());
-			}
-			else if (line.contains("WayPointFollower: Going to") 
-					|| (line.contains("MotionScriptFollower:") && line.contains("Going to "))) 
-			{
-				String keyStr = "Going to ";
-				String goingToLine = line.substring(line.indexOf(keyStr) + keyStr.length());
-				String[] tokens = goingToLine.split("[\\(\\),\\s,m]+");
-				
-				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
-				double lat = Double.valueOf(tokens[1]);
-				double lon = Double.valueOf(tokens[2]);
-				double speed = Double.valueOf(tokens[5]); 
-				
-				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
-				
-				// Set the start location of the path edge if we know where we are.
-				if (currLoc != null)
-					currEdge.setStartLoc(new Location(currLoc));
-			}
-			else if (line.contains("TestNavigateCompassGPS: Going to")) {
-				String[] tokens = line.split("[\\[\\]:=(), ]");
-//				for (int i=0; i < tokens.length; i++) {
-//					System.out.println(i + ": " + tokens[i]);
-//				}
-				long timeStamp = Long.valueOf(tokens[1]);
-				double lat = Double.valueOf(tokens[9]);
-				double lon = Double.valueOf(tokens[11]);
-				double speed = Double.valueOf(tokens[16]);
-				
-				currEdge = new PathEdge(new Location(lat, lon), timeStamp, speed);
-				
-				// Set the start location of the path edge if we know where we are.
-				if (currLoc != null)
-					currEdge.setStartLoc(new Location(currLoc));
 			}
 			
 			// Extract the GPS location data.
@@ -427,15 +426,15 @@ public class RobotExpData {
 			else if (line.contains("NavigateCompassGPS:") && line.contains("Arrived at destination")) {
 				// Save the end time of the experiment
 				long timestamp = Long.valueOf(line.substring(1,line.indexOf(']')));
-				
-				if (currEdge == null) {
-					Logger.logWarn("Arrived at destination but currEdge is null!");
-					//System.exit(1);
-				} else {
-				
-					currEdge.setEndTime(timestamp);
-					pathEdges.add(currEdge);
-					currEdge = null;
+				if (patrolStarted) {
+					if (currEdge == null) {
+						Logger.logWarn("Arrived at destination but currEdge is null!");
+						//System.exit(1);
+					} else {
+						currEdge.setEndTime(timestamp);
+						pathEdges.add(currEdge);
+						currEdge = null;
+					}
 				}
 			}
 			
@@ -723,12 +722,20 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * 
+	 * @return The time when the patrol started.
+	 */
+	public long getPatrolStartTime() {
+		return patrolStartTime;
+	}
+	
+	/**
 	 * Gets the time at which the robot started.  This is the time at which the
 	 * robot received the StartExpMsg.
 	 * 
 	 * @return The robot's start time.
 	 */
-	public long getStartTime() {
+	public long getExpStartTime() {
 		return expStartTime;
 	}
 	
@@ -738,7 +745,7 @@ public class RobotExpData {
 	 * 
 	 * @return The experiment end time.
 	 */
-	public long getStopTime() {
+	public long getExpStopTime() {
 		long result = -1;
 		
 		result = getFinalWaypointArrivalTime();
@@ -797,13 +804,13 @@ public class RobotExpData {
 	 * @return The speed that the robot is actually traveling at based on GPS measurements.
 	 */
 	public double getSpeed(long time) {
-		if (time < getStartTime()) {
-			Logger.logDbg("WARNING: timestamp prior to start time (" + time + " < " + getStartTime() + "), assuming speed is 0.");
+		if (time < getExpStartTime()) {
+			Logger.logDbg("WARNING: timestamp prior to start time (" + time + " < " + getExpStartTime() + "), assuming speed is 0.");
 			return 0;
 		}
 		
-		if (time > getStopTime()) {
-			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + time + "), assuming speed is 0");
+		if (time > getExpStopTime()) {
+			Logger.logDbg("WARNING: timestamp after end time. (" + getExpStopTime() + " < " + time + "), assuming speed is 0");
 			return 0;
 		}
 		
@@ -938,7 +945,7 @@ public class RobotExpData {
 			return pharoslabut.navigate.Navigate.angle(robotLoc, endLoc);
 		} else {	
 			Logger.logErr("Could not find path edge covering time " + timestamp 
-				+ " (" + (timestamp - getStartTime()) + ")");
+				+ " (" + (timestamp - getExpStartTime()) + ")");
 			printPathEdges(true);
 			System.exit(1);
 			return Double.MIN_VALUE; // This is just dummy code to prevent the compiler from complaining.
@@ -972,7 +979,7 @@ public class RobotExpData {
 		}
 		
 		Logger.logErr("Could not find relevant path edge at time " + timestamp
-				+ " (" + (timestamp - getStartTime()) + ")");
+				+ " (" + (timestamp - getExpStartTime()) + ")");
 		printPathEdges(true);
 		System.exit(1);
 		return null;
@@ -1017,9 +1024,9 @@ public class RobotExpData {
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge e = pathEdges.get(i);
 			String result = e.getStartTime() 
-				+ "\t" + (e.getStartTime() - getStartTime())
+				+ "\t" + (e.getStartTime() - getExpStartTime())
 				+ "\t" + e.getEndTime()
-				+ "\t" + (e.getEndTime() - getStartTime())  
+				+ "\t" + (e.getEndTime() - getExpStartTime())  
 				+ "\t" + e.getStartLoc() 
 				+ "\t" + e.getEndLocation();
 
@@ -1108,13 +1115,13 @@ public class RobotExpData {
 	 * @return The heading of the robot at the specified time.
 	 */
 	public double getHeading(long timestamp) {
-		if (timestamp < getStartTime()) {
-			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+		if (timestamp < getExpStartTime()) {
+			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getExpStartTime() + ")");
 			return getStartHeading();
 		}
 		
-		if (timestamp > getStopTime()) {
-			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+		if (timestamp > getExpStopTime()) {
+			Logger.logDbg("WARNING: timestamp after end time. (" + getExpStopTime() + " < " + timestamp + ")");
 			return getEndHeading();
 		}
 		
@@ -1174,13 +1181,13 @@ public class RobotExpData {
 	 * @return The location of the robot at the specified time.
 	 */
 	public Location getLocation(long timestamp) {
-		if (timestamp < getStartTime()) {
-			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getStartTime() + ")");
+		if (timestamp < getExpStartTime()) {
+			Logger.logDbg("WARNING: timestamp prior to start time. (" + timestamp + " < " + getExpStartTime() + ")");
 			return getStartLocation();
 		}
 		
-		if (timestamp > getStopTime()) {
-			Logger.logDbg("WARNING: timestamp after end time. (" + getStopTime() + " < " + timestamp + ")");
+		if (timestamp > getExpStopTime()) {
+			Logger.logDbg("WARNING: timestamp after end time. (" + getExpStopTime() + " < " + timestamp + ")");
 			return getEndLocation();
 		}
 		
@@ -1391,7 +1398,7 @@ public class RobotExpData {
 //		}
 		
 		public String toString() {
-			return time + "\t" + (time - getStartTime())/1000.0 + "\t" + speedCmd + "\t" + headingCmd;
+			return time + "\t" + (time - getExpStartTime())/1000.0 + "\t" + speedCmd + "\t" + headingCmd;
 		}
 	}
 	
@@ -1450,7 +1457,7 @@ public class RobotExpData {
 	 * @return The relative time that has passed since the robot start time.
 	 */
 	private long getRelativeTime(long time) {
-		return (time - getStartTime())/1000;
+		return (time - getExpStartTime())/1000;
 	}
 	
 	/**
@@ -1465,15 +1472,15 @@ public class RobotExpData {
 			Location waypoint = currEdge.getEndLocation();
 			long endTime = currEdge.getEndTime();
 			flogger.log(i + "\t" + waypoint.latitude() + "\t" + waypoint.longitude() 
-					+ "\t" + endTime + "\t" + (endTime - getStartTime()) 
-					+ "\t" + (endTime - getStartTime())/1000 + "\t0");
+					+ "\t" + endTime + "\t" + (endTime - getExpStartTime()) 
+					+ "\t" + (endTime - getExpStartTime())/1000 + "\t0");
 		}
 	}
 	
 	public String toString() {
 		String result = 
 			"File Name: " + getFileName()
-			+ "\nRobot Start Time: " + getStartTime()
+			+ "\nRobot Start Time: " + getExpStartTime()
 			+ "\nNumber of path edges: " + pathEdges.size();
 		for (int i=0; i < pathEdges.size(); i++) {
 			PathEdge currEdge = pathEdges.get(i);

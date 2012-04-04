@@ -40,12 +40,14 @@ public class BehaviorWaitTime extends Behavior {
 		// Wait until it's time to start.
 		
 		Logger.logDbg("Pausing for " + waitTime + " milliseconds");
-		synchronized(this) {
-			try {
-				this.wait(waitTime);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				Logger.logWarn("Interrupted while waiting. + " + e.getLocalizedMessage());
+		if (waitTime != 0) {
+			synchronized(this) {
+				try {
+					this.wait(waitTime);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+					Logger.logWarn("Interrupted while waiting. + " + e.getLocalizedMessage());
+				}
 			}
 		}
 		
