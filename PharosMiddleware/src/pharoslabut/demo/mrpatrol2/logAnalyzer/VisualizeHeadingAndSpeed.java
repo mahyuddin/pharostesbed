@@ -44,10 +44,10 @@ public class VisualizeHeadingAndSpeed {
 		this.logFileName = logFileName;
 		robotData = new RobotExpData(logFileName);
 		
-		long startTime = robotData.getStartTime();
+		long startTime = robotData.getExpStartTime();
 		
 		// Calculate heading and speed of the robot every sampling interval.
-		for (long time = startTime; time < robotData.getStopTime(); time += samplingInterval) {
+		for (long time = startTime; time < robotData.getExpStopTime(); time += samplingInterval) {
 			SpeedHeadingState dataPoint = new SpeedHeadingState(time, 
 					robotData.getHeading(time), robotData.getSpeed(time),
 					robotData.getHeadingCmd(time), robotData.getSpeedCmd(time));
@@ -69,7 +69,7 @@ public class VisualizeHeadingAndSpeed {
 		
 		log("Saving data to " + fileName, null);
 		FileLogger flogger = new FileLogger(fileName, false);
-		long startTime = robotData.getStartTime();
+		long startTime = robotData.getExpStartTime();
 		
 		flogger.log("Time (ms)\tDelta Time (ms)\tDelta Time (s)\tHeading (radians)\tHeading Command (radians)\tSpeed (m/s)\tSpeed Command (m/s)");
 		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
@@ -91,7 +91,7 @@ public class VisualizeHeadingAndSpeed {
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			long relStartTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
+			long relStartTime = (currEdge.getStartTime() - robotData.getExpStartTime())/1000;
 			flogger.log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0);
 		}
 		
@@ -101,7 +101,7 @@ public class VisualizeHeadingAndSpeed {
 		e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			long relEndTime = (currEdge.getEndTime() - robotData.getStartTime())/1000;
+			long relEndTime = (currEdge.getEndTime() - robotData.getExpStartTime())/1000;
 			flogger.log(currEdge.getEndTime() + "\t" + relEndTime + "\t" + 0);
 		}
 	}
@@ -119,7 +119,7 @@ public class VisualizeHeadingAndSpeed {
 		Enumeration<SpeedHeadingState> e = speedHeadingData.elements();
 		while (e.hasMoreElements()) {
 			SpeedHeadingState currState = e.nextElement();
-			double currTime = (currState.time - robotData.getStartTime())/1000.0;
+			double currTime = (currState.time - robotData.getExpStartTime())/1000.0;
 			headingSeries.add(currTime, currState.heading);
 			headingCmdSeries.add(currTime, currState.headingCmd);
 			speedSeries.add(currTime, currState.speed);
@@ -135,9 +135,9 @@ public class VisualizeHeadingAndSpeed {
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			double beginEdgeTime = (currEdge.getStartTime() - robotData.getStartTime())/1000.0;
+			double beginEdgeTime = (currEdge.getStartTime() - robotData.getExpStartTime())/1000.0;
 			beginEdgeSeries.add(beginEdgeTime, 0);
-			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
+			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getExpStartTime())/1000.0;
 			waypointArrivalSeries.add(wayPointArrivalTime, 0);
 		}
 

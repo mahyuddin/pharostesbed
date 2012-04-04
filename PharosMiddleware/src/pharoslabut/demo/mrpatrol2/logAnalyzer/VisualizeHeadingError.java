@@ -45,10 +45,10 @@ public class VisualizeHeadingError {
 		this.logFileName = logFileName;
 		robotData = new RobotExpData(logFileName);
 		
-		long startTime = robotData.getStartTime();
+		long startTime = robotData.getExpStartTime();
 		
 		// Calculate heading divergence every sampling interval
-		for (long time = startTime; time < robotData.getStopTime(); time += samplingInterval) {
+		for (long time = startTime; time < robotData.getExpStopTime(); time += samplingInterval) {
 			
 			// Only do the calculation if the robot has started to move.
 			if (time >= robotData.getPathEdge(0).getStartTime())
@@ -68,7 +68,7 @@ public class VisualizeHeadingError {
 			fileName = logFileName + "-headingError.txt";
 		
 		FileLogger flogger = new FileLogger(fileName, false);
-		long startTime = robotData.getStartTime();
+		long startTime = robotData.getExpStartTime();
 		
 		log("Time (ms)\tDelta Time (ms)\tActual Heading\tIdeal Heading\tHeading Error", flogger);
 		Enumeration<HeadingDivergenceState> e = divergenceData.elements();
@@ -88,7 +88,7 @@ public class VisualizeHeadingError {
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			long relStartTime = (currEdge.getStartTime() - robotData.getStartTime())/1000;
+			long relStartTime = (currEdge.getStartTime() - robotData.getExpStartTime())/1000;
 			log(currEdge.getStartTime() + "\t" + relStartTime + "\t" + 0, flogger);
 		}
 	}
@@ -116,7 +116,7 @@ public class VisualizeHeadingError {
 		Enumeration<HeadingDivergenceState> e = divergenceData.elements();
 		while (e.hasMoreElements()) {
 			HeadingDivergenceState currState = e.nextElement();
-			headingErrorSeries.add((currState.time - robotData.getStartTime())/1000, currState.headingError);
+			headingErrorSeries.add((currState.time - robotData.getExpStartTime())/1000, currState.headingError);
 		}
 		
 		// Create two data series one containing the times when the robot starts heading 
@@ -128,9 +128,9 @@ public class VisualizeHeadingError {
 		Enumeration<PathEdge> e2 = pathEdges.elements();
 		while (e2.hasMoreElements()) {
 			PathEdge currEdge = e2.nextElement();
-			double beginEdgeTime = (currEdge.getStartTime() - robotData.getStartTime())/1000.0;
+			double beginEdgeTime = (currEdge.getStartTime() - robotData.getExpStartTime())/1000.0;
 			beginEdgeSeries.add(beginEdgeTime, 0);
-			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getStartTime())/1000.0;
+			double wayPointArrivalTime = (currEdge.getEndTime() -  robotData.getExpStartTime())/1000.0;
 			waypointArrivalSeries.add(wayPointArrivalTime, 0);
 		}
 
