@@ -149,14 +149,10 @@ public class RobotExpData {
 	}
 	
 	/**
-	 * Tokenizes the file name based on the dashes.  Removes all 
-	 * directories from the name.  The two types of file names supported include:
+	 * Tokenizes the name of an experiment log file.
+	 * The file name is expected to be of the following format:
 	 * 
-	 *   [mission name]-[exp desc]-[exp name]-[robot name]-[...]
-	 * 
-	 * and
-	 * 
-	 *   [mission name]-[exp name]-[robot name]-[...]
+	 *   [mission name]_[exp num]-[robot name]-MRP2_[timestamp].log
 	 *   
 	 * @return The tokenized file name.
 	 */
@@ -166,12 +162,7 @@ public class RobotExpData {
 		// If the file name contains directories, remove the directories from the name first.
 		if (robotFileName.indexOf("/") != -1)
 			robotFileName = robotFileName.substring(fileName.lastIndexOf("/")+1);
-		String[] tokens = robotFileName.split("-");
-		
-//		log("Tokenizing robotFileName = " + robotFileName);
-//		for (int i=0; i < tokens.length; i++) {
-//			log(i + ": " + tokens[i]);
-//		}
+		String[] tokens = robotFileName.split("[_-]");
 		
 		return tokens;
 	}
@@ -183,18 +174,7 @@ public class RobotExpData {
 	 */
 	public String getRobotName() {
 		String[] tokens = tokenizeFileName();
-		
-		if (fileName.contains("MRPatrol")) {
-			return tokens[2];
-		} else {
-			if (tokens.length > 2) {
-				if (tokens.length == 5)
-					return tokens[3];
-				else
-					return tokens[2];
-			} else
-				return null;
-		}
+		return tokens[2];
 	}
 	
 	/**
@@ -564,6 +544,7 @@ public class RobotExpData {
 		
 		// Calibrate all of the timestamps...
 		expStartTime = calibrator.getCalibratedTime(expStartTime);
+		patrolStartTime = calibrator.getCalibratedTime(patrolStartTime);
 		
 		for (int i=0; i < locations.size(); i++) {
 			GPSLocationState currLoc = locations.get(i);
@@ -730,6 +711,17 @@ public class RobotExpData {
 	}
 	
 	/**
+	 * Returns the end of the patrol, which is the start time
+	 * of the last edge that goes from the patrol route back
+	 * to the base camp.
+	 * 
+	 * @return The time when the patrol ends.
+	 */
+	public long getPatrolEndtime() {
+		return pathEdges.get(pathEdges.size() - 1).getStartTime();
+	}
+	
+	/**
 	 * Gets the time at which the robot started.  This is the time at which the
 	 * robot received the StartExpMsg.
 	 * 
@@ -830,7 +822,7 @@ public class RobotExpData {
 			}
 		}
 		
-		Logger.logDbg("timestamp = " + time + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
+		//Logger.logDbg("timestamp = " + time + ", beforeIndx = " + beforeIndx + ", afterIndx = " + afterIndx);
 		
 		GPSLocationState preLoc, postLoc;
 		
@@ -862,8 +854,8 @@ public class RobotExpData {
 		
 		double speed = dist / deltaTime;
 		
-		Logger.logDbg("preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
-				+ ", deltaTime=" + deltaTime + ", speed=" + speed);
+		//Logger.logDbg("preLoc=" + preLoc + ", postLoc=" + postLoc + ", dist=" + dist 
+		//		+ ", deltaTime=" + deltaTime + ", speed=" + speed);
 		
 		return speed;
 	}
