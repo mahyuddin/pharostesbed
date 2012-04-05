@@ -71,6 +71,7 @@ public class AnalyzeWaypointIdleAndWaitTime {
 		}
 		
 		System.out.println("\nIdle time results:");
+		System.out.println("Experiment, Average (s), 95% Conf., Min., Max.");
 		Enumeration<Result> e = idleResults.elements();
 		while (e.hasMoreElements()) {
 			Result r = e.nextElement();
@@ -78,6 +79,7 @@ public class AnalyzeWaypointIdleAndWaitTime {
 		}
 		
 		System.out.println("\nWait time results:");
+		System.out.println("Experiment, Average (s), 95% Conf., Min., Max.");
 		e = waitResults.elements();
 		while (e.hasMoreElements()) {
 			Result r = e.nextElement();
@@ -144,11 +146,11 @@ public class AnalyzeWaypointIdleAndWaitTime {
 			sb.append("\n" + currWayPoint + ", " + df.format(Stats.getAvg(result)) + ", " + df.format(Stats.getConf95(result)));
 		}
 		
+		Collections.sort(allData);
+		
 		Result result = new Result(Stats.getAvg(allData), Stats.getConf95(allData), allData.get(0), allData.get(allData.size() - 1));
 		sb.append("\n\nOverall Average Idle Time (s), " + df.format(result.avg) 
 				+ ", " + df.format(result.conf95));
-		
-		Collections.sort(allData);
 		sb.append("\nOverall Max Idle Time (s), " + result.max);
 		sb.append("\nOverall Min Idle Time (s), " + result.min);
 		
@@ -198,11 +200,11 @@ public class AnalyzeWaypointIdleAndWaitTime {
 			sb.append("\n" + currWayPoint + ", " + df.format(Stats.getAvg(waitTimes)) + ", " + df.format(Stats.getConf95(waitTimes)));
 		}
 		
+		Collections.sort(allData);
+		
 		Result result = new Result(Stats.getAvg(allData), Stats.getConf95(allData), allData.get(0), allData.get(allData.size() - 1));
 		
 		sb.append("\n\nOverall Avg. Wait Time (s), " + df.format(result.avg) + ", " + df.format(result.conf95));
-		
-		Collections.sort(allData);
 		sb.append("\nOverall Max Wait Time (s), " + df.format(result.max));
 		sb.append("\nOverall Min Wait Time (s), " + df.format(result.min));
 		
