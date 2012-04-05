@@ -8,7 +8,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Vector;
 
-import pharoslabut.logger.FileLogger;
+//import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.logger.analyzer.PathEdge;
 import pharoslabut.navigate.Location;
