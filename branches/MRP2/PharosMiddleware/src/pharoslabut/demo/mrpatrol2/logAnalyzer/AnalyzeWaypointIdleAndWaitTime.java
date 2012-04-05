@@ -16,11 +16,8 @@ import pharoslabut.util.Stats;
 
 public class AnalyzeWaypointIdleAndWaitTime {
 
-	Vector<RobotExpData> robots = new Vector<RobotExpData>();
 	DecimalFormat df = new DecimalFormat("#.###");
-	
-	
-	
+
 	/**
 	 * 
 	 * @param args An array of experiment directories to analyze.
@@ -48,6 +45,8 @@ public class AnalyzeWaypointIdleAndWaitTime {
 			    System.err.println("No files found.");
 			    System.exit(1);
 			} else {
+				Vector<RobotExpData> robots = new Vector<RobotExpData>();
+				
 			    for (int i=0; i<logFiles.length; i++) {
 			    	String robotFileName = "./" + args[d] + "/" + logFiles[i];
 			    	Logger.logDbg("Reading robot log " + robotFileName);
@@ -58,16 +57,16 @@ public class AnalyzeWaypointIdleAndWaitTime {
 			        	prefix = tokens[0] + "_" + tokens[1];
 			        }
 			    }
-			}
-			
-			Result resultIdle = analyzeIdleTime();
-			Result resultWait = analyzeWaitTime();
+			    
+			    Result resultIdle = analyzeIdleTime(robots);
+				Result resultWait = analyzeWaitTime(robots);
 
-			resultIdle.expName = prefix;
-			resultWait.expName = prefix;
-			
-			idleResults.add(resultIdle);
-			waitResults.add(resultWait);
+				resultIdle.expName = prefix;
+				resultWait.expName = prefix;
+				
+				idleResults.add(resultIdle);
+				waitResults.add(resultWait);
+			}
 		}
 		
 		System.out.println("\nIdle time results:");
@@ -87,7 +86,7 @@ public class AnalyzeWaypointIdleAndWaitTime {
 		}
 	}
 	
-	private Result analyzeIdleTime() {
+	private Result analyzeIdleTime(Vector<RobotExpData> robots) {
 		
 		// This hashtable maps the waypoint name to the times it was visited.
 		Hashtable<String, Vector<Long>> data = new Hashtable<String, Vector<Long>>();
@@ -161,7 +160,7 @@ public class AnalyzeWaypointIdleAndWaitTime {
 		return result;
 	}
 	
-	private Result analyzeWaitTime() {
+	private Result analyzeWaitTime(Vector<RobotExpData> robots) {
 		// This hashtable maps the waypoint name to the times robots waited at it.
 		Hashtable<String, Vector<Double>> data = new Hashtable<String, Vector<Double>>();
 		
