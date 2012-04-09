@@ -135,6 +135,17 @@ public class ComputeWaypointIdleAndWaitTime {
 			Vector<Long> visitTimes = data.get(currWayPoint);
 			Collections.sort(visitTimes);
 			
+			StringBuffer wpVisitTimeString = new StringBuffer("Details of Idle Times for waypoint " + currWayPoint + ":");
+			wpVisitTimeString.append("\n\tArrival times\tDelta");
+			for (int i=0; i < visitTimes.size(); i++) {
+				if (i == 0)
+					wpVisitTimeString.append("\n\t" + visitTimes.get(i));
+				else
+					wpVisitTimeString.append("\n\t" + visitTimes.get(i) + "\t" + (visitTimes.get(i) - visitTimes.get(i-1)));
+			}
+			
+			System.out.println(wpVisitTimeString);
+			
 			Vector<Double> result = new Vector<Double>();
 			for (int i=1; i < visitTimes.size(); i++) {
 				long delta = visitTimes.get(i) - visitTimes.get(i-1);
