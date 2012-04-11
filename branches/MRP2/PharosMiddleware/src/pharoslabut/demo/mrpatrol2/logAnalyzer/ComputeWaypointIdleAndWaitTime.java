@@ -136,12 +136,12 @@ public class ComputeWaypointIdleAndWaitTime {
 			Collections.sort(visitTimes);
 			
 			StringBuffer wpVisitTimeString = new StringBuffer("Details of waypoint \"" + currWayPoint + "\" idle times:");
-			wpVisitTimeString.append("\n\tArrival times\tDelta");
+			wpVisitTimeString.append("\n\tArrival #, Arrival times (ms), Delta (ms)");
 			for (int i=0; i < visitTimes.size(); i++) {
 				if (i == 0)
-					wpVisitTimeString.append("\n\t" + visitTimes.get(i));
+					wpVisitTimeString.append("\n\t" + (i+1) + ", " + visitTimes.get(i));
 				else
-					wpVisitTimeString.append("\n\t" + visitTimes.get(i) + "\t" + (visitTimes.get(i) - visitTimes.get(i-1)));
+					wpVisitTimeString.append("\n\t" + (i+1) + ", " + visitTimes.get(i) + ", " + (visitTimes.get(i) - visitTimes.get(i-1)));
 			}
 			
 			System.out.println(wpVisitTimeString);
@@ -242,10 +242,10 @@ public class ComputeWaypointIdleAndWaitTime {
 			
 			// Print details for debugging.
 			StringBuffer detailString = new StringBuffer("\nDetails of waypoint \"" + currWayPoint + "\" wait times:");
-			detailString.append("\nVisit #, Robot, Arrival Time (ms), Leave Time (ms), Wait Time (s)");
+			detailString.append("\n\tVisit #, Robot, Arrival Time (ms), Leave Time (ms), Wait Time (s)");
 			for (int i = 0; i < waitTimeDetails.size(); i++) {
 				WaypointWaitDetails currDetails = waitTimeDetails.get(i);
-				detailString.append("\n" + (i+1) + ", " + currDetails);
+				detailString.append("\n\t" + (i+1) + ", " + currDetails);
 			}
 			System.out.println(detailString.toString());
 			
