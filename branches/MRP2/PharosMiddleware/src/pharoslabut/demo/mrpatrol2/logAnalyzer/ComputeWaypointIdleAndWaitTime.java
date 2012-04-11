@@ -135,7 +135,7 @@ public class ComputeWaypointIdleAndWaitTime {
 			Vector<Long> visitTimes = data.get(currWayPoint);
 			Collections.sort(visitTimes);
 			
-			StringBuffer wpVisitTimeString = new StringBuffer("Details of Idle Times for waypoint " + currWayPoint + ":");
+			StringBuffer wpVisitTimeString = new StringBuffer("Details of waypoint \"" + currWayPoint + "\" idle times:");
 			wpVisitTimeString.append("\n\tArrival times\tDelta");
 			for (int i=0; i < visitTimes.size(); i++) {
 				if (i == 0)
@@ -171,17 +171,50 @@ public class ComputeWaypointIdleAndWaitTime {
 		return result;
 	}
 	
+	class WaypointWaitDetails implements Comparable<WaypointWaitDetails> {
+		String robotName;
+		long arrivalTime, leaveTime; // in milliseconds
+		
+		public WaypointWaitDetails(String robotName, long arrivalTime, long leaveTime) {
+			this.robotName = robotName;
+			this.arrivalTime = arrivalTime;
+			this.leaveTime = leaveTime;
+		}
+		
+		/**
+		 * 
+		 * @return The wait time in seconds.
+		 */
+		public double getWaitTime() {
+			return (leaveTime - arrivalTime) / 1000.0;
+		}
+		
+		@Override
+		public int compareTo(WaypointWaitDetails d) {
+			if (d.arrivalTime > arrivalTime)
+				return -1;
+			else if (d.arrivalTime == arrivalTime)
+				return 0;
+			else
+				return 1;
+		}
+		
+		public String toString() {
+			return robotName + ", " + arrivalTime + ", " + leaveTime + ", " + getWaitTime();
+		}
+	}
+	
 	private Result analyzeWaitTime(Vector<RobotExpData> robots) {
 		// This hashtable maps the waypoint name to the times robots waited at it.
-		Hashtable<String, Vector<Double>> data = new Hashtable<String, Vector<Double>>();
+		Hashtable<String, Vector<WaypointWaitDetails>> data = new Hashtable<String, Vector<WaypointWaitDetails>>();
 		
 		for (int i= 0; i < robots.size(); i++) {
 			RobotExpData currRobot = robots.get(i);
 			
 			Vector<PathEdge> edges = currRobot.getPathEdges();
 			
-			// do not consider the first and last edges since those are going to and from the patrol route.
-			for (int j = 2; j < edges.size() - 1; j++) {  
+			// do not consider the first edge since those are going to and from the patrol route.
+			for (int j = 2; j < edges.size(); j++) {  
 				PathEdge currEdge = edges.get(j);
 				PathEdge prevEdge = edges.get(j-1);
 				
@@ -189,9 +222,9 @@ public class ComputeWaypointIdleAndWaitTime {
 					Location waypointLoc = prevEdge.getEndLocation();
 					String waypointName = currRobot.getWaypointName(waypointLoc);
 					if (!data.containsKey(waypointName))
-						data.put(waypointName, new Vector<Double>());
-					Vector<Double> waitTimes = data.get(waypointName);
-					waitTimes.add((currEdge.getStartTime() - prevEdge.getEndTime()) / 1000.0);
+						data.put(waypointName, new Vector<WaypointWaitDetails>());
+					Vector<WaypointWaitDetails> waitTimes = data.get(waypointName);
+					waitTimes.add(new WaypointWaitDetails(currRobot.getRobotName(), prevEdge.getEndTime(), currEdge.getStartTime()));
 				}
 			}
 		}
@@ -203,9 +236,25 @@ public class ComputeWaypointIdleAndWaitTime {
 		Enumeration<String> keys = data.keys();
 		while (keys.hasMoreElements()) {
 			String currWayPoint = keys.nextElement();
-			Vector<Double> waitTimes = data.get(currWayPoint);
+			Vector<WaypointWaitDetails> waitTimeDetails = data.get(currWayPoint);
+			Collections.sort(waitTimeDetails);
+			Vector<Double> waitTimes = new Vector<Double>();
 			
-			allData.addAll(waitTimes);
+			// Print details for debugging.
+			StringBuffer detailString = new StringBuffer("\nDetails of waypoint \"" + currWayPoint + "\" wait times:");
+			detailString.append("\nVisit #, Robot, Arrival Time (ms), Leave Time (ms), Wait Time (s)");
+			for (int i = 0; i < waitTimeDetails.size(); i++) {
+				WaypointWaitDetails currDetails = waitTimeDetails.get(i);
+				detailString.append("\n" + (i+1) + ", " + currDetails);
+			}
+			System.out.println(detailString.toString());
+			
+			
+			for (int i = 0; i < waitTimeDetails.size(); i++) {
+				double waitTime = waitTimeDetails.get(i).getWaitTime();
+				allData.add(waitTime);
+				waitTimes.add(waitTime);
+			}
 			
 			sb.append("\n" + currWayPoint + ", " + df.format(Stats.getAvg(waitTimes)) + ", " + df.format(Stats.getConf95(waitTimes)));
 		}
