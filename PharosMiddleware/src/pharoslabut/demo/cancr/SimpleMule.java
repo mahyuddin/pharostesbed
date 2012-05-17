@@ -40,7 +40,7 @@ public class SimpleMule implements ProteusOpaqueListener {
 	Location sinkGridCoord = new Location(0,0);
 	Location srcGridCoord = new Location(1,0);
 	
-	public SimpleMule(String expName, boolean updateContext) throws PharosException {
+	public SimpleMule(String expName, boolean updateContext, boolean sinkFirst) throws PharosException {
 		this.updateContext = updateContext;
 		
 		String fileName = expName + "-" + RobotIPAssignments.getName() + "-SimpleMule_" + FileLogger.getUniqueNameExtension() + ".log"; 
@@ -63,32 +63,53 @@ public class SimpleMule implements ProteusOpaqueListener {
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 				gpsDataBuffer);
 		
-		Logger.log("Going to the source...");
-		navigatorGPS.go(null, srcLoc, velocity);
+		if (sinkFirst) {
+			Logger.log("Going to the sink...");
+			navigatorGPS.go(null, sinkLoc, velocity);
+		} else {
+			Logger.log("Going to the source...");
+			navigatorGPS.go(null, srcLoc, velocity);
+		}
 		pause(pauseTime);
 		
 		int counter = 0;
 		while(true) {
-			Logger.log("Going to the sink " + counter + "...");
 			
-			if (updateContext) {
-				//contextSender.setDestLoc(sinkLoc);
-				contextSender.setDestLoc(sinkGridCoord);
-			}
-			navigatorGPS.go(srcLoc, sinkLoc, velocity);
+			if (sinkFirst)
+				goToSource(navigatorGPS, counter);
+			else
+				goToSink(navigatorGPS, counter);
 			
 			pause(pauseTime);
 			
-			Logger.log("Going to the source " + counter + "...");
-			if (updateContext) {				
-				//contextSender.setDestLoc(srcLoc);
-				contextSender.setDestLoc(srcGridCoord);
-			}
-			navigatorGPS.go(sinkLoc, srcLoc, velocity);
+			if (sinkFirst) 
+				goToSink(navigatorGPS, counter);
+			else
+				goToSource(navigatorGPS, counter);
 			
 			counter++;
 			pause(pauseTime);
 		}
+	}
+	
+	private void goToSink(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the sink " + counter + "...");
+		
+		if (updateContext) {
+			//contextSender.setDestLoc(sinkLoc);
+			contextSender.setDestLoc(srcGridCoord);
+		}
+		navigatorGPS.go(srcLoc, sinkLoc, velocity);
+	}
+	
+	private void goToSource(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the source " + counter + "...");
+		
+		if (updateContext) {
+			//contextSender.setDestLoc(sinkLoc);
+			contextSender.setDestLoc(sinkGridCoord);
+		}
+		navigatorGPS.go(sinkLoc, srcLoc, velocity);
 	}
 	
 	private void pause(long duration) {
@@ -188,13 +209,15 @@ public class SimpleMule implements ProteusOpaqueListener {
 		print("Where <options> include:");
 //		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
 //		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");
-		print("\t-updateContext");
+		print("\t-updateContext: Send context information to the context agent.");
+		print("\t-sinkFirst: Go to the sink first.");
 		print("\t-debug: enable debug mode");
 		System.exit(0);
 	}
 	
 	public static void main(String[] args) {
 		boolean updateContext = false;
+		boolean sinkFirst = false;
 		
 		if (args.length == 0)
 			usage();
@@ -204,6 +227,12 @@ public class SimpleMule implements ProteusOpaqueListener {
 				if (args[i].equals("-updateContext")) {
 					updateContext = true;
 				} 
+				else if (args[i].equals("-sinkFirst")) {
+					sinkFirst = true;
+				} 
+				else if (args[i].equals("-h") || args[i].equals("--help")) {
+					usage();
+				}
 //				else if (args[i].equals("-playerServer")) {
 //					playerIP = args[++i];
 //				} 
@@ -250,7 +279,7 @@ public class SimpleMule implements ProteusOpaqueListener {
 		String expName = args[args.length - 1];
 		
 		try {
-			new SimpleMule(expName, updateContext);
+			new SimpleMule(expName, updateContext, sinkFirst);
 		} catch (PharosException e) {
 			e.printStackTrace();
 		}
