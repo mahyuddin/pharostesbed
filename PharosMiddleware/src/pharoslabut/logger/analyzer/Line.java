@@ -1,6 +1,5 @@
 package pharoslabut.logger.analyzer;
 
-import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 
 /**

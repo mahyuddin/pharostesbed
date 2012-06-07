@@ -14,6 +14,9 @@ public class PathEdge {
 	 */
 	private int seqno;
 	
+	/**
+	 * The ideal destination location as specified by the motion script.
+	 */
 	private Location endLoc;
 	private Location idealStartLoc;
 	private Location startLoc;

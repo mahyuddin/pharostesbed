@@ -116,25 +116,25 @@ public class M17MoveInLoop implements Position2DListener {
 		
 		for (int i = 0; i < 10; i++) {
 			Logger.log("Going to: " + waypoint2);
-			if (!navigatorGPS.go(waypoint2, velocity))
+			if (!navigatorGPS.go(null, waypoint2, velocity))
 				Logger.logErr("Unable to reach " + waypoint2); 
 			else
 				Logger.log("SUCCESS!");
 
 			Logger.log("Going to: " + waypoint4);
-			if (!navigatorGPS.go(waypoint4, velocity))
+			if (!navigatorGPS.go(waypoint2, waypoint4, velocity))
 				Logger.logErr("Unable to reach " + waypoint4); 
 			else
 				Logger.log("SUCCESS!");
 
 			Logger.log("Going to: " + waypoint3);
-			if (!navigatorGPS.go(waypoint3, velocity))
+			if (!navigatorGPS.go(waypoint4, waypoint3, velocity))
 				Logger.logErr("Unable to reach " + waypoint3); 
 			else
 				Logger.log("SUCCESS!");
 
 			Logger.log("Going to: " + waypoint1);
-			if (!navigatorGPS.go(waypoint1, velocity))
+			if (!navigatorGPS.go(waypoint3, waypoint1, velocity))
 				Logger.logErr("Unable to reach " + waypoint1); 
 			else
 				Logger.log("SUCCESS!");

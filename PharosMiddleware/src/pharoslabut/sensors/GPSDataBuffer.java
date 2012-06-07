@@ -3,7 +3,6 @@ package pharoslabut.sensors;
 import java.util.*;
 
 import pharoslabut.exceptions.NoNewDataException;
-import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 

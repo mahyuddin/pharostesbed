@@ -179,7 +179,7 @@ public class WiFiBeaconReceiver implements Runnable {
      * Notifies each of the listeners of the new beacon.
      */
     private void distributeBeacon(WiFiBeacon beacon) {
-    	Logger.log("Received beacon: " + beacon);
+    	Logger.logDbg("Received beacon: " + beacon);
     	
     	WiFiBeaconEvent be = new WiFiBeaconEvent(beacon);
         for (int i = 0; i < bListeners.size(); i++) {

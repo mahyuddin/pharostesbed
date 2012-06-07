@@ -76,12 +76,14 @@ public class NavigateWaypoints implements ProteusOpaqueListener {
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 				gpsDataBuffer);
 		
+		Location prevLoc = null;
 		int loopCounter = 0;
 		while(true) {
 			for (int i=0; i < waypoints.size(); i++) {
 				Waypoint currWP = waypoints.get(i);
 				Logger.log("Loop " + loopCounter + ", going to waypoint " + currWP.name + "(" + currWP.loc + ")...");
-				navigatorGPS.go(currWP.loc, velocity);
+				navigatorGPS.go(prevLoc, currWP.loc, velocity);
+				prevLoc = currWP.loc;
 				pause(2000);
 			}
 			loopCounter++;

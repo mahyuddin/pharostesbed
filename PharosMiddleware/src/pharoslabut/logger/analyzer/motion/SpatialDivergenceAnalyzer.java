@@ -44,7 +44,12 @@ public class SpatialDivergenceAnalyzer {
 		while (e.hasMoreElements()) {
 			SpatialDivergence currDiv = e.nextElement();
 			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
-			absDivSeries.add(currTime, currDiv.getDivergence(noheading));
+			double divergence = 0;
+			if (noheading)
+				divergence = currDiv.getAbsoluteDivergence();
+			else
+				divergence = currDiv.getDivergence();
+			absDivSeries.add(currTime, divergence);
 		}
 		
 		XYSeries asDivSeries = new XYSeries("Actual Start Divergence (" + samplingInterval + "ms interval)");
@@ -52,7 +57,12 @@ public class SpatialDivergenceAnalyzer {
 		while (e.hasMoreElements()) {
 			SpatialDivergence currDiv = e.nextElement();
 			double currTime = (currDiv.getTimeStamp() - robotData.getStartTime())/1000.0;
-			asDivSeries.add(currTime, currDiv.getDivergence(noheading));
+			double divergence = 0;
+			if (noheading)
+				divergence = currDiv.getAbsoluteDivergence();
+			else
+				divergence = currDiv.getDivergence();
+			asDivSeries.add(currTime, divergence);
 		}
 		
 		// Create two data series containing the times when the robot starts heading 

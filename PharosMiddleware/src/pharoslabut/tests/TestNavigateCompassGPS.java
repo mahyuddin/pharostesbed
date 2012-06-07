@@ -31,12 +31,14 @@ public class TestNavigateCompassGPS implements Position2DListener {
 	 * @param serverIP The IP address of the player server.
 	 * @param serverPort The port of the player server.
 	 * @param mobilityPlane The type of mobility plane to use.
+	 * @param compassIndex The index of the compass device.
 	 * @param latitude The latitude of the destination location.
 	 * @param longitude The longitude of the destination location.
 	 * @param velocity The velocity at which to travel in m/s.
 	 * @param fileName The name of the file in which to log debug info, may be null.
 	 */
-	public TestNavigateCompassGPS(String serverIP, int serverPort, MotionArbiter.MotionType mobilityPlane, 
+	public TestNavigateCompassGPS(String serverIP, int serverPort, 
+			MotionArbiter.MotionType mobilityPlane, int compassIndex,
 			double latitude, double longitude, double velocity, String fileName) 
 	{
 		if (fileName != null) {
@@ -61,16 +63,16 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			System.exit(1);
 		}
 		
-		// The Traxxas and Segway mobility planes' compasses are Position2D devices at index 1,
-		// while the Segway RMP 50's compass is on index 2.
 		Logger.logDbg("Subscribing to compass interface...");
 		Position2DInterface compass;
-		if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
+		compass = client.requestInterfacePosition2D(compassIndex, PlayerConstants.PLAYER_OPEN_MODE);
+		
+		/*if (mobilityPlane == MotionArbiter.MotionType.MOTION_IROBOT_CREATE ||
 				mobilityPlane == MotionArbiter.MotionType.MOTION_TRAXXAS) {
 			compass = client.requestInterfacePosition2D(1, PlayerConstants.PLAYER_OPEN_MODE);
 		} else {
 			compass = client.requestInterfacePosition2D(2, PlayerConstants.PLAYER_OPEN_MODE);
-		}
+		}*/
 		if (compass == null) {
 			Logger.logErr("compass is null");
 			System.exit(1);
@@ -105,19 +107,18 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		Logger.logDbg("Resetting the odometer...");
 		motors.resetOdometry();
 		
-		Logger.logDbg("Listening for Position2D events (odmeter data)...");
+		Logger.logDbg("Listening for Position2D events (odometer data)...");
 		Position2DBuffer p2dBuff = new Position2DBuffer(motors);
 		p2dBuff.addPos2DListener(this);
 		p2dBuff.start();
 		
 		Logger.logDbg("Creating NavigateCompassGPS object...");
-		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
-				gpsDataBuffer);
+		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, gpsDataBuffer);
 		
 		Location destLoc = new Location(latitude, longitude);
 		Logger.log("Going to: " + destLoc + " at " + velocity);
 		
-		if (!navigatorGPS.go(destLoc, velocity))
+		if (!navigatorGPS.go(null, destLoc, velocity))
 			Logger.logErr("Unable to reach " + destLoc); 
 		else
 			Logger.log("SUCCESS!");
@@ -150,6 +151,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		System.err.println("\t-server <ip address>: The IP address of the Player Server (default localhost)");
 		System.err.println("\t-port <port number>: The Player Server's port number (default 6665)");
 		System.err.println("\t-mobilityPlane <traxxas|segway|create>: The type of mobility plane being used (default traxxas)");
+		System.err.println("\t-compassIndex <index>: The index of the compass device (default 1)");
 		System.err.println("\t-log <file name>: name of file in which to save results (default null)");
 		System.err.println("\t-latitude <latitude>: The latitude of the destination location (default 30.385645)");
 		System.err.println("\t-longitude <longitude>: The longitude of the destination location (default -97.7251983)");
@@ -170,6 +172,8 @@ public class TestNavigateCompassGPS implements Position2DListener {
 		
 		double velocity = 1.5;
 
+		int compassIndex = 1;
+		
 		try {
 			for (int i=0; i < args.length; i++) {
 				if (args[i].equals("-server")) {
@@ -194,6 +198,9 @@ public class TestNavigateCompassGPS implements Position2DListener {
 						usage();
 						System.exit(1);
 					}
+				}
+				else if (args[i].equals("-compassIndex")) {
+					compassIndex = Integer.valueOf(args[++i]);
 				}
 				else if (args[i].equals("-latitude")) {
 					latitude = Double.valueOf(args[++i]);
@@ -228,6 +235,7 @@ public class TestNavigateCompassGPS implements Position2DListener {
 			System.exit(1);
 		}
 		
-		new TestNavigateCompassGPS(serverIP, serverPort, mobilityPlane, latitude, longitude, velocity, fileName);
+		new TestNavigateCompassGPS(serverIP, serverPort, mobilityPlane, 
+				compassIndex, latitude, longitude, velocity, fileName);
 	}
 }

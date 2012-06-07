@@ -35,7 +35,8 @@ public class ContextSender implements Runnable {
 	
 	public void sendContext(Location currLoc, Location destLoc) {
 		
-		String sendStr = currLoc.longitude() + "," + currLoc.latitude() + "," + destLoc.longitude() + "," + destLoc.latitude();
+		String sendStr = (int)(destLoc.longitude()) + "," + (int)(destLoc.latitude()) 
+			+ "," + (int)(destLoc.longitude()) + "," + (int)(destLoc.latitude());
 		Logger.log("Sending the following context package: \"" + sendStr + "\"");
 		try {
 			Socket s = new Socket("localhost", port);
@@ -63,14 +64,16 @@ public class ContextSender implements Runnable {
 	public void run() {
 		Logger.log("Starting to send context packages...");
 		while(true) {
-			Location currLoc;
-			try {
-				currLoc = new Location(gpsDataBuffer.getCurrLoc());
-				sendContext(currLoc, destLoc);
-			} catch (NoNewDataException e) {
-				e.printStackTrace();
-				Logger.logErr("Unable to get current location: " + e);
-			}
+//			Location currLoc;
+//			try {
+//				//currLoc = new Location(gpsDataBuffer.getCurrLoc());
+//				//sendContext(currLoc, destLoc);
+//			} catch (NoNewDataException e) {
+//				e.printStackTrace();
+//				Logger.logErr("Unable to get current location: " + e);
+//			}
+			
+			sendContext(destLoc, destLoc);
 			
 			synchronized(this) {
 				try {

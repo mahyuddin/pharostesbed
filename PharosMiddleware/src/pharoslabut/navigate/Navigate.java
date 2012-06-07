@@ -10,28 +10,14 @@ import pharoslabut.logger.Logger;
 public abstract class Navigate {
 	
 	/**
-	 * Specifies the navigation component's cycle time in milliseconds.
-	 * For example, a value of 100ms means the navigation process updates
-	 * the direction and speed of the robot tens times per second.
-	 */
-	public static final int NAV_CYCLE_PERIOD = 200;
-	
-//	protected static FileLogger flogger = null;
-	
-	/**
 	 * A constructor.
 	 */
 	public Navigate() {
-//		this(null);
 	}
-	
-//	public Navigate(FileLogger fl) {
-//		flogger = fl;
-//	}
 
 	/**
 	 * Calculates the angle from currLoc to the targetLoc.  The return angle is from -PI to PI
-	 * where 0 is due North.
+	 * where 0 is due North and West is positive.
 	 * 
 	 * @param currLoc The current location
 	 * @param targetLoc the target location
@@ -39,9 +25,9 @@ public abstract class Navigate {
 	 */
 	public static double angle(Location currLoc, Location targetLoc) {
 		
-		// When a robot is facing north, it's heading angle is zero, 
-		// thus the xerr is the difference in the latitudes, and its
-		// yerr is the difference in the longitudes.  The yerr is inverse
+		// When a robot is facing north, its heading angle is zero, 
+		// thus xerr is the difference in the latitudes, and
+		// yerr is the difference in the longitudes.  The inverse of yerr is taken
 		// because the more negative the longitude value, the more West it is,
 		// and West is along the *positive* axis of the headings coordinate system.
 		double xerr = targetLoc.latitude() - currLoc.latitude();

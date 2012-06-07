@@ -25,7 +25,9 @@ public class TargetDirection {
 	}
 	
 	/**
-	 * Returns the heading error in radians.
+	 * Returns the heading error in radians.  A negative heading error
+	 * indicates that the robot should turn right.
+	 * 
 	 * @return the heading error in radians.
 	 */
 	public double getHeadingError() {

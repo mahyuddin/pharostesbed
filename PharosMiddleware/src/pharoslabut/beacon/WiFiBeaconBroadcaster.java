@@ -28,6 +28,20 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     private MulticastSocket mSocket = null;    
 
     /**
+     * Creates a BeaconBroadcaster that does not shim context and does not
+     * have a beacon initially.   To set the beacon, call the setBeacon() method. 
+     * Note that it does not automatically start beaconing.
+     * To start beaconing, call the start() method.
+     *
+     * @param mCastAddr the multicast group address to use.
+     * @param interfaceIPAddr The IP address of the local interface on which to broadcast beacons.
+     * @param mCastPort the multicast port to use.
+     */
+    public WiFiBeaconBroadcaster(InetAddress mCastAddr, String interfaceIPAddr, int mCastPort) {
+        this(mCastAddr, interfaceIPAddr, mCastPort, null, false);
+    }
+    
+    /**
      * Creates a BeaconBroadcaster that does not shim context.  
      * Note that it does not automatically start beaconing.
      * To start beaconing, call the start() method.
@@ -42,8 +56,8 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
     }
 
     /**
-     * Creates a BeaconBroadcaster. Note that it does not automatically start beaconing. To start beaconing, call the
-     * start() method.
+     * Creates a BeaconBroadcaster. Note that it does not automatically start 
+     * beaconing. To start beaconing, call the start() method.
      * 
      * @param mCastAddr
      *            the multicast group address to use.
@@ -114,6 +128,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 			try{
 				ByteArrayOutputStream bs = new ByteArrayOutputStream();
 				ObjectOutputStream os = new ObjectOutputStream(bs);
+				beacon.updateTimestamp();
 				os.writeObject(beacon);
 				os.flush();
 				os.close();
@@ -124,7 +139,7 @@ public class WiFiBeaconBroadcaster extends BeaconBroadcaster {
 				DatagramPacket beaconPacket
 				= new DatagramPacket(beaconBytes,  beaconBytes.length, mCastAddr, mCastPort);
 
-				Logger.log("Broadcasting Beacon: " + beacon);
+				Logger.logDbg("Broadcasting Beacon: " + beacon + ", num bytes = " + beaconBytes.length);
 
 				// broadcast the beacon
 				mSocket.send(beaconPacket);

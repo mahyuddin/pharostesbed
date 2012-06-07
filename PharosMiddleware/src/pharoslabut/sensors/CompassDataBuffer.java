@@ -5,7 +5,6 @@ import java.util.Enumeration;
 import java.util.Vector;
 
 import pharoslabut.exceptions.NoNewDataException;
-import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
 import playerclient3.*;
 import playerclient3.structures.position2d.PlayerPosition2dData;
@@ -21,12 +20,12 @@ public class CompassDataBuffer implements Runnable {
 	/**
 	 * The period in milliseconds at which to check for expired compass data.
 	 */
-	public static final int COMPASS_BUFFER_REFRESH_PERIOD = 100;
+	public static final int COMPASS_BUFFER_REFRESH_PERIOD = 5;
 	
 	/**
 	 * The size of the compass buffer.
 	 */
-	public static final int COMPASS_BUFFER_SIZE = 3;
+	public static final int COMPASS_BUFFER_SIZE = 1;
 	
 	/**
 	 * The maximum age in milliseconds of compass readings stored in this buffer.
@@ -105,7 +104,7 @@ public class CompassDataBuffer implements Runnable {
 	/**
 	 * Clears the heading buffer.
 	 */
-	private void clearHeadingBuffer() {
+	private synchronized void clearHeadingBuffer() {
 		headingBufferSize = 0;
 		headingBufferIndx = 0;
 	}
@@ -135,17 +134,21 @@ public class CompassDataBuffer implements Runnable {
     private void notifyP2DListeners(final PlayerPosition2dData pp2ddata) {
     	if (pos2dListeners.size() > 0) {
     		//log("notifyP2DListeners: Notifying listeners of new compass data...");
-    		new Thread(new Runnable() {
-    			public void run() {
-    				Enumeration<Position2DListener> e = pos2dListeners.elements();
-    				while (e.hasMoreElements()) {
-    					e.nextElement().newPlayerPosition2dData(pp2ddata);
-    				}
-    			}
-
-    		}).start();
-    	} //else
-    		//log("notifyP2DListeners: No listeners present...");
+    		Enumeration<Position2DListener> e = pos2dListeners.elements();
+			while (e.hasMoreElements()) {
+				e.nextElement().newPlayerPosition2dData(pp2ddata);
+			}
+			
+//    		new Thread(new Runnable() {
+//    			public void run() {
+//    				Enumeration<Position2DListener> e = pos2dListeners.elements();
+//    				while (e.hasMoreElements()) {
+//    					e.nextElement().newPlayerPosition2dData(pp2ddata);
+//    				}
+//    			}
+//
+//    		}).start();
+    	}
     }
 	
 //	/**
@@ -160,6 +163,8 @@ public class CompassDataBuffer implements Runnable {
 	
 	/**
 	 * Returns the median compass measurement.
+	 * 
+	 * TODO: Remove this method.
 	 * 
 	 * @param filterLength The size of the window over which to calculate the median.
 	 * @return The median compass measurement over the window defined by filterLength
@@ -209,25 +214,29 @@ public class CompassDataBuffer implements Runnable {
 		// If new compass data is available, get it!
 		if (compass.isDataReady()) {
 			PlayerPosition2dData newData = compass.getData();
-			double newHeading = newData.getPos().getPa();
-			
-			headingBuffer[headingBufferIndx] = newHeading;
-			
-			// Update the headingBufferIndx
-			headingBufferIndx++;
-			headingBufferIndx %= COMPASS_BUFFER_SIZE;
-			
-			// Update the number of elements in the compass buffer
-			headingBufferSize++;
-			if (headingBufferSize > COMPASS_BUFFER_SIZE) 
-				headingBufferSize = COMPASS_BUFFER_SIZE;
-			
-			// Update the last time stamp and add a log statement
-			lastTimeStamp = System.currentTimeMillis();
-			Logger.log("New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
-			
-			// Notify the listeners
-			notifyP2DListeners(newData);
+			try {
+				double newHeading = newData.getPos().getPa();
+
+				headingBuffer[headingBufferIndx] = newHeading;
+
+				// Update the headingBufferIndx
+				headingBufferIndx++;
+				headingBufferIndx %= COMPASS_BUFFER_SIZE;
+
+				// Update the number of elements in the compass buffer
+				headingBufferSize++;
+				if (headingBufferSize > COMPASS_BUFFER_SIZE) 
+					headingBufferSize = COMPASS_BUFFER_SIZE;
+
+				// Update the last time stamp and add a log statement
+				lastTimeStamp = System.currentTimeMillis();
+				Logger.log("New heading=" + newHeading + ", buffer size=" + headingBufferSize + ", headingBufferIndx=" + headingBufferIndx);
+
+				// Notify the listeners
+				notifyP2DListeners(newData);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 	
