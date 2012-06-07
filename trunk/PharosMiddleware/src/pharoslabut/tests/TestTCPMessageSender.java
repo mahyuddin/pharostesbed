@@ -3,9 +3,9 @@ package pharoslabut.tests;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import pharoslabut.behavior.MultiRobotBehaveMsg;
-import pharoslabut.behavior.management.WorldModel;
 import pharoslabut.exceptions.PharosException;
+import pharoslabut.experiment.ExpType;
+import pharoslabut.io.StartExpMsg;
 import pharoslabut.io.TCPMessageSender;
 import pharoslabut.logger.FileLogger;
 import pharoslabut.logger.Logger;
@@ -35,7 +35,7 @@ public class TestTCPMessageSender {
 		int cntr = 0;
 		while(true) {
 			try {
-				MultiRobotBehaveMsg msg = new MultiRobotBehaveMsg(new WorldModel());
+				StartExpMsg msg = new StartExpMsg("TestExp", ExpType.FOLLOW_GPS_MOTION_SCRIPT);
 				Logger.log("Sending " + msg);
 				sndr.sendMessage(address, port, msg);
 			} catch (PharosException e) {

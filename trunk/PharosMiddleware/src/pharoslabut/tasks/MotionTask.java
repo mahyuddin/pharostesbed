@@ -10,51 +10,79 @@ package pharoslabut.tasks;
 public class MotionTask extends Task {
 	private static final long serialVersionUID = -1005883794694320611L;
 	public static final double STOP_SPEED = 0;
-	public static final double STOP_HEADING = 0;
+	public static final double STOP_STEERING_ANGLE = 0;
 	
-	private double velocity;
-	private double heading;
+	private double speed;
+	private double steeringAngle;
 	
-	public MotionTask(Priority priority, double velocity, double heading) {
+	/**
+	 * Creates a MotionTask with priority FIRST, velocity 0.0, and heading 0.0.
+	 */
+	public MotionTask() {
+		this(Priority.FIRST, 0, 0);
+	}
+	
+	/**
+	 * Creates a MotionTask with the specified parameters.
+	 * 
+	 * @param priority The priority of the task.
+	 * @param speed The velocity in m/s.
+	 * @param steeringAngle The heading in rad/s.
+	 */
+	public MotionTask(Priority priority, double speed, double steeringAngle) {
 		super(priority);
-		this.velocity = velocity;
-		this.heading = heading;
+		this.speed = speed;
+		this.steeringAngle = steeringAngle;
 	}
 	
-	public double getVelocity() {
-		return velocity;
+	public synchronized void update(Priority priority, double speed, double steeringAngle) {
+		setPriority(priority);
+		this.speed = speed;
+		this.steeringAngle = steeringAngle;
 	}
 	
-	public double getHeading() {
-		return heading;
+//	public void setSpeed(double speed) {
+//		this.speed = speed;
+//	}
+//	
+//	public void setHeading(double heading) {
+//		this.heading = heading;
+//	}
+	
+	public synchronized double getSpeed() {
+		return speed;
+	}
+	
+	public synchronized double getSteeringAngle() {
+		return steeringAngle;
 	}
 	
 	public boolean isStop() {
-		return velocity == STOP_SPEED && heading == STOP_HEADING;
+		return speed == STOP_SPEED && steeringAngle == STOP_STEERING_ANGLE;
 	}
 	
 	public boolean equals(Object o) {
 		if (o instanceof MotionTask) {
 			MotionTask mt = (MotionTask)o;
-			return getVelocity() == mt.getVelocity() && 
-				getHeading() == mt.getHeading() &&
+			return getSpeed() == mt.getSpeed() && 
+				getSteeringAngle() == mt.getSteeringAngle() &&
 				getPriority() == mt.getPriority();
 		} else
 			return false;
 	}
 	
 	public String toString() {
-		return "(MotionTask Priority=" + getPriority() + " velocity=" + velocity + " heading=" + heading + ")";
+		return "(MotionTask Priority=" + getPriority() + " speed=" + speed + " steeringAngle=" + steeringAngle + ")";
 	}
 	
-	public static final void main(String[] args) {
-		// Test whether the priority comparison function works
-		MotionTask firstPriorityTask = new MotionTask(Priority.FIRST, 0, 0);
-		MotionTask secondPriorityTask = new MotionTask(Priority.SECOND, 0, 0);
-		if (firstPriorityTask.isHigherPriorityThan(secondPriorityTask)) {
-			System.out.println("Test passed!");
-		} else {
-			System.out.println("Test failed!");
-		}
-	}
+//	public static final void main(String[] args) {
+//		// Test whether the priority comparison function works
+//		MotionTask firstPriorityTask = new MotionTask(Priority.FIRST, 0, 0);
+//		MotionTask secondPriorityTask = new MotionTask(Priority.SECOND, 0, 0);
+//		if (firstPriorityTask.isHigherPriorityThan(secondPriorityTask)) {
+//			System.out.println("Test passed!");
+//		} else {
+//			System.out.println("Test failed!");
+//		}
+//	}
 }

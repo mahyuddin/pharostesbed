@@ -62,6 +62,11 @@ public class Location implements java.io.Serializable, Comparable {
 		return elevation;
 	}
 	
+	@Override
+	public int hashCode() {
+		return (int)(latitude * 100000 + longitude * 100000);
+	}
+	
 	/*::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/
 	/*::                                                                         :*/
 	/*::  This routine calculates the distance between two points (given the     :*/

@@ -62,7 +62,7 @@ public class MotorStressTest implements Position2DListener {
 		MotionTask currTask;
 		
 //		Logger.log("Stopping the motor.");
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 		
 		Logger.log("Starting motor stress test in " + testStartDelay + " seconds ...");
 		while (testStartDelay-- > 0) {
@@ -90,7 +90,7 @@ public class MotorStressTest implements Position2DListener {
 //			pause(3000);
 		}
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 		Logger.log("Stopping the robot before testing reverse direction.");
 		motionArbiter.submitTask(currTask);
 		pause(3000);
@@ -103,7 +103,7 @@ public class MotorStressTest implements Position2DListener {
 			pause(duration);
 		}
 		
-		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		currTask = new MotionTask(Priority.FIRST, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 		Logger.log("Stopping the robot.");
 		motionArbiter.submitTask(currTask);
 //		pause(3000);

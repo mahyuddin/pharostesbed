@@ -110,7 +110,7 @@ public class TestHeadingDirection {
 		}
 		
 		System.out.println("Centering the front wheels...");
-		mt = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_HEADING);
+		mt = new MotionTask(Priority.SECOND, MotionTask.STOP_SPEED, MotionTask.STOP_STEERING_ANGLE);
 		motionArbiter.submitTask(mt);
 		
 		System.out.println("End of test...");

@@ -4,10 +4,8 @@ package pharoslabut.tasks;
  * The abstract parent class of all tasks used in the Pharos Middleware.
  * 
  * @author Chien-Liang Fok
- *
  */
 public abstract class Task implements java.io.Serializable {
-//	public static enum Priority {FIRST, SECOND, THIRD, FOURTH, FIFTH, SIXTH, SEVENTH, EIGHTH, NINTH, TENTH};
 	
 	private static final long serialVersionUID = 7952640754776450847L;
 	
@@ -17,7 +15,11 @@ public abstract class Task implements java.io.Serializable {
 		this.priority = p;
 	}
 	
-	public Priority getPriority() {
+	public synchronized void setPriority(Priority priority) {
+		this.priority = priority;
+	}
+	
+	public synchronized Priority getPriority() {
 		return priority;
 	}
 	

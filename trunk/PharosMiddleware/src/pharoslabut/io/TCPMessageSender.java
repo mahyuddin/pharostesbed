@@ -17,7 +17,7 @@ public class TCPMessageSender implements MessageSender {
 	 * This is the maximum number of times this class will try to retransmit a message
 	 * before giving up.
 	 */
-    public static final int MAX_RETRIES = 3;
+    public static final int MAX_RETRIES = 0;
     
     /**
      * The amount of time to wait before retransmitting a message.
@@ -86,7 +86,7 @@ public class TCPMessageSender implements MessageSender {
 	    	boolean success = false;
 	    	String errMsg = null;
 	    	
-	    	while (!success && numTries++ < MAX_RETRIES) {
+	    	while (!success && numTries++ <= MAX_RETRIES) {
 	    		Logger.log("Sending message, attempt " + numTries + " of " + MAX_RETRIES + "..." 
 	    				+ "\n\tDestination: " + address  + ":" + port
 	    				+ "\n\tMessage to send: " + msg);

@@ -46,6 +46,8 @@ public class SetTimeMsg implements Message {
 		String yearStr = Integer.toString(year);
 		
 		String secStr = Integer.toString(sec);
+		if (sec < 10)
+			secStr = "0" + secStr;
 		
 		timeString = monthStr + dayStr + hourStr + minStr + yearStr + "." + secStr;
 	}
@@ -65,8 +67,4 @@ public class SetTimeMsg implements Message {
 	public String toString() {
 		return "SetTimeMsg: " + timeString;
 	}
-
-//	public static final void main(String args[] ) {
-//		System.out.println(new SetTimeMsg().toString());
-//	}
 }
