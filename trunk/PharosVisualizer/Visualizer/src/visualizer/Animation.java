@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 3:34 PM
- * Last Modified: June 15, 2012 2:24 PM
+ * Last Modified: June 16, 2012 10:43 PM
  */
 
 package visualizer;
@@ -35,7 +35,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		
 		try {
 			// Read log file
-			FileReader fr = new FileReader("C:\\Users\\Lok Wong\\Desktop\\workspace\\Visualizer\\src\\visualizer\\M44_Exp1-GUINNESS-MRPatrol2_20120410092604.log");
+			FileReader fr = new FileReader("C:\\Users\\Lok Wong\\Desktop\\workspace\\Visualizer\\example-logs\\M44_Exp1-GUINNESS-MRPatrol2_20120410092604.log");
 			BufferedReader br = new BufferedReader(fr);
 			
 			// Create database of positions
