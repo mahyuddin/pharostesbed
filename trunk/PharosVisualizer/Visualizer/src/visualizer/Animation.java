@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 3:34 PM
- * Last Modified: June 16, 2012 10:43 PM
+ * Last Modified: June 21, 2012 8:28 PM
  */
 
 package visualizer;
@@ -13,6 +13,7 @@ import java.awt.*;
 import java.applet.*;
 import java.io.*;
 import java.util.*;
+import java.lang.*;
 
 public class Animation extends java.applet.Applet implements Runnable {
 	
@@ -35,7 +36,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		
 		try {
 			// Read log file
-			FileReader fr = new FileReader("C:\\Users\\Lok Wong\\Desktop\\workspace\\Visualizer\\example-logs\\M44_Exp1-GUINNESS-MRPatrol2_20120410092604.log");
+			FileReader fr = new FileReader("../../example-logs/M44_Exp1-GUINNESS-MRPatrol2_20120410092604.log");
 			BufferedReader br = new BufferedReader(fr);
 			
 			// Create database of positions
@@ -92,6 +93,8 @@ public class Animation extends java.applet.Applet implements Runnable {
 		if(thread == null){
 			thread = new Thread(this);
 			thread.start();
+		} else{
+			notify();
 		}
 		isPlaying = true;
 		isRewinding = false;
@@ -139,7 +142,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 			
 			while(!isPlaying){
 				try{ wait(); }
-				catch (Exception e){ System.out.print("FAIL"); }
+				catch (Exception e){}
 			}
 		}
 	}
@@ -158,13 +161,34 @@ public class Animation extends java.applet.Applet implements Runnable {
 		if(!isRewinding){ i++; }
 		else{ i--; }
 
-		int[] xPts = {Xpos - 4, Xpos + 4, Xpos + 4, Xpos + 12, Xpos, Xpos - 12, Xpos - 4};
-		int[] yPts = {Ypos, Ypos, Ypos - 32, Ypos - 32, Ypos - 48, Ypos - 32, Ypos - 32};
+		/*
+		 * North = 0
+		 * West = pi/2
+		 * South = pi
+		 * East = -pi/2
+		 * 
+		 * Pivot point at (Xpos,Ypos)
+		 * Arrow 48px x 24px 
+		 */
+		int[] xPts = {Xpos - (int) (4 * Math.cos(pos.heading)),
+				Xpos + (int) (4 * Math.cos(pos.heading)),
+				Xpos - (int) (Math.sqrt(4*4 + 32*32) * Math.sin(pos.heading - Math.atan2(4, 32))),
+				Xpos - (int) (Math.sqrt(12*12 + 32*32) * Math.sin(pos.heading - Math.atan2(12, 32))),
+				Xpos - (int) (48 * Math.sin(pos.heading)),
+				Xpos - (int) (Math.sqrt(12*12 + 32*32) * Math.sin(pos.heading + Math.atan2(12, 32))),
+				Xpos - (int) (Math.sqrt(4*4 + 32*32) * Math.sin(pos.heading + Math.atan2(4, 32)))};
+		int[] yPts = {Ypos + (int) (4 * Math.sin(pos.heading)),
+				Ypos - (int) (4 * Math.sin(pos.heading)),
+				Ypos - (int) (Math.sqrt(4*4 + 32*32) * Math.cos(pos.heading - Math.atan2(4, 32))),
+				Ypos - (int) (Math.sqrt(12*12 + 32*32) * Math.cos(pos.heading - Math.atan2(12, 32))),
+				Ypos - (int) (48 * Math.cos(pos.heading)),
+				Ypos - (int) (Math.sqrt(12*12 + 32*32) * Math.cos(pos.heading + Math.atan2(12, 32))),
+				Ypos - (int) (Math.sqrt(4*4 + 32*32) * Math.cos(pos.heading + Math.atan2(4, 32)))};
 		int n = 7;
 		
 		g.setColor(Color.red);
 		g.fillPolygon(xPts, yPts, n);
-		System.out.print("" + i + ": " + pos.time + "\n");
+		System.out.print("" + i + ": " + pos.heading + "\n");
 	}
 	
 	private static long convertTextToInt(String s){	
@@ -263,5 +287,4 @@ public class Animation extends java.applet.Applet implements Runnable {
 		double mid = (Ymin + Ymax) / 2;
 		return (int) (350 + (defaultScale * (mid - GPSYpos)));	// Signs flip between latitude and Y-coordinate
 	}
-
 }
