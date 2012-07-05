@@ -6,6 +6,7 @@ public class SerialTest {
 		listPorts();
 	}
 	
+	@SuppressWarnings("unchecked")
     static void listPorts()
     {
         java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
