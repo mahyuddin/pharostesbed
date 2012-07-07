@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+
+<project name="PharosVisualizer" basedir="." default="main">
+	
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+	
+	<target name="compile" depends="clean">
+		<mkdir dir="build"/>
+		<javac srcdir="src/visualizer" destdir="build"/>
+		<mkdir dir="build/visualizer/img"/>
+		<copy todir="build/visualizer/img">
+			<fileset dir="src/visualizer/img"/>
+		</copy>
+	</target>
+	
+	<target name="jar" depends="compile">
+		<jar destfile="build/visualizer/Visualizer.jar" basedir="build">
+			<manifest>
+				<attribute name="Main-Class" value="visualizer.Interface"/>
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="run" depends="jar">
+		<java jar="build/visualizer/Visualizer.jar" fork="true"/>
+	</target>
+	
+	<target name="main" depends="run">
+	</target>
+
+</project>
