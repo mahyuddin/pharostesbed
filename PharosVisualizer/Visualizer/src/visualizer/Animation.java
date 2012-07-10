@@ -165,8 +165,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		}
 		Xpos = getXpos(pos.begLong);
 		Ypos = getYpos(pos.begLat);
-		if(isPlaying){
-			
+		if(isPlaying){	
 			if(!isRewinding){ i++; }
 			else{ i--; }
 		}
