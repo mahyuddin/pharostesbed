@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<project name="PharosVisualizer" basedir="." default="main">
+<project name="PharosVisualizer" basedir="." default="run">
 	
 	<target name="clean">
 		<delete dir="build"/>
@@ -25,9 +25,6 @@
 	
 	<target name="run" depends="jar">
 		<java jar="build/visualizer/Visualizer.jar" fork="true"/>
-	</target>
-	
-	<target name="main" depends="run">
 	</target>
 
 </project>

@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 3:34 PM
- * Last Modified: June 21, 2012 8:28 PM
+ * Last Modified: July 9, 2012 9:33 PM
  */
 
 package visualizer;
@@ -24,6 +24,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 	private boolean isPlaying, isRewinding;
 	private int speedMultiple;
 	private int Xpos, Ypos, prevXpos, prevYpos;
+	public long endTime;
 	public boolean isEnd = false;
 	
 	public Animation(){
@@ -36,7 +37,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		
 		try {
 			// Read log file
-			FileReader fr = new FileReader("../../example-logs/M44_Exp1-GUINNESS-MRPatrol2_20120410092604.log");
+			FileReader fr = new FileReader("example-logs/M44_Exp2-GUINNESS-MRPatrol2_20120410100226.log");
 			BufferedReader br = new BufferedReader(fr);
 			
 			// Create database of positions
@@ -62,11 +63,17 @@ public class Animation extends java.applet.Applet implements Runnable {
 					pos.endLong = getLong(s);
 					while(!s.contains("Current Heading")){ s = br.readLine(); }
 					pos.heading = getHeading(s);
-					PosArray.addElement(new Position(pos.time, pos.delay, pos.begLat, pos.begLong, pos.endLat, pos.endLong, pos.heading));
+					PosArray.addElement(pos);
 					i++;
 					s = br.readLine();
 				}
 			}
+			if(PosArray.size() == 0){
+				Position pos = new Position();
+				PosArray.addElement(pos);
+			}
+			endTime = PosArray.get(PosArray.size() - 1).time;
+			
 			br.close();
 			fr.close();
 			
@@ -85,8 +92,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 						
 			resize(700,700);
 		}
-		catch (FileNotFoundException e) {	e.printStackTrace(); }
-		catch (IOException e) {	e.printStackTrace(); }
+		catch (Exception e) {	e.printStackTrace(); }
 	}
 	
 	public synchronized void start(){
@@ -111,6 +117,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		isRewinding = false;
 		speedMultiple = 1;
 		i = 0;
+		repaint();
 	}
 	
 	public synchronized void rewind(){
@@ -138,8 +145,8 @@ public class Animation extends java.applet.Applet implements Runnable {
 				Position pos = PosArray.get(i);
 				Thread.sleep(pos.delay / speedMultiple);
 			}
-			catch(InterruptedException e) { System.out.print("FAIL"); }
-			
+			catch(InterruptedException e) {}			
+
 			while(!isPlaying){
 				try{ wait(); }
 				catch (Exception e){}
@@ -158,8 +165,10 @@ public class Animation extends java.applet.Applet implements Runnable {
 		}
 		Xpos = getXpos(pos.begLong);
 		Ypos = getYpos(pos.begLat);
-		if(!isRewinding){ i++; }
-		else{ i--; }
+		if(isPlaying){
+			if(!isRewinding){ i++; }
+			else{ i--; }
+		}
 
 		/*
 		 * North = 0
@@ -188,7 +197,7 @@ public class Animation extends java.applet.Applet implements Runnable {
 		
 		g.setColor(Color.red);
 		g.fillPolygon(xPts, yPts, n);
-		System.out.print("" + i + ": " + pos.heading + "\n");
+//		System.out.print("" + i + ": " + pos.time + ", " + pos.delay + "\n");
 	}
 	
 	private static long convertTextToInt(String s){	
