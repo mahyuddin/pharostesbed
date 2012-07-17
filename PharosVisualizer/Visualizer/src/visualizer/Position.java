@@ -4,13 +4,22 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 1:24 AM
- * Last Modified: June 9, 2012 7:59 PM
+ * Last Modified: July 12, 2012 7:52 PM
  */
 
 package visualizer;
 
 public class Position{
 
+	/*
+	 * time = number of milliseconds since start of experiment
+	 * delay = number of milliseconds since the last position update (or start of experiment if first position)
+	 * begLat = current latitude
+	 * begLong = current longitude
+	 * endLat = target latitude
+	 * endLong = target longitude
+	 * heading = direction robot is facing in radians
+	 */
 	public long time, delay;
 	public double begLat, begLong, endLat, endLong, heading;
 	
