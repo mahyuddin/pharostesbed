@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 3:34 PM
- * Last Modified: July 9, 2012 9:33 PM
+ * Last Modified: July 16, 2012 12:48 11:21 PM
  */
 
 package visualizer;
@@ -13,13 +13,20 @@ import java.awt.*;
 import java.applet.*;
 import java.io.*;
 import java.util.*;
-import java.lang.*;
 
-public class Animation extends java.applet.Applet implements Runnable {
+import javax.swing.ImageIcon;
+
+public class Animation extends Applet implements Runnable {
 	
 	private static Vector<Position> PosArray = new Vector<Position>();
+	private static RobotPath path = new RobotPath();
 	private static int i;
-	private static double defaultScale, Xmin, Xmax, Ymin, Ymax;
+	/* 
+	 * (minLong,maxLat) = (0,0)
+	 * (maxLong,minLat) = (700,700) (default)
+	 */
+	private final static double minLat = 30.52702, maxLat = 30.52783, minLong = -97.63307, maxLong = -97.63214;
+//	private static double defaultScale, Xmin, Xmax, Ymin, Ymax; // ***Code to be used for variable background***
 	private volatile Thread thread;
 	private boolean isPlaying, isRewinding;
 	private int speedMultiple;
@@ -34,6 +41,8 @@ public class Animation extends java.applet.Applet implements Runnable {
 	public void init(){
 		String s;
 		long startTime, prevTime;
+		
+		this.setBackground(Color.white);
 		
 		try {
 			// Read log file
@@ -68,18 +77,35 @@ public class Animation extends java.applet.Applet implements Runnable {
 					s = br.readLine();
 				}
 			}
+			br.close();
+			fr.close();
+			
+			// If there is no log file to read, create an array of one position with properties at zero
 			if(PosArray.size() == 0){
 				Position pos = new Position();
 				PosArray.addElement(pos);
 			}
+			// endTime = total time from start of experiment to last position change
 			endTime = PosArray.get(PosArray.size() - 1).time;
 			
-			br.close();
-			fr.close();
+			int j = 0;
+			path.add(0, 0, getXpos(PosArray.get(0).begLong), getYpos(PosArray.get(0).begLat));	// First position
+			for(i = 1, j = 1; i < PosArray.size(); i++, j++){
+				int k = i - 1;
+				Position pos1 = PosArray.get(k);
+				Position pos2 = PosArray.get(i);
+				while(pos1.begLat == pos2.begLat && pos1.begLong == pos2.begLong){
+					i++;
+					if(i < PosArray.size()){ pos2 = PosArray.get(i); }
+					else{ break; }
+				}
+				path.add(j, i, getXpos(pos2.begLong), getYpos(pos2.begLat));
+			}
+			path.add(j, i, 0, 0);	// Dummy entry (end indicator)
 			
-			i = 0;			
-			
-			// Create mapping of lat/long to 700x700 pixel screen
+/*			***Code to be used for variable background***
+ 
+  			// Create mapping of lat/long to 700x700 pixel screen
 			findXmin();
 			findXmax();
 			findYmin();
@@ -88,11 +114,13 @@ public class Animation extends java.applet.Applet implements Runnable {
 				defaultScale = 500 / (Xmax - Xmin);
 			} else{
 				defaultScale = 500 / (Ymax - Ymin);
-			}
-						
+			}*/
+			
+			i = 0;
+			
 			resize(700,700);
 		}
-		catch (Exception e) {	e.printStackTrace(); }
+		catch (Exception e) { e.printStackTrace(); }
 	}
 	
 	public synchronized void start(){
@@ -128,9 +156,9 @@ public class Animation extends java.applet.Applet implements Runnable {
 	
 	public synchronized void fforward(){
 		if(isPlaying == false){ start(); }
+		isPlaying = true;
 		isRewinding = false;
 		speedMultiple = 2;
-		isPlaying = true;
 	}
 	
 	public void run(){
@@ -138,8 +166,6 @@ public class Animation extends java.applet.Applet implements Runnable {
 			repaint();
 			try {
 				if(i >= PosArray.size() || i < 0){
-					isEnd = true;
-					i = 0;
 					Interface.stop.doClick();
 				}
 				Position pos = PosArray.get(i);
@@ -155,7 +181,10 @@ public class Animation extends java.applet.Applet implements Runnable {
 	}
 	
 	public void paint(Graphics g){
-		Position pos = PosArray.get(i);
+		Position pos;
+		
+		if(i >= 0 && i < PosArray.size()){ pos = PosArray.get(i); }
+		else{ pos = PosArray.get(0); }
 		if(i == 0){
 			prevXpos = getXpos(pos.begLong);
 			prevYpos = getYpos(pos.begLat);
@@ -195,9 +224,17 @@ public class Animation extends java.applet.Applet implements Runnable {
 				Ypos - (int) (Math.sqrt(4*4 + 32*32) * Math.cos(pos.heading + Math.atan2(4, 32)))};
 		int n = 7;
 		
-		g.setColor(Color.red);
+		g.drawImage(new ImageIcon("src/visualizer/img/background.png").getImage(), 0, 0, null);
+		Graphics2D g2 = (Graphics2D) g;
+		g.setColor(Color.blue);
+		g2.setStroke(new BasicStroke(3));
+		int j;
+		for(j = 0; i >= path.pos[j]; j++){}
+		g.drawPolyline(path.x, path.y, j);
 		g.fillPolygon(xPts, yPts, n);
-//		System.out.print("" + i + ": " + pos.time + ", " + pos.delay + "\n");
+		g.setColor(Color.black);
+		g2.setStroke(new BasicStroke(2));
+		g.drawPolygon(xPts, yPts, n);
 	}
 	
 	private static long convertTextToInt(String s){	
@@ -247,7 +284,9 @@ public class Animation extends java.applet.Applet implements Runnable {
 		return Double.valueOf(str[0]);
 	}
 
-	private static void findXmin(){
+/*	***Code to be used for variable background***
+ 
+  	private static void findXmin(){
 		Position pos = PosArray.get(0);
 		Xmin = pos.begLong;
 		for(; i < PosArray.size(); i++){
@@ -295,5 +334,13 @@ public class Animation extends java.applet.Applet implements Runnable {
 	private static int getYpos(double GPSYpos){
 		double mid = (Ymin + Ymax) / 2;
 		return (int) (350 + (defaultScale * (mid - GPSYpos)));	// Signs flip between latitude and Y-coordinate
+	}*/
+	
+	private static int getXpos(double GPSXpos){
+		return (int) ((GPSXpos - minLong) * 700 / (maxLong - minLong));
+	}
+	
+	private static int getYpos(double GPSYpos){
+		return (int) ((maxLat - GPSYpos) * 700 / (maxLat - minLat));
 	}
 }
