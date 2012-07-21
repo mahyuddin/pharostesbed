@@ -18,8 +18,10 @@ import playerclient3.PlayerException;
 import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 
-public class SimpleMule implements ProteusOpaqueListener {
-
+public class SimpleMuleHalfLot implements ProteusOpaqueListener {
+	enum RouteType {NORTH, SOUTH};
+	
+	RouteType routeType;
 	String playerServerIP = "localhost";
 	int playerServerPort = 6665;
 	PlayerClient client;
@@ -31,33 +33,39 @@ public class SimpleMule implements ProteusOpaqueListener {
 	private boolean updateContext;
 	ContextSender contextSender;
 	
-	Location parkingSpace03 = new Location(30.5281667,	-97.6325183);
-	Location parkingSpace80 = new Location(30.5262633,	-97.6324717);
+	Location northLoc = new Location(30.5281667,	-97.6325183);
+	Location southLoc = new Location(30.5262633,	-97.6324717);
+	Location midNorthLoc = new Location(30.52737,	-97.63248);
+	Location midSouthLoc = new Location(30.52718,	-97.63248); 
+		
+	Location northLocGridCoord = new Location(2,0);
+	Location southLocGridCoord = new Location(0,0);
+	Location midNorthLocGridCoord = new Location(1, 0);
+	Location midSouthLocGridCoord = new Location(1, 0);
 	
-	Location srcLoc = parkingSpace03; //new Location(30.5263083,	-97.6324533);
-	Location sinkLoc = parkingSpace80; //new Location(30.526845,	-97.6324783);
-	
-	Location sinkGridCoord = new Location(0,0);
-	Location srcGridCoord = new Location(1,0);
-	
-	public SimpleMule(String expName, boolean updateContext, boolean sinkFirst) throws PharosException {
+	public SimpleMuleHalfLot(String expName, boolean updateContext, RouteType routeType) 
+	throws PharosException {
 		this.updateContext = updateContext;
 		
-		String fileName = expName + "-" + RobotIPAssignments.getName() + "-SimpleMule_" + FileLogger.getUniqueNameExtension() + ".log"; 
+		String fileName = expName + "-" + RobotIPAssignments.getName() + "-SimpleMuleHalfLot_" + FileLogger.getUniqueNameExtension() + ".log"; 
 		FileLogger expFlogger = new FileLogger(fileName);
 		Logger.setFileLogger(expFlogger);
 		
 		createPlayerClient(MotionArbiter.MotionType.MOTION_TRAXXAS);
 		
 		if (updateContext) {
-			if (sinkFirst)
-				contextSender = new ContextSender(gpsDataBuffer, sinkGridCoord);
-			else
-				contextSender = new ContextSender(gpsDataBuffer, srcGridCoord);
+			switch(routeType) {
+			case NORTH:
+				contextSender = new ContextSender(gpsDataBuffer, northLocGridCoord);
+				break;
+			case SOUTH:
+				contextSender = new ContextSender(gpsDataBuffer, southLocGridCoord);
+				break;
+			}
 		}
 		
 		Logger.log("Starting experiment at time " + System.currentTimeMillis() + "...");
-		
+				
 		// Start the individual components
 		if (compassDataBuffer != null)
 			compassDataBuffer.start();
@@ -65,51 +73,76 @@ public class SimpleMule implements ProteusOpaqueListener {
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 				gpsDataBuffer);
 		
-		if (sinkFirst) {
-			Logger.log("Going to the sink...");
-			navigatorGPS.go(null, sinkLoc, velocity);
-		} else {
-			Logger.log("Going to the source...");
-			navigatorGPS.go(null, srcLoc, velocity);
+		switch(routeType) {
+		case NORTH:
+			Logger.log("Going to the north waypoint.");
+			navigatorGPS.go(null, northLoc, velocity);
+			break;
+		case SOUTH:
+			navigatorGPS.go(null, southLoc, velocity);
+			break;
 		}
+		
 		pause(pauseTime);
 		
 		int counter = 0;
 		while(true) {
 			
-			if (sinkFirst)
-				goToSource(navigatorGPS, counter);
-			else
-				goToSink(navigatorGPS, counter);
+			switch(routeType) {
+			case NORTH:
+				goToNorthLoc(navigatorGPS, counter);
+				break;
+			case SOUTH:
+				goToSouthLoc(navigatorGPS, counter);
+				break;
+			}
 			
 			pause(pauseTime);
 			
-			if (sinkFirst) 
-				goToSink(navigatorGPS, counter);
-			else
-				goToSource(navigatorGPS, counter);
+			switch(routeType) {
+			case NORTH:
+				goToMidNorthLoc(navigatorGPS, counter);
+				break;
+			case SOUTH:
+				goToMidSouthLoc(navigatorGPS, counter);
+				break;
+			}
 			
 			counter++;
 			pause(pauseTime);
 		}
 	}
 	
-	private void goToSink(NavigateCompassGPS navigatorGPS, int counter) {
-		Logger.log("Going to the sink " + counter + "...");
+	private void goToNorthLoc(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the north location " + counter + "...");
 		
-		if (updateContext) {
-			contextSender.setDestLoc(sinkGridCoord);
-		}
-		navigatorGPS.go(srcLoc, sinkLoc, velocity);
+		if (updateContext)
+			contextSender.setDestLoc(northLocGridCoord);
+		navigatorGPS.go(midNorthLoc, northLoc, velocity);
 	}
 	
-	private void goToSource(NavigateCompassGPS navigatorGPS, int counter) {
-		Logger.log("Going to the source " + counter + "...");
+	private void goToMidNorthLoc(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the middle north location " + counter + "...");
 		
-		if (updateContext) {
-			contextSender.setDestLoc(srcGridCoord);
-		}
-		navigatorGPS.go(sinkLoc, srcLoc, velocity);
+		if (updateContext)
+			contextSender.setDestLoc(midNorthLocGridCoord);
+		navigatorGPS.go(northLoc, midNorthLoc, velocity);
+	}
+	
+	private void goToSouthLoc(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the south location " + counter + "...");
+		
+		if (updateContext)
+			contextSender.setDestLoc(southLocGridCoord);
+		navigatorGPS.go(midSouthLoc, southLoc, velocity);
+	}
+	
+	private void goToMidSouthLoc(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the middle south location " + counter + "...");
+		
+		if (updateContext)
+			contextSender.setDestLoc(midSouthLocGridCoord);
+		navigatorGPS.go(southLoc, midSouthLoc, velocity);
 	}
 	
 	private void pause(long duration) {
@@ -205,19 +238,17 @@ public class SimpleMule implements ProteusOpaqueListener {
 	}
 	
 	private static void usage() {
-		print("Usage: " + SimpleMule.class.getName() + " <options> [expName]\n");
+		print("Usage: " + SimpleMuleHalfLot.class.getName() + " <options> [expName]\n");
 		print("Where <options> include:");
-//		print("\t-playerServer <ip address>: The IP address of the Player Server (default localhost)");
-//		print("\t-playerPort <port number>: The Player Server's port number (default 6665)");
 		print("\t-updateContext: Send context information to the context agent.");
-		print("\t-sinkFirst: Go to the sink first.");
+		print("\t-route [north/south]: Select which route the robot will travel (default north).");
 		print("\t-debug: enable debug mode");
 		System.exit(0);
 	}
 	
 	public static void main(String[] args) {
 		boolean updateContext = false;
-		boolean sinkFirst = false;
+		RouteType route = RouteType.NORTH;
 		
 		if (args.length == 0)
 			usage();
@@ -227,8 +258,16 @@ public class SimpleMule implements ProteusOpaqueListener {
 				if (args[i].equals("-updateContext")) {
 					updateContext = true;
 				} 
-				else if (args[i].equals("-sinkFirst")) {
-					sinkFirst = true;
+				else if (args[i].equals("-route")) {
+					String routeName = args[++i];
+					if (routeName.equals("north"))
+						route = RouteType.NORTH;
+					else if (routeName.equals("south"))
+						route = RouteType.SOUTH;
+					else {
+						System.err.println("Unknown route type.");
+						usage();
+					}
 				} 
 				else if (args[i].equals("-h") || args[i].equals("--help")) {
 					usage();
@@ -279,7 +318,7 @@ public class SimpleMule implements ProteusOpaqueListener {
 		String expName = args[args.length - 1];
 		
 		try {
-			new SimpleMule(expName, updateContext, sinkFirst);
+			new SimpleMuleHalfLot(expName, updateContext, route);
 		} catch (PharosException e) {
 			e.printStackTrace();
 		}
