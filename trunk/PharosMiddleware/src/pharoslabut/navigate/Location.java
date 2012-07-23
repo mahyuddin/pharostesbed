@@ -2,7 +2,7 @@ package pharoslabut.navigate;
 
 import playerclient3.structures.gps.PlayerGpsData;
 
-public class Location implements java.io.Serializable, Comparable {
+public class Location implements java.io.Serializable, Comparable<Location> {
 	private static final long serialVersionUID = -2689555631414682934L;
 	private double latitude, longitude, elevation;
 	
@@ -158,7 +158,7 @@ public class Location implements java.io.Serializable, Comparable {
 	}
 	
 	@Override
-	public int compareTo(Object o) {
+	public int compareTo(Location o) {
 		if (o instanceof Location) {
 			Location l = (Location)o;
 			if (l.latitude() < latitude())  // locations that are more North are first
