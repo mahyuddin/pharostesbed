@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 1:24 AM
- * Last Modified: July 12, 2012 7:52 PM
+ * Last Modified: July 23, 2012 1:34 AM
  */
 
 package visualizer;
@@ -13,24 +13,22 @@ public class Position{
 
 	/*
 	 * time = number of milliseconds since start of experiment
-	 * delay = number of milliseconds since the last position update (or start of experiment if first position)
 	 * begLat = current latitude
 	 * begLong = current longitude
 	 * endLat = target latitude
 	 * endLong = target longitude
 	 * heading = direction robot is facing in radians
 	 */
-	public long time, delay;
+	public long time;
 	public double begLat, begLong, endLat, endLong, heading;
 	
 	public Position(){
-		this.time = this.delay = 0;
+		this.time = 0;
 		this.begLat = this.begLong = this.endLat = this.endLong = this.heading = 0;
 	}
 	
-	public Position(long initTime, long initDelay, double initBegLat, double initBegLong, double initEndLat, double initEndLong, double initHeading){
+	public Position(long initTime, double initBegLat, double initBegLong, double initEndLat, double initEndLong, double initHeading){
 		this.time = initTime;
-		this.delay = initDelay;
 		this.begLat = initBegLat;
 		this.begLong = initBegLong;
 		this.endLat = initEndLat;
