@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 
-<project name="PharosVisualizer" basedir="." default="run">
+<project name="PharosVisualizer" basedir="." default="compile">
 	
 	<target name="clean">
 		<delete dir="bin/visualizer"/>
