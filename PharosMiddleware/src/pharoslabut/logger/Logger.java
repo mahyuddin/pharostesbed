@@ -9,6 +9,13 @@ public class Logger {
 
 	private static FileLogger flogger = null;
 	
+	/**
+	 * Generates a prefix that should be added to the 
+	 * beginning of a log statement.  The prefix is the 
+	 * name of the calling class and method.
+	 * 
+	 * @return the log prefix.
+	 */
 	private static String getPrefix() {
 		// Add the name of the calling method to the beginning of the message.
 		StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
