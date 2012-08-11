@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 2, 2012 3:34 PM
- * Last Modified: August 10, 2012 8:25 PM
+ * Last Modified: August 10, 2012 10:56 PM
  */
 
 package visualizer;
@@ -102,7 +102,6 @@ public class Animation extends JApplet implements Runnable {
 						g.drawPolygon(xPts, yPts, n);
 					}
 				}
-				System.out.println("" + i + ": " + bot.frames.get(i).begLat);
 			}						
 		}
 	}
@@ -190,7 +189,7 @@ public class Animation extends JApplet implements Runnable {
 			if(logdir == "."){ logdir = ""; }
 			else if(!logdir.endsWith("/")){ logdir = logdir.concat("/"); }
 			File[] files = new File(logdir).listFiles();
-			if(files == null){ System.out.println("No log files found."); }
+			if(files == null){ JOptionPane.showMessageDialog(null, "No log files found."); }
 			// Creates Robots database
 			else{
 				CBSelection selection = new CBSelection();
@@ -295,13 +294,11 @@ public class Animation extends JApplet implements Runnable {
 					}
 				}
 				
-				Position pos0 = PosArray.get(0);
-				PosArray.add(0, new Position(0, pos0.begLat, pos0.begLong, pos0.endLat, pos0.endLong, pos0.heading));
-				
-				// If there is no log file to read, create an array of one position with properties at zero
-				if(PosArray.size() == 0){
-					Position pos = new Position();
-					PosArray.addElement(pos);
+				if(numLogs == 0){
+					JOptionPane.showMessageDialog(null, "No log files found.");
+				} else{
+					Position pos0 = PosArray.get(0);
+					PosArray.add(0, new Position(0, pos0.begLat, pos0.begLong, pos0.endLat, pos0.endLong, pos0.heading));
 				}
 				
 /*				***Code to be used for variable background***
