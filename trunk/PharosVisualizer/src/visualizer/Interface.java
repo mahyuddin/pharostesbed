@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 11, 2012 9:55 AM
- * Last Modified: August 10, 2012 10:13 PM
+ * Last Modified: August 10, 2012 10:56 PM
  */
 
 package visualizer;
@@ -68,7 +68,7 @@ public class Interface extends JFrame {
 			}
 		}*/
 		while(true){
-			if(isAnimationChanged){
+			if(isAnimationChanged && animation.endTime != 0){
 				gui.remove(animation);
 				animation.setBounds(0, 0, 700, 700);
 				gui.add(animation);
