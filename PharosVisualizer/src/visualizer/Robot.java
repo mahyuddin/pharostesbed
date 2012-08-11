@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: July 21, 2012 9:04 PM
- * Last Modified: July 25, 2012 12:03 AM
+ * Last Modified: August 4, 2012 11:21 PM
  */
 
 package visualizer;
@@ -17,16 +17,20 @@ public class Robot {
 	public String name;
 	public Vector<Position> frames;
 	public RobotPath path;
+	public int pathIndex;
 	public Color color;
-	public boolean isFinished;
+	public boolean isFinished, showRobot, showPath;
 	
 	public Robot(){
 		this.n = 0;
 		this.name = "null";
 		this.frames = new Vector<Position>();
 		this.path = new RobotPath();
+		this.pathIndex = 0;
 		this.color = new Color(0, 0, 0, 0);
 		this.isFinished = false;
+		this.showRobot = true;
+		this.showPath = true;
 	}
 	
 	public Robot(int initN, String initName, Color initColor){
@@ -34,7 +38,10 @@ public class Robot {
 		this.name = initName;
 		this.frames = new Vector<Position>();
 		this.path = new RobotPath();
+		this.pathIndex = 0;
 		this.color = initColor;
 		this.isFinished = false;
+		this.showRobot = true;
+		this.showPath = true;
 	}	
 }
