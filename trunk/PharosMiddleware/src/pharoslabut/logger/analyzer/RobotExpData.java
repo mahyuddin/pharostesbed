@@ -537,6 +537,41 @@ public class RobotExpData {
 					Logger.log("Rejecting invalid location: " + currLoc);
 				}
 			}
+			// This is for Proteus III log files.
+			else if (line.contains("Received GPS message:")) {
+				String keyStr = "Received GPS message:";
+				String gpsLine = line.substring(line.indexOf(keyStr) + keyStr.length());
+				
+				String[] tokens = gpsLine.split("[,\\s)]");
+				
+				long timeStamp = Long.valueOf(line.substring(1,line.indexOf(']')));
+				currLoc = new PlayerGpsData();
+				currLoc.setAltitude((int)(Double.valueOf(tokens[20]) * 1000));  // convert from meters to mm
+				//currLoc.setErr_horz(Double.valueOf(tokens[26]));
+				//currLoc.setErr_vert(Double.valueOf(tokens[28]));
+				currLoc.setHdop((int)(Double.valueOf(tokens[40]) * 10));
+				currLoc.setLatitude((int)(Double.valueOf(tokens[12]) * 1e7));
+				currLoc.setLongitude((int)(Double.valueOf(tokens[16]) * 1e7));
+				currLoc.setNum_sats(Integer.valueOf(tokens[36]));
+				currLoc.setQuality(Integer.valueOf(tokens[32]));
+				currLoc.setTime_sec(Integer.valueOf(tokens[4]));
+				currLoc.setTime_usec(Integer.valueOf(tokens[8]));
+				currLoc.setUtm_e(Double.valueOf(tokens[24]));
+				currLoc.setUtm_n(Double.valueOf(tokens[28]));
+				currLoc.setVdop((int)(Double.valueOf(tokens[44]) * 10));
+				
+				Location l = new Location(currLoc);
+				if (pharoslabut.sensors.GPSDataBuffer.isValid(l)) {  // Only add the GPSLocation if it is valid.
+					locations.add(new GPSLocationState(timeStamp, currLoc));
+					if (currEdge != null) {
+						if (!currEdge.hasStartLoc())
+							currEdge.setStartLoc(l);
+					}
+				} else {
+					Logger.log("Rejecting invalid location: " + currLoc);
+				}
+			}
+			
 			
 			// Extract the heading measurements of the robot
 			// The following is printed by the CompassDataBuffer during Mission 15
@@ -719,7 +754,7 @@ public class RobotExpData {
 				else if (pathEdges.size() > 0)
 					pathEdges.get(pathEdges.size()-1).addPauseTime(pauseTime);
 				else
-					Logger.logDbg("WARNING: discarding pause time because currEdge not defined and there were not previous edges!");
+					Logger.logWarn("Discarding pause time because currEdge not defined and there were not previous edges!");
 			}
 		} // end while...
 		
@@ -739,8 +774,13 @@ public class RobotExpData {
 		
 		// Do some sanity checks...
 		if (!expStartTimeSet) {
-			Logger.logErr("experiment start time not set!");
-			System.exit(1);
+			Logger.logWarn("Experiment start time not set!  Using timestamp of first line in the log file.");
+			br = new BufferedReader(new FileReader(file));
+			line = br.readLine();
+			
+			expStartTime = Long.valueOf(line.substring(1,line.indexOf(']')));
+			expStartTimeSet = true;
+			Logger.logDbg("expStartTime = " + expStartTime);
 		}
 		
 		if (locations.size() == 0) {
@@ -1056,8 +1096,13 @@ public class RobotExpData {
 			PathEdge lastEdge = getPathEdge(numEdges()-1);
 			return lastEdge.getEndTime();
 		} else {
-			Logger.logWarn("Robot did not traverse any edges!");
-			//System.exit(1);
+			Logger.logWarn("Robot did not traverse any edges!  Using last location reading");
+			if (locations.size() > 0) {
+				GPSLocationState finalLoc = locations.get(locations.size()-1);
+				return finalLoc.getTimestamp();
+			} else {
+				Logger.logWarn("No final location!");
+			}
 		}
 		
 		return -1;
