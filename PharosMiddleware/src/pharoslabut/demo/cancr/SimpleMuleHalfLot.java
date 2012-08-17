@@ -53,6 +53,8 @@ public class SimpleMuleHalfLot implements ProteusOpaqueListener {
 		
 		createPlayerClient(MotionArbiter.MotionType.MOTION_TRAXXAS);
 		
+		Logger.log("updateContext = " + updateContext);
+		
 		if (updateContext) {
 			switch(routeType) {
 			case NORTH:
