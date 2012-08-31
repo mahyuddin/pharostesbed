@@ -31,14 +31,16 @@ public class SimpleMule implements ProteusOpaqueListener {
 	private boolean updateContext;
 	ContextSender contextSender;
 	
+	Location parkingSpace02 = new Location(30.52818,	-97.63250);
 	Location parkingSpace03 = new Location(30.5281667,	-97.6325183);
 	Location parkingSpace80 = new Location(30.5262633,	-97.6324717);
+	Location southPoint = new Location(30.52618,		-97.63246);  // right next to the south point node
 	
-	Location srcLoc = parkingSpace03; //new Location(30.5263083,	-97.6324533);
-	Location sinkLoc = parkingSpace80; //new Location(30.526845,	-97.6324783);
+	Location northNodeLoc = parkingSpace02; //parkingSpace03
+	Location southNodeLoc = southPoint; //parkingSpace80
 	
-	Location sinkGridCoord = new Location(0,0);
-	Location srcGridCoord = new Location(1,0);
+	Location southNodeGridCoord = new Location(0,0);
+	Location northNodeGridCoord = new Location(1,0);
 	
 	public SimpleMule(String expName, boolean updateContext, boolean sinkFirst) throws PharosException {
 		this.updateContext = updateContext;
@@ -51,9 +53,9 @@ public class SimpleMule implements ProteusOpaqueListener {
 		
 		if (updateContext) {
 			if (sinkFirst)
-				contextSender = new ContextSender(gpsDataBuffer, sinkGridCoord);
+				contextSender = new ContextSender(gpsDataBuffer, southNodeGridCoord);
 			else
-				contextSender = new ContextSender(gpsDataBuffer, srcGridCoord);
+				contextSender = new ContextSender(gpsDataBuffer, northNodeGridCoord);
 		}
 		
 		Logger.log("Starting experiment at time " + System.currentTimeMillis() + "...");
@@ -66,11 +68,11 @@ public class SimpleMule implements ProteusOpaqueListener {
 				gpsDataBuffer);
 		
 		if (sinkFirst) {
-			Logger.log("Going to the sink...");
-			navigatorGPS.go(null, sinkLoc, velocity);
+			Logger.log("Going to the south node...");
+			navigatorGPS.go(null, southNodeLoc, velocity);
 		} else {
-			Logger.log("Going to the source...");
-			navigatorGPS.go(null, srcLoc, velocity);
+			Logger.log("Going to the north node...");
+			navigatorGPS.go(null, northNodeLoc, velocity);
 		}
 		pause(pauseTime);
 		
@@ -78,38 +80,38 @@ public class SimpleMule implements ProteusOpaqueListener {
 		while(true) {
 			
 			if (sinkFirst)
-				goToSource(navigatorGPS, counter);
+				goToNorthNode(navigatorGPS, counter);
 			else
-				goToSink(navigatorGPS, counter);
+				goToSouthNode(navigatorGPS, counter);
 			
 			pause(pauseTime);
 			
 			if (sinkFirst) 
-				goToSink(navigatorGPS, counter);
+				goToSouthNode(navigatorGPS, counter);
 			else
-				goToSource(navigatorGPS, counter);
+				goToNorthNode(navigatorGPS, counter);
 			
 			counter++;
 			pause(pauseTime);
 		}
 	}
 	
-	private void goToSink(NavigateCompassGPS navigatorGPS, int counter) {
-		Logger.log("Going to the sink " + counter + "...");
+	private void goToSouthNode(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the southern node " + counter + "...");
 		
 		if (updateContext) {
-			contextSender.setDestLoc(sinkGridCoord);
+			contextSender.setDestLoc(southNodeGridCoord);
 		}
-		navigatorGPS.go(srcLoc, sinkLoc, velocity);
+		navigatorGPS.go(northNodeLoc, southNodeLoc, velocity);
 	}
 	
-	private void goToSource(NavigateCompassGPS navigatorGPS, int counter) {
-		Logger.log("Going to the source " + counter + "...");
+	private void goToNorthNode(NavigateCompassGPS navigatorGPS, int counter) {
+		Logger.log("Going to the northern node " + counter + "...");
 		
 		if (updateContext) {
-			contextSender.setDestLoc(srcGridCoord);
+			contextSender.setDestLoc(northNodeGridCoord);
 		}
-		navigatorGPS.go(sinkLoc, srcLoc, velocity);
+		navigatorGPS.go(southNodeLoc, northNodeLoc, velocity);
 	}
 	
 	private void pause(long duration) {
