@@ -29,19 +29,21 @@ public class SimpleMuleHalfLot implements ProteusOpaqueListener {
 	private GPSDataBuffer gpsDataBuffer;
 	private MotionArbiter motionArbiter;
 	double velocity = 1.0;
-	long pauseTime = 0;
+	long pauseTime = 10000;
 	private boolean updateContext;
 	ContextSender contextSender;
 	
-	Location northLoc = new Location(30.5281667,	-97.6325183);
-	Location southLoc = new Location(30.5262633,	-97.6324717);
+	Location parkingSpace02 = new Location(30.52818,	-97.63250);
+	
+	Location northLoc = parkingSpace02; //new Location(30.5281667,	-97.6325183);
+	Location southLoc = new Location(30.52618,		-97.63246);  // right next to the south point node new Location(30.5262633,	-97.6324717);
 	Location midNorthLoc = new Location(30.52737,	-97.63248);
 	Location midSouthLoc = new Location(30.52718,	-97.63248); 
 		
 	Location northLocGridCoord = new Location(2,0);
 	Location southLocGridCoord = new Location(0,0);
-	Location midNorthLocGridCoord = new Location(1, 0);
-	Location midSouthLocGridCoord = new Location(1, 0);
+	Location midNorthLocGridCoord = new Location(2,0); //new Location(1, 0);
+	Location midSouthLocGridCoord = new Location(0,0); //new Location(1, 0);
 	
 	public SimpleMuleHalfLot(String expName, boolean updateContext, RouteType routeType) 
 	throws PharosException {
@@ -75,19 +77,8 @@ public class SimpleMuleHalfLot implements ProteusOpaqueListener {
 		NavigateCompassGPS navigatorGPS = new NavigateCompassGPS(motionArbiter, compassDataBuffer, 
 				gpsDataBuffer);
 		
-		switch(routeType) {
-		case NORTH:
-			Logger.log("Going to the north waypoint.");
-			navigatorGPS.go(null, northLoc, velocity);
-			break;
-		case SOUTH:
-			navigatorGPS.go(null, southLoc, velocity);
-			break;
-		}
+		int counter = 0;		
 		
-		pause(pauseTime);
-		
-		int counter = 0;
 		while(true) {
 			
 			switch(routeType) {
