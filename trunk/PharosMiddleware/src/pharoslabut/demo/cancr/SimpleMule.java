@@ -19,7 +19,7 @@ import playerclient3.Position2DInterface;
 import playerclient3.structures.PlayerConstants;
 
 public class SimpleMule implements ProteusOpaqueListener {
-
+	
 	String playerServerIP = "localhost";
 	int playerServerPort = 6665;
 	PlayerClient client;
@@ -27,7 +27,7 @@ public class SimpleMule implements ProteusOpaqueListener {
 	private GPSDataBuffer gpsDataBuffer;
 	private MotionArbiter motionArbiter;
 	double velocity = 1.0;
-	long pauseTime = 0;
+	long pauseTime = 10000;
 	private boolean updateContext;
 	ContextSender contextSender;
 	
