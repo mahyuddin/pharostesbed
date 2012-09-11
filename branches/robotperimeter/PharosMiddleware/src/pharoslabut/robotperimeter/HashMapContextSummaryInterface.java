@@ -1,10 +1,8 @@
 package pharoslabut.robotperimeter;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
-
 import edu.utexas.ece.mpc.context.summary.HashMapContextSummary;
 
 

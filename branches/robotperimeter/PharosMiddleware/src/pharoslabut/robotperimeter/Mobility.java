@@ -1,7 +1,5 @@
 package pharoslabut.robotperimeter;
 
-import pharoslabut.beacon.WiFiBeaconBroadcaster;
-import pharoslabut.exceptions.NoNewDataException;
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
 import pharoslabut.navigate.MotionArbiter;

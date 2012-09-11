@@ -1,9 +1,6 @@
 package pharoslabut.robotperimeter;
-import java.util.ArrayList;
-
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
-import Jama.Matrix;
 import edu.utexas.ece.mpc.context.summary.GroupContextSummary;
 import edu.utexas.ece.mpc.context.summary.HashMapContextSummary;
 

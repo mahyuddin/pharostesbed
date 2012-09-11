@@ -3,8 +3,6 @@ import java.util.List;
 
 import pharoslabut.logger.Logger;
 import pharoslabut.navigate.Location;
-import pharoslabut.sensors.CompassDataBuffer;
-import pharoslabut.sensors.GPSDataBuffer;
 import edu.utexas.ece.mpc.context.ContextHandler;
 import edu.utexas.ece.mpc.context.group.GroupDefinition;
 import edu.utexas.ece.mpc.context.group.LabeledGroupDefinition;
