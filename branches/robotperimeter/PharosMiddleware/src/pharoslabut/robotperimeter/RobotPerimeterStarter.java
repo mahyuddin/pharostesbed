@@ -1,4 +1,4 @@
-package robotPerimeter;
+package pharoslabut.robotperimeter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 

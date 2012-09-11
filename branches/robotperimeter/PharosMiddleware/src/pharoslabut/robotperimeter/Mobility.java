@@ -1,4 +1,4 @@
-package robotPerimeter;
+package pharoslabut.robotperimeter;
 
 import pharoslabut.beacon.WiFiBeaconBroadcaster;
 import pharoslabut.exceptions.NoNewDataException;

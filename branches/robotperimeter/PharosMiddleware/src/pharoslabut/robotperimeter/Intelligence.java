@@ -1,4 +1,4 @@
-package robotPerimeter;
+package pharoslabut.robotperimeter;
 import java.util.List;
 import java.util.Map;
 

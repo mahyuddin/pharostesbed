@@ -12,5 +12,6 @@
 	<classpathentry kind="lib" path="jars/rxtx-2.1-7-bins-r2/RXTXcomm.jar"/>
 	<classpathentry kind="lib" path="jars/kryo-1.04-all.jar"/>
 	<classpathentry kind="lib" path="jars/junit-4.10.jar"/>
+	<classpathentry kind="lib" path="jars/Jama-1.0.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

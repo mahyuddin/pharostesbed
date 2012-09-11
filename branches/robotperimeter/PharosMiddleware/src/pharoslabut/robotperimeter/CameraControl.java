@@ -1,4 +1,4 @@
-package robotPerimeter;
+package pharoslabut.robotperimeter;
 
 import java.util.Enumeration;
 import java.util.Vector;
