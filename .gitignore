@@ -1,0 +1,10 @@
+/PharosMiddleware/bin/
+
+# /PharosMiddleware/jars/
+/PharosMiddleware/jars/PharosMiddleware.jar
+
+# /PharosVisualizer/
+/PharosVisualizer/.classpath
+/PharosVisualizer/.metadata
+/PharosVisualizer/.project
+/PharosVisualizer/.settings
