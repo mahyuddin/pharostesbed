@@ -96,7 +96,7 @@ public class Vision {
 
 		if (!myTargetGroupFound) {
 
-			GroupDefinition groupDef = new LabeledGroupDefinition<TargetGroupContextSummary>(
+			GroupDefinition<TargetGroupContextSummary> groupDef = new LabeledGroupDefinition<TargetGroupContextSummary>(
 					TargetGroupContextSummary.class, targetId);
 			handler.addGroupDefinition(groupDef);
 			myTargetGroup = (TargetGroupContextSummary) handler.get(targetId);
@@ -147,7 +147,7 @@ public class Vision {
 
 		if (!myTargetGroupFound) {
 
-			GroupDefinition groupDef = new LabeledGroupDefinition<TargetGroupContextSummary>(
+			GroupDefinition<TargetGroupContextSummary> groupDef = new LabeledGroupDefinition<TargetGroupContextSummary>(
 					TargetGroupContextSummary.class, targetId);
 			handler.addGroupDefinition(groupDef);
 			myTargetGroup = (TargetGroupContextSummary) handler.get(targetId);
