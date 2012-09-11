@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import pharoslabut.logger.Logger;
 
-import robotPerimeter.TargetGroupContextSummary;
+import pharoslabut.robotperimeter.TargetGroupContextSummary;
 
 import edu.utexas.ece.mpc.context.group.GroupDefinition;
 import edu.utexas.ece.mpc.context.logger.ContextLoggingDelegate;
