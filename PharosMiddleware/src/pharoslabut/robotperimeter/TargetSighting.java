@@ -1,6 +1,5 @@
 package pharoslabut.robotperimeter;
 
-import pharoslabut.navigate.Location;
 
 public class TargetSighting {
 	
