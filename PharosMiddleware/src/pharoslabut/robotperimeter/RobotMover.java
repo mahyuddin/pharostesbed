@@ -1,3 +1,4 @@
+package pharoslabut.robotperimeter;
 
 import pharoslabut.navigate.MotionArbiter;
 import pharoslabut.tasks.Priority;

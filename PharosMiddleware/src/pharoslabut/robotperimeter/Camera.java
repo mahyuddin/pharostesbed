@@ -1,4 +1,4 @@
-package robotPerimeter;
+package pharoslabut.robotperimeter;
 import pharoslabut.logger.Logger;
 import pharoslabut.sensors.BlobDataConsumer;
 import pharoslabut.sensors.BlobDataProvider;
