@@ -8,7 +8,7 @@ import edu.utexas.ece.mpc.context.summary.GroupContextSummary;
 import edu.utexas.ece.mpc.context.summary.HashMapContextSummary;
 import edu.utexas.ece.mpc.context.util.GroupUtils;
 
-public class TargetGroupDefinition extends LabeledGroupDefinition {
+public class TargetGroupDefinition extends LabeledGroupDefinition<TargetGroupContextSummary> {
 
 	private static final ContextHandler handler = ContextHandler.getInstance();
 
