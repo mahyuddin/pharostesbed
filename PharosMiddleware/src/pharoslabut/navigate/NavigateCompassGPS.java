@@ -139,7 +139,7 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 			GPSDataBuffer gpsDataBuffer) 
 	{
 		this.motionArbiter = motionArbiter;
-		//this.compassDataBuffer = compassDataBuffer;
+//		this.compassDataBuffer = compassDataBuffer;
 		compassDataBuffer.addPos2DListener(this);
 		this.gpsDataBuffer = gpsDataBuffer;
 	}
@@ -282,8 +282,8 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 		try {
 			return gpsDataBuffer.getCurrLoc();
 		} catch (NoNewDataException e) {
-			e.printStackTrace();
-			Logger.logErr("Failed to get current location\n");
+//			e.printStackTrace();
+//			Logger.logErr("Failed to get current location\n");
 			return null;
 		}
 	}
@@ -472,6 +472,7 @@ public class NavigateCompassGPS extends Navigate implements Position2DListener {
 			// Get the current location...
 			try {
 				currLoc = new Location(gpsDataBuffer.getCurrLoc());
+				currHeadingTimestamp = System.currentTimeMillis();
 			} catch(NoNewDataException nnde) {
 				Logger.logErr("Unable to get the current location, halting robot...");	
 				stopRobot();

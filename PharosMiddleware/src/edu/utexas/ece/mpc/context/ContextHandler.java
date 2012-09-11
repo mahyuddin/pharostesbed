@@ -10,12 +10,15 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.concurrent.ConcurrentHashMap;
 
+import pharoslabut.logger.Logger;
+
+import robotPerimeter.TargetGroupContextSummary;
+
 import edu.utexas.ece.mpc.context.group.GroupDefinition;
 import edu.utexas.ece.mpc.context.logger.ContextLoggingDelegate;
 import edu.utexas.ece.mpc.context.logger.NullContextLogger;
 import edu.utexas.ece.mpc.context.summary.ContextSummary;
 import edu.utexas.ece.mpc.context.summary.GroupContextSummary;
-import edu.utexas.ece.mpc.context.summary.HashMapGroupContextSummary;
 import edu.utexas.ece.mpc.context.summary.WireContextSummary;
 
 public class ContextHandler {
@@ -267,9 +270,14 @@ public class ContextHandler {
 
     public synchronized void addGroupDefinition(GroupDefinition groupDefinition) {
         int gId = groupDefinition.getId();
-        GroupContextSummary groupSummary = new HashMapGroupContextSummary(gId);
-
+   //     GroupContextSummary groupSummary = new HashMapGroupContextSummary(gId);
+        
+    	//TODO learn how to generalize this (had runtime errors before mission, just harded this)
+//		GroupContextSummary groupSummary = groupDefinition.createGroupInstance();
+		GroupContextSummary groupSummary = new TargetGroupContextSummary(gId);
+		
         groupContext.put(gId, groupSummary);
+        Logger.log(groupContext.get(gId).getClass().getName());
         
         groupDefinitions.put(gId, groupDefinition);
         
@@ -291,6 +299,7 @@ public class ContextHandler {
     public synchronized List<GroupContextSummary> getGroupSummaries() {
         List<GroupContextSummary> summaries = new ArrayList<GroupContextSummary>();
         for (GroupContextSummary summary: groupContext.values()) {
+        	Logger.log(summary.getClass().getName());
             summaries.add(summary.getGroupCopy());
         }
 
