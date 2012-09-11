@@ -1,1 +1,0 @@
-Tests the compatibility between the Servo and SoftwareSerial (formerly NewSoftwareSerial) libraries. It shows that there is a conflict.  When bytes are sent using SoftwareSerial, the servo stutters slightly.

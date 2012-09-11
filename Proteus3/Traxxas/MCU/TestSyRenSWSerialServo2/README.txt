@@ -1,1 +1,0 @@
-Tests the compatibility between the ProteusServo and SoftwareSerial (formerly NewSoftwareSerial) libraries. It shows that the two works together the majority of the time.  The front wheels rarely stutter.
