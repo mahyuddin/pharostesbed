@@ -29,6 +29,7 @@ public class Vision {
 
 		//TODO remove fake
 	
+		Logger.log("Sending faked lat/long");
 		receivedTargetSignal (new Location (fakeLatitude, fakeLongitude),0);
 	}
 
@@ -48,6 +49,7 @@ public class Vision {
 //		double angle = Intelligence.findAngle(currLoc.latitude(), currLoc.longitude(), targetLocation.latitude(), targetLocation.longitude());
 //		findTarget (0,angle, currLoc.latitude(), currLoc.longitude(), targetId);
 //		
+		Logger.log("Received target signal");
 		findTarget(targetLocation, targetId);
 	}
 
@@ -74,9 +76,11 @@ public class Vision {
 		newSighting.timestamp = System.currentTimeMillis();
 		newSighting.targetLocation = new LocationStamp(location, newSighting.timestamp);
 
+		Logger.log("Inserting target sighting into local summary");
 		HashMapContextSummaryInterface.insertTargetSighting(mySummary,
 				newSighting);
 		
+		Logger.log("Updating summary with ContextHandler");
 		handler.updateLocalSummary(mySummary);
 
 		// create target group (or add local summary if already exists)
@@ -95,13 +99,14 @@ public class Vision {
 		}
 
 		if (!myTargetGroupFound) {
-
+			Logger.log("Adding local summary to new group");
 			GroupDefinition<TargetGroupContextSummary> groupDef = new LabeledGroupDefinition<TargetGroupContextSummary>(
 					TargetGroupContextSummary.class, targetId);
 			handler.addGroupDefinition(groupDef);
 			myTargetGroup = (TargetGroupContextSummary) handler.get(targetId);
 			myTargetGroup.addLocalSummary(mySummary);
 		} else
+			Logger.log("Adding local summary to existing group");
 			myTargetGroup.addLocalSummary(mySummary);
 	}
 	
