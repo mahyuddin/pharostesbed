@@ -4,7 +4,7 @@
  * Lok Wong
  * Pharos Lab
  * Created: June 11, 2012 9:55 AM
- * Last Modified: August 10, 2012 10:56 PM
+ * Last Modified: September 20, 2012 8:47 PM
  */
 
 package visualizer;
@@ -47,11 +47,6 @@ public class Interface extends JFrame {
 	
 	public static void main(String args[]){
 		Interface gui = new Interface();
-		gui.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		gui.setSize(frameWidth+15, frameHeight+panelHeight+35);	// Constants take into account Windows window border
-		gui.setVisible(true);
-		gui.setTitle("Pharos Lab Visualizer");
-		gui.getContentPane().setBounds(0, 0, frameWidth, frameHeight);
 		
 /*		// Code for command-line input
 		for(int i = 0; i < args.length; i++){
@@ -67,24 +62,52 @@ public class Interface extends JFrame {
 				break;
 			}
 		}*/
+
+//		int w = gui.getWidth(), h = gui.getHeight();
 		while(true){
-			if(isAnimationChanged && animation.endTime != 0){
-				gui.remove(animation);
+			if(isAnimationChanged){
+				isAnimationChanged = false;
+
+				if(animation != null){
+					stop.doClick();
+					gui.remove(animation);
+				}
+				animation = new Animation(chooser.getSelectedFile().getPath());
 				animation.setBounds(0, 0, 700, 700);
 				gui.add(animation);
-		
+				
 				endTime = animation.endTime;
 				// Set start at "00:00 / endTime" with endTime in terms of minutes and seconds with leading zeros
 				totalTime = ("" + (endTime/60000 < 10 ? 0 : "") + (endTime/60000) + ':' + (endTime%60000/1000 < 10 ? 0 : "")
 						+ endTime%60000/1000);
 				timeElapsed.setText("00:00 / " + totalTime);
-				isAnimationChanged = false;
 				
 				play.setEnabled(true);
 				stop.setEnabled(true);
 				rewind.setEnabled(true);
 				fforward.setEnabled(true);
-			} else{ System.out.print(""); }
+			} else{ System.out.print(""); }	// Needed to work properly (reasons unknown)
+//			synchronized(gui){
+//				if(w != gui.getWidth() || h != gui.getHeight()){
+//					int dw = gui.getWidth()-w;
+//					int dh = gui.getHeight()-h;
+//					if(dw < dh){ animation.setBounds(0, dh/2, frameWidth+dw, frameHeight+dw); }
+//					else{ animation.setBounds(dw/2, 0, frameWidth+dh/2, frameHeight+dh/2); }
+//					progress.setBounds(0, frameHeight+dh, frameWidth+dw,
+//							UIManager.getDefaults().getIcon("Slider.horizontalThumbIcon").getIconHeight());
+//					open.setLocation(5, progress.getY()+progress.getHeight()+5);
+//					play.setLocation(open.getX()+open.getWidth()+10, progress.getY()+progress.getHeight()+5);
+//					stop.setLocation(play.getX()+play.getWidth()+5, progress.getY()+progress.getHeight()+5);
+//					rewind.setLocation(stop.getX()+stop.getWidth()+10, progress.getY()+progress.getHeight()+5);
+//					fforward.setLocation(rewind.getX()+rewind.getWidth()+5, progress.getY()+progress.getHeight()+5);
+//					speedControl.setLocation(fforward.getX()+fforward.getWidth()+10,
+//							progress.getY()+progress.getHeight()+(panelHeight-progress.getHeight()-44)/2);
+//					speedLabel.setLocation(speedControl.getX()+speedControl.getWidth()+5,
+//							progress.getY()+progress.getHeight()+(panelHeight-progress.getHeight()-21)/2);
+//					timeElapsed.setLocation(frameWidth+dw-UIManager.getDefaults().getIcon("Slider.horizontalThumbIcon").getIconWidth()/2-151,
+//							progress.getY()+progress.getHeight()+(panelHeight-progress.getHeight()-21)/2);
+//				}
+//			}
 		}
 	}
 	
@@ -185,6 +208,12 @@ public class Interface extends JFrame {
 				progress.getY()+progress.getHeight()+(panelHeight-progress.getHeight()-21)/2, 150, 21);
 		timeElapsed.setHorizontalAlignment(SwingConstants.RIGHT);
 		add(timeElapsed);
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setMinimumSize(new Dimension(frameWidth+15, frameHeight+panelHeight+35));
+		setSize(frameWidth+15, frameHeight+panelHeight+35);	// Constants take into account Windows window border
+		setVisible(true);
+		setTitle("Pharos Lab Visualizer");
 	}
 	
 	private static class TimeChange extends MouseAdapter{
@@ -223,15 +252,8 @@ public class Interface extends JFrame {
 		public void actionPerformed(ActionEvent chooseEvent){
 			int x = chooser.showOpenDialog(null);
 			if(x == JFileChooser.APPROVE_OPTION){
-				if(chooser.getSelectedFile().canRead()){
-					if(animation != null){
-						animation.removeAll();
-						animation.destroy();
-					}
-					animation = new Animation(chooser.getSelectedFile().getPath());
-					animation.repaint();
-					isAnimationChanged = true;
-				} else{ JOptionPane.showMessageDialog(null, "Folder does not exist."); }
+				if(chooser.getSelectedFile().canRead()){ isAnimationChanged = true; }
+				else{ JOptionPane.showMessageDialog(null, "Folder does not exist."); }
 			}
 		}
 	}
